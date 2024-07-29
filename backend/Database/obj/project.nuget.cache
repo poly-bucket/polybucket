@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "52tGfH4/FzPZge+Ecj/nojTrvJ74/HqvCJ8PGpccNdbCLrHN3K1bTiv7Cgc8+JraQNSyzeT+/J5DvXBApCtiXg==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\kodyr\\Documents\\GitHub\\polybucket\\backend\\Database\\Database.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\kodyr\\.nuget\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.19.6\\microsoft.visualstudio.azure.containers.tools.targets.1.19.6.nupkg.sha512"
+  ],
+  "logs": []
+}
