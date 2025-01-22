@@ -1,17 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Security.AccessControl;
-using System.Xml;
 
 namespace Database
 {
-    public class Context
+    public class Context : DbContext
     {
         public Context(DbContextOptions<Context> options) : base(options)
-        { }
+        {
+        }
 
         public static string ConnectionString =>
             $"Host={Environment.GetEnvironmentVariable("DB_HOST")};"
@@ -21,17 +16,12 @@ namespace Database
             + $"Database={Environment.GetEnvironmentVariable("DB_NAME")};"
             + $"SSL Mode=none;";
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            if (!optionsBuilder.IsConfigured)
-            {
-                ServerVersion version = ServerVersion.AutoDetect(ConnectionString);
-                optionsBuilder.UseMySql(ConnectionString, version);
-            }
         }
     }
 }
