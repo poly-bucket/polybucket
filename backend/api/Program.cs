@@ -4,6 +4,7 @@ using Serilog;
 using Api.Extensions;
 using Api.Extensions.Environment;
 using Microsoft.EntityFrameworkCore;
+using Database;
 
 namespace Api
 {
@@ -38,33 +39,9 @@ namespace Api
 
             var builder = WebApplication.CreateBuilder(args);
 
-            //ConfigureDatabase(builder.Services);
+            ConfigureDatabase(builder.Services);
 
-            //ConfigureApi(builder);
-            // Add services to the container.
-            builder.Services.AddControllers();
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-
-            builder.Services.AddSwaggerGen();
-
-            var app = builder.Build();
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
-            app.MapControllers();
-
-            app.UseResponseCaching();
-
-            app.UseRouting();
-
-            app.Run();
+            ConfigureApi(builder);
         }
 
         private static void ConfigureApi(WebApplicationBuilder builder)
@@ -94,19 +71,31 @@ namespace Api
 
             app.Run();
 
-            //Log.Information("Api services configured.");
+            Log.Information("Api services configured.");
         }
 
-        //private static void ConfigureDatabase(IServiceCollection services)
-        //{
-        //    ServerVersion version = ServerVersion.AutoDetect(Context.ConnectionString);
+        private static void ConfigureDatabase(IServiceCollection services)
+        {
+            try
+            {
+                ServerVersion version = ServerVersion.AutoDetect(Context.ConnectionString);
+                services.AddDbContext<Context>(options =>
+                {
+                    options.UseMySql(Context.ConnectionString, version);
+                });
+            }
+            catch (MySqlConnector.MySqlException connectionException)
+            {
+                Log.Error(connectionException, "Failed to connect to database. Check your environment database settings.");
+                throw;
+            }
+            catch (Exception configureDatabaseException)
+            {
+                Log.Error(configureDatabaseException, "Failed to configure database services.");
+                throw;
+            }
 
-        //    services.AddDbContext<Context>(options =>
-        //    {
-        //        options.UseMySql(Context.ConnectionString, version);
-        //    });
-
-        //    Log.Information("Database connection established.");
-        //}
+            Log.Information("Database connection established.");
+        }
     }
 }
