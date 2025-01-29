@@ -14,9 +14,9 @@ namespace Api
         {
             // Load the .env file
             DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4)); // this would only search 2 directories up from the executing directory.
-            //Validate.ValidateEnvironmentVariables();
+            Validate.ValidateEnvironmentVariables();
+
             // Configure logging
-            // Log everything to console
 #pragma warning disable CS8604 // Possible null reference argument. Env vars won't be null past our validation methods.
             Log.Logger = new LoggerConfiguration()
 #if DEBUG
@@ -48,23 +48,29 @@ namespace Api
         {
             // Add services to the container.
             builder.Services.AddControllers();
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+
+#if DEBUG
+            app.UseDeveloperExceptionPage();
+#endif
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                c.SwaggerEndpoint($"{Environment.GetEnvironmentVariable(Variables.INSTANCE_NAME)}.json", $"{Environment.GetEnvironmentVariable(Variables.INSTANCE_NAME)}");
+            });
+
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
 
+            // Caching
+            builder.Services.AddMemoryCache();
+            builder.Services.AddResponseCaching();
             app.UseResponseCaching();
 
             app.UseRouting();
@@ -83,6 +89,12 @@ namespace Api
                 {
                     options.UseMySql(Context.ConnectionString, version);
                 });
+
+                using (var scope = services.BuildServiceProvider().CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<Context>();
+                    dbContext.Database.Migrate();
+                }
             }
             catch (MySqlConnector.MySqlException connectionException)
             {

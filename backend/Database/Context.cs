@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Database.Maps.Users;
+using Microsoft.EntityFrameworkCore;
 
 namespace Database
 {
@@ -22,6 +23,23 @@ namespace Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Users
+            modelBuilder.ApplyConfiguration<Core.Models.Users.User>(new UserMap());
+            modelBuilder.ApplyConfiguration<Core.Models.Users.UserLogin>(new UserLoginMap());
+
+            // Models
+            modelBuilder.ApplyConfiguration<Core.Models.Models.Model>(new ModelMap());
+            modelBuilder.ApplyConfiguration<Core.Models.Models.PrintSettings>(new PrintSettingsMap());
+
+            // Files
+            modelBuilder.ApplyConfiguration<Core.Models.Files.File>(new FileMap());
+
+            // Printers and Filaments
+            modelBuilder.ApplyConfiguration<Core.Models.Printers.Printer>(new PrinterMap());
+            modelBuilder.ApplyConfiguration<Core.Models.Filaments.Filament>(new FilamentMap());
+
+            // Comments
+            modelBuilder.ApplyConfiguration<Core.Models.Comments.Comment>(new CommentMap());
         }
     }
 }

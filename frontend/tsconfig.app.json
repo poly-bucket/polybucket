@@ -24,6 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@navigation/*": ["./navigation/*"],
+      "@stlLoader*": ["../node_modules/three/examples/jsm/loaders/STLLoader.js"]
     },
   },
   "include": ["src"]

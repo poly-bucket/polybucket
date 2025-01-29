@@ -8,6 +8,11 @@ namespace Database.Maps.Users
     {
         public void Configure(EntityTypeBuilder<User> entity)
         {
+            entity.ToTable("users");
+
+            entity.HasKey(e => e.Id)
+                .HasName("Id");
+
             entity.Property(e => e.Email)
                 .IsRequired()
                 .HasColumnName("email")
