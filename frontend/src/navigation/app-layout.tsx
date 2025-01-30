@@ -1,7 +1,22 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import { routes } from "./routes";
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { logout } from '../store/slices/auth-slice';
 
-export const AppLayout: React.FC = () => {
+interface AppLayoutProps {
+  children?: React.ReactNode;
+}
+
+export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate(routes.login);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <nav className="sticky top-0 z-10 bg-black border-b border-green-900">
@@ -27,19 +42,33 @@ export const AppLayout: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <a href={routes.dashboard} className="px-3 py-2 text-sm font-medium text-green-400 rounded-md hover:text-blue-600">
+              <Link to={routes.dashboard} className="px-3 py-2 text-sm font-medium text-green-400 rounded-md hover:text-blue-600">
                 Home
-              </a>
-              <a href={routes.login} className="px-3 py-2 text-sm font-medium text-green-400 rounded-md hover:text-blue-600">
-                Login
-              </a>
+              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link to={routes.profile} className="px-3 py-2 text-sm font-medium text-green-400 rounded-md hover:text-blue-600">
+                    Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="px-3 py-2 text-sm font-medium text-green-400 rounded-md hover:text-red-500"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link to={routes.login} className="px-3 py-2 text-sm font-medium text-green-400 rounded-md hover:text-blue-600">
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </nav>
       <main className="flex-1 w-full bg-black">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Outlet />
+          {children || <Outlet />}
         </div>
       </main>
     </div>

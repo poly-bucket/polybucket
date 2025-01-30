@@ -4,8 +4,6 @@ namespace Core.Models.Users
 {
     public class User : Auditable
     {
-        public Guid Id { get; set; }
-
         /// <summary>
         /// A user's email address
         /// </summary>
@@ -19,12 +17,12 @@ namespace Core.Models.Users
         /// <summary>
         /// The first name of a particular user.
         /// </summary>
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
 
         /// <summary>
         /// The last name of a particular user.
         /// </summary>
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
 
         /// <summary>
         /// A user's password salt
@@ -35,5 +33,9 @@ namespace Core.Models.Users
         /// A user's password hash
         /// </summary>
         public string PasswordHash { get; set; }
+
+        public string? Country { get; set; }
+
+        public UserRole Role { get; set; }
     }
 }

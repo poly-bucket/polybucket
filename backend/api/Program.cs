@@ -1,100 +1,206 @@
-using dotenv.net;
-using Serilog.Events;
-using Serilog;
 using Api.Extensions;
+using Api.Extensions.Database;
 using Api.Extensions.Environment;
-using Microsoft.EntityFrameworkCore;
+using Core.Services;
+using Core.Models.Users;
 using Database;
+using dotenv.net;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Conductors.Login;
+using Database.Seeders;
+using Conductors.Models;
+using Conductors.Users;
+using System.Security.Claims;
+using Api.Controllers.Users.GetUserById.Persistance;
+using Api.Controllers.Users.GetUserById.Domain;
+using Api.Models;
 
 namespace Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            // Load the .env file
-            DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4)); // this would only search 2 directories up from the executing directory.
-            Validate.ValidateEnvironmentVariables();
+            try
+            {
+                // Load the .env file
+                DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4));
+                Validate.ValidateEnvironmentVariables();
 
-            // Configure logging
-#pragma warning disable CS8604 // Possible null reference argument. Env vars won't be null past our validation methods.
-            Log.Logger = new LoggerConfiguration()
+                // Configure logging
+#pragma warning disable CS8604
+                Log.Logger = new LoggerConfiguration()
 #if DEBUG
-                .MinimumLevel.Debug()
+                    .MinimumLevel.Debug()
 #else
-                .MinimumLevel.Information()
+                    .MinimumLevel.Information()
 #endif
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .Enrich.FromLogContext()
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                    .Enrich.FromLogContext()
 #if DEBUG
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}", restrictedToMinimumLevel: LogEventLevel.Debug, theme: Extensions.Console.Console.Theme)
+                    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+                        restrictedToMinimumLevel: LogEventLevel.Debug,
+                        theme: Extensions.Console.Console.Theme)
 #endif
-                .WriteTo.File(
-                    "Logs/.log",
-                    outputTemplate: "[{Timestamp:HH:mm:ss}][{Level:u3}]{Message:lj}{NewLine}{Exception}",
-                    restrictedToMinimumLevel: Logging.SetLogLevel(Environment.GetEnvironmentVariable(Variables.LOG_LEVEL)),
-                    rollingInterval: RollingInterval.Day)
-                .CreateLogger();
-#pragma warning restore CS8604 // Possible null reference argument. Env vars won't be null past our validation methods.
+                    .WriteTo.File(
+                        "Logs/.log",
+                        outputTemplate: "[{Timestamp:HH:mm:ss}][{Level:u3}]{Message:lj}{NewLine}{Exception}",
+                        restrictedToMinimumLevel: Logging.SetLogLevel(Environment.GetEnvironmentVariable(Variables.LOG_LEVEL)),
+                        rollingInterval: RollingInterval.Day)
+                    .CreateLogger();
+#pragma warning restore CS8604
 
-            var builder = WebApplication.CreateBuilder(args);
+                var builder = WebApplication.CreateBuilder(args);
 
-            ConfigureDatabase(builder.Services);
+                ConfigureDatabase(builder.Services);
 
-            ConfigureApi(builder);
+                await ConfigureApi(builder);
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Application startup failed");
+                throw;
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
-        private static void ConfigureApi(WebApplicationBuilder builder)
+        private static async Task ConfigureApi(WebApplicationBuilder builder)
         {
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-            var app = builder.Build();
-            // Configure the HTTP request pipeline.
-
-#if DEBUG
-            app.UseDeveloperExceptionPage();
-#endif
-
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
+            // Add CORS configuration
+            builder.Services.AddCors(options =>
             {
-                c.SwaggerEndpoint($"{Environment.GetEnvironmentVariable(Variables.INSTANCE_NAME)}.json", $"{Environment.GetEnvironmentVariable(Variables.INSTANCE_NAME)}");
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.SetIsOriginAllowed(_ => true) // Be careful with this in production!
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .WithExposedHeaders("Content-Disposition")
+                          .AllowCredentials();
+                });
             });
 
+            builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+            builder.Services.AddScoped<ILoginConductor, LoginConductor>();
+            builder.Services.AddScoped<IModelConductor, ModelConductor>();
+            builder.Services.AddTransient<GetUserByIdDataAccess>();
+            builder.Services.AddTransient<GetUserByIdService>();
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET") ??
+                                throw new ArgumentNullException("JWT_SECRET"))),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero,
+                        NameClaimType = ClaimTypes.Name,
+                        RoleClaimType = ClaimTypes.Role
+                    };
+
+                    // Add debug logging for token validation
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            var logger = context.HttpContext.RequestServices
+                                .GetRequiredService<ILogger<Program>>();
+
+                            var userIdClaim = context.Principal?.FindFirst("userId")?.Value;
+                            logger.LogInformation("Token validated for user: {UserId}", userIdClaim);
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+
+            // Add response caching before building the app
+            builder.Services.AddResponseCaching();
+
+            var app = builder.Build();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json",
+                        $"{Environment.GetEnvironmentVariable(Variables.INSTANCE_NAME)} API v1");
+                });
+            }
+
+            // Order matters! CORS should be early in the pipeline
+            app.UseCors("AllowFrontend");
+            app.UseRouting();
             app.UseHttpsRedirection();
+            app.UseResponseCaching();
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
 
-            // Caching
-            builder.Services.AddMemoryCache();
-            builder.Services.AddResponseCaching();
-            app.UseResponseCaching();
+            // Apply any pending migrations
+            app.ApplyMigrations<Context>();
 
-            app.UseRouting();
+            // Seed development data
+            if (app.Environment.IsDevelopment())
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<Context>();
+                    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
-            app.Run();
+                    // Updated seeder instantiation and calls
+                    var adminSeeder = new AdminSeeder(context, passwordHasher);
+                    await adminSeeder.Seed();
+
+                    var printerSeeder = new PrinterSeeder(context);
+                    await printerSeeder.Seed();
+
+                    var modelSeeder = new ModelSeeder(context);
+                    modelSeeder.Seed();
+                }
+            }
 
             Log.Information("Api services configured.");
+
+            await app.RunAsync();
         }
 
         private static void ConfigureDatabase(IServiceCollection services)
         {
             try
             {
-                ServerVersion version = ServerVersion.AutoDetect(Context.ConnectionString);
-                services.AddDbContext<Context>(options =>
-                {
-                    options.UseMySql(Context.ConnectionString, version);
-                });
+                services.AddDbContext<Context>(
+                    DbContextOptions => DbContextOptions
+                        .UseMySql(Context.ConnectionString, ServerVersion.AutoDetect(Context.ConnectionString)));
 
                 using (var scope = services.BuildServiceProvider().CreateScope())
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<Context>();
                     dbContext.Database.Migrate();
                 }
+
+                Log.Information("Database connection established.");
             }
             catch (MySqlConnector.MySqlException connectionException)
             {
@@ -106,8 +212,6 @@ namespace Api
                 Log.Error(configureDatabaseException, "Failed to configure database services.");
                 throw;
             }
-
-            Log.Information("Database connection established.");
         }
     }
 }

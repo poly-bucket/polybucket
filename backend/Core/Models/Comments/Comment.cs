@@ -30,4 +30,4 @@ namespace Core.Models.Comments
         /// </summary>
         public virtual User Author { get; set; }
     }
-} 
+}

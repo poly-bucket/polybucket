@@ -92,6 +92,18 @@
     @apply border border-green-500/30 rounded-lg 
            shadow-[0_0_15px_rgba(34,197,94,0.2)];
   }
+
+  .model-viewer-container {
+    @apply w-full aspect-[16/9] max-w-6xl mx-auto rounded-lg overflow-hidden;
+  }
+
+  .model-viewer-fullscreen {
+    @apply fixed inset-0 w-full h-full z-50;
+  }
+
+  .model-controls-overlay {
+    @apply absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent;
+  }
 }
 
 /* Custom animation for terminal-like cursor effect */

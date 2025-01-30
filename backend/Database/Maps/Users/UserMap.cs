@@ -10,8 +10,10 @@ namespace Database.Maps.Users
         {
             entity.ToTable("users");
 
-            entity.HasKey(e => e.Id)
-                .HasName("Id");
+            entity.Property(e => e.Id)
+                .IsRequired()
+                .HasColumnName("id")
+                .HasColumnType("uuid");
 
             entity.Property(e => e.Email)
                 .IsRequired()
@@ -24,10 +26,12 @@ namespace Database.Maps.Users
                 .HasColumnType("varchar(255)");
 
             entity.Property(e => e.FirstName)
+                .IsRequired(false)
                 .HasColumnName("first_name")
                 .HasColumnType("varchar(255)");
 
             entity.Property(e => e.LastName)
+                .IsRequired(false)
                 .HasColumnName("last_name")
                 .HasColumnType("varchar(255)");
 
@@ -40,6 +44,15 @@ namespace Database.Maps.Users
                 .IsRequired()
                 .HasColumnName("password_hash")
                 .HasColumnType("varchar(255)");
+
+            entity.Property(e => e.Country)
+                .IsRequired(false)
+                .HasColumnName("country")
+                .HasColumnType("varchar(255)");
+
+            entity.Property(x => x.Role)
+                .HasColumnType("varchar(20)")
+                .HasConversion<string>();
         }
     }
 }

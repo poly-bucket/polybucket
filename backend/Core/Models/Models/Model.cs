@@ -20,7 +20,7 @@ namespace Core.Models.Models
         /// <summary>
         /// The license type of the 3D model.
         /// </summary>
-        public LicenseTypes License { get; set; }
+        public LicenseTypes? License { get; set; }
 
         /// <summary>
         /// The privacy setting of the 3D model.

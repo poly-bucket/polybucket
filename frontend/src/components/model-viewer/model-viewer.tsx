@@ -43,14 +43,12 @@ export const ModelViewer = ({
   };
 
   return (
-    <div className="relative aspect-square">
-      <div 
-        className={`relative ${
-          isFullscreen 
-            ? 'fixed inset-0 z-50 bg-gray-100' 
-            : 'w-full h-[400px] bg-gray-100 rounded-lg'
-        }`}
-      >
+    <div className={`relative ${
+      isFullscreen 
+        ? 'model-viewer-fullscreen' 
+        : 'model-viewer-container'
+    }`}>
+      <div className="w-full h-full bg-gray-100 rounded-lg">
         <Canvas 
           shadows 
           camera={{ 
@@ -96,7 +94,7 @@ export const ModelViewer = ({
         )}
 
         {/* Controls Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+        <div className="model-controls-overlay">
           <div className="flex items-center justify-between text-white">
             {/* Left Controls */}
             <div className="flex items-center gap-4">

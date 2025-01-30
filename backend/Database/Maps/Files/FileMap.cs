@@ -9,6 +9,11 @@ namespace Database.Maps.Files
         public void Configure(EntityTypeBuilder<Core.Models.Files.File> entity)
         {
             entity.ToTable("files");
+            
+            entity.Property(e => e.Id)
+                .IsRequired()
+                .HasColumnName("id")
+                .HasColumnType("uuid");
 
             entity.Property(e => e.Name)
                 .IsRequired()

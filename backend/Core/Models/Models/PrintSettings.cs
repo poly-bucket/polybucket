@@ -1,6 +1,6 @@
 ﻿namespace Core.Models.Models
 {
-    public class PrintSettings
+    public class PrintSettings : BaseEntity
     {
         public bool Supports { get; set; }
 

@@ -8,14 +8,16 @@ namespace Database.Maps.Users
     {
         public void Configure(EntityTypeBuilder<UserLogin> entity)
         {
+            entity.ToTable("user_logins");
+
+            entity.Property(e => e.Id)
+                .IsRequired()
+                .HasColumnName("id")
+                .HasColumnType("uuid");
+
             entity.Property(e => e.Email)
                 .IsRequired()
                 .HasColumnName("email")
-                .HasColumnType("varchar(255)");
-
-            entity.Property(e => e.Password)
-                .IsRequired()
-                .HasColumnName("password")
                 .HasColumnType("varchar(255)");
 
             entity.Property(e => e.IpAddress)

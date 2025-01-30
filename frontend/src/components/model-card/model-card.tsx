@@ -29,12 +29,14 @@ export const ModelCard = ({ model }: ModelCardProps) => {
               By <Link to={`/users/${model.creator}`} className="text-blue-500 hover:underline">{model.creator}</Link>
             </p>
           </div>
-          <ModelViewer 
-            modelUrl={model.modelUrl}
-            color="#808080"
-            metalness={0.5}
-            roughness={0.5}
-          />
+          <div className="relative aspect-[16/9] w-full">
+            <ModelViewer 
+              modelUrl={model.modelUrl}
+              color="#808080"
+              metalness={0.5}
+              roughness={0.5}
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-2 p-4">
           <div className="text-sm text-green-300/80">

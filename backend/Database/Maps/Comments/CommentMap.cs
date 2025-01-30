@@ -10,6 +10,11 @@ namespace Database.Maps.Comments
         {
             entity.ToTable("comments");
 
+            entity.Property(e => e.Id)
+                .IsRequired()
+                .HasColumnName("id")
+                .HasColumnType("uuid");
+
             entity.Property(e => e.Content)
                 .IsRequired()
                 .HasColumnName("content")
@@ -48,11 +53,9 @@ namespace Database.Maps.Comments
                 .HasColumnName("created_at");
 
             entity.Property(e => e.UpdatedById)
-                .IsRequired()
                 .HasColumnName("updated_by_id");
 
             entity.Property(e => e.UpdatedAt)
-                .IsRequired()
                 .HasColumnName("updated_at");
 
             entity.Property(e => e.DeletedById)
@@ -62,4 +65,4 @@ namespace Database.Maps.Comments
                 .HasColumnName("deleted_at");
         }
     }
-} 
+}

@@ -10,6 +10,11 @@ namespace Database.Maps.Models
         {
             entity.ToTable("models");
 
+            entity.Property(e => e.Id)
+                .IsRequired()
+                .HasColumnName("id")
+                .HasColumnType("uuid");
+
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasColumnName("name")
@@ -20,7 +25,7 @@ namespace Database.Maps.Models
                 .HasColumnType("text");
 
             entity.Property(e => e.License)
-                .IsRequired()
+                .IsRequired(false)
                 .HasColumnName("license")
                 .HasColumnType("int");
 
@@ -86,4 +91,4 @@ namespace Database.Maps.Models
                 .HasForeignKey("model_id");
         }
     }
-} 
+}

@@ -10,8 +10,10 @@ namespace Database.Maps.Models
         {
             entity.ToTable("print_settings");
 
-            entity.HasKey(e => e.Id)
-                .HasName("Id");
+            entity.Property(e => e.Id)
+                .IsRequired()
+                .HasColumnName("id")
+                .HasColumnType("uuid");
 
             entity.Property(e => e.Supports)
                 .IsRequired()
@@ -34,4 +36,4 @@ namespace Database.Maps.Models
                 .HasColumnType("int");
         }
     }
-} 
+}

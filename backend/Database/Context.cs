@@ -1,5 +1,18 @@
-﻿using Database.Maps.Users;
+﻿using Core.Models;
+using Core.Models.Filaments;
+using Core.Models.Files;
+using Core.Models.Models;
+using Core.Models.Printers;
+using Core.Models.Users;
+using Database.Maps.Comments;
+using Database.Maps.Filaments;
+using Database.Maps.Files;
+using Database.Maps.Models;
+using Database.Maps.Printers;
+using Database.Maps.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Newtonsoft.Json;
 
 namespace Database
 {
@@ -17,29 +30,95 @@ namespace Database
             + $"Database={Environment.GetEnvironmentVariable("DB_NAME")};"
             + $"SSL Mode=none;";
 
+        public DbSet<User> Users { get; set; } = null!;
+
+        public DbSet<UserLogin> UserLogins { get; set; } = null!;
+
+        public DbSet<Printer> Printers { get; set; } = null!;
+
+        public DbSet<Filament> Filaments { get; set; } = null!;
+
+        public DbSet<Core.Models.Files.File> Files { get; set; } = null!;
+
+        public DbSet<Model> Models { get; set; } = null!;
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            if (!optionsBuilder.IsConfigured)
+            {
+                ServerVersion version = ServerVersion.AutoDetect(ConnectionString);
+                optionsBuilder.UseMySql(ConnectionString, version);
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            JsonSerializerSettings settings = new()
+            {
+                Formatting = Formatting.None,
+            };
+
             // Users
-            modelBuilder.ApplyConfiguration<Core.Models.Users.User>(new UserMap());
-            modelBuilder.ApplyConfiguration<Core.Models.Users.UserLogin>(new UserLoginMap());
+            modelBuilder.Entity<User>().Property(prop => prop.Role).HasConversion(new EnumToStringConverter<UserRole>());
+
+            modelBuilder.ApplyConfiguration(new UserMap());
+            modelBuilder.ApplyConfiguration(new UserLoginMap());
 
             // Models
-            modelBuilder.ApplyConfiguration<Core.Models.Models.Model>(new ModelMap());
-            modelBuilder.ApplyConfiguration<Core.Models.Models.PrintSettings>(new PrintSettingsMap());
+            modelBuilder.ApplyConfiguration(new ModelMap());
+            modelBuilder.ApplyConfiguration(new PrintSettingsMap());
 
             // Files
-            modelBuilder.ApplyConfiguration<Core.Models.Files.File>(new FileMap());
+            modelBuilder.ApplyConfiguration(new FileMap());
 
             // Printers and Filaments
-            modelBuilder.ApplyConfiguration<Core.Models.Printers.Printer>(new PrinterMap());
-            modelBuilder.ApplyConfiguration<Core.Models.Filaments.Filament>(new FilamentMap());
+            modelBuilder.ApplyConfiguration(new PrinterMap());
+            modelBuilder.ApplyConfiguration(new FilamentMap());
 
             // Comments
-            modelBuilder.ApplyConfiguration<Core.Models.Comments.Comment>(new CommentMap());
+            modelBuilder.ApplyConfiguration(new CommentMap());
+        }
+
+        public override int SaveChanges()
+        {
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is BaseEntity && (
+                    e.State == EntityState.Added ||
+                    e.State == EntityState.Modified));
+
+            foreach (var entityEntry in entries)
+            {
+                var entity = (BaseEntity)entityEntry.Entity;
+
+                if (entityEntry.State == EntityState.Added)
+                {
+                    entity.Id = Guid.NewGuid();
+                }
+            }
+
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is BaseEntity && (
+                    e.State == EntityState.Added ||
+                    e.State == EntityState.Modified));
+
+            foreach (var entityEntry in entries)
+            {
+                var entity = (BaseEntity)entityEntry.Entity;
+
+                if (entityEntry.State == EntityState.Added)
+                {
+                    entity.Id = Guid.NewGuid();
+                }
+            }
+
+            return base.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -10,6 +10,11 @@ namespace Database.Maps.Filaments
         {
             entity.ToTable("filaments");
 
+            entity.Property(e => e.Id)
+                .IsRequired()
+                .HasColumnName("id")
+                .HasColumnType("uuid");
+
             entity.Property(e => e.Manufacturer)
                 .IsRequired()
                 .HasColumnName("manufacturer")
@@ -31,4 +36,4 @@ namespace Database.Maps.Filaments
                 .HasColumnType("varchar(10)");
         }
     }
-} 
+}
