@@ -17,6 +17,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": ["react"],
     "strict": true,
     "noUnusedLocals": true,
     "noImplicitReturns": true,

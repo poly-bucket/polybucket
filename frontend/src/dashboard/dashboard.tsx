@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { ModelCard } from '../components/model-card/model-card';
 import { UploadModal } from '../components/upload-modal/upload-modal';
+import { Model, ModelUploadData } from '../types/models';
 
 export const Dashboard = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // This would normally come from an API
-  const models = [
+  const models: Model[] = [
     {
       id: 1,
       title: "Cool 3D Model",
@@ -20,7 +21,7 @@ export const Dashboard = () => {
     // Add more sample models...
   ];
 
-  const handleUpload = (modelData: any) => {
+  const handleUpload = (modelData: ModelUploadData) => {
     // Handle the upload logic here
     console.log('Uploading model:', modelData);
     // You would typically make an API call here

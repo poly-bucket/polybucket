@@ -1,20 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ModelViewer } from '../model-viewer/model-viewer';
+import { Model } from '../../types/models';
 
 interface ModelCardProps {
-  model: {
-    id: number;
-    title: string;
-    description: string;
-    thumbnailUrl: string;
-    modelUrl: string;
-    likes: number;
-    downloads: number;
-    creator: string;
-  };
+  model: Model;
 }
 
-export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
+export const ModelCard = ({ model }: ModelCardProps) => {
   // Function to format numbers (e.g., 1000 -> 1k)
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
@@ -33,6 +25,9 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
           <div className="p-4">
             <h3 className="mb-2 text-lg font-semibold text-green-400">{model.title}</h3>
             <p className="mb-3 text-sm text-green-300/80 line-clamp-2">{model.description}</p>
+            <p className="text-sm text-gray-500">
+              By <Link to={`/users/${model.creator}`} className="text-blue-500 hover:underline">{model.creator}</Link>
+            </p>
           </div>
           <ModelViewer 
             modelUrl={model.modelUrl}

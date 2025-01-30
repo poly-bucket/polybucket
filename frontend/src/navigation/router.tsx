@@ -4,6 +4,7 @@ import { routes } from "./routes";
 import { AppLayout } from "./app-layout";
 import { Dashboard } from "../dashboard/dashboard";
 import { ModelDetail } from "../pages/model-detail/model-detail";
+import { UserProfile } from '../pages/user-profile/user-profile';
 
 export const router = createBrowserRouter([
   {
@@ -21,6 +22,10 @@ export const router = createBrowserRouter([
       {
         path: routes.modelDetail,
         element: <ModelDetail />,
+      },
+      {
+        path: "/users/:username",
+        element: <UserProfile />,
       }
     ],
   },
