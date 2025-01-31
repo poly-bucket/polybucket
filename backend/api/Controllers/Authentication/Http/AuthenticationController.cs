@@ -1,17 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
-using Conductors.Login;
 using Api.Controllers.Authentication.Domain;
 
 namespace Api.Controllers.Authentication.Http;
 
 [ApiController]
 [Route("[controller]")]
-public class AuthenticationController(ILoginConductor loginConductor, ILogger<AuthenticationController> logger) : ControllerBase
+public class AuthenticationController(CreateUserLoginService createUserLoginService, ILogger<AuthenticationController> logger) : ControllerBase
 {
-    private readonly ILoginConductor _loginConductor = loginConductor;
+    private readonly CreateUserLoginService _createUserLoginService = createUserLoginService;
     private readonly ILogger<AuthenticationController> _logger = logger;
 
     [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginResponse))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromBody] CreateUserLoginRequest userLoginRequest)
     {
         try
@@ -26,7 +29,7 @@ public class AuthenticationController(ILoginConductor loginConductor, ILogger<Au
             if (ipAddress == "::1") // localhost IPv6
                 ipAddress = "127.0.0.1";
 
-            var (token, user) = await _loginConductor.LoginAsync(userLoginRequest.Email, userLoginRequest.Password, ipAddress, userLoginRequest.UserAgent);
+            var (token, user) = await _createUserLoginService.ExecuteAsync(userLoginRequest.Email, userLoginRequest.Password, ipAddress, userLoginRequest.UserAgent);
 
             var response = new LoginResponse
             {

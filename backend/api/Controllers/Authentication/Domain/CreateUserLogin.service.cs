@@ -6,35 +6,36 @@ using Core.Models.Users;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Api.Controllers.Authentication.Persistance;
 
-namespace Conductors.Login;
+namespace Api.Controllers.Authentication.Domain;
 
-public interface ILoginConductor
+public class CreateUserLoginService
 {
-    Task<(string token, User user)> LoginAsync(string email, string password, string ipAddress, string userAgent);
-}
-
-public class LoginConductor : ILoginConductor
-{
-    private readonly Context _context;
+    private readonly CreateUserLoginDataAccess _dataAccess;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly ILogger<CreateUserLoginService> _logger;
     private readonly string _jwtSecret;
 
-    public LoginConductor(Context context, IPasswordHasher passwordHasher)
+    public CreateUserLoginService(CreateUserLoginDataAccess dataAccess, IPasswordHasher passwordHasher, ILogger<CreateUserLoginService> logger)
     {
-        _context = context;
+        _dataAccess = dataAccess;
         _passwordHasher = passwordHasher;
+        _logger = logger;
         _jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new ArgumentNullException("JWT_SECRET environment variable is not set");
     }
 
-    public async Task<(string token, User user)> LoginAsync(string email, string password, string ipAddress, string userAgent)
+    public async Task<GetUserLoginResponse> CreateUserLoginAsync(string email, string password, string ipAddress, string userAgent)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _dataAccess.FindUserByEmailAsync(email);
 
-        var loginSuccess = user != null && _passwordHasher.VerifyPassword(password, user.Salt, user.PasswordHash);
+        if (user == null)
+        {
+            throw new KeyNotFoundException($"User with email {email} not found");
+        }
 
-        // Create login record
+        var loginSuccess = _passwordHasher.VerifyPassword(password, user.Salt, user.PasswordHash);
+
         var userLogin = new UserLogin
         {
             Email = user?.Username ?? email,
@@ -43,8 +44,21 @@ public class LoginConductor : ILoginConductor
             UserAgent = userAgent,
         };
 
-        await _context.UserLogins.AddAsync(userLogin);
-        await _context.SaveChangesAsync();
+        await _dataAccess.CreateLoginRecordAsync(userLogin);
+
+        if (!loginSuccess)
+        {
+            throw new UnauthorizedAccessException("Invalid email or password");
+        }
+    }
+
+    public async Task<(string token, User user)> ExecuteAsync(string email, string password, string ipAddress, string userAgent)
+    {
+        var user = await _dataAccess.PersistUserLoginAttempt(email);
+
+        var loginSuccess = user != null && _passwordHasher.VerifyPassword(password, user.Salt, user.PasswordHash);
+
+        await _dataAccess.CreateLoginRecordAsync(userLogin);
 
         if (!loginSuccess)
         {
