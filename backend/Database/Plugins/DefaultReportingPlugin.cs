@@ -20,12 +20,13 @@ public class DefaultReportingPlugin : IReportingPlugin
     public string Author => "Polybucket Team";
 
     public Task InitializeAsync() => Task.CompletedTask;
+
     public Task UnloadAsync() => Task.CompletedTask;
 
     public async Task<Report> SubmitReportAsync(ReportType type, Guid targetId, Guid reporterId, ReportReason reason, string description)
     {
         var reporter = await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == reporterId.ToString());
+            .FirstOrDefaultAsync(u => u.Id == reporterId);
         if (reporter == null)
             throw new InvalidOperationException("Reporter not found");
 
@@ -87,4 +88,4 @@ public class DefaultReportingPlugin : IReportingPlugin
 
         return report;
     }
-} 
+}

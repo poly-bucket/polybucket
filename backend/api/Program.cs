@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Database.Seeders;
-using Conductors.Models;
 using System.Security.Claims;
 using Api.Controllers.Users.GetUserById.Persistance;
 using Api.Controllers.Users.GetUserById.Domain;
@@ -105,7 +104,6 @@ namespace Api
             builder.Services.AddDirectoryBrowser();
 
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-            builder.Services.AddScoped<IModelConductor, ModelConductor>();
             builder.Services.AddTransient<GetUserByIdDataAccess>();
             builder.Services.AddTransient<GetUserByIdService>();
             builder.Services.AddTransient<CreateUserLoginDataAccess>();

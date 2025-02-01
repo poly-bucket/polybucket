@@ -40,6 +40,7 @@ public class Context : DbContext
     public DbSet<Core.Models.Models.PrintSettings> PrintSettings { get; set; } = null!;
     public DbSet<Core.Models.Comments.Comment> Comments { get; set; } = null!;
     public DbSet<Core.Plugins.Reports.Report> Reports { get; set; } = null!;
+    public DbSet<Core.Models.Printers.Printer> Printers { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

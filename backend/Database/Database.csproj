@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core.Models\Core.Models.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 

@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
-using Conductors.Users;
-using Core.Models.Users;
-using Microsoft.AspNetCore.Authorization;
 using Api.Controllers.Users.GetUser.Domain;
 using Api.Controllers.Users.GetUserById.Domain;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.Users.GetUser.Http;
 

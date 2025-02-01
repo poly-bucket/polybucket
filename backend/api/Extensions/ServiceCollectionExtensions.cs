@@ -1,5 +1,6 @@
 using Core.Plugins;
 using Core.Plugins.Comments;
+using Database.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Api.Extensions
@@ -21,4 +22,4 @@ namespace Api.Extensions
             return services;
         }
     }
-} 
+}
