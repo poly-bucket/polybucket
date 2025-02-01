@@ -1,19 +1,24 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../store';
+import { jwtDecode } from 'jwt-decode';
 
 export interface User {
   id: string;
-  email: string;
   username: string;
-  firstName?: string;
-  lastName?: string;
+  role: string;
+}
+
+interface JwtPayload {
+  sub: string;
+  name: string;
+  role: string;
+  agent: string;
+  exp: number;
 }
 
 export interface AuthState {
-  user: User | null;
   isAuthenticated: boolean;
   token: string | null;
-  userId: string | null;
+  user: User | null;
 }
 
 // Load initial state from localStorage
@@ -22,19 +27,35 @@ const loadState = (): AuthState => {
     const serializedState = localStorage.getItem('auth');
     if (serializedState === null) {
       return {
-        user: null,
         isAuthenticated: false,
         token: null,
-        userId: null,
+        user: null,
       };
     }
-    return JSON.parse(serializedState);
+    const state = JSON.parse(serializedState);
+    // Verify token is still valid
+    if (state.token) {
+      const decoded = jwtDecode<JwtPayload>(state.token);
+      if (decoded.exp * 1000 < Date.now()) {
+        return {
+          isAuthenticated: false,
+          token: null,
+          user: null,
+        };
+      }
+      // Add user information from token
+      state.user = {
+        id: decoded.sub,
+        username: decoded.name,
+        role: decoded.role,
+      };
+    }
+    return state;
   } catch (err) {
     return {
-      user: null,
       isAuthenticated: false,
       token: null,
-      userId: null,
+      user: null,
     };
   }
 };
@@ -45,31 +66,42 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (
-      state,
-      action: PayloadAction<{ user: User; token: string }>
-    ) => {
-      const { user, token } = action.payload;
-      state.user = user;
+    setCredentials: (state, action: PayloadAction<{ token: string }>) => {
+      const { token } = action.payload;
       state.token = token;
       state.isAuthenticated = true;
-      state.userId = user.id;
+      
+      // Decode token and set user information
+      try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        state.user = {
+          id: decoded.sub,
+          username: decoded.name,
+          role: decoded.role,
+        };
+      } catch (err) {
+        console.error('Failed to decode token:', err);
+      }
+
       // Save to localStorage
       localStorage.setItem('auth', JSON.stringify(state));
     },
-    logout: (state) => {
-      state.user = null;
+    clearCredentials: (state) => {
       state.token = null;
       state.isAuthenticated = false;
-      state.userId = null;
-      // Clear from localStorage
+      state.user = null;
       localStorage.removeItem('auth');
     },
   },
 });
 
-export const { setCredentials, logout } = authSlice.actions;
-export default authSlice.reducer;
+export const { setCredentials, clearCredentials } = authSlice.actions;
+export const logout = clearCredentials;
 
-// Add this selector
-export const selectCurrentUserId = (state: RootState) => state.auth.userId; 
+// Selectors
+export const selectCurrentToken = (state: { auth: AuthState }) => state.auth.token;
+export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
+export const selectCurrentUser = (state: { auth: AuthState }) => state.auth.user;
+export const selectCurrentUserId = (state: { auth: AuthState }) => state.auth.user?.id ?? null;
+
+export default authSlice.reducer; 

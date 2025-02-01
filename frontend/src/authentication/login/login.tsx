@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { routes } from '../../navigation/routes';
-import { loginService } from './login.service';
+import { handleLogin } from './login.service';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { setCredentials } from '../../store/slices/auth-slice';
-import { fetchUserDetails } from '../../store/slices/user-slice';
 
 export const LoginPage = () => {
   const dispatch = useAppDispatch();
@@ -24,21 +22,13 @@ export const LoginPage = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
-      const response = await loginService({ email, password });
-      dispatch(setCredentials({
-        user: response.user,
-        token: response.token
-      }));
-      
-      // Fetch additional user details after successful login
-      await dispatch(fetchUserDetails(response.user.id)).unwrap();
-      
+      await handleLogin({ email, password }, dispatch);
       navigate(routes.dashboard);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -62,7 +52,7 @@ export const LoginPage = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={onSubmit}>
           {error && (
             <div className="p-3 text-sm text-red-500 bg-red-100 border border-red-200 rounded-md">
               {error}

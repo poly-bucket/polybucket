@@ -11,7 +11,7 @@ public class AuthenticationController(CreateUserLoginService createUserLoginServ
     private readonly ILogger<AuthenticationController> _logger = logger;
 
     [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginResponse))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CreateUserLoginResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -29,20 +29,12 @@ public class AuthenticationController(CreateUserLoginService createUserLoginServ
             if (ipAddress == "::1") // localhost IPv6
                 ipAddress = "127.0.0.1";
 
-            var (token, user) = await _createUserLoginService.ExecuteAsync(userLoginRequest.Email, userLoginRequest.Password, ipAddress, userLoginRequest.UserAgent);
-
-            var response = new LoginResponse
-            {
-                Token = token,
-                User = new UserResponse
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName
-                }
-            };
+            var response = await _createUserLoginService.CreateUserLoginAsync(
+                userLoginRequest.Email,
+                userLoginRequest.Password,
+                ipAddress,
+                userLoginRequest.UserAgent
+                );
 
             return Ok(response);
         }

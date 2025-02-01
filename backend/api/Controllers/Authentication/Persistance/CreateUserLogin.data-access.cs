@@ -18,21 +18,6 @@ public class CreateUserLoginDataAccess
         _mapper = mapper;
     }
 
-    public async Task<GetUserLoginResponse?> PersistUserLoginAttempt(string email)
-    {
-        _logger.LogDebug($"Getting user with email {email}");
-
-        User? user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
-
-        if (user == null)
-        {
-            _logger.LogTrace($"User with email {email} not found");
-            throw new KeyNotFoundException($"User with email {email} not found");
-        }
-
-        return _mapper.Map<User, GetUserLoginResponse>(user);
-    }
-
     public async Task<User?> FindUserByEmailAsync(string email)
     {
         return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);

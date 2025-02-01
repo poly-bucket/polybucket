@@ -10,23 +10,17 @@ using Api.Controllers.Authentication.Persistance;
 
 namespace Api.Controllers.Authentication.Domain;
 
-public class CreateUserLoginService
+public class CreateUserLoginService(CreateUserLoginDataAccess dataAccess, IPasswordHasher passwordHasher, ILogger<CreateUserLoginService> logger)
 {
-    private readonly CreateUserLoginDataAccess _dataAccess;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly ILogger<CreateUserLoginService> _logger;
-    private readonly string _jwtSecret;
+    private readonly CreateUserLoginDataAccess _dataAccess = dataAccess;
+    private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly ILogger<CreateUserLoginService> _logger = logger;
+    private readonly string _jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new ArgumentNullException("JWT_SECRET environment variable is not set");
 
-    public CreateUserLoginService(CreateUserLoginDataAccess dataAccess, IPasswordHasher passwordHasher, ILogger<CreateUserLoginService> logger)
+    public async Task<CreateUserLoginResponse> CreateUserLoginAsync(string email, string password, string ipAddress, string userAgent)
     {
-        _dataAccess = dataAccess;
-        _passwordHasher = passwordHasher;
-        _logger = logger;
-        _jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new ArgumentNullException("JWT_SECRET environment variable is not set");
-    }
-
-    public async Task<GetUserLoginResponse> CreateUserLoginAsync(string email, string password, string ipAddress, string userAgent)
-    {
+        // Find what user we're trying to login
+        _logger.LogDebug($"Attempting to login user with email {email}");
         var user = await _dataAccess.FindUserByEmailAsync(email);
 
         if (user == null)
@@ -34,41 +28,34 @@ public class CreateUserLoginService
             throw new KeyNotFoundException($"User with email {email} not found");
         }
 
+        // Lets check if the passwords match.
         var loginSuccess = _passwordHasher.VerifyPassword(password, user.Salt, user.PasswordHash);
 
         var userLogin = new UserLogin
         {
-            Email = user?.Username ?? email,
+            Email = user?.Email ?? email,
             Successful = loginSuccess,
             IpAddress = ipAddress,
             UserAgent = userAgent,
+            CreatedAt = DateTime.UtcNow
         };
 
         await _dataAccess.CreateLoginRecordAsync(userLogin);
 
-        if (!loginSuccess)
+        if (loginSuccess && user != null)
         {
-            throw new UnauthorizedAccessException("Invalid email or password");
-        }
-    }
+            //TODO: Re-salt the user's password and save the new salt.
 
-    public async Task<(string token, User user)> ExecuteAsync(string email, string password, string ipAddress, string userAgent)
-    {
-        var user = await _dataAccess.PersistUserLoginAttempt(email);
-
-        var loginSuccess = user != null && _passwordHasher.VerifyPassword(password, user.Salt, user.PasswordHash);
-
-        await _dataAccess.CreateLoginRecordAsync(userLogin);
-
-        if (!loginSuccess)
-        {
-            throw new UnauthorizedAccessException("Invalid email or password");
+            return new CreateUserLoginResponse
+            {
+                Token = GenerateJwtToken(user, userLogin.UserAgent),
+            };
         }
 
-        return (GenerateJwtToken(user!), user!);
+        throw new UnauthorizedAccessException("Invalid email or password");
     }
 
-    private string GenerateJwtToken(User user)
+    private string GenerateJwtToken(User user, string userAgent)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_jwtSecret);
@@ -79,7 +66,8 @@ public class CreateUserLoginService
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
-                new Claim("userId", user.Id.ToString())
+                new Claim("sub", user.Id.ToString()),
+                new Claim("agent", userAgent)
             }),
             Expires = DateTime.UtcNow.AddDays(7),
             SigningCredentials = new SigningCredentials(

@@ -1,12 +1,36 @@
 export interface Model {
-  id: number;
-  title: string;
+  id: string;
+  name: string;
   description: string;
-  thumbnailUrl: string;
-  modelUrl: string;
+  license: string;
+  privacy: string;
+  categories: string[];
+  aiGenerated: boolean;
+  wip: boolean;
+  nsfw: boolean;
+  isRemix: string;
+  createdAt: string;
+  updatedAt: string;
+  files: ModelFile[];
+  author: User;
   likes: number;
   downloads: number;
-  creator: string;
+}
+
+export interface ModelFile {
+  name: string;
+  path: string;
+  size: number;
+  mimeType: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedModelsResponse {
+  models: Model[];
+  totalCount: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface User {

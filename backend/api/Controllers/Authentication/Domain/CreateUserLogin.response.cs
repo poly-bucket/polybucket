@@ -1,4 +1,4 @@
-public class GetUserLoginResponse
+public class CreateUserLoginResponse
 {
     public string Token { get; set; }
 }

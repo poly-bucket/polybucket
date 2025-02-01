@@ -2,24 +2,28 @@ using Api.Extensions;
 using Api.Extensions.Database;
 using Api.Extensions.Environment;
 using Core.Services;
-using Core.Models.Users;
 using Database;
 using dotenv.net;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Conductors.Login;
 using Database.Seeders;
 using Conductors.Models;
-using Conductors.Users;
 using System.Security.Claims;
 using Api.Controllers.Users.GetUserById.Persistance;
 using Api.Controllers.Users.GetUserById.Domain;
 using Api.Models;
+using Api.Controllers.Authentication.Persistance;
+using Api.Controllers.Authentication.Domain;
+using Api.Controllers.Models.Domain;
+using Api.Controllers.Models.Persistance;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.StaticFiles;
+using api.Controllers.Printers.Domain;
+using Api.Controllers.Users.UserSettings.Domain;
 
 namespace Api
 {
@@ -81,6 +85,9 @@ namespace Api
             builder.Services.AddSwaggerGen();
             builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+            // Add plugins
+            builder.Services.AddPlugins();
+
             // Add CORS configuration
             builder.Services.AddCors(options =>
             {
@@ -94,11 +101,28 @@ namespace Api
                 });
             });
 
+            // Configure static files
+            builder.Services.AddDirectoryBrowser();
+
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-            builder.Services.AddScoped<ILoginConductor, LoginConductor>();
             builder.Services.AddScoped<IModelConductor, ModelConductor>();
             builder.Services.AddTransient<GetUserByIdDataAccess>();
             builder.Services.AddTransient<GetUserByIdService>();
+            builder.Services.AddTransient<CreateUserLoginDataAccess>();
+            builder.Services.AddTransient<CreateUserLoginService>();
+
+            // Models
+            builder.Services.AddTransient<IGetModelsDataAccess, GetModelsDataAccess>();
+            builder.Services.AddTransient<IGetModelsService, GetModelsService>();
+            builder.Services.AddTransient<IGetModelByIdDataAccess, GetModelByIdDataAccess>();
+            builder.Services.AddTransient<IGetModelByIdService, GetModelByIdService>();
+
+            // Printers
+            builder.Services.AddTransient<IGetPrintersService, GetPrintersService>();
+
+            // User Settings
+            builder.Services.AddTransient<IGetUserSettingsService, GetUserSettingsService>();
+            builder.Services.AddTransient<IUpdateUserSettingsService, UpdateUserSettingsService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -151,6 +175,23 @@ namespace Api
 
             // Order matters! CORS should be early in the pipeline
             app.UseCors("AllowFrontend");
+            app.UseStaticFiles();
+
+            // Ensure files directory exists
+            var filesPath = Path.Combine(Directory.GetCurrentDirectory(), "files");
+            if (!Directory.Exists(filesPath))
+            {
+                Directory.CreateDirectory(filesPath);
+                Log.Information("Created files directory at: {Path}", filesPath);
+            }
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(filesPath),
+                RequestPath = "/files",
+                ServeUnknownFileTypes = true
+            });
+
             app.UseRouting();
             app.UseHttpsRedirection();
             app.UseResponseCaching();

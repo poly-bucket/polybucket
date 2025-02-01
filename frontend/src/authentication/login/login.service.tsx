@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import api from '../../services/api';
-
-const API_URL = "https://localhost:44378"; // Note: using HTTPS
+import { AppDispatch } from '../../store/store';
+import { setCredentials } from '../../store/slices/auth-slice';
+import { fetchUserDetails } from '../../store/slices/user-slice';
 
 interface CreateUserLoginRequest {
     email: string;
@@ -11,20 +12,13 @@ interface CreateUserLoginRequest {
 
 interface LoginResponse {
     token: string;
-    user: {
-        id: string;
-        username: string;
-        email: string;
-        firstName?: string;
-        lastName?: string;
-    };
 }
 
 // Login API call
 export const loginService = async (credentials: CreateUserLoginRequest): Promise<LoginResponse> => {
     try {
         const response = await api.post<LoginResponse>(
-            '/Auth/login',
+            '/Authentication/login',
             {
                 email: credentials.email,
                 password: credentials.password,
@@ -42,4 +36,20 @@ export const loginService = async (credentials: CreateUserLoginRequest): Promise
         }
         throw new Error("An unexpected error occurred");
     }
+};
+
+// Redux-integrated login handler
+export const handleLogin = async (
+    credentials: CreateUserLoginRequest,
+    dispatch: AppDispatch
+): Promise<void> => {
+    const response = await loginService(credentials);
+
+    // Update Redux store with credentials
+    dispatch(setCredentials({
+        token: response.token,
+    }));
+    
+    // Fetch user details after successful login
+    await dispatch(fetchUserDetails()).unwrap();
 };

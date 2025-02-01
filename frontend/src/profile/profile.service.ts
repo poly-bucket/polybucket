@@ -1,6 +1,5 @@
-import axios from 'axios';
-
-const API_URL = 'https://localhost:44378/api';
+import api from '../services/api';
+import { AxiosError } from 'axios';
 
 export interface UserProfile {
     id: string;
@@ -8,33 +7,22 @@ export interface UserProfile {
     email: string;
     role: string;
     createdAt: string;
+    // Add any additional fields we want to display
+    bio?: string;
+    avatarUrl?: string;
+    displayName?: string;
 }
 
 export const getUserProfile = async (userId: string): Promise<UserProfile> => {
-    const token = localStorage.getItem('auth');
-    if (!token) {
-        throw new Error('No authentication token found');
-    }
-
     try {
-        const response = await axios.get<UserProfile>(
-            `${API_URL}/User/${userId}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            }
-        );
+        const response = await api.get<UserProfile>(`/Users/${userId}`);
         return response.data;
     } catch (error) {
-        if (axios.isAxiosError(error)) {
-            console.error('Profile fetch error:', error.response?.data);
-            if (error.response?.status === 404) {
-                throw new Error('User not found');
-            }
-            throw new Error(error.response?.data?.message || 'Failed to fetch user profile');
+        const axiosError = error as AxiosError<{ message: string }>;
+        if (axiosError.response?.status === 404) {
+            throw new Error('User not found');
         }
-        throw new Error('An unexpected error occurred');
+        throw new Error(axiosError.response?.data?.message || 'Failed to fetch user profile');
     }
 };
 
@@ -45,8 +33,8 @@ export const getCurrentUserProfile = async (): Promise<UserProfile> => {
     }
 
     try {
-        const response = await axios.get<UserProfile>(
-            `${API_URL}/User/me`,
+        const response = await api.get<UserProfile>(
+            `/Users/me`,
             {
                 headers: {
                     'Authorization': `Bearer ${token}`,

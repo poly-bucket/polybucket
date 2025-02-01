@@ -1,4 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import api from '../../services/api';
+import { RootState } from '../store';
+import { selectCurrentUserId } from './auth-slice';
 
 export interface UserDetails {
   id: string;
@@ -22,16 +25,17 @@ const initialState: UserState = {
 
 export const fetchUserDetails = createAsyncThunk(
   'user/fetchDetails',
-  async (userId: string) => {
-    const response = await fetch(`/api/users/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch user details');
+  async (_, { getState }) => {
+    const state = getState() as RootState;
+    const token = state.auth.token;
+    const userId = selectCurrentUserId(state);
+    
+    if (!token || !userId) {
+      throw new Error('No authentication token or user ID found');
     }
-    return response.json();
+
+    const response = await api.get(`/Users/${userId}`);
+    return response.data;
   }
 );
 

@@ -1,4 +1,5 @@
 ﻿using Core.Extensions.Models;
+using Core.Models.Users.Settings;
 
 namespace Core.Models.Users
 {
@@ -37,5 +38,8 @@ namespace Core.Models.Users
         public string? Country { get; set; }
 
         public UserRole Role { get; set; }
+
+        public virtual UserSettings Settings { get; set; }
+        public virtual ICollection<UserLogin> Logins { get; set; } = new List<UserLogin>();
     }
 }

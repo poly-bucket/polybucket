@@ -1,34 +1,21 @@
-﻿using Core.Models.Users;
+﻿using Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Database.Maps.Users
+namespace Database.Maps.Users;
+
+public class UserLoginMap : IEntityTypeConfiguration<UserLogin>
 {
-    public class UserLoginMap : IEntityMap<UserLogin>
+    public void Configure(EntityTypeBuilder<UserLogin> builder)
     {
-        public void Configure(EntityTypeBuilder<UserLogin> entity)
-        {
-            entity.ToTable("user_logins");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Provider).IsRequired();
+        builder.Property(x => x.ProviderKey).IsRequired();
+        builder.Property(x => x.LoginDate).IsRequired();
 
-            entity.Property(e => e.Id)
-                .IsRequired()
-                .HasColumnName("id")
-                .HasColumnType("uuid");
-
-            entity.Property(e => e.Email)
-                .IsRequired()
-                .HasColumnName("email")
-                .HasColumnType("varchar(255)");
-
-            entity.Property(e => e.IpAddress)
-                .IsRequired()
-                .HasColumnName("ip_address")
-                .HasColumnType("varchar(255)");
-
-            entity.Property(e => e.UserAgent)
-                .IsRequired()
-                .HasColumnName("user_agent")
-                .HasColumnType("varchar(255)");
-        }
+        builder.HasOne(x => x.User)
+            .WithMany(x => x.Logins)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

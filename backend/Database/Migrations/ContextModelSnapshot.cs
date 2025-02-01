@@ -193,6 +193,9 @@ namespace Database.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("ai_generated");
 
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid(36)");
+
                     b.Property<string>("Categories")
                         .IsRequired()
                         .HasColumnType("json")
@@ -253,18 +256,11 @@ namespace Database.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("wip");
 
-                    b.Property<Guid>("created_by_id")
-                        .HasColumnType("uuid(36)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("created_by_id");
+                    b.HasIndex("AuthorId");
 
-                    b.ToTable("models", null, t =>
-                        {
-                            t.Property("created_by_id")
-                                .HasColumnName("created_by_id1");
-                        });
+                    b.ToTable("models", (string)null);
                 });
 
             modelBuilder.Entity("Core.Models.Models.PrintSettings", b =>
@@ -502,6 +498,9 @@ namespace Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("varchar(255)")
@@ -555,7 +554,7 @@ namespace Database.Migrations
                 {
                     b.HasOne("Core.Models.Users.User", "Author")
                         .WithMany()
-                        .HasForeignKey("created_by_id")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

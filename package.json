@@ -2,11 +2,11 @@
   "dependencies": {
     "@react-three/drei": "^9.121.4",
     "@react-three/fiber": "^8.17.12",
-    "@types/three": "^0.172.0",
     "three": "^0.172.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0"
+    "@types/react-dom": "^18.2.0",
+    "@types/three": "^0.173.0"
   }
 }
