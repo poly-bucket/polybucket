@@ -7,10 +7,10 @@ namespace PolyBucket.Api.Features.Models.Domain
 {
     public class Report : Auditable
     {
-        public Guid Id { get; set; }
+        public new Guid Id { get; set; }
         public Guid TargetId { get; set; }
         public Guid ReporterId { get; set; }
-        public required User Reporter { get; set; }
+        public User Reporter { get; set; } = null!;
         public ReportType Type { get; set; }
         public ReportReason Reason { get; set; }
         public string? Description { get; set; }

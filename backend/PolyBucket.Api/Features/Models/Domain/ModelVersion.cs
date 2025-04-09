@@ -5,7 +5,7 @@ namespace PolyBucket.Api.Features.Models.Domain
 {
     public class ModelVersion : Auditable
     {
-        public Guid Id { get; set; }
+        public new Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int Version { get; set; }
     }

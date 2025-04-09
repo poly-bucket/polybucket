@@ -6,8 +6,10 @@ namespace PolyBucket.Api.Features.Models.Domain
 {
     public class Like : Auditable
     {
-        public Guid Id { get; set; }
+        public new Guid Id { get; set; }
         public Guid UserId { get; set; }
         public User User { get; set; }
+        public Guid ModelId { get; set; }
+        public Model Model { get; set; } = null!;
     }
 } 

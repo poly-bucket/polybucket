@@ -6,13 +6,12 @@ namespace PolyBucket.Api.Features.Models.Domain
 {
     public class Comment : Auditable
     {
-        public Guid Id { get; set; }
-        public required string Content { get; set; }
+        public new Guid Id { get; set; }
+        public string Content { get; set; } = string.Empty;
         public Guid AuthorId { get; set; }
-        public required User Author { get; set; }
+        public User Author { get; set; } = null!;
         public Guid ModelId { get; set; }
-        public required Model Model { get; set; }
+        public Model Model { get; set; } = null!;
         public bool IsEdited { get; set; }
-        public new bool IsDeleted { get; set; }
     }
 } 

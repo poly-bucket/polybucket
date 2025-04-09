@@ -1,0 +1,30 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using System;
+using PolyBucket.Api.Features.Reports.Domain;
+using System.Collections.Generic;
+
+namespace PolyBucket.Api.Features.Reports.Queries
+{
+    [ApiController]
+    [Route("api/reports")]
+    [Authorize(Roles = "Admin")]
+    public class GetReportsForTargetController : ControllerBase
+    {
+        private readonly IReportingPlugin _reportingPlugin;
+
+        public GetReportsForTargetController(IReportingPlugin reportingPlugin)
+        {
+            _reportingPlugin = reportingPlugin;
+        }
+
+        [HttpGet("target/{targetId}")]
+        public async Task<IActionResult> GetReportsForTarget(Guid targetId, [FromQuery] ReportType type)
+        {
+            var reports = await _reportingPlugin.GetReportsForTargetAsync(type, targetId);
+            return Ok(reports);
+        }
+    }
+} 

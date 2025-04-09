@@ -5,8 +5,8 @@ namespace PolyBucket.Api.Features.Models.Domain
 {
     public class PrintSettings : Auditable
     {
-        public Guid ModelId { get; set; }
-        public required Model Model { get; set; }
+        public new Guid Id { get; set; }
+        public Model Model { get; set; } = null!;
         public float LayerHeight { get; set; }
         public int WallThickness { get; set; }
         public int InfillPercentage { get; set; }

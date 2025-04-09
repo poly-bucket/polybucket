@@ -39,7 +39,7 @@ namespace PolyBucket.Api.Data.Seeders
                 Author = admin,
                 License = LicenseTypes.MIT,
                 Privacy = PrivacySettings.Public,
-                Categories = new List<ModelCategories> { ModelCategories.Art, ModelCategories.Technology },
+                Categories = new List<Category>(), // Empty for now, can be populated later
                 AIGenerated = false,
                 WIP = false,
                 NSFW = false,

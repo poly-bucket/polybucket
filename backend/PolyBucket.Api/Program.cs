@@ -13,6 +13,7 @@ using PolyBucket.Api.Data.Seeders;
 using MediatR;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Settings;
+using PolyBucket.Api.Extensions;
 
 namespace PolyBucket.Api;
 
@@ -61,15 +62,10 @@ public class Program
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
     
             // Models
-            builder.Services.AddTransient<PolyBucket.Api.Features.Models.Queries.GetModelsQueryHandler>();
-            builder.Services.AddTransient<PolyBucket.Api.Features.Models.Queries.GetModelByIdQueryHandler>();
-            builder.Services.AddTransient<PolyBucket.Api.Features.Models.Repository.IModelsRepository, PolyBucket.Api.Features.Models.Repository.ModelsRepository>();
+            builder.Services.AddTransient<Features.Models.Repository.IModelsRepository, Features.Models.Repository.ModelsRepository>();
 
             // Users
-            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Queries.GetUserByIdQueryHandler>();
-            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Repository.IUserRepository, PolyBucket.Api.Features.Users.Repository.UserRepository>();
-            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Queries.GetUserSettingsQueryHandler>();
-            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Commands.UpdateUserSettingsCommandHandler>();
+            builder.Services.AddTransient<Features.Users.Repository.IUserRepository, Features.Users.Repository.UserRepository>();
 
             builder.Services.AddSingleton<PolyBucket.Api.Common.Plugins.PluginManager>(provider =>
             {
@@ -84,6 +80,8 @@ public class Program
 
             builder.Services.AddTransient<AdminSeeder>();
             builder.Services.AddTransient<ModelSeeder>();
+
+            builder.Services.AddObjectStorage(builder.Configuration);
 
             var appSettings = builder.Configuration.GetSection("AppSettings").Get<AppSettings>();
             builder.Services.AddAuthentication(options =>
