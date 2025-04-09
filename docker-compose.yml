@@ -1,0 +1,98 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=polybucket;Username=postgres;Password=postgres
+    depends_on:
+      - db
+      - minio
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  db:
+    image: postgres:latest
+    container_name: polybucket-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: polybucket
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - polybucket-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: polybucket-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  create-buckets:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    volumes:
+      - ./scripts:/scripts
+    command: >
+      -c "
+      mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      mc ls myminio/polybucket-uploads || mc mb myminio/polybucket-uploads;
+      mc anonymous set download myminio/polybucket-uploads;
+      exit 0;
+      "
+    restart: "no"
+
+  # Service to test MinIO setup
+  test-minio:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    volumes:
+      - ./scripts:/scripts
+    command: >
+      -c "
+      cd /scripts && 
+      chmod +x test-minio.sh && 
+      ./test-minio.sh minio
+      "
+    restart: "no"
+
+volumes:
+  postgres-data:
+  minio-data:
+
+networks:
+  polybucket-network:
+    driver: bridge 

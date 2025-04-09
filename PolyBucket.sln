@@ -1,0 +1,68 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E758BAE9-2946-4FAD-874A-6E5A06DB5E7B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PolyBucket.Api", "PolyBucket.Api", "{19E16C18-0845-47AD-AAC7-43A26B6F6300}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyBucket.Api", "src\PolyBucket.Api\PolyBucket.Api.csproj", "{A85FE5DE-CA13-401D-8D89-A8AA29D08D4E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PolyBucket.Core", "PolyBucket.Core", "{2A2C8E98-2A83-4A65-9A66-247A8333C7CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyBucket.Core", "src\PolyBucket.Core\PolyBucket.Core.csproj", "{18BFB2EE-2DB8-4A1C-B392-77DB65BDEE57}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PolyBucket.Infrastructure", "PolyBucket.Infrastructure", "{30CB2043-64CF-4ABE-9069-A6EA63508B86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyBucket.Infrastructure", "src\PolyBucket.Infrastructure\PolyBucket.Infrastructure.csproj", "{F9C4C5E5-4C0C-4FA9-8D2A-8FC7CB2C96D1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PolyBucket.Plugins", "PolyBucket.Plugins", "{CE11074D-89E9-414C-A875-E538AA08265B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyBucket.Plugins", "src\PolyBucket.Plugins\PolyBucket.Plugins\PolyBucket.Plugins.csproj", "{49BE5729-C390-498F-AD8C-6A77F72D049D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E8A290D5-5BB1-46B2-8194-DC2E55F9DCC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyBucket.Tests", "tests\PolyBucket.Tests\PolyBucket.Tests.csproj", "{65D76669-214E-42EA-9E70-C419C14DD29C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A85FE5DE-CA13-401D-8D89-A8AA29D08D4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A85FE5DE-CA13-401D-8D89-A8AA29D08D4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A85FE5DE-CA13-401D-8D89-A8AA29D08D4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A85FE5DE-CA13-401D-8D89-A8AA29D08D4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18BFB2EE-2DB8-4A1C-B392-77DB65BDEE57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18BFB2EE-2DB8-4A1C-B392-77DB65BDEE57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18BFB2EE-2DB8-4A1C-B392-77DB65BDEE57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18BFB2EE-2DB8-4A1C-B392-77DB65BDEE57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9C4C5E5-4C0C-4FA9-8D2A-8FC7CB2C96D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9C4C5E5-4C0C-4FA9-8D2A-8FC7CB2C96D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9C4C5E5-4C0C-4FA9-8D2A-8FC7CB2C96D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9C4C5E5-4C0C-4FA9-8D2A-8FC7CB2C96D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49BE5729-C390-498F-AD8C-6A77F72D049D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49BE5729-C390-498F-AD8C-6A77F72D049D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49BE5729-C390-498F-AD8C-6A77F72D049D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49BE5729-C390-498F-AD8C-6A77F72D049D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65D76669-214E-42EA-9E70-C419C14DD29C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65D76669-214E-42EA-9E70-C419C14DD29C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65D76669-214E-42EA-9E70-C419C14DD29C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65D76669-214E-42EA-9E70-C419C14DD29C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{19E16C18-0845-47AD-AAC7-43A26B6F6300} = {E758BAE9-2946-4FAD-874A-6E5A06DB5E7B}
+		{A85FE5DE-CA13-401D-8D89-A8AA29D08D4E} = {19E16C18-0845-47AD-AAC7-43A26B6F6300}
+		{2A2C8E98-2A83-4A65-9A66-247A8333C7CE} = {E758BAE9-2946-4FAD-874A-6E5A06DB5E7B}
+		{18BFB2EE-2DB8-4A1C-B392-77DB65BDEE57} = {2A2C8E98-2A83-4A65-9A66-247A8333C7CE}
+		{30CB2043-64CF-4ABE-9069-A6EA63508B86} = {E758BAE9-2946-4FAD-874A-6E5A06DB5E7B}
+		{F9C4C5E5-4C0C-4FA9-8D2A-8FC7CB2C96D1} = {30CB2043-64CF-4ABE-9069-A6EA63508B86}
+		{CE11074D-89E9-414C-A875-E538AA08265B} = {E758BAE9-2946-4FAD-874A-6E5A06DB5E7B}
+		{49BE5729-C390-498F-AD8C-6A77F72D049D} = {CE11074D-89E9-414C-A875-E538AA08265B}
+		{65D76669-214E-42EA-9E70-C419C14DD29C} = {E8A290D5-5BB1-46B2-8194-DC2E55F9DCC4}
+	EndGlobalSection
+EndGlobal

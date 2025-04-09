@@ -2,139 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-black text-green-300/80 m-0 min-w-[320px] min-h-screen;
-  }
-
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    @apply w-2;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-900;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-green-500/30 hover:bg-green-500/50;
-  }
-
-  /* Default heading styles */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-green-400;
-  }
-
-  h1 {
-    @apply text-3xl leading-tight;
-  }
-
-  /* Default link styles */
-  a {
-    @apply font-medium text-green-400 no-underline transition-colors duration-200 hover:text-green-300;
-  }
-
-  /* Default button styles */
-  button {
-    @apply px-4 py-2 text-base font-medium transition-all duration-200 border border-transparent rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-0;
-  }
-
-  /* Input field styling */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
-  input[type="search"],
-  textarea {
-    @apply px-4 py-2 text-green-300 bg-gray-900 border rounded-md border-green-500/30 focus:outline-none focus:border-green-500/50 placeholder:text-green-500/30;
-  }
-
-  /* Range input styling */
-  input[type="range"] {
-    @apply accent-green-500;
-  }
-
-  /* Checkbox and radio styling */
-  input[type="checkbox"],
-  input[type="radio"] {
-    @apply accent-green-500;
-  }
-
-  /* Select styling */
-  select {
-    @apply px-4 py-2 text-green-300 bg-gray-900 border rounded-md border-green-500/30 focus:outline-none focus:border-green-500/50;
-  }
-}
-
-@layer components {
-  /* Primary button */
-  .btn-primary {
-    @apply px-4 py-2 font-medium text-black transition-colors duration-200 bg-green-500 rounded-md hover:bg-green-400 active:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  /* Secondary button */
-  .btn-secondary {
-    @apply px-4 py-2 font-medium text-green-400 transition-colors duration-200 border rounded-md border-green-500/30 hover:bg-gray-800 active:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  /* Card component */
-  .card {
-    @apply p-4 bg-gray-900 border rounded-lg border-green-500/30;
-  }
-
-  /* Badge component */
-  .badge {
-    @apply px-2 py-1 text-sm text-green-400 bg-gray-800 border rounded-md border-green-500/30;
-  }
-
-  /* Container with glow effect */
-  .glow-container {
-    @apply border border-green-500/30 rounded-lg 
-           shadow-[0_0_15px_rgba(34,197,94,0.2)];
-  }
-
-  .model-viewer-container {
-    @apply w-full aspect-[16/9] max-w-6xl mx-auto rounded-lg overflow-hidden;
-  }
-
-  .model-viewer-fullscreen {
-    @apply fixed inset-0 w-full h-full z-50;
-  }
-
-  .model-controls-overlay {
-    @apply absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent;
-  }
-}
-
-/* Custom animation for terminal-like cursor effect */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.cursor-blink::after {
-  content: '|';
-  @apply text-green-400 animate-[blink_1s_infinite];
-}
-
-/* Loading animation */
-.loading-dots::after {
-  content: '...';
-  @apply text-green-400 animate-[blink_1.4s_infinite_steps(4,_end)];
-}
-
-/* Focus outline */
-*:focus-visible {
-  @apply outline-none ring-2 ring-green-500/50 ring-offset-0;
-}
-
-/* Fullscreen model viewer styles */
-body.fullscreen-model {
-  overflow: hidden;
+body {
   margin: 0;
-  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.fullscreen-model #root {
-  overflow: hidden;
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }
