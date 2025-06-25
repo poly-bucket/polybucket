@@ -1,13 +1,8 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "backend\PolyBucket.Api\Api.csproj", "{B8DC0370-2F7B-48FE-A8BB-3028851265D2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "backend\PolyBucket.Core\Core.csproj", "{2A117D73-6EB3-4E8D-A946-99E9C386A690}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "backend\PolyBucket.Infrastructure\Infrastructure.csproj", "{6E45CF75-8919-4DFD-9499-278A65C2C1CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugins", "backend\PolyBucket.Plugins\PolyBucket.Plugins\Plugins.csproj", "{C9AADE04-74D6-46EC-8E1C-01D2BD8B70D9}"
 EndProject
@@ -23,14 +18,6 @@ Global
 		{B8DC0370-2F7B-48FE-A8BB-3028851265D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8DC0370-2F7B-48FE-A8BB-3028851265D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8DC0370-2F7B-48FE-A8BB-3028851265D2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2A117D73-6EB3-4E8D-A946-99E9C386A690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2A117D73-6EB3-4E8D-A946-99E9C386A690}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2A117D73-6EB3-4E8D-A946-99E9C386A690}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2A117D73-6EB3-4E8D-A946-99E9C386A690}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6E45CF75-8919-4DFD-9499-278A65C2C1CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6E45CF75-8919-4DFD-9499-278A65C2C1CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6E45CF75-8919-4DFD-9499-278A65C2C1CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6E45CF75-8919-4DFD-9499-278A65C2C1CD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C9AADE04-74D6-46EC-8E1C-01D2BD8B70D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C9AADE04-74D6-46EC-8E1C-01D2BD8B70D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9AADE04-74D6-46EC-8E1C-01D2BD8B70D9}.Release|Any CPU.ActiveCfg = Release|Any CPU

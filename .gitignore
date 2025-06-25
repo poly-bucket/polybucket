@@ -357,3 +357,5 @@ node_modules
 *.cache
 backend/.editorconfig
 /backend/.vs
+.cursor
+.idea
