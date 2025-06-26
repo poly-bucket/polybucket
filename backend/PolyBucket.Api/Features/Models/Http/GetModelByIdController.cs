@@ -1,7 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Models.Queries;
 using System;
 using System.Threading.Tasks;
-using PolyBucket.Api.Features.Models.Domain;
 
 namespace PolyBucket.Api.Features.Models.Http
 {
@@ -9,26 +10,19 @@ namespace PolyBucket.Api.Features.Models.Http
     [Route("api/models")]
     public class GetModelByIdController : ControllerBase
     {
-        private readonly IModelService _modelService;
+        private readonly IMediator _mediator;
 
-        public GetModelByIdController(IModelService modelService)
+        public GetModelByIdController(IMediator mediator)
         {
-            _modelService = modelService;
+            _mediator = mediator;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Model>> GetModelById(Guid id)
+        public async Task<ActionResult<GetModelByIdResponse>> GetModel(Guid id)
         {
-            // TODO: Add moderation checks back
-            var model = await _modelService.GetModelByIdAsync(id);
-
-            if (model == null)
-            {
-                return NotFound();
-            }
-
-            // TODO: Record view interaction
-            return Ok(model);
+            var query = new GetModelByIdQuery { Id = id };
+            var response = await _mediator.Send(query);
+            return Ok(response);
         }
     }
 } 

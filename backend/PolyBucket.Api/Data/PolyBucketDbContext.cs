@@ -7,6 +7,7 @@ using CommentDomain = PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Models.Domain;
 using PolyBucket.Api.Features.Filaments.Domain;
 using PolyBucket.Api.Features.Filaments.Repository;
+using PolyBucket.Api.Features.SystemSettings.Domain;
 
 namespace PolyBucket.Api.Data
 {
@@ -23,7 +24,7 @@ namespace PolyBucket.Api.Data
         public DbSet<CommentDomain.Comment> Comments { get; set; } = null!;
         public DbSet<Model> Models { get; set; } = null!;
         public DbSet<Filament> Filaments { get; set; } = null!;
-        // public DbSet<UserSettings> UserSettings { get; set; } = null!;
+        public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

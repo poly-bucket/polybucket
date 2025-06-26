@@ -4,15 +4,19 @@ namespace PolyBucket.Api.Features.Authentication.Services
 {
     public class PasswordHasher : IPasswordHasher
     {
-        public string HashPassword(string password, out string salt)
+        public string GenerateSalt()
         {
-            salt = Salt.Generate();
-            return BCrypt.HashPassword(password + salt);
+            return BCrypt.Net.BCrypt.GenerateSalt();
         }
 
-        public bool VerifyPassword(string password, string salt, string hash)
+        public string HashPassword(string password, string salt)
         {
-            return BCrypt.Verify(password + salt, hash);
+            return BCrypt.Net.BCrypt.HashPassword(password, salt);
+        }
+
+        public bool VerifyPassword(string password, string hash)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hash);
         }
     }
 } 

@@ -4,20 +4,28 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     ports:
-      - "5000:80"
+      - "11666:11666"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://*:11666
       - ConnectionStrings__DefaultConnection=Host=db;Database=polybucket;Username=postgres;Password=postgres
     depends_on:
-      - db
-      - minio
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11666/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   client:
     build:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "3000:80"
+      - "3001:80"
     depends_on:
       - api
 
@@ -33,8 +41,11 @@ services:
       - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    networks:
-      - polybucket-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d polybucket"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio:latest
@@ -55,44 +66,6 @@ services:
       timeout: 20s
       retries: 3
 
-  create-buckets:
-    image: minio/mc:latest
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: /bin/sh
-    volumes:
-      - ./scripts:/scripts
-    command: >
-      -c "
-      mc config host add myminio http://minio:9000 minioadmin minioadmin;
-      mc ls myminio/polybucket-uploads || mc mb myminio/polybucket-uploads;
-      mc anonymous set download myminio/polybucket-uploads;
-      exit 0;
-      "
-    restart: "no"
-
-  # Service to test MinIO setup
-  test-minio:
-    image: minio/mc:latest
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: /bin/sh
-    volumes:
-      - ./scripts:/scripts
-    command: >
-      -c "
-      cd /scripts && 
-      chmod +x test-minio.sh && 
-      ./test-minio.sh minio
-      "
-    restart: "no"
-
 volumes:
   postgres-data:
   minio-data:
-
-networks:
-  polybucket-network:
-    driver: bridge 

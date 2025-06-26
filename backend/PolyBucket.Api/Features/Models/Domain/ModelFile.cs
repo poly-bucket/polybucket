@@ -6,10 +6,10 @@ namespace PolyBucket.Api.Features.Models.Domain
     public class ModelFile : Auditable
     {
         public Guid ModelId { get; set; }
-        public virtual Model Model { get; set; }
-        public string Name { get; set; }
-        public string Path { get; set; }
+        public required Model Model { get; set; }
+        public required string Name { get; set; }
+        public required string Path { get; set; }
         public long Size { get; set; }
-        public string MimeType { get; set; }
+        public required string MimeType { get; set; }
     }
 } 

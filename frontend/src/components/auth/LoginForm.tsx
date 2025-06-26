@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../utils/hooks';
 import { login, reset, getSetupStatus } from '../../store/slices/authSlice';
+import { LoginRequest } from '../../services/api.client';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { store } from '../../store/store';
 
 const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
-    emailOrUsername: '',
+    email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const { emailOrUsername, password } = formData;
+  const { email, password } = formData;
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -36,9 +37,9 @@ const LoginForm: React.FC = () => {
   // Handle redirects based on setup status
   useEffect(() => {
     if (user && setupStatus) {
-      if (!setupStatus.isAdminConfigured) {
+      if (!setupStatus.isAdminSetupComplete) {
         navigate('/admin-setup');
-      } else if (!setupStatus.isRoleConfigured) {
+      } else if (!setupStatus.isRoleSetupComplete) {
         navigate('/custom-role-setup');
       } else {
         navigate('/dashboard');
@@ -58,92 +59,16 @@ const LoginForm: React.FC = () => {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    const userData = {
-      emailOrUsername,
-      password,
-    };
 
-    console.log('Submitting login with credentials:', { emailOrUsername });
-    
-    // Add direct test before redux login
-    const testDirectLogin = async () => {
-      try {
-        console.log('DIRECT TEST: Making direct API call to login endpoint...');
-        const response = await fetch('http://localhost:5166/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            EmailOrUsername: userData.emailOrUsername,
-            Password: userData.password
-          })
-        });
-        
-        const data = await response.json();
-        console.log('DIRECT TEST: Login response:', data);
-        
-        if (data.succeeded && data.data) {
-          console.log('DIRECT TEST: Login successful with token:', data.data.accessToken);
-          
-          // Try storing directly in localStorage
-          const authData = {
-            id: data.data.user.id,
-            username: data.data.user.username,
-            email: data.data.user.email,
-            accessToken: data.data.accessToken,
-            refreshToken: data.data.refreshToken,
-            roles: data.data.user.isAdmin ? ['Admin'] : ['User']
-          };
-          
-          console.log('DIRECT TEST: Storing auth data in localStorage:', authData);
-          localStorage.setItem('user', JSON.stringify(authData));
-          
-          // Verify it was stored
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            console.log('DIRECT TEST: Successfully stored user data:', JSON.parse(storedUser));
-          } else {
-            console.error('DIRECT TEST: Failed to store user data in localStorage');
-          }
-        }
-      } catch (error) {
-        console.error('DIRECT TEST: Login error:', error);
-      }
-    };
-    
-    // Run the direct test
-    testDirectLogin();
-    
-    // Continue with the normal Redux flow
-    dispatch(login(userData))
+    const credentials = new LoginRequest({
+      email: email,
+      password: password,
+    });
+
+    dispatch(login(credentials))
       .unwrap()
-      .then((response: any) => {
-        console.log('Login successful, received token:', response.accessToken);
-        console.log('Full login response:', response);
-        
-        // Debug localStorage storage
-        setTimeout(() => {
-          const storedUser = localStorage.getItem('user');
-          console.log('STORAGE CHECK - User in localStorage:', storedUser);
-          if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            console.log('STORAGE CHECK - Parsed user data:', parsed);
-            console.log('STORAGE CHECK - Access token exists:', !!parsed.accessToken);
-            console.log('STORAGE CHECK - Access token value:', parsed.accessToken);
-          } else {
-            console.log('STORAGE CHECK - No user data in localStorage');
-          }
-          
-          // Check Redux store state
-          console.log('REDUX CHECK - Auth state:', {
-            user: store.getState().auth.user,
-            isSuccess: store.getState().auth.isSuccess,
-            isError: store.getState().auth.isError,
-            errorMessage: store.getState().auth.errorMessage
-          });
-        }, 100);
+      .then(() => {
+        // The slice handles the redirect logic now
       })
       .catch((error: unknown) => {
         console.error('Login failed:', error);
@@ -192,18 +117,18 @@ const LoginForm: React.FC = () => {
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="emailOrUsername" className="sr-only">
-                Email or Username
+              <label htmlFor="email" className="sr-only">
+                Email
               </label>
               <input
-                id="emailOrUsername"
-                name="emailOrUsername"
-                type="text"
+                id="email"
+                name="email"
+                type="email"
                 autoComplete="email"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email or Username"
-                value={emailOrUsername}
+                placeholder="Email"
+                value={email}
                 onChange={onChange}
               />
             </div>

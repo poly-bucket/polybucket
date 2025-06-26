@@ -3,9 +3,11 @@ import authService from '../services/authService';
 import { store } from '../store/store';
 import { refreshToken, logout } from '../store/slices/authSlice';
 
+const API_BASE_URL = 'http://localhost:11666/api';
+
 // Create an instance of axios
 const api = axios.create({
-  baseURL: 'http://localhost:5166/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   }

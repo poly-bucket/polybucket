@@ -1,0 +1,17 @@
+{
+  "name": "polybucket",
+  "private": true,
+  "packageManager": "npm@11.4.2",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build"
+  },
+  "devDependencies": {
+    "nswag": "^14.4.0",
+    "turbo": "^2.5.4"
+  }
+}

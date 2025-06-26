@@ -43,7 +43,7 @@ namespace PolyBucket.Api.Data.Seeders
                 AIGenerated = false,
                 WIP = false,
                 NSFW = false,
-                IsRemix = "false",
+                IsRemix = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };

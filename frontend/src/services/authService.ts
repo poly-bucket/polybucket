@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5166/api/auth';
+const API_URL = 'http://localhost:11666/api/auth';
 
 // For testing purposes
 const MOCK_MODE = false;
@@ -42,14 +42,9 @@ export interface CheckFirstRunResponse {
 }
 
 export interface SystemSetupStatus {
-  id: string;
-  isAdminConfigured: boolean;
-  isRoleConfigured: boolean;
-  isModerationConfigured: boolean;
-  requireUploadModeration?: boolean;
-  moderatorRoles?: string;
-  createdAt: string;
-  updatedAt: string;
+  isAdminSetupComplete: boolean;
+  isRoleSetupComplete: boolean;
+  isModerationSetupComplete: boolean;
 }
 
 // Mock implementation for testing
@@ -77,14 +72,9 @@ const getSetupStatus = async (): Promise<SystemSetupStatus> => {
   if (MOCK_MODE) {
     console.log('MOCK: getSetupStatus');
     return { 
-      id: '1',
-      isAdminConfigured: !mockFirstRun,
-      isRoleConfigured: !mockFirstRun,
-      isModerationConfigured: !mockFirstRun,
-      requireUploadModeration: false,
-      moderatorRoles: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      isAdminSetupComplete: !mockFirstRun,
+      isRoleSetupComplete: !mockFirstRun,
+      isModerationSetupComplete: !mockFirstRun,
     };
   }
   
@@ -95,8 +85,8 @@ const getSetupStatus = async (): Promise<SystemSetupStatus> => {
     }
   });
   
-  const response = await instance.get(`${API_URL}/setup-status`);
-  return response.data.data;
+  const response = await instance.get('http://localhost:5166/api/system-settings/setup-status');
+  return response.data;
 };
 
 const isAdminConfigured = async (): Promise<boolean> => {
@@ -289,139 +279,54 @@ const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
   if (MOCK_MODE) {
     console.log('MOCK: register', userData);
     const newUser: AuthResponse = {
-      id: String(mockUsers.length + 1),
+      id: Math.random().toString(),
       username: userData.username,
       email: userData.email,
       accessToken: 'fake-jwt-token',
       refreshToken: 'fake-refresh-token',
-      roles: userData.isAdmin ? ['Admin'] : ['User']
+      roles: ['User']
     };
     mockUsers.push(newUser);
     localStorage.setItem('user', JSON.stringify(newUser));
     return newUser;
   }
+
+  // Create a new instance of axios without interceptors
+  const instance = axios.create({
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
   
   try {
-    // Create an object that matches the RegisterUserRequest class in the backend
-    const backendUserData = {
-      Username: userData.username,
-      Email: userData.email,
-      Password: userData.password,
-      FirstName: userData.firstName || 'User',
-      LastName: userData.lastName || 'Account',
-      IsAdmin: userData.isAdmin || false
-    };
+    const response = await instance.post(`${API_URL}/register`, userData);
     
-    console.log('Sending registration data:', backendUserData);
-    
-    // Create a new instance of axios without interceptors to prevent authorization header
-    // from being automatically added to register requests
-    const instance = axios.create({
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const response = await instance.post(`${API_URL}/register`, backendUserData);
-    console.log('Registration response:', response.data);
-    console.log('Response structure:', JSON.stringify(response.data, null, 2));
-    
-    // Create a default AuthResponse object from the response data
-    // Handle various response structures that might come from the API
-    let authData: AuthResponse;
-    
-    try {
-      // Attempt to extract the needed auth fields from various possible response structures
-      if (response.data && typeof response.data === 'object') {
-        // Check if response is in expected format
-        if (response.data.data && response.data.data.accessToken) {
-          authData = response.data.data;
-        } else if (response.data.accessToken) {
-          authData = response.data;
-        } else if (response.data.id && response.data.username) {
-          // If the data has user identifiers but not tokens, create a placeholder
-          // This allows us to proceed to login in the next step
-          authData = {
-            id: response.data.id,
-            username: response.data.username,
-            email: response.data.email || userData.email,
-            accessToken: response.data.token || '',
-            refreshToken: response.data.refreshToken || '',
-            roles: response.data.roles || [userData.isAdmin ? 'Admin' : 'User']
-          };
-        } else {
-          // If we can't extract a proper auth object, create one from the submitted data
-          // This is a fallback so we can proceed to the explicit login step
-          authData = {
-            id: '0', // Temporary ID
-            username: userData.username,
-            email: userData.email,
-            accessToken: '', // Will be obtained in the login step
-            refreshToken: '',
-            roles: []
-          };
-        }
-      } else {
-        // If response.data isn't an object, create minimal auth data from the userData
+    // Handle different response formats
+    if (response.data && typeof response.data === 'object') {
+      let authData: AuthResponse;
+      if (response.data.succeeded && response.data.data) {
+        const data = response.data.data;
         authData = {
-          id: '0',
-          username: userData.username,
-          email: userData.email,
-          accessToken: '',
-          refreshToken: '',
-          roles: []
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          roles: data.roles || []
         };
+      } else if (response.data.accessToken) {
+        authData = response.data;
+      } else {
+        throw new Error('Invalid registration response format');
       }
-    } catch (parseError) {
-      console.error('Error parsing auth data:', parseError);
-      // Fallback to minimal auth data
-      authData = {
-        id: '0',
-        username: userData.username,
-        email: userData.email,
-        accessToken: '',
-        refreshToken: '',
-        roles: []
-      };
-    }
-    
-    console.log('Extracted auth data:', authData);
-    
-    // Store the auth data in localStorage if it contains an accessToken
-    if (authData.accessToken) {
+      
       localStorage.setItem('user', JSON.stringify(authData));
+      return authData;
+    } else {
+      throw new Error('Invalid registration response format');
     }
-    
-    return authData;
   } catch (error) {
     console.error('Registration error:', error);
-    if (axios.isAxiosError(error) && error.response) {
-      console.error('Error status:', error.response.status);
-      console.error('Error data:', error.response.data);
-      
-      // Extract and format validation errors
-      let errorMessage = 'Registration failed';
-      let validationErrors = {};
-      
-      if (error.response.data) {
-        // Handle structured error response
-        if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        }
-        
-        if (error.response.data.validationErrors) {
-          validationErrors = error.response.data.validationErrors;
-          console.error('Validation errors:', validationErrors);
-        }
-      }
-      
-      // Throw a structured error that can be handled by components
-      throw {
-        message: errorMessage,
-        validationErrors,
-        original: error
-      };
-    }
     throw error;
   }
 };
@@ -465,112 +370,55 @@ const getCurrentUser = (): AuthResponse | null => {
 
 const refreshToken = async (): Promise<AuthResponse> => {
   if (MOCK_MODE) {
+    console.log('MOCK: refreshToken');
     const user = getCurrentUser();
     if (!user) {
-      throw new Error('No user found');
+      throw new Error('No user to refresh');
     }
-    
-    // For testing: just return the same user
-    await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
-    return user;
+    return { ...user, accessToken: 'new-fake-jwt-token' };
   }
   
   const user = getCurrentUser();
-  if (!user) {
-    throw new Error('No user found');
+  if (!user || !user.refreshToken) {
+    throw new Error('No refresh token available');
   }
 
   try {
-    // Fix capitalization to match backend expectations
-    const backendRequest = {
-      RefreshToken: user.refreshToken
-    };
+    const response = await axios.post(`${API_URL}/refresh-token`, {
+      refreshToken: user.refreshToken
+    });
     
-    const response = await axios.post(`${API_URL}/refresh-token`, backendRequest);
-    console.log('Refresh token response:', response.data);
-    
-    let authData: AuthResponse;
-    
-    // Handle different response formats - prioritize the most common format we've seen
-    if (response.data && typeof response.data === 'object') {
-      if (response.data.succeeded === true && response.data.data) {
-        console.log('Processing succeeded=true response with data property');
-        // Most common format: { succeeded: true, data: { user: {...}, accessToken: "..." } } 
-        const data = response.data.data;
-        
-        if (data.user && data.accessToken) {
-          // This is the actual format from the backend
-          console.log('Found user and accessToken in data');
-          const responseUser = data.user;
-          authData = {
-            id: responseUser.id,
-            username: responseUser.username,
-            email: responseUser.email,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            roles: responseUser.isAdmin ? ['Admin'] : ['User']
-          };
-        } else {
-          // Fallback for other data structures
-          console.log('No user property but has data with accessToken');
-          authData = {
-            id: data.id || user.id,
-            username: data.username || user.username,
-            email: data.email || user.email,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken || user.refreshToken,
-            roles: data.roles || user.roles
-          };
-        }
-      } else {
-        // Other formats
-        console.log('Alternative response format detected');
-        if (response.data.accessToken) {
-          // Direct token at root
-          authData = {
-            ...user, // Keep existing user data
-            accessToken: response.data.accessToken,
-            refreshToken: response.data.refreshToken || user.refreshToken
-          };
-        } else {
-          console.error('Unrecognized refresh token response:', response.data);
-          throw new Error('Invalid refresh token response format: missing accessToken');
-        }
-      }
+    if (response.data && response.data.accessToken) {
+      const updatedUser = {
+        ...user,
+        accessToken: response.data.accessToken,
+        refreshToken: response.data.refreshToken || user.refreshToken
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return updatedUser;
     } else {
-      throw new Error('Invalid refresh token response format: not an object');
+      throw new Error('Invalid refresh token response');
     }
-    
-    // Validate we have a token
-    if (!authData.accessToken) {
-      console.error('No access token in refresh response:', authData);
-      throw new Error('Token refresh successful but no access token received');
-    }
-    
-    // Store updated auth data
-    localStorage.setItem('user', JSON.stringify(authData));
-    console.log('Updated auth data in localStorage after refresh');
-    
-    return authData;
   } catch (error) {
-    console.error('Error refreshing token:', error);
+    console.error('Refresh token error:', error);
+    logout(); // Logout user if refresh fails
     throw error;
   }
 };
 
 const authService = {
   checkFirstRun,
-  login,
-  register,
-  logout,
-  getCurrentUser,
-  refreshToken,
   getSetupStatus,
   isAdminConfigured,
   isRoleConfigured,
   setAdminConfigured,
   setRoleConfigured,
-  setModerationConfigured
+  setModerationConfigured,
+  login,
+  register,
+  logout,
+  getCurrentUser,
+  refreshToken,
 };
 
 export default authService; 

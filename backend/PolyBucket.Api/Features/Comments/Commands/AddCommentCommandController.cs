@@ -29,9 +29,4 @@ namespace PolyBucket.Api.Features.Comments.Commands
             return Ok(comment);
         }
     }
-
-    public class AddCommentRequest
-    {
-        public string Content { get; set; }
-    }
 } 

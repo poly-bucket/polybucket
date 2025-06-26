@@ -1,0 +1,20 @@
+services:
+  api:
+    build:
+      target: build
+    volumes:
+      - ./backend:/app/backend
+      - ./PolyBucket.sln:/app/PolyBucket.sln
+    command: dotnet watch run --urls http://*:11666
+    healthcheck:
+      disable: true
+
+  client:
+    ports:
+      - "3002:3000"
+    build:
+      target: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm start 

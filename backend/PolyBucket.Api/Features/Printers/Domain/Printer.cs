@@ -14,7 +14,7 @@ namespace PolyBucket.Api.Features.Printers.Domain
 
     public class Printer : Auditable
     {
-        public Guid Id { get; set; }
+        public new Guid Id { get; set; }
         public string Manufacturer { get; set; } = null!;
         public string Model { get; set; } = null!;
         public int BuildVolumeX { get; set; }

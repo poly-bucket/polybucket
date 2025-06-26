@@ -1,3 +1,4 @@
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 
 namespace PolyBucket.Api.Features.Authentication.Repository

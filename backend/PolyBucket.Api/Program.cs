@@ -2,34 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using PolyBucket.Api.Middleware;
 using Serilog;
 using Serilog.Events;
-using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Extensions.Serilog;
 using Microsoft.Extensions.FileProviders;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Data.Seeders;
+using MediatR;
+using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Settings;
 
 namespace PolyBucket.Api;
-
-public class AppSettings
-{
-    public SecuritySettings Security { get; set; } = new();
-}
-
-public class SecuritySettings
-{
-    public string JwtIssuer { get; set; } = string.Empty;
-    public string JwtAudience { get; set; } = string.Empty;
-    public string JwtSecret { get; set; } = string.Empty;
-}
 
 public class Program
 {
@@ -68,18 +53,39 @@ public class Program
             builder.Services.AddControllers();
             builder.Services.AddAuthorization();
 
-            builder.Services.Configure<AppSettings>(builder.Configuration);
+            builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
             builder.Services.AddDbContext<PolyBucketDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddFeatures();
-            builder.Services.AddPlugins();
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+    
+            // Models
+            builder.Services.AddTransient<PolyBucket.Api.Features.Models.Queries.GetModelsQueryHandler>();
+            builder.Services.AddTransient<PolyBucket.Api.Features.Models.Queries.GetModelByIdQueryHandler>();
+            builder.Services.AddTransient<PolyBucket.Api.Features.Models.Repository.IModelsRepository, PolyBucket.Api.Features.Models.Repository.ModelsRepository>();
+
+            // Users
+            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Queries.GetUserByIdQueryHandler>();
+            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Repository.IUserRepository, PolyBucket.Api.Features.Users.Repository.UserRepository>();
+            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Queries.GetUserSettingsQueryHandler>();
+            builder.Services.AddTransient<PolyBucket.Api.Features.Users.Commands.UpdateUserSettingsCommandHandler>();
+
+            builder.Services.AddSingleton<PolyBucket.Api.Common.Plugins.PluginManager>(provider =>
+            {
+                var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
+                return new PolyBucket.Api.Common.Plugins.PluginManager(pluginsPath);
+            });
+
+            // Register default plugins
+            builder.Services.AddScoped<PolyBucket.Api.Features.Comments.Domain.ICommentsPlugin, PolyBucket.Api.Features.Comments.Plugins.DefaultCommentsPlugin>();
+
+            builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             builder.Services.AddTransient<AdminSeeder>();
             builder.Services.AddTransient<ModelSeeder>();
 
-            var appSettings = builder.Configuration.Get<AppSettings>();
+            var appSettings = builder.Configuration.GetSection("AppSettings").Get<AppSettings>();
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -101,21 +107,26 @@ public class Program
             });
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
+            builder.Services.AddOpenApiDocument(config =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "PolyBucket API", Version = "v1" });
+                config.DocumentName = "v1";
+                config.Title = "PolyBucket API";
+                config.Version = "v1";
             });
             
             builder.Services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>
                 {
-                    policy.WithOrigins("http://localhost:3000")
+                    policy.WithOrigins("http://localhost:3001")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials();
                 });
             });
+
+            builder.Services.AddHealthChecks()
+                .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection"));
 
             var app = builder.Build();
 
@@ -141,8 +152,8 @@ public class Program
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseOpenApi();
+                app.UseSwaggerUi();
             }
 
             app.UseCors();
@@ -163,6 +174,7 @@ public class Program
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHealthChecks("/health");
 
             await app.RunAsync();
         }

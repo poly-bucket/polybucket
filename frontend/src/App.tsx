@@ -15,7 +15,6 @@ import ModelUploadSettings from './components/admin/ModelUploadSettings';
 import ModerationSettings from './components/admin/ModerationSettings';
 import RoleManagement from './pages/admin/RoleManagement';
 import ModelUploadSettingsPage from './pages/admin/ModelUploadSettings';
-import './App.css';
 
 // Component to test localStorage functionality
 const LocalStorageTest: React.FC = () => {

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Common.Models;
 
 namespace PolyBucket.Api.Features.Authentication.Repository
 {
