@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../utils/hooks';
-import { register, reset, login, setAdminConfigured, getSetupStatus } from '../../store/slices/authSlice';
+import { adminSetup, reset, login, setAdminConfigured, getSetupStatus } from '../../store/slices/authSlice';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 interface ValidationErrors {
@@ -85,12 +85,12 @@ const AdminSetup: React.FC = () => {
       isAdmin: true, // This is the admin setup, so we set isAdmin to true
     };
 
-    console.log('AdminSetup - Submitting registration data:', userData);
+    console.log('AdminSetup - Submitting admin setup data:', userData);
     
-    dispatch(register(userData))
+    dispatch(adminSetup(userData))
       .unwrap()
       .then((response: any) => {
-        console.log('Registration successful:', response);
+        console.log('Admin setup successful:', response);
         
         // Mark admin setup as configured
         dispatch(setAdminConfigured(true))
@@ -105,13 +105,13 @@ const AdminSetup: React.FC = () => {
         // Check if we have authentication tokens in the response
         if (response.accessToken) {
           // We already have auth tokens, navigate to role setup
-          console.log('Registration returned auth tokens, proceeding to role setup');
+          console.log('Admin setup returned auth tokens, proceeding to role setup');
           navigate('/custom-role-setup');
         } else {
           // No auth tokens in response, try explicit login
-          console.log('Registration successful but no auth tokens, attempting login');
+          console.log('Admin setup successful but no auth tokens, attempting login');
           
-          // After successful registration, explicitly log in with the same credentials
+          // After successful admin setup, explicitly log in with the same credentials
           const loginData = {
             emailOrUsername: username,
             password: password
@@ -133,7 +133,7 @@ const AdminSetup: React.FC = () => {
         }
       })
       .catch((error: any) => {
-        console.error('Registration failed:', error);
+        console.error('Admin setup failed:', error);
         
         // Handle validation errors
         if (error.validationErrors) {

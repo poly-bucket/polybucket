@@ -10,7 +10,7 @@ using Xunit;
 
 namespace PolyBucket.Tests.Features.Models;
 
-public class ModelsControllerTests
+public class ModelsControllerTests : IDisposable
 {
     public static IEnumerable<object[]> ControllerTypes()
     {
@@ -47,5 +47,10 @@ public class ModelsControllerTests
         // Ensure RouteAttribute exists
         var routeAttr = controllerType.GetCustomAttribute<RouteAttribute>();
         routeAttr.ShouldNotBeNull();
+    }
+
+    public void Dispose()
+    {
+        // No resources to dispose in this test class
     }
 } 

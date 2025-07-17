@@ -14,4 +14,15 @@ public static class SystemSettingKeys
     public const string AdminSetupCompleted = "Setup:AdminCompleted";
     public const string RoleSetupCompleted = "Setup:RolesCompleted";
     public const string ModerationSetupCompleted = "Setup:ModerationCompleted";
+    
+    // Email Configuration Keys
+    public const string EmailEnabled = "Email:Enabled";
+    public const string EmailSmtpServer = "Email:SmtpServer";
+    public const string EmailSmtpPort = "Email:SmtpPort";
+    public const string EmailSmtpUsername = "Email:SmtpUsername";
+    public const string EmailSmtpPassword = "Email:SmtpPassword";
+    public const string EmailUseSsl = "Email:UseSsl";
+    public const string EmailFromAddress = "Email:FromAddress";
+    public const string EmailFromName = "Email:FromName";
+    public const string EmailRequireVerification = "Email:RequireVerification";
 } 

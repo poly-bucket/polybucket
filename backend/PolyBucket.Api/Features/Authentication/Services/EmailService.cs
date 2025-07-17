@@ -1,8 +1,13 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Net.Mail;
-using System.Net;
+using Microsoft.EntityFrameworkCore;
+using PolyBucket.Api.Data;
+using PolyBucket.Api.Features.SystemSettings.Domain;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using System.Threading.Tasks;
+using System;
 
 namespace PolyBucket.Api.Features.Authentication.Services
 {
@@ -10,11 +15,13 @@ namespace PolyBucket.Api.Features.Authentication.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
+        private readonly PolyBucketDbContext _context;
 
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger, PolyBucketDbContext context)
         {
             _configuration = configuration;
             _logger = logger;
+            _context = context;
         }
 
         public async Task SendPasswordResetEmailAsync(string email, string resetToken, string resetUrl)
@@ -64,40 +71,158 @@ namespace PolyBucket.Api.Features.Authentication.Services
             await SendEmailAsync(email, subject, body);
         }
 
-        private async Task SendEmailAsync(string to, string subject, string body)
+        public async Task SendAdminCreatedAccountEmailAsync(string email, string username, string generatedPassword)
+        {
+            var subject = "Your PolyBucket Account Has Been Created";
+            var body = $@"
+                <h2>Welcome to PolyBucket!</h2>
+                <p>Hi {username},</p>
+                <p>An administrator has created a PolyBucket account for you.</p>
+                <p><strong>Your login credentials:</strong></p>
+                <ul>
+                    <li><strong>Email:</strong> {email}</li>
+                    <li><strong>Username:</strong> {username}</li>
+                    <li><strong>Temporary Password:</strong> {generatedPassword}</li>
+                </ul>
+                <p><strong>Important Security Notice:</strong> Please log in and change your password immediately after your first login for security purposes.</p>
+                <p>You can now start exploring and sharing your 3D models with the community.</p>
+                <p>If you have any questions, feel free to reach out to our support team.</p>
+                <br>
+                <p>Best regards,<br>The PolyBucket Team</p>";
+
+            await SendEmailAsync(email, subject, body);
+        }
+
+        public async Task<bool> TestEmailConfigurationAsync(EmailSettings emailSettings, string testEmailAddress)
         {
             try
             {
-                var smtpServer = _configuration["AppSettings:Email:SmtpServer"];
-                var smtpPort = Convert.ToInt32(_configuration["AppSettings:Email:SmtpPort"]);
-                var smtpUsername = _configuration["AppSettings:Email:SmtpUsername"];
-                var smtpPassword = _configuration["AppSettings:Email:SmtpPassword"];
-                var useSsl = Convert.ToBoolean(_configuration["AppSettings:Email:UseSsl"]);
-                var fromEmail = _configuration["AppSettings:Email:FromEmail"];
-                var fromName = _configuration["AppSettings:Email:FromName"];
-
-                if (string.IsNullOrEmpty(smtpServer))
+                if (!emailSettings.IsValid())
                 {
-                    _logger.LogWarning("SMTP server not configured. Email sending is disabled.");
+                    _logger.LogWarning("Email configuration is invalid for testing");
+                    return false;
+                }
+
+                var subject = "PolyBucket Email Configuration Test";
+                var body = @"
+                    <h2>Email Configuration Test</h2>
+                    <p>This is a test email to verify that your PolyBucket email configuration is working correctly.</p>
+                    <p>If you received this email, your email settings are properly configured!</p>
+                    <br>
+                    <p>Best regards,<br>The PolyBucket Team</p>";
+
+                await SendEmailAsync(testEmailAddress, subject, body, emailSettings);
+                _logger.LogInformation("Test email sent successfully to {Email}", testEmailAddress);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send test email to {Email}", testEmailAddress);
+                return false;
+            }
+        }
+
+        public async Task<bool> IsEmailServiceConfiguredAsync()
+        {
+            try
+            {
+                var emailSettings = await GetEmailSettingsAsync();
+                return emailSettings.Enabled && emailSettings.IsValid();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<EmailSettings> GetEmailSettingsAsync()
+        {
+            var settings = await _context.SystemSettings
+                .Where(s => s.Key.StartsWith("Email:"))
+                .ToListAsync();
+
+            var emailSettings = new EmailSettings();
+
+            foreach (var setting in settings)
+            {
+                switch (setting.Key)
+                {
+                    case SystemSettingKeys.EmailEnabled:
+                        emailSettings.Enabled = bool.TryParse(setting.Value, out var enabled) && enabled;
+                        break;
+                    case SystemSettingKeys.EmailSmtpServer:
+                        emailSettings.SmtpServer = setting.Value ?? string.Empty;
+                        break;
+                    case SystemSettingKeys.EmailSmtpPort:
+                        emailSettings.SmtpPort = int.TryParse(setting.Value, out var port) ? port : 587;
+                        break;
+                    case SystemSettingKeys.EmailSmtpUsername:
+                        emailSettings.SmtpUsername = setting.Value ?? string.Empty;
+                        break;
+                    case SystemSettingKeys.EmailSmtpPassword:
+                        emailSettings.SmtpPassword = setting.Value ?? string.Empty;
+                        break;
+                    case SystemSettingKeys.EmailUseSsl:
+                        emailSettings.UseSsl = bool.TryParse(setting.Value, out var useSsl) && useSsl;
+                        break;
+                    case SystemSettingKeys.EmailFromAddress:
+                        emailSettings.FromAddress = setting.Value ?? string.Empty;
+                        break;
+                    case SystemSettingKeys.EmailFromName:
+                        emailSettings.FromName = setting.Value ?? string.Empty;
+                        break;
+                    case SystemSettingKeys.EmailRequireVerification:
+                        emailSettings.RequireEmailVerification = bool.TryParse(setting.Value, out var requireVerification) && requireVerification;
+                        break;
+                }
+            }
+
+            return emailSettings;
+        }
+
+        private async Task SendEmailAsync(string to, string subject, string body, EmailSettings? customSettings = null)
+        {
+            try
+            {
+                var emailSettings = customSettings ?? await GetEmailSettingsAsync();
+
+                if (!emailSettings.Enabled)
+                {
+                    _logger.LogWarning("Email service is disabled. Skipping email to {Email}", to);
                     return;
                 }
 
-                using var client = new SmtpClient(smtpServer, smtpPort)
+                if (!emailSettings.IsValid())
                 {
-                    EnableSsl = useSsl,
-                    Credentials = new NetworkCredential(smtpUsername, smtpPassword)
-                };
+                    _logger.LogWarning("Email configuration is invalid. Cannot send email to {Email}", to);
+                    return;
+                }
 
-                var message = new MailMessage
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(emailSettings.FromName, emailSettings.FromAddress));
+                message.To.Add(new MailboxAddress("", to));
+                message.Subject = subject;
+
+                var bodyBuilder = new BodyBuilder
                 {
-                    From = new MailAddress(fromEmail, fromName),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = true
+                    HtmlBody = body
                 };
-                message.To.Add(to);
+                message.Body = bodyBuilder.ToMessageBody();
 
-                await client.SendMailAsync(message);
+                using var client = new SmtpClient();
+                
+                var secureSocketOptions = emailSettings.UseSsl ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+                
+                await client.ConnectAsync(emailSettings.SmtpServer, emailSettings.SmtpPort, secureSocketOptions);
+
+                if (!string.IsNullOrEmpty(emailSettings.SmtpUsername) && !string.IsNullOrEmpty(emailSettings.SmtpPassword))
+                {
+                    await client.AuthenticateAsync(emailSettings.SmtpUsername, emailSettings.SmtpPassword);
+                }
+
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+
                 _logger.LogInformation("Email sent successfully to {Email}", to);
             }
             catch (Exception ex)

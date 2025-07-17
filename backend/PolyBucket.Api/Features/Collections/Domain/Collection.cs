@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace PolyBucket.Api.Features.Collections.Domain
 {
-    public class Collection : BaseEntity
+    public class Collection : Auditable
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }

@@ -103,13 +103,28 @@ export const setModerationConfigured = createAsyncThunk(
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: LoginRequest, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
+  async (credentials: { emailOrUsername: string; password: string }, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
     try {
-      const response = await apiAuthService.login(credentials);
-      // We are only getting a token back, not a full user object.
-      // The slice will need to be adapted to handle this.
-      // For now, let's just return the response.
-      return response;
+      // Convert to the format expected by apiAuthService
+      const apiCredentials = new LoginRequest({
+        email: credentials.emailOrUsername,
+        password: credentials.password
+      });
+      
+      const response = await apiAuthService.login(apiCredentials);
+      
+      // The login response only contains a token, so we need to construct a user object
+      // We'll use the credentials to create a basic user object
+      const userData: AuthResponse = {
+        id: '', // We don't have the user ID from login, but we can get it later if needed
+        username: credentials.emailOrUsername, // Use the email/username as username for now
+        email: credentials.emailOrUsername.includes('@') ? credentials.emailOrUsername : '',
+        accessToken: response.token || '',
+        refreshToken: '', // We don't have refresh token from this login flow
+        roles: ['Admin'] // Assume admin for now since this is the admin setup flow
+      };
+      
+      return userData;
     } catch (error: any) {
       const message = error.response?.data?.message || error.message || 'Failed to login';
       return rejectWithValue(message);
@@ -146,6 +161,45 @@ export const register = createAsyncThunk(
       }
       
       console.error('Registration error details:', {
+        message: errorMessage,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const adminSetup = createAsyncThunk(
+  'auth/adminSetup',
+  async (userData: RegisterRequest, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
+    try {
+      return await authService.adminSetup(userData);
+    } catch (error: any) {
+      // Extract detailed error message if available from axios response
+      let errorMessage = 'Failed to create admin account';
+      
+      if (error.response?.data) {
+        // Check for different error formats from backend
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.errors) {
+          // Handle validation errors
+          const errors = error.response.data.errors;
+          if (Array.isArray(errors)) {
+            errorMessage = errors.join(', ');
+          } else if (typeof errors === 'object') {
+            errorMessage = Object.values(errors).flat().join(', ');
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      console.error('Admin setup error details:', {
         message: errorMessage,
         response: error.response?.data,
         status: error.response?.status
@@ -209,7 +263,7 @@ const authSlice = createSlice({
         state.isSuccess = true;
         state.setupStatus = action.payload;
         // Update isFirstRun based on setup status
-        state.isFirstRun = !action.payload.isAdminSetupComplete || !action.payload.isRoleSetupComplete;
+        state.isFirstRun = !action.payload.isAdminConfigured || !action.payload.isRoleConfigured;
       })
       .addCase(getSetupStatus.rejected, (state: AuthState, action: PayloadAction<string>) => {
         state.isLoading = false;
@@ -224,9 +278,9 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         if (state.setupStatus) {
-          state.setupStatus.isAdminSetupComplete = action.payload.isConfigured;
+          state.setupStatus.isAdminConfigured = action.payload.isConfigured;
           // Update isFirstRun based on setup status
-          state.isFirstRun = !state.setupStatus.isAdminSetupComplete || !state.setupStatus.isRoleSetupComplete;
+          state.isFirstRun = !state.setupStatus.isAdminConfigured || !state.setupStatus.isRoleConfigured;
         }
       })
       .addCase(setAdminConfigured.rejected, (state: AuthState, action: PayloadAction<string>) => {
@@ -242,9 +296,9 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         if (state.setupStatus) {
-          state.setupStatus.isRoleSetupComplete = action.payload.isConfigured;
+          state.setupStatus.isRoleConfigured = action.payload.isConfigured;
           // Update isFirstRun based on setup status
-          state.isFirstRun = !state.setupStatus.isAdminSetupComplete || !state.setupStatus.isRoleSetupComplete;
+          state.isFirstRun = !state.setupStatus.isAdminConfigured || !state.setupStatus.isRoleConfigured;
         }
       })
       .addCase(setRoleConfigured.rejected, (state: AuthState, action: PayloadAction<string>) => {
@@ -260,7 +314,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         if (state.setupStatus) {
-          state.setupStatus.isModerationSetupComplete = action.payload.isConfigured;
+          state.setupStatus.isModerationConfigured = action.payload.isConfigured;
         }
       })
       .addCase(setModerationConfigured.rejected, (state: AuthState, action: PayloadAction<string>) => {
@@ -272,14 +326,10 @@ const authSlice = createSlice({
       .addCase(login.pending, (state: AuthState) => {
         state.isLoading = true;
       })
-      .addCase(login.fulfilled, (state: AuthState, action: PayloadAction<LoginResponse>) => {
+      .addCase(login.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
         state.isLoading = false;
         state.isSuccess = true;
-        // The user object in the state is not compatible with LoginResponse.
-        // This will need to be addressed. For now, we'll clear the old user object
-        // and just store the token in local storage.
-        state.user = null; 
-        // The token is already stored in localStorage by the auth service.
+        state.user = action.payload;
       })
       .addCase(login.rejected, (state: AuthState, action: any) => {
         state.isLoading = false;
@@ -297,6 +347,21 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(register.rejected, (state: AuthState, action: PayloadAction<string>) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.errorMessage = action.payload;
+        state.user = null;
+      })
+      // Admin Setup
+      .addCase(adminSetup.pending, (state: AuthState) => {
+        state.isLoading = true;
+      })
+      .addCase(adminSetup.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload;
+      })
+      .addCase(adminSetup.rejected, (state: AuthState, action: PayloadAction<string>) => {
         state.isLoading = false;
         state.isError = true;
         state.errorMessage = action.payload;

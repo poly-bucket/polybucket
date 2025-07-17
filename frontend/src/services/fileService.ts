@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL for API requests
-const API_URL = 'http://localhost:11666/api/file';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/file` : 'http://localhost:11666/api/file';
 
 // Types for file configuration
 export interface FileExtensionInfo {

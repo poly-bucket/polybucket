@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
+import ModeratorEditForm, { ModeratorEditRequest } from './ModeratorEditForm';
+import { Model } from '../../services/api.client';
 
 interface PendingModel {
   id: string;
@@ -34,7 +36,9 @@ const ModelModeration: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<PendingModel | null>(null);
+  const [selectedModelForEdit, setSelectedModelForEdit] = useState<Model | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -99,6 +103,56 @@ const ModelModeration: React.FC = () => {
   const openRejectDialog = (model: PendingModel) => {
     setSelectedModel(model);
     setRejectDialogOpen(true);
+  };
+
+  const openEditDialog = async (model: PendingModel) => {
+    try {
+      setActionLoading(true);
+      // Fetch full model details for editing
+      const response = await axios.get(`/api/moderation/models/${model.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setSelectedModelForEdit(response.data);
+      setEditDialogOpen(true);
+    } catch (err) {
+      setError('Failed to load model details for editing. Please try again.');
+      console.error('Error loading model for edit:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEditModel = async (editRequest: ModeratorEditRequest) => {
+    if (!selectedModelForEdit) return;
+    
+    try {
+      setActionLoading(true);
+      await axios.put(`/api/moderation/models/${selectedModelForEdit.id}`, editRequest, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      setSuccessMessage('Model updated successfully!');
+      setEditDialogOpen(false);
+      
+      // Refresh the pending models list
+      await fetchPendingModels();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      setError('Failed to update model. Please try again.');
+      console.error('Error updating model:', err);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleRejectModel = async () => {
@@ -184,20 +238,31 @@ const ModelModeration: React.FC = () => {
                         ? `${model.description.substring(0, 100)}...` 
                         : model.description}
                     </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
                       <Button 
                         variant="contained" 
                         color="primary"
                         disabled={actionLoading}
                         onClick={() => handleApproveModel(model.id)}
+                        size="small"
                       >
                         Approve
+                      </Button>
+                      <Button 
+                        variant="outlined" 
+                        color="secondary"
+                        disabled={actionLoading}
+                        onClick={() => openEditDialog(model)}
+                        size="small"
+                      >
+                        Edit
                       </Button>
                       <Button 
                         variant="outlined" 
                         color="error"
                         disabled={actionLoading}
                         onClick={() => openRejectDialog(model)}
+                        size="small"
                       >
                         Reject
                       </Button>
@@ -249,6 +314,20 @@ const ModelModeration: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Edit Model Dialog */}
+      {selectedModelForEdit && (
+        <ModeratorEditForm
+          model={selectedModelForEdit}
+          isOpen={editDialogOpen}
+          onClose={() => {
+            setEditDialogOpen(false);
+            setSelectedModelForEdit(null);
+          }}
+          onSave={handleEditModel}
+          loading={actionLoading}
+        />
+      )}
     </Box>
   );
 };

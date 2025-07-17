@@ -7,7 +7,6 @@ using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using System.Linq;
 using System.Threading.Tasks;
-using PolyBucket.Api.Common.Enums;
 
 namespace PolyBucket.Api.Features.SystemSettings.Http
 {
@@ -36,19 +35,38 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
                 return BadRequest("Admin setup has already been completed.");
             }
             
-            if (await _context.Users.AnyAsync(u => u.Role == UserRole.Admin))
+            // Check if there's already an admin user
+            var existingAdmin = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Role != null && u.Role.Name == "Admin");
+            
+            if (existingAdmin != null)
             {
-                return BadRequest("An admin user already exists.");
+                // If we're not replacing the default admin, return error
+                if (!request.ReplaceDefaultAdmin)
+                {
+                    return BadRequest("An admin user already exists.");
+                }
+                
+                // If we are replacing, soft delete the existing admin
+                existingAdmin.DeletedAt = System.DateTime.UtcNow;
             }
 
             var salt = _passwordHasher.GenerateSalt();
             var hashedPassword = _passwordHasher.HashPassword(request.Password, salt);
 
+            // Find the Admin role
+            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+            if (adminRole == null)
+            {
+                return BadRequest("Admin role not found. Please ensure roles are properly configured.");
+            }
+
             var user = new User
             {
                 Username = request.Username,
                 Email = request.Email,
-                Role = UserRole.Admin,
+                RoleId = adminRole.Id,
                 CreatedAt = System.DateTime.UtcNow,
                 Salt = salt,
                 PasswordHash = hashedPassword
@@ -88,5 +106,6 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
         public string Username { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
+        public bool ReplaceDefaultAdmin { get; set; } = false;
     }
 } 

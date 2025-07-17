@@ -26,7 +26,8 @@ public class GetModelByIdControllerTests
     public async Task GetModel_ReturnsOk_WhenModelFound()
     {
         var id = Guid.NewGuid();
-        var expected = new GetModelByIdResponse { Id = id, Name = "Test", Description = "Desc" };
+        var model = new PolyBucket.Api.Features.Models.Domain.Model { Id = id, Name = "Test", Description = "Desc" };
+        var expected = new GetModelByIdResponse { Model = model };
         _mediator.Setup(m => m.Send(It.Is<GetModelByIdQuery>(q => q.Id == id), It.IsAny<CancellationToken>())).ReturnsAsync(expected);
 
         var result = await _controller.GetModel(id);

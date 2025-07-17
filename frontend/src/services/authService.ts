@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:11666/api/auth';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/auth` : 'http://localhost:11666/api/auth';
 
 // For testing purposes
 const MOCK_MODE = false;
@@ -35,6 +35,7 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   roles: string[];
+  profilePictureUrl?: string; // Optional: for when users upload profile pictures
 }
 
 export interface CheckFirstRunResponse {
@@ -42,9 +43,9 @@ export interface CheckFirstRunResponse {
 }
 
 export interface SystemSetupStatus {
-  isAdminSetupComplete: boolean;
-  isRoleSetupComplete: boolean;
-  isModerationSetupComplete: boolean;
+  isAdminConfigured: boolean;
+  isRoleConfigured: boolean;
+  isModerationConfigured: boolean;
 }
 
 // Mock implementation for testing
@@ -57,24 +58,20 @@ const checkFirstRun = async (): Promise<CheckFirstRunResponse> => {
     return { isFirstRun: mockFirstRun };
   }
   
-  // Create a new instance of axios without interceptors
-  const instance = axios.create({
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
+  // Use the setup-status endpoint to determine if it's first run
+  const setupStatus = await getSetupStatus();
+  const isFirstRun = !setupStatus.isAdminConfigured;
   
-  const response = await instance.get(`${API_URL}/check-first-run`);
-  return response.data;
+  return { isFirstRun };
 };
 
 const getSetupStatus = async (): Promise<SystemSetupStatus> => {
   if (MOCK_MODE) {
     console.log('MOCK: getSetupStatus');
     return { 
-      isAdminSetupComplete: !mockFirstRun,
-      isRoleSetupComplete: !mockFirstRun,
-      isModerationSetupComplete: !mockFirstRun,
+      isAdminConfigured: !mockFirstRun,
+      isRoleConfigured: !mockFirstRun,
+      isModerationConfigured: !mockFirstRun,
     };
   }
   
@@ -85,8 +82,16 @@ const getSetupStatus = async (): Promise<SystemSetupStatus> => {
     }
   });
   
-  const response = await instance.get('http://localhost:5166/api/system-settings/setup-status');
-  return response.data;
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+  const response = await instance.get(`${baseUrl}/api/system-settings/setup-status`);
+  const data = response.data;
+  
+  // Map backend response to frontend interface
+  return {
+    isAdminConfigured: data.isAdminSetupComplete,
+    isRoleConfigured: data.isRoleSetupComplete,
+    isModerationConfigured: data.isModerationSetupComplete
+  };
 };
 
 const isAdminConfigured = async (): Promise<boolean> => {
@@ -331,6 +336,91 @@ const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
   }
 };
 
+const adminSetup = async (userData: RegisterRequest): Promise<AuthResponse> => {
+  if (MOCK_MODE) {
+    console.log('MOCK: adminSetup', userData);
+    const newAdmin: AuthResponse = {
+      id: Math.random().toString(),
+      username: userData.username,
+      email: userData.email,
+      accessToken: 'fake-jwt-token',
+      refreshToken: 'fake-refresh-token',
+      roles: ['Admin']
+    };
+    mockUsers.push(newAdmin);
+    localStorage.setItem('user', JSON.stringify(newAdmin));
+    return newAdmin;
+  }
+
+  // Create a new instance of axios without interceptors
+  const instance = axios.create({
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  try {
+    // Call the admin-setup endpoint with ReplaceDefaultAdmin flag
+    const adminSetupData = {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      replaceDefaultAdmin: true
+    };
+    
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+    const response = await instance.post(`${baseUrl}/api/system-settings/admin-setup`, adminSetupData);
+    
+    // After successful admin setup, login with the new credentials
+    const loginData = {
+      emailOrUsername: userData.username,
+      password: userData.password
+    };
+    
+    const loginResponse = await instance.post(`${API_URL}/login`, loginData);
+    
+    // Handle login response
+    if (loginResponse.data && typeof loginResponse.data === 'object') {
+      let authData: AuthResponse;
+      if (loginResponse.data.succeeded && loginResponse.data.data) {
+        const data = loginResponse.data.data;
+        if (data.user) {
+          authData = {
+            id: data.user.id,
+            username: data.user.username,
+            email: data.user.email,
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+            roles: data.user.isAdmin ? ['Admin'] : ['User']
+          };
+        } else {
+          authData = {
+            id: data.id || '',
+            username: data.username || '',
+            email: data.email || '',
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken || '',
+            roles: data.roles || []
+          };
+        }
+      } else if (loginResponse.data.accessToken) {
+        authData = loginResponse.data;
+        authData.roles = authData.roles || [];
+      } else {
+        throw new Error('Invalid login response format after admin setup');
+      }
+      
+      localStorage.setItem('user', JSON.stringify(authData));
+      return authData;
+    } else {
+      throw new Error('Invalid login response format after admin setup');
+    }
+  } catch (error) {
+    console.error('Admin setup error:', error);
+    throw error;
+  }
+};
+
 const logout = (): void => {
   localStorage.removeItem('user');
 };
@@ -416,6 +506,7 @@ const authService = {
   setModerationConfigured,
   login,
   register,
+  adminSetup,
   logout,
   getCurrentUser,
   refreshToken,

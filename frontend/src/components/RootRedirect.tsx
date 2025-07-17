@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../utils/hooks';
-import { checkFirstRun, getSetupStatus } from '../store/slices/authSlice';
+import { getSetupStatus } from '../store/slices/authSlice';
 
 const RootRedirect: React.FC = () => {
   const dispatch = useAppDispatch();
   const [isChecking, setIsChecking] = useState(true);
-  const { isFirstRun, user, isLoading, setupStatus } = useAppSelector((state) => state.auth);
+  const { user, isLoading, setupStatus } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        // First check if it's the first run
-        await dispatch(checkFirstRun());
-        
-        // Also get detailed setup status
+        // Only get setup status - this provides all the information we need
         await dispatch(getSetupStatus());
         
         setIsChecking(false);
@@ -46,13 +43,10 @@ const RootRedirect: React.FC = () => {
     if (!setupStatus.isRoleConfigured) {
       return <Navigate to="/custom-role-setup" replace />;
     }
-  } else if (isFirstRun) {
-    // Fallback to first run check if setup status is not available
-    return <Navigate to="/admin-setup" replace />;
   }
 
   // If not first run but no user, go to login
-  if (!user && !isFirstRun) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 

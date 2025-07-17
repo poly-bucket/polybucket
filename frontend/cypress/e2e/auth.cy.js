@@ -6,12 +6,12 @@
 describe('Authentication Flow', () => {
   beforeEach(() => {
     // Mock the API responses
-    cy.intercept('GET', 'http://localhost:5166/api/auth/check-first-run', {
+    cy.intercept('GET', 'http://localhost:11666/api/auth/check-first-run', {
       statusCode: 200,
       body: { isFirstRun: true }
     }).as('checkFirstRun');
 
-    cy.intercept('POST', 'http://localhost:5166/api/auth/register', {
+    cy.intercept('POST', 'http://localhost:11666/api/auth/register', {
       statusCode: 200,
       body: {
         id: '1',
@@ -23,7 +23,7 @@ describe('Authentication Flow', () => {
       }
     }).as('registerAdmin');
 
-    cy.intercept('POST', 'http://localhost:5166/api/auth/login', {
+    cy.intercept('POST', 'http://localhost:11666/api/auth/login', {
       statusCode: 200,
       body: {
         id: '1',
@@ -75,7 +75,7 @@ describe('Authentication Flow', () => {
 
   it('should allow login with correct credentials', () => {
     // Mock first run check to return false (admin exists)
-    cy.intercept('GET', 'http://localhost:5166/api/auth/check-first-run', {
+    cy.intercept('GET', 'http://localhost:11666/api/auth/check-first-run', {
       statusCode: 200,
       body: { isFirstRun: false }
     }).as('checkFirstRunFalse');
@@ -95,7 +95,7 @@ describe('Authentication Flow', () => {
 
   it('should allow logout', () => {
     // Mock first run check to return false (admin exists)
-    cy.intercept('GET', 'http://localhost:5166/api/auth/check-first-run', {
+    cy.intercept('GET', 'http://localhost:11666/api/auth/check-first-run', {
       statusCode: 200,
       body: { isFirstRun: false }
     }).as('checkFirstRunFalse');

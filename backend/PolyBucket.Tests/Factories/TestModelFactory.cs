@@ -28,11 +28,11 @@ namespace PolyBucket.Tests.Factories
                     Description = $"Test Description for Model {i + 1}",
                     License = LicenseTypes.MIT,
                     Privacy = PrivacySettings.Public,
-                    Categories = new List<ModelCategories> { ModelCategories.Other },
+                    Categories = new List<Category>(),
                     AIGenerated = false,
                     WIP = false,
                     NSFW = false,
-                    IsRemix = "",
+                    IsRemix = false,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                 };

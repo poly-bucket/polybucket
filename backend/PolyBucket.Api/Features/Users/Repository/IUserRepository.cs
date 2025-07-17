@@ -2,7 +2,6 @@ using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Users.Domain;
 using System;
 using System.Threading.Tasks;
-using PolyBucket.Api.Common.Enums;
 
 namespace PolyBucket.Api.Features.Users.Repository
 {
@@ -21,9 +20,10 @@ namespace PolyBucket.Api.Features.Users.Repository
     public class UserProfile
     {
         public Guid Id { get; set; }
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public UserRole Role { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public Guid? RoleId { get; set; }
+        public string RoleName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
 } 

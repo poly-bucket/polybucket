@@ -11,10 +11,12 @@ services:
 
   client:
     ports:
-      - "3002:3000"
+      - "32768:3000"
     build:
       target: development
     volumes:
       - ./frontend:/app
-      - /app/node_modules
-    command: npm start 
+      - ./node_modules:/app/node_modules
+    command: npm start
+    environment:
+      - VITE_API_URL=http://localhost:11666 

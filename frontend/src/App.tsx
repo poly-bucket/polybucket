@@ -1,7 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store/store';
 import FirstTimeSetup from './components/auth/FirstTimeSetup';
 import CustomRoleSetup from './components/auth/CustomRoleSetup';
 import LoginForm from './components/auth/LoginForm';
@@ -10,11 +8,17 @@ import Dashboard from './components/Dashboard';
 import RootRedirect from './components/RootRedirect';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminControlPanel from './pages/admin/AdminControlPanel';
 import ModelModeration from './components/moderation/ModelModeration';
 import ModelUploadSettings from './components/admin/ModelUploadSettings';
 import ModerationSettings from './components/admin/ModerationSettings';
 import RoleManagement from './pages/admin/RoleManagement';
 import ModelUploadSettingsPage from './pages/admin/ModelUploadSettings';
+import ModelUpload from './pages/ModelUpload';
+import ModelDetails from './pages/ModelDetails';
+import UserSettings from './pages/UserSettings';
+import Collections from './pages/Collections';
+import AvatarDemo from './components/AvatarDemo';
 
 // Component to test localStorage functionality
 const LocalStorageTest: React.FC = () => {
@@ -58,7 +62,7 @@ const LocalStorageTest: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Provider store={store}>
+    <>
       <LocalStorageTest />
       <Router>
         <Routes>
@@ -75,6 +79,9 @@ const App: React.FC = () => {
           <Route path="/login" element={<LoginForm />} />
           <Route path="/register" element={<RegisterForm />} />
           
+          {/* Demo routes (development only) */}
+          <Route path="/avatar-demo" element={<AvatarDemo />} />
+          
           {/* Protected routes */}
           <Route 
             path="/dashboard" 
@@ -83,6 +90,48 @@ const App: React.FC = () => {
                 <Dashboard />
               </ProtectedRoute>
             } 
+          />
+          
+          <Route 
+            path="/upload-model" 
+            element={
+              <ProtectedRoute>
+                <ModelUpload />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/models/:id" 
+            element={
+              <ProtectedRoute>
+                <ModelDetails />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <UserSettings />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/collections" 
+            element={
+              <ProtectedRoute>
+                <Collections />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Admin Control Panel - Accessible for development purposes */}
+          <Route 
+            path="/admin-panel" 
+            element={<AdminControlPanel />}
           />
           
           {/* Admin routes - Use the new AdminDashboard and nested routes */}
@@ -127,7 +176,7 @@ const App: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
-    </Provider>
+    </>
   );
 };
 

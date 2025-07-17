@@ -40,7 +40,8 @@ const FileUploader = () => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await axios.post('http://localhost:5166/api/FileStorage/upload', formData, {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      const response = await axios.post(`${baseUrl}/api/FileStorage/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -91,7 +92,8 @@ const FileUploader = () => {
 
   const handleDelete = async (fileName) => {
     try {
-      await axios.delete(`http://localhost:5166/api/FileStorage/${fileName}`);
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      await axios.delete(`${baseUrl}/api/FileStorage/${fileName}`);
       
       setFiles(prevFiles => prevFiles.filter(file => file.fileName !== fileName));
       
@@ -184,7 +186,7 @@ const FileUploader = () => {
                     </VStack>
                     
                     <HStack>
-                      <Link href={`http://localhost:5166/api/FileStorage/${file.fileName}`} isExternal>
+                      <Link href={`${import.meta.env.VITE_API_URL || 'http://localhost:11666'}/api/FileStorage/${file.fileName}`} isExternal>
                         <IconButton
                           icon={<FiDownload />}
                           aria-label="Download file"

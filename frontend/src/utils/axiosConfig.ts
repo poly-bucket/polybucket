@@ -3,7 +3,7 @@ import authService from '../services/authService';
 import { store } from '../store/store';
 import { refreshToken, logout } from '../store/slices/authSlice';
 
-const API_BASE_URL = 'http://localhost:11666/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:11666/api';
 
 // Create an instance of axios
 const api = axios.create({

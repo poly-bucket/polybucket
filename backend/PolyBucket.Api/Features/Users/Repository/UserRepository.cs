@@ -124,6 +124,7 @@ namespace PolyBucket.Api.Features.Users.Repository
         public async Task<UserProfile> GetUserProfileAsync(Guid id)
         {
             var user = await _context.Users
+                .Include(u => u.Role)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == id);
 
@@ -135,7 +136,8 @@ namespace PolyBucket.Api.Features.Users.Repository
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                Role = user.Role,
+                RoleId = user.RoleId,
+                RoleName = user.Role?.Name ?? "Unknown",
                 CreatedAt = user.CreatedAt
             };
         }

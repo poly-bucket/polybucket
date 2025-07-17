@@ -1,0 +1,254 @@
+import React, { useState } from 'react';
+import { ExtendedModel } from '../../services/modelsService';
+import { Model } from '../../services/api.client';
+import ModelEditForm from './ModelEditForm';
+import ModelVersionManager from './ModelVersionManager';
+import VersionEditor, { ExtendedModelVersion } from './VersionEditor';
+
+interface EditModelModalProps {
+  model: ExtendedModel;
+  isOpen: boolean;
+  onClose: () => void;
+  onModelUpdate?: (updatedModel: ExtendedModel) => void;
+  onVersionCreate?: (model: ExtendedModel, versionData: any) => void;
+  onVersionUpdate?: (model: ExtendedModel, versionId: string, updatedVersion: ExtendedModelVersion) => void;
+}
+
+type TabType = 'edit' | 'version' | 'editVersion';
+
+interface VersionFormData {
+  name: string;
+  notes: string;
+  files: any[];
+}
+
+const EditModelModal: React.FC<EditModelModalProps> = ({
+  model,
+  isOpen,
+  onClose,
+  onModelUpdate,
+  onVersionCreate,
+  onVersionUpdate
+}) => {
+  const [activeTab, setActiveTab] = useState<TabType>('edit');
+  const [loading, setLoading] = useState(false);
+  const [modelVersions, setModelVersions] = useState<ExtendedModelVersion[]>([]);
+
+  // Initialize versions when modal opens
+  React.useEffect(() => {
+    if (isOpen && model.versions) {
+      const extendedVersions: ExtendedModelVersion[] = model.versions.map(version => ({
+        ...version,
+        billOfMaterials: [],
+        printSettings: {
+          id: version.id || '',
+          layerHeight: '0.2mm',
+          infill: '15%',
+          supports: false,
+          printSpeed: '50mm/s',
+          nozzleTemp: '210°C',
+          bedTemp: '60°C',
+          material: 'PLA',
+          nozzleSize: '0.4mm',
+          retraction: '6mm',
+          buildPlateAdhesion: 'skirt',
+          notes: ''
+        },
+        files: [],
+        notes: ''
+      } as unknown as ExtendedModelVersion));
+      setModelVersions(extendedVersions);
+    }
+  }, [isOpen, model.versions]);
+
+  if (!isOpen) return null;
+
+  const handleSaveModel = async (updatedModel: Partial<Model>) => {
+    setLoading(true);
+    try {
+      // TODO: Implement API call to update model
+      console.log('Updating model:', updatedModel);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update the model with new data
+      const updated = { ...model, ...updatedModel } as ExtendedModel;
+      
+      if (onModelUpdate) {
+        onModelUpdate(updated);
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Failed to update model:', error);
+      // TODO: Add proper error handling
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateVersion = async (versionData: VersionFormData) => {
+    setLoading(true);
+    try {
+      // TODO: Implement API call to create new version
+      console.log('Creating new version:', versionData);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (onVersionCreate) {
+        onVersionCreate(model, versionData);
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Failed to create version:', error);
+      // TODO: Add proper error handling
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVersionUpdate = (versionId: string, updatedVersion: ExtendedModelVersion) => {
+    // Update local state
+    setModelVersions(prev => 
+      prev.map(v => v.id === versionId ? updatedVersion : v)
+    );
+    
+    // Notify parent component
+    if (onVersionUpdate) {
+      onVersionUpdate(model, versionId, updatedVersion);
+    }
+  };
+
+  const handleCancel = () => {
+    if (!loading) {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleCancel}></div>
+      
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="relative w-full max-w-6xl bg-white rounded-lg shadow-xl">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Manage Model</h2>
+              <p className="text-gray-600 mt-1">{model.name}</p>
+            </div>
+            <button
+              onClick={handleCancel}
+              disabled={loading}
+              className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-6">
+              <button
+                onClick={() => setActiveTab('edit')}
+                disabled={loading}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'edit'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } disabled:opacity-50`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>Edit Details</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('version')}
+                disabled={loading}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'version'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } disabled:opacity-50`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  <span>New Version</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('editVersion')}
+                disabled={loading}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'editVersion'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } disabled:opacity-50`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Edit Versions</span>
+                </div>
+              </button>
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+            {activeTab === 'edit' && (
+              <div className="p-6">
+                <ModelEditForm
+                  model={model}
+                  onSave={handleSaveModel}
+                  onCancel={handleCancel}
+                  loading={loading}
+                />
+              </div>
+            )}
+            
+            {activeTab === 'version' && (
+              <div className="p-6">
+                <ModelVersionManager
+                  model={model}
+                  onCreateVersion={handleCreateVersion}
+                  onCancel={handleCancel}
+                  loading={loading}
+                />
+              </div>
+            )}
+
+            {activeTab === 'editVersion' && (
+              <div className="p-6">
+                <VersionEditor
+                  model={model}
+                  versions={modelVersions}
+                  onVersionUpdate={handleVersionUpdate}
+                  onCancel={handleCancel}
+                  loading={loading}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditModelModal; 

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:11666/api/roles';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/roles` : 'http://localhost:11666/api/roles';
 
 export interface RoleDto {
   id: string;
