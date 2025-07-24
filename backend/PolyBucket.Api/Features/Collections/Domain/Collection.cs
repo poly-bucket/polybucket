@@ -12,6 +12,8 @@ namespace PolyBucket.Api.Features.Collections.Domain
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public CollectionVisibility Visibility { get; set; } = CollectionVisibility.Private;
+        public string? PasswordHash { get; set; }
+        public string? Avatar { get; set; }
 
         public Guid OwnerId { get; set; }
         public virtual User Owner { get; set; } = null!;

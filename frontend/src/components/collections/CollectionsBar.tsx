@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, FolderIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '../UserAvatar';
+import CollectionAvatar from '../CollectionAvatar';
 import collectionsService, { Collection } from '../../services/collectionsService';
 
 interface CollectionsBarProps {
@@ -47,10 +48,12 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
       }
     }
     
-    // Fallback to UserAvatar with collection name
+    // Fallback to CollectionAvatar with collection ID
     return (
-      <UserAvatar 
-        username={collection.name} 
+      <CollectionAvatar 
+        collectionId={collection.id}
+        collectionName={collection.name}
+        avatar={collection.avatar}
         size="sm"
         className="w-8 h-8"
       />
@@ -58,40 +61,40 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
   };
 
   const handleCreateCollection = () => {
-    navigate('/collections/create');
+    navigate('/my-collections/create');
   };
 
   const handleViewAllCollections = () => {
-    navigate('/collections');
+    navigate('/my-collections');
   };
 
   if (isCollapsed) {
     return (
-      <div className="fixed left-0 top-0 h-full w-12 bg-white border-r border-gray-200 shadow-sm z-40 flex flex-col">
+      <div className="lg-sidebar fixed left-0 top-0 h-full w-12 z-40 flex flex-col">
         {/* Toggle Button */}
         <button
           onClick={onToggle}
-          className="p-3 hover:bg-gray-50 border-b border-gray-200"
+          className="p-3 hover:bg-white/10 border-b border-white/10"
           title="Expand Collections"
         >
-          <ChevronRightIcon className="w-6 h-6 text-gray-500" />
+          <ChevronRightIcon className="w-6 h-6 text-white/60" />
         </button>
         
         {/* Collapsed Collections Icons */}
         <div className="flex-1 overflow-y-auto py-2">
           {collections.slice(0, 8).map((collection) => (
-            <Link
-              key={collection.id}
-              to={`/collections/${collection.id}`}
-              className="block p-2 hover:bg-gray-50"
-              title={collection.name}
-            >
+                          <Link
+                key={collection.id}
+                to={`/my-collections/${collection.id}`}
+                className="block p-2 hover:bg-white/10"
+                title={collection.name}
+              >
               {getCollectionIcon(collection)}
             </Link>
           ))}
           
           {collections.length > 8 && (
-            <div className="p-2 text-center text-xs text-gray-400">
+            <div className="p-2 text-center text-xs text-white/40">
               +{collections.length - 8}
             </div>
           )}
@@ -100,26 +103,26 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
         {/* Add Collection Button */}
         <button
           onClick={handleCreateCollection}
-          className="p-3 hover:bg-gray-50 border-t border-gray-200"
+          className="p-3 hover:bg-white/10 border-t border-white/10"
           title="Create Collection"
         >
-          <PlusIcon className="w-6 h-6 text-gray-500" />
+          <PlusIcon className="w-6 h-6 text-white/60" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 shadow-sm z-40 flex flex-col">
+    <div className="lg-sidebar fixed left-0 top-0 h-full w-64 z-40 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Collections</h2>
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <h2 className="text-lg font-semibold text-white">Collections</h2>
         <button
           onClick={onToggle}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-white/10 rounded"
           title="Collapse Collections"
         >
-          <ChevronLeftIcon className="w-5 h-5 text-gray-500" />
+          <ChevronLeftIcon className="w-5 h-5 text-white/60" />
         </button>
       </div>
       
@@ -127,25 +130,25 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+            <div className="lg-spinner h-8 w-8"></div>
           </div>
         ) : error ? (
-          <div className="text-center py-8 text-red-600">
+          <div className="text-center py-8 text-red-400">
             <p>{error}</p>
             <button 
               onClick={loadCollections}
-              className="mt-2 text-sm text-indigo-600 hover:text-indigo-800"
+              className="mt-2 text-sm text-indigo-400 hover:text-indigo-300"
             >
               Try again
             </button>
           </div>
         ) : collections.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <FolderIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-8 text-white/60">
+            <FolderIcon className="w-12 h-12 mx-auto mb-4 text-white/30" />
             <p className="text-sm">No collections yet</p>
             <button
               onClick={handleCreateCollection}
-              className="mt-2 text-sm text-indigo-600 hover:text-indigo-800"
+              className="mt-2 text-sm text-indigo-400 hover:text-indigo-300"
             >
               Create your first collection
             </button>
@@ -155,17 +158,17 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
             {collections.map((collection) => (
               <Link
                 key={collection.id}
-                to={`/collections/${collection.id}`}
-                className="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                to={`/my-collections/${collection.id}`}
+                className="flex items-center p-3 hover:bg-white/10 rounded-lg transition-colors"
               >
                 <div className="mr-3">
                   {getCollectionIcon(collection)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-gray-900 truncate">
+                  <h3 className="text-sm font-medium text-white truncate">
                     {collection.name}
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-white/60">
                     {collection.collectionModels?.length || 0} models
                   </p>
                 </div>
@@ -173,7 +176,7 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
                   <span className={`inline-block w-2 h-2 rounded-full ${
                     collection.visibility === 'Public' ? 'bg-green-400' :
                     collection.visibility === 'Unlisted' ? 'bg-yellow-400' :
-                    'bg-gray-400'
+                    'bg-white/40'
                   }`} title={collection.visibility} />
                 </div>
               </Link>
@@ -183,10 +186,10 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
       </div>
       
       {/* Footer Actions */}
-      <div className="border-t border-gray-200 p-4 space-y-2">
+      <div className="border-t border-white/10 p-4 space-y-2">
         <button
           onClick={handleCreateCollection}
-          className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="lg-button lg-button-primary w-full flex items-center justify-center"
         >
           <PlusIcon className="w-4 h-4 mr-2" />
           New Collection
@@ -194,7 +197,7 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
         
         <button
           onClick={handleViewAllCollections}
-          className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="lg-button w-full flex items-center justify-center"
         >
           View All
         </button>

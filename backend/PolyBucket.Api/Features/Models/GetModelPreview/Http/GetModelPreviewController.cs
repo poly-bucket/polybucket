@@ -8,14 +8,9 @@ namespace PolyBucket.Api.Features.Models.GetModelPreview.Http
 {
     [ApiController]
     [Route("api/models")]
-    public class GetModelPreviewController : ControllerBase
+    public class GetModelPreviewController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public GetModelPreviewController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         /// <summary>
         /// Gets a preview image for a specific model and size

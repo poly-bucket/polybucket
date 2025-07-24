@@ -1,5 +1,6 @@
 using PolyBucket.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using PolyBucket.Api.Features.Users.Domain;
@@ -14,19 +15,13 @@ namespace PolyBucket.Api.Features.Users.Queries
 
     public class GetUserSettingsResponse
     {
-        public UserSettings Settings { get; set; }
+        public required PolyBucket.Api.Features.Users.Domain.UserSettings Settings { get; set; }
     }
 
-    public class GetUserSettingsQueryHandler
+    public class GetUserSettingsQueryHandler(PolyBucketDbContext context, ILogger<GetUserSettingsQueryHandler> logger)
     {
-        private readonly PolyBucketDbContext _context;
-        private readonly ILogger<GetUserSettingsQueryHandler> _logger;
-
-        public GetUserSettingsQueryHandler(PolyBucketDbContext context, ILogger<GetUserSettingsQueryHandler> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+        private readonly PolyBucketDbContext _context = context;
+        private readonly ILogger<GetUserSettingsQueryHandler> _logger = logger;
 
         public async Task<GetUserSettingsResponse> ExecuteAsync(GetUserSettingsRequest request)
         {

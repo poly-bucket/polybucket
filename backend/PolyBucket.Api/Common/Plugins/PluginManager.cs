@@ -11,7 +11,7 @@ namespace PolyBucket.Api.Common.Plugins
 {
     public class PluginManager
     {
-        private CompositionContainer _container;
+        private CompositionContainer? _container;
         private readonly string _pluginsPath;
         private readonly List<IPlugin> _loadedPlugins = new();
 

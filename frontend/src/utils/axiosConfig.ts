@@ -1,9 +1,29 @@
 import axios, { InternalAxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
-import authService from '../services/authService';
-import { store } from '../store/store';
-import { refreshToken, logout } from '../store/slices/authSlice';
+import store from '../store';
+import { refreshUserToken } from '../store/thunks/authThunks';
+import { clearUser } from '../store/slices/authSlice';
+import { extractUserFromJWT } from './jwtUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:11666/api';
+
+// Utility function to check if user is authenticated
+export const isAuthenticated = (): boolean => {
+  const state = store.getState();
+  const user = state.auth.user;
+  return !!(user && user.accessToken && user.refreshToken);
+};
+
+// Utility function to handle authentication failure
+export const handleAuthFailure = (): void => {
+  console.log('Authentication failed, logging out user');
+  store.dispatch(clearUser());
+  // Clear localStorage
+  localStorage.removeItem('user');
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  // Redirect to login page
+  window.location.href = '/login';
+};
 
 // Create an instance of axios
 const api = axios.create({
@@ -16,9 +36,12 @@ const api = axios.create({
 // Add a request interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get the token from local storage
-    const user = authService.getCurrentUser();
-    if (user?.accessToken) {
+    // Get the token from Redux store
+    const state = store.getState();
+    const user = state.auth.user;
+    
+    // Only add Authorization header if user is authenticated and has a valid token
+    if (user?.accessToken && user.accessToken.trim() !== '') {
       // Add the token to the authorization header
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${user.accessToken}`;
@@ -54,20 +77,41 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        // Try to refresh the token
-        await store.dispatch(refreshToken()).unwrap();
+        // Get current user from store
+        const state = store.getState();
+        const user = state.auth.user;
         
-        // Get the new token
-        const user = authService.getCurrentUser();
-        if (user && user.accessToken) {
-          // Add the new token to the original request
-          originalRequest.headers.Authorization = `Bearer ${user.accessToken}`;
-          return axios(originalRequest);
+        if (user?.refreshToken) {
+          console.log('Attempting to refresh token...');
+          // Try to refresh the token
+          const result = await store.dispatch(refreshUserToken(user.refreshToken));
+          
+          if (refreshUserToken.fulfilled.match(result)) {
+            console.log('Token refreshed successfully');
+            // Get the updated user with new token
+            const updatedState = store.getState();
+            const updatedUser = updatedState.auth.user;
+            
+            if (updatedUser && updatedUser.accessToken) {
+              // Add the new token to the original request
+              originalRequest.headers.Authorization = `Bearer ${updatedUser.accessToken}`;
+              return api(originalRequest);
+            }
+          } else {
+            console.log('Token refresh failed, logging out user');
+            // Refresh failed, logout user
+            store.dispatch(clearUser());
+            // Redirect to login page or show login modal
+            window.location.href = '/login';
+          }
+        } else {
+          console.log('No refresh token available, logging out user');
+          handleAuthFailure();
         }
       } catch (refreshError) {
         // If refreshing fails, logout user
         console.error('Token refresh failed, logging out:', refreshError);
-        store.dispatch(logout());
+        handleAuthFailure();
         return Promise.reject(refreshError);
       }
     }

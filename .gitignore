@@ -360,3 +360,4 @@ backend/.editorconfig
 .cursor
 .idea
 .turbo
+package-lock.json

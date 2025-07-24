@@ -9,14 +9,9 @@ namespace PolyBucket.Api.Features.Plugins.Queries
     [ApiController]
     [Route("api/plugins")]
     [Authorize]
-    public class GetPluginsController : ControllerBase
+    public class GetPluginsController(PluginManager pluginManager) : ControllerBase
     {
-        private readonly PluginManager _pluginManager;
-
-        public GetPluginsController(PluginManager pluginManager)
-        {
-            _pluginManager = pluginManager;
-        }
+        private readonly PluginManager _pluginManager = pluginManager;
 
         [HttpGet]
         public ActionResult<IEnumerable<PluginInfo>> GetPlugins()
@@ -36,11 +31,11 @@ namespace PolyBucket.Api.Features.Plugins.Queries
 
     public class PluginInfo
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Version { get; set; }
-        public string Author { get; set; }
-        public string Description { get; set; }
+        public required string Id { get; set; }
+        public required string Name { get; set; }
+        public required string Version { get; set; }
+        public required string Author { get; set; }
+        public required string Description { get; set; }
     }
 
     public class Plugin

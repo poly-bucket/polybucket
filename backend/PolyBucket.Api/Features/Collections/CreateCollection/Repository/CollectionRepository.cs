@@ -4,14 +4,9 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.CreateCollection.Repository
 {
-    public class CollectionRepository : ICollectionRepository
+    public class CollectionRepository(PolyBucketDbContext context) : ICollectionRepository
     {
-        private readonly PolyBucketDbContext _context;
-
-        public CollectionRepository(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task<Collection> CreateCollectionAsync(Collection collection)
         {

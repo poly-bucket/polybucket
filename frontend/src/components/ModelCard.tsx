@@ -1,11 +1,7 @@
 import React from 'react';
-import { Model } from '../services/api.client';
-
-// Extended model interface to include missing properties from backend
-interface ExtendedModel extends Model {
-  thumbnailUrl?: string;
-  downloads?: number;
-}
+import { ExtendedModel } from '../services/modelsService';
+import { useAuth } from '../context/AuthContext';
+import { useUserSettings } from '../context/UserSettingsContext';
 
 interface ModelCardProps {
   model: ExtendedModel;
@@ -14,6 +10,12 @@ interface ModelCardProps {
 }
 
 const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' }) => {
+  const { user } = useAuth();
+  const { settings } = useUserSettings();
+  
+  // Get auto-rotate setting from user settings, default to true
+  const autoRotate = settings?.autoRotateModels ?? true;
+  
   const handleClick = () => {
     if (onClick) {
       onClick(model);
@@ -37,8 +39,8 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
     return num.toString();
   };
 
-  // Get thumbnail URL - using Unsplash images for demo
-  const thumbnailUrl = model.thumbnailUrl || 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=400&h=225&fit=crop';
+  // Get thumbnail URL
+  const thumbnailUrl = model.thumbnailUrl;
 
   // Calculate like percentage for the like bar
   const totalLikes = (model.likes?.length || 0);
@@ -49,34 +51,60 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
 
   return (
     <div 
-      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group ${className}`}
+      className={`lg-card cursor-pointer overflow-hidden group w-full h-72 sm:h-80 flex flex-col ${className}`}
       onClick={handleClick}
+      data-testid="model-card"
     >
-      {/* Thumbnail Container */}
-      <div className="relative aspect-video bg-gray-100 overflow-hidden">
-        <img
-          src={thumbnailUrl}
-          alt={model.name || 'Model thumbnail'}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=400&h=225&fit=crop';
-          }}
-        />
+      {/* Thumbnail Container - Fixed height */}
+      <div className="relative h-40 sm:h-48 bg-white/10 overflow-hidden flex-shrink-0">
+        {thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt={model.name || 'Model thumbnail'}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              // Show placeholder when image fails to load
+              const container = e.currentTarget.parentElement;
+              if (container) {
+                container.innerHTML = `
+                  <div class="w-full h-full flex items-center justify-center bg-gray-800">
+                    <div class="text-center">
+                      <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <div class="text-gray-400 text-sm">No preview</div>
+                    </div>
+                  </div>
+                `;
+              }
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-800">
+            <div className="text-center">
+              <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <div className="text-gray-400 text-sm">No preview</div>
+            </div>
+          </div>
+        )}
         
         {/* Status Badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1">
           {model.wip && (
-            <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+            <span className="lg-badge lg-badge-warning text-xs">
               WIP
             </span>
           )}
           {model.aiGenerated && (
-            <span className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+            <span className="lg-badge lg-badge-info text-xs">
               AI
             </span>
           )}
           {model.nsfw && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+            <span className="lg-badge lg-badge-error text-xs">
               NSFW
             </span>
           )}
@@ -86,7 +114,7 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button
             onClick={handleLike}
-            className="bg-white bg-opacity-90 hover:bg-opacity-100 text-red-500 p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110"
+            className="bg-white/90 hover:bg-white text-red-500 p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110"
             title="Like this model"
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -96,23 +124,23 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        {/* Model Title */}
-        <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2 leading-tight">
+      {/* Content - Fixed height with flex layout */}
+      <div className="p-3 sm:p-4 flex flex-col flex-1 min-h-0">
+        {/* Model Title - Fixed height with ellipsis */}
+        <h3 className="font-semibold text-white text-sm mb-1 leading-tight line-clamp-2 min-h-[2.5rem]">
           {model.name || 'Untitled Model'}
         </h3>
 
-        {/* Author */}
-        <p className="text-xs text-gray-600 mb-3">
+        {/* Author - Fixed height */}
+        <p className="text-xs text-white/60 mb-2 sm:mb-3 flex-shrink-0">
           by {authorName}
         </p>
 
-        {/* Stats Row */}
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        {/* Stats Row - Fixed height */}
+        <div className="flex items-center justify-between text-xs text-white/60 flex-shrink-0">
           {/* Likes */}
           <div className="flex items-center space-x-1">
-            <svg className="w-3 h-3 fill-current text-red-500" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 fill-current text-red-400" viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
             <span>{formatNumber(totalLikes)}</span>
@@ -120,32 +148,32 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
 
           {/* Downloads */}
           <div className="flex items-center space-x-1">
-            <svg className="w-3 h-3 fill-current text-green-500" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 fill-current text-green-400" viewBox="0 0 24 24">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
-            <span>{formatNumber(model.downloads || 0)}</span>
+            <span>{formatNumber((model as any).downloads || 0)}</span>
           </div>
 
           {/* Views or Comments count */}
           <div className="flex items-center space-x-1">
-            <svg className="w-3 h-3 fill-current text-blue-500" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 fill-current text-blue-400" viewBox="0 0 24 24">
               <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
             </svg>
             <span>{formatNumber(model.comments?.length || 0)}</span>
           </div>
         </div>
 
-        {/* Like Bar (similar to Thingiverse) */}
-        {totalLikes > 0 && (
-          <div className="mt-3">
-            <div className="bg-gray-200 rounded-full h-1">
+        {/* Like Bar - Fixed height at bottom */}
+        <div className="mt-auto pt-2 sm:pt-3">
+          {totalLikes > 0 && (
+            <div className="bg-white/20 rounded-full h-1">
               <div 
-                className="bg-red-500 h-1 rounded-full transition-all duration-300"
+                className="bg-red-400 h-1 rounded-full transition-all duration-300"
                 style={{ width: `${likePercentage}%` }}
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

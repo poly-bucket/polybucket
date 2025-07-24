@@ -8,16 +8,16 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  const { user, isFirstRun, setupStatus } = useAppSelector((state) => state.auth);
+  const { user, isInitialized, isLoading } = useAppSelector((state) => state.auth);
 
-  // Always prioritize first run setup
-  if (isFirstRun) {
-    return <Navigate to="/admin-setup" replace />;
-  }
-
-  // Check if roles need to be configured (when admin exists but roles don't)
-  if (setupStatus && setupStatus.isAdminConfigured && !setupStatus.isRoleConfigured) {
-    return <Navigate to="/custom-role-setup" replace />;
+  // Show loading while initializing
+  if (!isInitialized || isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
+        <h2 className="text-xl font-semibold mt-4">Loading...</h2>
+      </div>
+    );
   }
 
   // If no user, redirect to login
@@ -26,10 +26,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
   }
 
   // Check for required role if specified
-  if (requiredRole === 'admin' && !user.roles?.includes('Admin')) {
-    // Redirect to dashboard or an unauthorized page if the role doesn't match
-    console.warn(`Access denied: User role does not include 'Admin', required for this route.`);
-    return <Navigate to="/dashboard" replace />;
+  if (requiredRole) {
+    const hasRequiredRole = user.roles?.some((role: string) => 
+      role.toLowerCase() === requiredRole.toLowerCase()
+    );
+    
+    if (!hasRequiredRole) {
+      console.warn(`Access denied: User roles [${user.roles?.join(', ')}] do not include '${requiredRole}', required for this route.`);
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   // Otherwise render the children

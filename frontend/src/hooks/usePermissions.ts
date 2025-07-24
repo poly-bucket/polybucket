@@ -29,13 +29,13 @@ export interface Permission {
 }
 
 export const usePermissions = () => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [permissions, setPermissions] = useState<UserPermissions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserPermissions = useCallback(async () => {
-    if (!user?.id || !token) {
+    if (!user?.id || !user.accessToken) {
       setPermissions(null);
       setLoading(false);
       return;
@@ -43,12 +43,13 @@ export const usePermissions = () => {
 
     try {
       setLoading(true);
-      const response = await axios.get(`/api/admin/user-permissions/${user.id}/permissions`, {
+      const response = await axios.get(`/api/admin/user-permissions/me/permissions`, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${user.accessToken}`
         }
       });
       
+      console.log('usePermissions - API Response:', response.data);
       setPermissions(response.data);
       setError(null);
     } catch (err) {
@@ -58,46 +59,46 @@ export const usePermissions = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, token]);
+  }, [user?.id, user?.accessToken]);
 
   useEffect(() => {
     fetchUserPermissions();
   }, [fetchUserPermissions]);
 
   const hasPermission = useCallback((permission: string): boolean => {
-    if (!permissions) return false;
+    if (!permissions || !permissions.effectivePermissions) return false;
     return permissions.effectivePermissions.includes(permission);
   }, [permissions]);
 
   const hasAnyPermission = useCallback((permissionList: string[]): boolean => {
-    if (!permissions) return false;
+    if (!permissions || !permissions.effectivePermissions) return false;
     return permissionList.some(permission => permissions.effectivePermissions.includes(permission));
   }, [permissions]);
 
   const hasAllPermissions = useCallback((permissionList: string[]): boolean => {
-    if (!permissions) return false;
+    if (!permissions || !permissions.effectivePermissions) return false;
     return permissionList.every(permission => permissions.effectivePermissions.includes(permission));
   }, [permissions]);
 
   const hasRole = useCallback((roleName: string): boolean => {
-    if (!permissions) return false;
+    if (!permissions || !permissions.role) return false;
     return permissions.role.name.toLowerCase() === roleName.toLowerCase();
   }, [permissions]);
 
   const hasMinimumRole = useCallback((roleName: string, roleHierarchy: Record<string, number>): boolean => {
-    if (!permissions) return false;
+    if (!permissions || !permissions.role) return false;
     const userRolePriority = roleHierarchy[permissions.role.name.toLowerCase()] || 0;
     const requiredRolePriority = roleHierarchy[roleName.toLowerCase()] || 0;
     return userRolePriority >= requiredRolePriority;
   }, [permissions]);
 
   const isAdmin = useCallback((): boolean => {
-    if (!permissions) return false;
+    if (!permissions || !permissions.role) return false;
     return permissions.role.name.toLowerCase() === 'admin' || permissions.role.priority >= 1000;
   }, [permissions]);
 
   const isModerator = useCallback((): boolean => {
-    if (!permissions) return false;
+    if (!permissions || !permissions.role) return false;
     return isAdmin() || permissions.role.name.toLowerCase() === 'moderator';
   }, [permissions, isAdmin]);
 

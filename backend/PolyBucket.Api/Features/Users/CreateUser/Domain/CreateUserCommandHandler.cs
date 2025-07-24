@@ -12,33 +12,22 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Users.CreateUser.Domain
 {
-    public class CreateUserCommandHandler
+    public class CreateUserCommandHandler(
+        IAuthenticationRepository authRepository,
+        IPasswordHasher passwordHasher,
+        IPasswordGenerator passwordGenerator,
+        IEmailService emailService,
+        IConfiguration configuration,
+        ILogger<CreateUserCommandHandler> logger,
+        PolyBucketDbContext context)
     {
-        private readonly IAuthenticationRepository _authRepository;
-        private readonly IPasswordHasher _passwordHasher;
-        private readonly IPasswordGenerator _passwordGenerator;
-        private readonly IEmailService _emailService;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<CreateUserCommandHandler> _logger;
-        private readonly PolyBucketDbContext _context;
-
-        public CreateUserCommandHandler(
-            IAuthenticationRepository authRepository,
-            IPasswordHasher passwordHasher,
-            IPasswordGenerator passwordGenerator,
-            IEmailService emailService,
-            IConfiguration configuration,
-            ILogger<CreateUserCommandHandler> logger,
-            PolyBucketDbContext context)
-        {
-            _authRepository = authRepository;
-            _passwordHasher = passwordHasher;
-            _passwordGenerator = passwordGenerator;
-            _emailService = emailService;
-            _configuration = configuration;
-            _logger = logger;
-            _context = context;
-        }
+        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly IPasswordHasher _passwordHasher = passwordHasher;
+        private readonly IPasswordGenerator _passwordGenerator = passwordGenerator;
+        private readonly IEmailService _emailService = emailService;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<CreateUserCommandHandler> _logger = logger;
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task<CreateUserCommandResponse> Handle(CreateUserCommand command, CancellationToken cancellationToken)
         {

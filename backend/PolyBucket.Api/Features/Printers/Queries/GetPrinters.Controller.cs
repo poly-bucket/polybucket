@@ -9,14 +9,9 @@ namespace PolyBucket.Api.Features.Printers.Queries
     [ApiController]
     [Route("api/printers")]
     [Authorize]
-    public class GetPrintersController : ControllerBase
+    public class GetPrintersController(GetPrintersQueryHandler handler) : ControllerBase
     {
-        private readonly GetPrintersQueryHandler _handler;
-
-        public GetPrintersController(GetPrintersQueryHandler handler)
-        {
-            _handler = handler;
-        }
+        private readonly GetPrintersQueryHandler _handler = handler;
 
         [HttpGet]
         public async Task<IActionResult> GetPrinters(CancellationToken cancellationToken)

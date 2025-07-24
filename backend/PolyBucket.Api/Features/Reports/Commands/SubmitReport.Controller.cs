@@ -10,15 +10,10 @@ namespace PolyBucket.Api.Features.Reports.Commands
     [ApiController]
     [Route("api/reports")]
     [Authorize]
-    public class SubmitReportController : ControllerBase
+    public class SubmitReportController(IReportingPlugin reportingPlugin) : ControllerBase
     {
-        private readonly IReportingPlugin _reportingPlugin;
+        private readonly IReportingPlugin _reportingPlugin = reportingPlugin;
 
-        public SubmitReportController(IReportingPlugin reportingPlugin)
-        {
-            _reportingPlugin = reportingPlugin;
-        }
-        
         [HttpPost]
         public async Task<IActionResult> SubmitReport([FromBody] SubmitReportRequest request)
         {
@@ -42,6 +37,6 @@ namespace PolyBucket.Api.Features.Reports.Commands
         public ReportType Type { get; set; }
         public Guid TargetId { get; set; }
         public ReportReason Reason { get; set; }
-        public string Description { get; set; }
+        public required string Description { get; set; }
     }
 } 

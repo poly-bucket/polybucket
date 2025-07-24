@@ -1,0 +1,33 @@
+using Microsoft.EntityFrameworkCore;
+using PolyBucket.Api.Data;
+using PolyBucket.Api.Features.Models.Domain;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace PolyBucket.Api.Features.Models.DeleteModelVersion.Repository
+{
+    public class DeleteModelVersionRepository : IDeleteModelVersionRepository
+    {
+        private readonly PolyBucketDbContext _dbContext;
+
+        public DeleteModelVersionRepository(PolyBucketDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<ModelVersion?> GetModelVersionAsync(Guid modelId, Guid versionId, CancellationToken cancellationToken)
+        {
+            return await _dbContext.ModelVersions
+                .Include(v => v.Model)
+                .Include(v => v.Files)
+                .FirstOrDefaultAsync(v => v.ModelId == modelId && v.Id == versionId, cancellationToken);
+        }
+
+        public async Task DeleteModelVersionAsync(ModelVersion modelVersion, CancellationToken cancellationToken)
+        {
+            _dbContext.ModelVersions.Update(modelVersion);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+} 

@@ -6,10 +6,10 @@ namespace PolyBucket.Api.Features.Comments.Domain
 {
     public class Comment : Auditable
     {
-        public string Content { get; set; }
+        public required string Content { get; set; }
         public int Likes { get; set; }
         public int Dislikes { get; set; }
-        public virtual Model Model { get; set; }
-        public virtual User Author { get; set; }
+        public virtual required Model Model { get; set; }
+        public virtual required User Author { get; set; }
     }
 } 

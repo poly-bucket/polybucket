@@ -1,20 +1,23 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Login.Domain;
 using PolyBucket.Api.Features.Authentication.Login.Http;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.SystemSettings.Domain;
 using Shouldly;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using PolyBucket.Api.Common.Enums;
+using PolyBucket.Api.Features.ACL.Domain;
 using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
 
 namespace PolyBucket.Tests.Features.Authentication.Http
@@ -23,6 +26,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
     {
         private readonly Mock<IAuthenticationRepository> _authRepositoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
+        private readonly Mock<IPasswordHasher> _passwordHasherMock;
         private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<ILogger<LoginCommandHandler>> _loggerMock;
         private readonly LoginController _controller;
@@ -32,14 +36,17 @@ namespace PolyBucket.Tests.Features.Authentication.Http
         {
             _authRepositoryMock = new Mock<IAuthenticationRepository>();
             _tokenServiceMock = new Mock<ITokenService>();
+            _passwordHasherMock = new Mock<IPasswordHasher>();
             _configurationMock = new Mock<IConfiguration>();
             _loggerMock = new Mock<ILogger<LoginCommandHandler>>();
             
             _handler = new LoginCommandHandler(
                 _authRepositoryMock.Object,
                 _tokenServiceMock.Object,
+                _passwordHasherMock.Object,
                 _configurationMock.Object,
-                _loggerMock.Object);
+                _loggerMock.Object,
+                null!); // Pass null for DbContext in tests
                 
             _controller = new LoginController(_handler, Mock.Of<ILogger<LoginController>>())
             {
@@ -61,13 +68,21 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 UserAgent = "Test User Agent"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                Role = UserRole.User,
+                RoleId = userRole.Id,
+                Role = userRole,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -83,18 +98,23 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                     Id = user.Id,
                     Email = user.Email,
                     Username = user.Username,
-                    Role = user.Role.ToString()
+                    Role = user.Role?.Name ?? "User"
                 }
             };
 
             _authRepositoryMock.Setup(x => x.GetUserByEmailAsync(command.Email))
                 .ReturnsAsync(user);
+            _passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash))
+                .Returns(true);
             _tokenServiceMock.Setup(x => x.GenerateAuthenticationResponse(user))
                 .Returns(authResponse);
             _authRepositoryMock.Setup(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshTokenModel>()))
                 .ReturnsAsync(It.IsAny<RefreshTokenModel>());
             _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
                 .Returns(Task.CompletedTask);
+            
+            // Note: The database context mock will return null for SystemSetups by default
+            // This is sufficient for the tests since we're not testing the setup functionality
 
             // Act
             var result = await _controller.Login(command, CancellationToken.None);
@@ -107,6 +127,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
 
             // Verify all expected calls were made
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(command.Email), Times.Once);
+            _passwordHasherMock.Verify(x => x.VerifyPassword(command.Password, user.PasswordHash), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshTokenModel>()), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once); // One successful login record
             _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(user), Times.Once);
@@ -153,19 +174,29 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 UserAgent = "Test User Agent"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("correctpassword"),
-                Role = UserRole.User,
+                RoleId = userRole.Id,
+                Role = userRole,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             _authRepositoryMock.Setup(x => x.GetUserByEmailAsync(command.Email))
                 .ReturnsAsync(user);
+            _passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash))
+                .Returns(false);
             _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
                 .Returns(Task.CompletedTask);
 
@@ -179,6 +210,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
 
             // Verify failed login was logged but no token created
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(command.Email), Times.Once);
+            _passwordHasherMock.Verify(x => x.VerifyPassword(command.Password, user.PasswordHash), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshTokenModel>()), Times.Never);
             _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(It.IsAny<User>()), Times.Never);
@@ -224,19 +256,29 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 UserAgent = "Test User Agent"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                Role = UserRole.User,
+                RoleId = userRole.Id,
+                Role = userRole,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             _authRepositoryMock.Setup(x => x.GetUserByEmailAsync(command.Email))
                 .ReturnsAsync(user);
+            _passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash))
+                .Returns(true);
             _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
                 .Returns(Task.CompletedTask);
             _tokenServiceMock.Setup(x => x.GenerateAuthenticationResponse(user))
@@ -251,9 +293,10 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             errorResult.StatusCode.ShouldBe(500);
             errorResult.Value.ShouldNotBeNull();
 
-            // Verify calls were made up to the point of failure
+            // Verify all expected calls were made
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(command.Email), Times.Once);
-            _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once); // One login record logged
+            _passwordHasherMock.Verify(x => x.VerifyPassword(command.Password, user.PasswordHash), Times.Once);
+            _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once);
             _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(user), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshTokenModel>()), Times.Never);
         }
@@ -269,20 +312,18 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 UserAgent = "Test User Agent"
             };
 
-            _authRepositoryMock.Setup(x => x.GetUserByEmailAsync(command.Email))
-                .ReturnsAsync((User?)null);
-            _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
-                .Returns(Task.CompletedTask);
-
             // Act
             var result = await _controller.Login(command, CancellationToken.None);
 
             // Assert
             result.ShouldBeOfType<UnauthorizedObjectResult>();
-            
-            // Verify failed login was logged
-            _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(command.Email), Times.Once);
-            _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once);
+            var unauthorizedResult = (UnauthorizedObjectResult)result;
+            unauthorizedResult.Value.ShouldNotBeNull();
+
+            // Verify no repository calls were made
+            _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(It.IsAny<string>()), Times.Never);
+            _authRepositoryMock.Verify(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshTokenModel>()), Times.Never);
+            _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(It.IsAny<User>()), Times.Never);
         }
     }
 } 

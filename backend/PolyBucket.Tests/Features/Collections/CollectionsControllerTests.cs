@@ -11,6 +11,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api;
 using PolyBucket.Api.Features.Collections.CreateCollection.Http;
 using PolyBucket.Api.Features.Collections.DeleteCollection.Http;
@@ -21,6 +22,8 @@ using PolyBucket.Api.Features.Collections.AddModelToCollection.Http;
 using PolyBucket.Api.Features.Collections.RemoveModelFromCollection.Http;
 using PolyBucket.Api.Features.Collections.CreateCollection.Domain;
 using PolyBucket.Api.Features.Collections.UpdateCollection.Domain;
+using PolyBucket.Api.Features.Collections.AddModelToCollection.Domain;
+using PolyBucket.Api.Features.Collections.RemoveModelFromCollection.Domain;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
 using PolyBucket.Api.Data;
@@ -76,7 +79,8 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
         
-        var user = TestUserFactory.CreateTestUser();
+        var userFactory = new TestUserFactory(context);
+        var user = await userFactory.CreateTestUser();
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
@@ -111,7 +115,8 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
 
-        var user = TestUserFactory.CreateTestUser();
+        var userFactory = new TestUserFactory(context);
+        var user = await userFactory.CreateTestUser();
         await context.Users.AddAsync(user);
 
         var collection = new Collection
@@ -146,7 +151,8 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
 
-        var user = TestUserFactory.CreateTestUser();
+        var userFactory = new TestUserFactory(context);
+        var user = await userFactory.CreateTestUser();
         await context.Users.AddAsync(user);
 
         var collection = new Collection
@@ -191,7 +197,8 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
 
-        var user = TestUserFactory.CreateTestUser();
+        var userFactory = new TestUserFactory(context);
+        var user = await userFactory.CreateTestUser();
         await context.Users.AddAsync(user);
 
         var collection = new Collection
@@ -222,7 +229,8 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
 
-        var user = TestUserFactory.CreateTestUser();
+        var userFactory = new TestUserFactory(context);
+        var user = await userFactory.CreateTestUser();
         await context.Users.AddAsync(user);
 
         var collections = new List<Collection>
@@ -256,10 +264,12 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
 
-        var user = TestUserFactory.CreateTestUser();
-        var model = TestModelFactory.CreateTestModel(user.Id);
+        var userFactory = new TestUserFactory(context);
+        var user = await userFactory.CreateTestUser();
+        var modelFactory = new TestModelFactory(context);
+        var model = await modelFactory.CreateTestModel();
         await context.Users.AddAsync(user);
-        await context.Models.AddAsync(model);
+        await context.SaveChangesAsync();
 
         var collection = new Collection
         {
@@ -270,16 +280,22 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         await context.Collections.AddAsync(collection);
         await context.SaveChangesAsync();
 
+        var command = new AddModelToCollectionCommand
+        {
+            CollectionId = collection.Id,
+            ModelId = model.Id
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(command), Encoding.UTF8, "application/json");
         _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {CreateJwtToken(user.Id.ToString())}");
 
         // Act
-        var response = await _client.PostAsync($"/api/collections/{collection.Id}/models/{model.Id}", null);
+        var response = await _client.PostAsync("/api/collections/add-model", content);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var collectionModel = await context.CollectionModels
-            .FirstOrDefaultAsync(cm => cm.CollectionId == collection.Id && cm.ModelId == model.Id);
+        var collectionModel = await context.CollectionModels.FirstOrDefaultAsync(cm => cm.CollectionId == collection.Id && cm.ModelId == model.Id);
         collectionModel.ShouldNotBeNull();
     }
 
@@ -290,10 +306,12 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
 
-        var user = TestUserFactory.CreateTestUser();
-        var model = TestModelFactory.CreateTestModel(user.Id);
+        var userFactory = new TestUserFactory(context);
+        var user = await userFactory.CreateTestUser();
+        var modelFactory = new TestModelFactory(context);
+        var model = await modelFactory.CreateTestModel();
         await context.Users.AddAsync(user);
-        await context.Models.AddAsync(model);
+        await context.SaveChangesAsync();
 
         var collection = new Collection
         {
@@ -302,33 +320,47 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
             OwnerId = user.Id
         };
         await context.Collections.AddAsync(collection);
+        await context.SaveChangesAsync();
 
         var collectionModel = new CollectionModel
         {
             CollectionId = collection.Id,
-            ModelId = model.Id,
-            AddedAt = DateTime.UtcNow
+            ModelId = model.Id
         };
         await context.CollectionModels.AddAsync(collectionModel);
         await context.SaveChangesAsync();
 
+        var command = new RemoveModelFromCollectionCommand
+        {
+            CollectionId = collection.Id,
+            ModelId = model.Id
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(command), Encoding.UTF8, "application/json");
         _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {CreateJwtToken(user.Id.ToString())}");
 
         // Act
-        var response = await _client.DeleteAsync($"/api/collections/{collection.Id}/models/{model.Id}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, "/api/collections/remove-model")
+        {
+            Content = content
+        };
+        var response = await _client.SendAsync(request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var removedCollectionModel = await context.CollectionModels
-            .FirstOrDefaultAsync(cm => cm.CollectionId == collection.Id && cm.ModelId == model.Id);
+        var removedCollectionModel = await context.CollectionModels.FirstOrDefaultAsync(cm => cm.CollectionId == collection.Id && cm.ModelId == model.Id);
         removedCollectionModel.ShouldBeNull();
     }
 
     private string CreateJwtToken(string userId)
     {
-        // This is a simplified JWT token creation for testing
-        // In a real test, you'd use proper JWT creation
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{{\"sub\":\"{userId}\"}}"));
+        // This is a simplified JWT token creation for testing purposes
+        // In a real application, you would use a proper JWT library
+        var header = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("{\"alg\":\"HS256\",\"typ\":\"JWT\"}"));
+        var payload = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{{\"sub\":\"{userId}\",\"exp\":{DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds()}}}"));
+        var signature = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("test-signature"));
+        
+        return $"{header}.{payload}.{signature}";
     }
 } 

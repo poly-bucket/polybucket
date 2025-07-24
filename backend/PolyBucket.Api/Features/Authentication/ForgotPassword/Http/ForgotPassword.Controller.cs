@@ -9,16 +9,10 @@ namespace PolyBucket.Api.Features.Authentication.ForgotPassword.Http
 {
     [ApiController]
     [Route("api/auth")]
-    public class ForgotPasswordController : ControllerBase
+    public class ForgotPasswordController(ForgotPasswordCommandHandler handler, ILogger<ForgotPasswordController> logger) : ControllerBase
     {
-        private readonly ForgotPasswordCommandHandler _handler;
-        private readonly ILogger<ForgotPasswordController> _logger;
-
-        public ForgotPasswordController(ForgotPasswordCommandHandler handler, ILogger<ForgotPasswordController> logger)
-        {
-            _handler = handler;
-            _logger = logger;
-        }
+        private readonly ForgotPasswordCommandHandler _handler = handler;
+        private readonly ILogger<ForgotPasswordController> _logger = logger;
 
         /// <summary>
         /// Request a password reset email

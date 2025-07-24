@@ -1,28 +1,20 @@
 import axios from 'axios';
+import store from '../store';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/admin/users` : 'http://localhost:11666/api/admin/users';
 
-// Helper to get auth headers
+// Helper to get auth headers from Redux store
 const getAuthHeaders = () => {
-  try {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      throw new Error('No user found in localStorage');
-    }
-    
-    const user = JSON.parse(userStr);
-    if (!user.accessToken) {
-      throw new Error('No access token found in user data');
-    }
-    
+  const state = store.getState();
+  const user = state.auth.user;
+  
+  if (user?.accessToken) {
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${user.accessToken}`
     };
-  } catch (error) {
-    console.error('Error creating auth headers:', error);
-    throw error;
   }
+  throw new Error('No access token found in Redux store');
 };
 
 // Types for user creation

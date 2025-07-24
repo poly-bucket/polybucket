@@ -9,14 +9,9 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Data.Seeders
 {
-    public class CollectionSeeder
+    public class CollectionSeeder(PolyBucketDbContext context)
     {
-        private readonly PolyBucketDbContext _context;
-
-        public CollectionSeeder(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task SeedAsync()
         {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../utils/hooks';
-import { register, reset } from '../../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { registerUser } from '../../store/thunks/authThunks';
+import { reset } from '../../store/slices/authSlice';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 interface RegisterFormProps {
@@ -71,7 +72,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isAdminSetup = false }) => 
       isAdmin: isAdminSetup
     };
 
-    dispatch(register(userData));
+    dispatch(registerUser(userData));
   };
 
   return (

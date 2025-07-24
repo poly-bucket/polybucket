@@ -8,24 +8,16 @@ using System.Threading.Tasks;
 namespace PolyBucket.Api.Features.ACL.Authorization
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class RequireResourceOwnershipAttribute : Attribute, IAsyncActionFilter
+    public class RequireResourceOwnershipAttribute(
+        string resourceType,
+        string ownPermission,
+        string anyPermission,
+        string ownerIdParameterName = "userId") : Attribute, IAsyncActionFilter
     {
-        private readonly string _resourceType;
-        private readonly string _ownPermission;
-        private readonly string _anyPermission;
-        private readonly string _ownerIdParameterName;
-
-        public RequireResourceOwnershipAttribute(
-            string resourceType, 
-            string ownPermission, 
-            string anyPermission, 
-            string ownerIdParameterName = "userId")
-        {
-            _resourceType = resourceType ?? throw new ArgumentNullException(nameof(resourceType));
-            _ownPermission = ownPermission ?? throw new ArgumentNullException(nameof(ownPermission));
-            _anyPermission = anyPermission ?? throw new ArgumentNullException(nameof(anyPermission));
-            _ownerIdParameterName = ownerIdParameterName;
-        }
+        private readonly string _resourceType = resourceType ?? throw new ArgumentNullException(nameof(resourceType));
+        private readonly string _ownPermission = ownPermission ?? throw new ArgumentNullException(nameof(ownPermission));
+        private readonly string _anyPermission = anyPermission ?? throw new ArgumentNullException(nameof(anyPermission));
+        private readonly string _ownerIdParameterName = ownerIdParameterName;
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {

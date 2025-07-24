@@ -8,23 +8,24 @@ using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshT
 
 namespace PolyBucket.Api.Features.Authentication.Repository
 {
-    public class AuthenticationRepository : IAuthenticationRepository
+    public class AuthenticationRepository(PolyBucketDbContext context) : IAuthenticationRepository
     {
-        private readonly PolyBucketDbContext _context;
-
-        public AuthenticationRepository(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
-            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.Users
+                .Include(u => u.Role)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<User?> GetUserByUsernameAsync(string username)
         {
-            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Username == username);
+            return await _context.Users
+                .Include(u => u.Role)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task<User> CreateUserAsync(User user)
@@ -59,7 +60,9 @@ namespace PolyBucket.Api.Features.Authentication.Repository
 
         public async Task<RefreshTokenModel?> GetRefreshTokenAsync(string token)
         {
-            return await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
+            return await _context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == token);
         }
 
         public async Task RevokeRefreshTokenAsync(string token, string reason, string revokedByIp)

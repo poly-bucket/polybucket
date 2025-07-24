@@ -27,7 +27,7 @@ public class AzureBlobStorageService : IStorageService
         var blob = _container.GetBlobClient(objectName);
         await blob.UploadAsync(data, overwrite: true, cancellationToken: cancellationToken);
         await blob.SetHttpHeadersAsync(new Azure.Storage.Blobs.Models.BlobHttpHeaders { ContentType = contentType }, cancellationToken: cancellationToken);
-        return await GetPresignedUrlAsync(objectName, TimeSpan.FromHours(1), cancellationToken);
+        return objectName; // Return the object key instead of presigned URL
     }
 
     public async Task<Stream> DownloadAsync(string objectName, CancellationToken cancellationToken = default)

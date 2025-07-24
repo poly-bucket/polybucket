@@ -116,7 +116,6 @@ The backend is organized following Clean Architecture principles with these proj
 - **PolyBucket.Api**: ASP.NET Core Web API
 - **PolyBucket.Core**: Domain models and interfaces
 - **PolyBucket.Infrastructure**: Implementation of interfaces, data access, etc.
-- **PolyBucket.Plugins**: Extensibility points
 
 To run tests:
 ```

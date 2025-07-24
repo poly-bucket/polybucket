@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../utils/hooks';
-import { checkFirstRun } from '../../store/slices/authSlice';
 
 const ProtectedRoute: React.FC = () => {
   const { user, isLoading } = useAppSelector((state) => state.auth);
@@ -9,20 +8,11 @@ const ProtectedRoute: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If we don't have a user, check if it's first run
+    // If we don't have a user and not loading, redirect to login
     if (!user && !isLoading) {
-      dispatch(checkFirstRun())
-        .unwrap()
-        .then((result: { isFirstRun: boolean }) => {
-          if (result.isFirstRun) {
-            navigate('/');
-          }
-        })
-        .catch(() => {
-          navigate('/login');
-        });
+      navigate('/login');
     }
-  }, [user, isLoading, dispatch, navigate]);
+  }, [user, isLoading, navigate]);
 
   // Show loading indicator while checking authentication
   if (isLoading) {

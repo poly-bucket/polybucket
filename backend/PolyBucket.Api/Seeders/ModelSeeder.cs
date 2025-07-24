@@ -8,14 +8,9 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Data.Seeders
 {
-    public class ModelSeeder
+    public class ModelSeeder(PolyBucketDbContext context)
     {
-        private readonly PolyBucketDbContext _context;
-
-        public ModelSeeder(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task SeedAsync()
         {
@@ -48,7 +43,7 @@ namespace PolyBucket.Api.Data.Seeders
                     IsRemix = false,
                     Downloads = 245,
                     Likes = 18,
-                    ThumbnailUrl = "https://via.placeholder.com/300x200/4f46e5/ffffff?text=Sample+Model",
+                    ThumbnailUrl = null, // No thumbnail to test MiniModelViewer
                     CreatedAt = DateTime.UtcNow.AddDays(-30),
                     UpdatedAt = DateTime.UtcNow.AddDays(-30),
                 },
@@ -266,6 +261,25 @@ namespace PolyBucket.Api.Data.Seeders
             };
 
             _context.Models.AddRange(models);
+            await _context.SaveChangesAsync();
+
+            // Add a test file to the first model to test MiniModelViewer
+            var firstModel = models[0];
+            var testFile = new ModelFile
+            {
+                Id = Guid.NewGuid(),
+                Model = firstModel,
+                Name = "test-model.stl",
+                Path = "test/path/test-model.stl",
+                Size = 1024 * 1024, // 1MB
+                MimeType = "application/sla",
+                CreatedAt = DateTime.UtcNow,
+                CreatedById = admin.Id,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedById = admin.Id
+            };
+
+            _context.ModelFiles.Add(testFile);
             await _context.SaveChangesAsync();
         }
     }

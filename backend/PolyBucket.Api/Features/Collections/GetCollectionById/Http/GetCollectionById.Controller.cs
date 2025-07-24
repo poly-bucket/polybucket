@@ -8,14 +8,9 @@ namespace PolyBucket.Api.Features.Collections.GetCollectionById.Http
 {
     [ApiController]
     [Route("api/collections")]
-    public class GetCollectionByIdController : ControllerBase
+    public class GetCollectionByIdController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public GetCollectionByIdController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCollectionById(Guid id)

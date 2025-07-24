@@ -2,24 +2,21 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Models.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Repository;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Services;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Models.GenerateModelPreview.Domain
 {
-    public class GenerateModelPreviewCommandHandler : IRequestHandler<GenerateModelPreviewCommand, GenerateModelPreviewResponse>
+    public class GenerateModelPreviewCommandHandler(
+        IGenerateModelPreviewRepository previewRepository,
+        IModelPreviewGenerationService previewGenerationService,
+        ILogger<GenerateModelPreviewCommandHandler> logger) : IRequestHandler<GenerateModelPreviewCommand, GenerateModelPreviewResponse>
     {
-        private readonly IGenerateModelPreviewRepository _previewRepository;
-        private readonly ILogger<GenerateModelPreviewCommandHandler> _logger;
-
-        public GenerateModelPreviewCommandHandler(
-            IGenerateModelPreviewRepository previewRepository,
-            ILogger<GenerateModelPreviewCommandHandler> logger)
-        {
-            _previewRepository = previewRepository;
-            _logger = logger;
-        }
+        private readonly IGenerateModelPreviewRepository _previewRepository = previewRepository;
+        private readonly IModelPreviewGenerationService _previewGenerationService = previewGenerationService;
+        private readonly ILogger<GenerateModelPreviewCommandHandler> _logger = logger;
 
         public async Task<GenerateModelPreviewResponse> Handle(GenerateModelPreviewCommand request, CancellationToken cancellationToken)
         {

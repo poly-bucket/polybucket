@@ -14,8 +14,7 @@ public class SystemSettingsControllerTests
     {
         return new List<object[]>
         {
-            new object[] { typeof(AdminSetupController) },
-            new object[] { typeof(GetSetupStatusController) }
+            new object[] { typeof(SystemSetupController) }
         };
     }
 

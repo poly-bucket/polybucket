@@ -5,19 +5,15 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using PolyBucket.Api.Features.Models.GetModels.Domain;
+using PolyBucket.Api.Common.Storage;
 
 namespace PolyBucket.Api.Features.Models.GetModels.Domain
 {
-    public class GetModelsQueryHandler : IRequestHandler<GetModelsQuery, GetModelsResponse>
+    public class GetModelsQueryHandler(IModelsRepository repository, ILogger<GetModelsQueryHandler> logger, IStorageService storageService) : IRequestHandler<GetModelsQuery, GetModelsResponse>
     {
-        private readonly IModelsRepository _repository;
-        private readonly ILogger<GetModelsQueryHandler> _logger;
-
-        public GetModelsQueryHandler(IModelsRepository repository, ILogger<GetModelsQueryHandler> logger)
-        {
-            _repository = repository;
-            _logger = logger;
-        }
+        private readonly IModelsRepository _repository = repository;
+        private readonly ILogger<GetModelsQueryHandler> _logger = logger;
+        private readonly IStorageService _storageService = storageService;
 
         public async Task<GetModelsResponse> Handle(GetModelsQuery request, CancellationToken cancellationToken)
         {
@@ -25,6 +21,30 @@ namespace PolyBucket.Api.Features.Models.GetModels.Domain
             {
                 var (models, totalCount) = await _repository.GetModelsAsync(request.Page, request.Take);
                 var totalPages = (int)Math.Ceiling(totalCount / (double)request.Take);
+
+                // Generate fresh presigned URLs for all models
+                foreach (var model in models)
+                {
+                    // Generate fresh presigned URL for FileUrl
+                    if (!string.IsNullOrEmpty(model.FileUrl))
+                    {
+                        // Check if it's already a presigned URL (contains query parameters)
+                        if (!model.FileUrl.Contains("?"))
+                        {
+                            model.FileUrl = await _storageService.GetPresignedUrlAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
+                        }
+                    }
+
+                    // Generate fresh presigned URL for ThumbnailUrl
+                    if (!string.IsNullOrEmpty(model.ThumbnailUrl))
+                    {
+                        // Check if it's already a presigned URL (contains query parameters)
+                        if (!model.ThumbnailUrl.Contains("?"))
+                        {
+                            model.ThumbnailUrl = await _storageService.GetPresignedUrlAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
+                        }
+                    }
+                }
 
                 return new GetModelsResponse
                 {

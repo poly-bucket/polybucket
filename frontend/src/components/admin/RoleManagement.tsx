@@ -1,22 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  Paper,
-  Typography,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  Divider,
-} from '@mui/material';
-import {
   AdminPanelSettings as RoleIcon,
   Security as SecurityIcon,
   People as PeopleIcon,
@@ -102,22 +85,17 @@ const RoleManagement: React.FC = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock data - in reality this would come from: await api.get('/admin/users/role-counts');
-      const mockCounts = {
-        Admin: 1,
-        Moderator: 2, 
-        User: 42
-      };
-
-      setRoles(prev => prev.map(role => ({
+      // Mock user counts
+      const updatedRoles = roles.map(role => ({
         ...role,
-        userCount: mockCounts[role.name as keyof typeof mockCounts] || 0
-      })));
-
+        userCount: Math.floor(Math.random() * 50) + 1
+      }));
+      
+      setRoles(updatedRoles);
       showSnackbar('Role data loaded successfully', 'success');
     } catch (error) {
       console.error('Failed to fetch user counts:', error);
-      showSnackbar('Failed to load role data. Using default values.', 'warning');
+      showSnackbar('Failed to load role data', 'error');
     } finally {
       setLoading(false);
     }
@@ -128,217 +106,134 @@ const RoleManagement: React.FC = () => {
   };
 
   const getTotalUsers = () => {
-    return roles.reduce((sum, role) => sum + role.userCount, 0);
+    return roles.reduce((total, role) => total + role.userCount, 0);
   };
 
   const getTotalPermissions = () => {
-    const allPermissions = new Set();
-    roles.forEach(role => {
-      role.permissions.forEach(permission => allPermissions.add(permission));
-    });
-    return allPermissions.size;
+    return roles.reduce((total, role) => total + role.permissions.length, 0);
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <div className="flex items-center justify-center py-12">
+        <div className="lg-spinner"></div>
+        <span className="ml-3 text-lg text-white">Loading role data...</span>
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2">
-          Role Management
-        </Typography>
-        <Alert severity="info" sx={{ ml: 2 }}>
-          Current system uses predefined roles. ACL expansion coming soon.
-        </Alert>
-      </Box>
-
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                System Roles
-              </Typography>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                These are the current system roles. Role modification will be available when the ACL system is fully integrated.
-              </Alert>
-              
-              <List>
-                {roles.map((role) => (
-                  <Paper key={role.name} variant="outlined" sx={{ mb: 1 }}>
-                    <ListItem>
-                      <RoleIcon sx={{ mr: 2, color: 'primary.main' }} />
-                      <ListItemText
-                        primary={
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <Typography variant="h6">{role.name}</Typography>
-                            <Chip
-                              label="System Role"
-                              size="small"
-                              color={role.color}
-                            />
-                            <Chip
-                              label={`${role.userCount} users`}
-                              size="small"
-                              variant="outlined"
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {role.description}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Permissions: {role.permissions.length}
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                    
-                    {/* Role Permissions Display */}
-                    <Box sx={{ px: 2, pb: 2 }}>
-                      <Typography variant="caption" color="text.secondary" gutterBottom>
-                        Current Permissions:
-                      </Typography>
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                        {role.permissions.map((permission) => (
-                          <Chip 
-                            key={permission} 
-                            label={permission}
-                            size="small"
-                            variant="outlined"
-                            color="default"
-                          />
-                        ))}
-                      </Box>
-                    </Box>
-                  </Paper>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Role Statistics
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={1}>
-                <Typography variant="body2">
-                  Total Roles: {roles.length}
-                </Typography>
-                <Typography variant="body2">
-                  System Roles: {roles.filter(r => r.isSystemRole).length}
-                </Typography>
-                <Typography variant="body2">
-                  Total Users: {getTotalUsers()}
-                </Typography>
-                <Typography variant="body2">
-                  Total Permissions: {getTotalPermissions()}
-                </Typography>
-              </Box>
-              
-              <Divider sx={{ my: 2 }} />
-              
-              <Typography variant="h6" gutterBottom>
-                User Distribution
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={1}>
-                {roles.map((role) => (
-                  <Box key={role.name} display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2">{role.name}</Typography>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        {role.userCount}
-                      </Typography>
-                      <Chip
-                        label={`${((role.userCount / getTotalUsers()) * 100).toFixed(1)}%`}
-                        size="small"
-                        color={role.color}
-                        variant="outlined"
-                      />
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                System Information
-              </Typography>
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                <Typography variant="body2">
-                  <strong>Current Limitations:</strong>
-                </Typography>
-                <Typography variant="body2">
-                  • Roles cannot be created or modified
-                  • Permission assignment is static
-                  • User role changes require backend API calls
-                </Typography>
-              </Alert>
-              
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                <strong>Coming Soon:</strong>
-              </Typography>
-              <List dense>
-                <ListItem sx={{ py: 0 }}>
-                  <ListItemText 
-                    primary="Custom Role Creation" 
-                    secondary="Create roles with specific permissions"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
-                  />
-                </ListItem>
-                <ListItem sx={{ py: 0 }}>
-                  <ListItemText 
-                    primary="Permission Management" 
-                    secondary="Fine-grained permission control"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
-                  />
-                </ListItem>
-                <ListItem sx={{ py: 0 }}>
-                  <ListItemText 
-                    primary="Role Hierarchy" 
-                    secondary="Parent-child role relationships"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
-                  />
-                </ListItem>
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-      >
-        <Alert
-          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Role Management</h2>
+        <button
+          onClick={fetchUserCounts}
+          className="lg-button lg-button-primary"
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+          Refresh Data
+        </button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="lg-card p-4">
+          <div className="flex items-center">
+            <RoleIcon className="w-8 h-8 text-indigo-400 mr-3" />
+            <div>
+              <div className="text-2xl font-bold text-white">{roles.length}</div>
+              <div className="text-sm text-white/60">Total Roles</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="lg-card p-4">
+          <div className="flex items-center">
+            <PeopleIcon className="w-8 h-8 text-green-400 mr-3" />
+            <div>
+              <div className="text-2xl font-bold text-white">{getTotalUsers()}</div>
+              <div className="text-sm text-white/60">Total Users</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="lg-card p-4">
+          <div className="flex items-center">
+            <SecurityIcon className="w-8 h-8 text-yellow-400 mr-3" />
+            <div>
+              <div className="text-2xl font-bold text-white">{getTotalPermissions()}</div>
+              <div className="text-sm text-white/60">Total Permissions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Roles List */}
+      <div className="lg-card p-6">
+        <h3 className="text-lg font-medium text-white mb-4">System Roles</h3>
+        
+        <div className="space-y-4">
+          {roles.map((role) => (
+            <div key={role.name} className="border border-white/10 rounded-lg p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center">
+                  <span className={`lg-badge ${
+                    role.color === 'error' ? 'lg-badge-error' :
+                    role.color === 'warning' ? 'lg-badge-warning' :
+                    'lg-badge-info'
+                  } mr-3`}>
+                    {role.name}
+                  </span>
+                  <span className="text-sm text-white/60">
+                    {role.userCount} users
+                  </span>
+                </div>
+                {role.isSystemRole && (
+                  <span className="text-xs text-white/40 bg-white/10 px-2 py-1 rounded">
+                    System Role
+                  </span>
+                )}
+              </div>
+              
+              <p className="text-white/80 mb-3">{role.description}</p>
+              
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-white">Permissions:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {role.permissions.map((permission) => (
+                    <span
+                      key={permission}
+                      className="text-xs bg-white/10 text-white/80 px-2 py-1 rounded"
+                    >
+                      {permission}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Snackbar */}
+      {snackbar.open && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className={`lg-badge p-4 ${
+            snackbar.severity === 'error' ? 'lg-badge-error' :
+            snackbar.severity === 'warning' ? 'lg-badge-warning' :
+            snackbar.severity === 'info' ? 'lg-badge-info' :
+            'lg-badge-success'
+          }`}>
+            <span className="text-white">{snackbar.message}</span>
+            <button
+              onClick={() => setSnackbar({ ...snackbar, open: false })}
+              className="ml-3 text-white/80 hover:text-white"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

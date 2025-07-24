@@ -1,6 +1,8 @@
 using MediatR;
 using PolyBucket.Api.Features.Collections.Domain;
+using PolyBucket.Api.Features.Collections.Domain.Enums;
 using PolyBucket.Api.Features.Collections.UpdateCollection.Repository;
+using PolyBucket.Api.Features.Authentication.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -9,16 +11,14 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
 {
-    public class UpdateCollectionCommandHandler : IRequestHandler<UpdateCollectionCommand, Collection>
+    public class UpdateCollectionCommandHandler(
+        ICollectionRepository collectionsRepository, 
+        IHttpContextAccessor httpContextAccessor,
+        IPasswordHasher passwordHasher) : IRequestHandler<UpdateCollectionCommand, Collection>
     {
-        private readonly ICollectionRepository _collectionsRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public UpdateCollectionCommandHandler(ICollectionRepository collectionsRepository, IHttpContextAccessor httpContextAccessor)
-        {
-            _collectionsRepository = collectionsRepository;
-            _httpContextAccessor = httpContextAccessor;
-        }
+        private readonly ICollectionRepository _collectionsRepository = collectionsRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
         public async Task<Collection> Handle(UpdateCollectionCommand request, CancellationToken cancellationToken)
         {
@@ -42,6 +42,27 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
             collection.Name = request.Name ?? collection.Name;
             collection.Description = request.Description ?? collection.Description;
             collection.Visibility = request.Visibility ?? collection.Visibility;
+
+            // Handle password for unlisted collections
+            if (request.Visibility == CollectionVisibility.Unlisted || collection.Visibility == CollectionVisibility.Unlisted)
+            {
+                if (!string.IsNullOrEmpty(request.Password))
+                {
+                    // Hash new password
+                    var salt = _passwordHasher.GenerateSalt();
+                    collection.PasswordHash = _passwordHasher.HashPassword(request.Password, salt);
+                }
+                else if (request.Visibility == CollectionVisibility.Unlisted && string.IsNullOrEmpty(request.Password))
+                {
+                    // If changing to unlisted without password, clear any existing password
+                    collection.PasswordHash = null;
+                }
+            }
+            else
+            {
+                // If not unlisted, clear password
+                collection.PasswordHash = null;
+            }
 
             return await _collectionsRepository.UpdateCollectionAsync(collection);
         }

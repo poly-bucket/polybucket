@@ -4,20 +4,18 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System;
 using PolyBucket.Api.Features.Reports.Domain;
+using PolyBucket.Api.Features.ACL.Authorization;
+using PolyBucket.Api.Features.ACL.Domain;
 
 namespace PolyBucket.Api.Features.Reports.Commands
 {
     [ApiController]
     [Route("api/reports")]
-    [Authorize(Roles = "Admin")]
-    public class ResolveReportController : ControllerBase
+    [Authorize]
+    [RequirePermission(PermissionConstants.MODERATION_HANDLE_REPORTS)]
+    public class ResolveReportController(IReportingPlugin reportingPlugin) : ControllerBase
     {
-        private readonly IReportingPlugin _reportingPlugin;
-
-        public ResolveReportController(IReportingPlugin reportingPlugin)
-        {
-            _reportingPlugin = reportingPlugin;
-        }
+        private readonly IReportingPlugin _reportingPlugin = reportingPlugin;
 
         [HttpPost("{reportId}/resolve")]
         public async Task<IActionResult> ResolveReport(Guid reportId, [FromBody] ResolveReportRequest request)
@@ -32,6 +30,6 @@ namespace PolyBucket.Api.Features.Reports.Commands
 
     public class ResolveReportRequest
     {
-        public string Resolution { get; set; }
+        public required string Resolution { get; set; }
     }
 } 

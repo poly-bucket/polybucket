@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using PolyBucket.Api.Common.Enums;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Register.Domain;
@@ -16,6 +15,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using PolyBucket.Api.Data;
 
 namespace PolyBucket.Tests.Features.Authentication.Http
 {
@@ -27,6 +27,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
         private readonly Mock<IPasswordHasher> _passwordHasherMock;
         private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<ILogger<RegisterCommandHandler>> _loggerMock;
+        private readonly Mock<PolyBucketDbContext> _contextMock;
         private readonly RegisterController _controller;
         private readonly RegisterCommandHandler _handler;
 
@@ -38,6 +39,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _passwordHasherMock = new Mock<IPasswordHasher>();
             _configurationMock = new Mock<IConfiguration>();
             _loggerMock = new Mock<ILogger<RegisterCommandHandler>>();
+            _contextMock = new Mock<PolyBucketDbContext>();
 
             _handler = new RegisterCommandHandler(
                 _authRepositoryMock.Object,
@@ -45,7 +47,8 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 _emailServiceMock.Object,
                 _passwordHasherMock.Object,
                 _configurationMock.Object,
-                _loggerMock.Object);
+                _loggerMock.Object,
+                _contextMock.Object);
 
             _controller = new RegisterController(_handler, Mock.Of<ILogger<RegisterController>>())
             {
@@ -83,7 +86,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                     Id = Guid.NewGuid(),
                     Email = command.Email,
                     Username = command.Username,
-                    Role = UserRole.User.ToString()
+                    Role = "User"
                 }
             };
 
@@ -251,15 +254,15 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             var command = new RegisterCommand
             {
                 Email = "invalid-email",
-                Username = "u", // Too short
-                Password = "123", // Too short
-                ConfirmPassword = "456", // Doesn't match
+                Username = "",
+                Password = "short",
+                ConfirmPassword = "different",
                 UserAgent = "Test User Agent"
             };
 
             _controller.ModelState.AddModelError("Email", "Invalid email format");
-            _controller.ModelState.AddModelError("Username", "Username must be at least 3 characters");
-            _controller.ModelState.AddModelError("Password", "Password must be at least 6 characters");
+            _controller.ModelState.AddModelError("Username", "Username is required");
+            _controller.ModelState.AddModelError("Password", "Password too short");
             _controller.ModelState.AddModelError("ConfirmPassword", "Passwords do not match");
 
             // Act
@@ -272,6 +275,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
 
             // Verify no repository calls were made
             _authRepositoryMock.Verify(x => x.IsEmailTakenAsync(It.IsAny<string>()), Times.Never);
+            _authRepositoryMock.Verify(x => x.IsUsernameTakenAsync(It.IsAny<string>()), Times.Never);
             _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Never);
         }
 
@@ -300,8 +304,9 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             errorResult.StatusCode.ShouldBe(500);
             errorResult.Value.ShouldNotBeNull();
 
-            // Verify repository was called but other operations were not
+            // Verify only the first check was attempted
             _authRepositoryMock.Verify(x => x.IsEmailTakenAsync(command.Email), Times.Once);
+            _authRepositoryMock.Verify(x => x.IsUsernameTakenAsync(It.IsAny<string>()), Times.Never);
             _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Never);
         }
 
@@ -324,10 +329,10 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 .ReturnsAsync(false);
             _authRepositoryMock.Setup(x => x.CreateUserAsync(It.IsAny<User>()))
                 .ReturnsAsync(It.IsAny<User>());
+            _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
+                .Returns(Task.CompletedTask);
             _tokenServiceMock.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
                 .Throws(new Exception("Token generation failed"));
-            _configurationMock.Setup(x => x["AppSettings:Email:RequireEmailVerification"])
-                .Returns("false");
 
             // Act
             var result = await _controller.Register(command, CancellationToken.None);
@@ -338,10 +343,11 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             errorResult.StatusCode.ShouldBe(500);
             errorResult.Value.ShouldNotBeNull();
 
-            // Verify calls were made up to the point of failure
+            // Verify user was created but token generation failed
             _authRepositoryMock.Verify(x => x.IsEmailTakenAsync(command.Email), Times.Once);
             _authRepositoryMock.Verify(x => x.IsUsernameTakenAsync(command.Username), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Once);
+            _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once);
             _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(It.IsAny<User>()), Times.Once);
         }
 
@@ -361,6 +367,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             var authResponse = new AuthenticationResponse
             {
                 AccessToken = "test-access-token",
+                RefreshToken = "test-refresh-token",
                 User = new UserInfo { Id = Guid.NewGuid() }
             };
 
@@ -388,8 +395,12 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             errorResult.StatusCode.ShouldBe(500);
             errorResult.Value.ShouldNotBeNull();
 
-            // Verify all calls were made including the failed email
+            // Verify user was created and token generated but email failed
+            _authRepositoryMock.Verify(x => x.IsEmailTakenAsync(command.Email), Times.Once);
+            _authRepositoryMock.Verify(x => x.IsUsernameTakenAsync(command.Username), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Once);
+            _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once);
+            _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(It.IsAny<User>()), Times.Once);
             _emailServiceMock.Verify(x => x.SendWelcomeEmailAsync(command.Email, command.Username), Times.Once);
         }
     }

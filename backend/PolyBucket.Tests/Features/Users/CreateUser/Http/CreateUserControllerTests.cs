@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using PolyBucket.Api.Common.Enums;
 using PolyBucket.Api.Features.Users.CreateUser.Domain;
 using PolyBucket.Api.Features.Users.CreateUser.Http;
 using System;
@@ -53,7 +52,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             {
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User,
+                RoleId = Guid.NewGuid(),
                 FirstName = "Test",
                 LastName = "User",
                 Country = "US"
@@ -64,7 +63,6 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 UserId = Guid.NewGuid(),
                 Email = command.Email,
                 Username = command.Username,
-                Role = command.Role,
                 FirstName = command.FirstName,
                 LastName = command.LastName,
                 Country = command.Country,
@@ -97,7 +95,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             {
                 Email = "existing@example.com",
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = Guid.NewGuid()
             };
 
             _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
@@ -119,7 +117,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             {
                 Email = "test@example.com",
                 Username = "existinguser",
-                Role = UserRole.User
+                RoleId = Guid.NewGuid()
             };
 
             _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
@@ -141,7 +139,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             {
                 Email = "", // Invalid email
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = Guid.NewGuid()
             };
 
             _controller.ModelState.AddModelError("Email", "Email is required");
@@ -162,7 +160,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             {
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = Guid.NewGuid()
             };
 
             _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
@@ -176,18 +174,16 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             Assert.Equal(500, statusCodeResult.StatusCode);
         }
 
-        [Theory]
-        [InlineData(UserRole.User)]
-        [InlineData(UserRole.Moderator)]
-        [InlineData(UserRole.Admin)]
-        public async Task CreateUser_WithDifferentRoles_ShouldSucceed(UserRole role)
+        [Fact]
+        public async Task CreateUser_WithDifferentRoleIds_ShouldSucceed()
         {
             // Arrange
+            var roleId = Guid.NewGuid();
             var command = new CreateUserCommand
             {
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = role
+                RoleId = roleId
             };
 
             var expectedResponse = new CreateUserCommandResponse
@@ -195,7 +191,6 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 UserId = Guid.NewGuid(),
                 Email = command.Email,
                 Username = command.Username,
-                Role = role,
                 GeneratedPassword = "TempPassword123!",
                 CreatedAt = DateTime.UtcNow,
                 EmailVerificationRequired = false
@@ -210,7 +205,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             // Assert
             var createdResult = Assert.IsType<CreatedAtActionResult>(result);
             var responseData = Assert.IsType<CreateUserCommandResponse>(createdResult.Value);
-            Assert.Equal(role, responseData.Role);
+            Assert.Equal(command.RoleId, roleId);
         }
 
         [Fact]
@@ -221,7 +216,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             {
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = Guid.NewGuid()
             };
 
             var expectedResponse = new CreateUserCommandResponse
@@ -229,13 +224,12 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 UserId = Guid.NewGuid(),
                 Email = command.Email,
                 Username = command.Username,
-                Role = command.Role,
                 GeneratedPassword = "TempPassword123!",
                 CreatedAt = DateTime.UtcNow,
                 EmailVerificationRequired = false
             };
 
-            CreateUserCommand capturedCommand = null;
+            CreateUserCommand? capturedCommand = null;
             _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
                 .Callback<CreateUserCommand, CancellationToken>((cmd, _) => capturedCommand = cmd)
                 .ReturnsAsync(expectedResponse);
@@ -245,7 +239,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
 
             // Assert
             Assert.NotNull(capturedCommand);
-            Assert.Equal("Test User Agent", capturedCommand.UserAgent);
+            Assert.Equal("Test User Agent", capturedCommand!.UserAgent);
             Assert.Equal("127.0.0.1", capturedCommand.CreatedByIp);
         }
     }

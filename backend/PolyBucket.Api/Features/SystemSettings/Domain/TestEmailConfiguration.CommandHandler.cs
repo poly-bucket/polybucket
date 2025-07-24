@@ -4,18 +4,12 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.SystemSettings.Domain;
 
-public class TestEmailConfigurationCommandHandler
+public class TestEmailConfigurationCommandHandler(
+    IEmailService emailService,
+    ILogger<TestEmailConfigurationCommandHandler> logger)
 {
-    private readonly IEmailService _emailService;
-    private readonly ILogger<TestEmailConfigurationCommandHandler> _logger;
-
-    public TestEmailConfigurationCommandHandler(
-        IEmailService emailService,
-        ILogger<TestEmailConfigurationCommandHandler> logger)
-    {
-        _emailService = emailService;
-        _logger = logger;
-    }
+    private readonly IEmailService _emailService = emailService;
+    private readonly ILogger<TestEmailConfigurationCommandHandler> _logger = logger;
 
     public async Task<TestEmailConfigurationResponse> Handle(TestEmailConfigurationCommand command)
     {

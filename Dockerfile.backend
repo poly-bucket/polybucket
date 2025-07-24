@@ -4,7 +4,6 @@ WORKDIR /app
 # Copy solution and project files
 COPY PolyBucket.sln ./
 COPY backend/PolyBucket.Api/*.csproj ./backend/PolyBucket.Api/
-COPY backend/PolyBucket.Plugins/PolyBucket.Plugins/*.csproj ./backend/PolyBucket.Plugins/PolyBucket.Plugins/
 COPY backend/PolyBucket.Tests/*.csproj ./backend/PolyBucket.Tests/
 
 # Restore dependencies

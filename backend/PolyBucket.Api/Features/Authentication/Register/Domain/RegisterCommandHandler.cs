@@ -13,33 +13,22 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Authentication.Register.Domain
 {
-    public class RegisterCommandHandler
+    public class RegisterCommandHandler(
+        IAuthenticationRepository authRepository,
+        ITokenService tokenService,
+        IEmailService emailService,
+        IPasswordHasher passwordHasher,
+        IConfiguration configuration,
+        ILogger<RegisterCommandHandler> logger,
+        PolyBucketDbContext context)
     {
-        private readonly IAuthenticationRepository _authRepository;
-        private readonly ITokenService _tokenService;
-        private readonly IEmailService _emailService;
-        private readonly IPasswordHasher _passwordHasher;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<RegisterCommandHandler> _logger;
-        private readonly PolyBucketDbContext _context;
-
-        public RegisterCommandHandler(
-            IAuthenticationRepository authRepository,
-            ITokenService tokenService,
-            IEmailService emailService,
-            IPasswordHasher passwordHasher,
-            IConfiguration configuration,
-            ILogger<RegisterCommandHandler> logger,
-            PolyBucketDbContext context)
-        {
-            _authRepository = authRepository;
-            _tokenService = tokenService;
-            _emailService = emailService;
-            _passwordHasher = passwordHasher;
-            _configuration = configuration;
-            _logger = logger;
-            _context = context;
-        }
+        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly IEmailService _emailService = emailService;
+        private readonly IPasswordHasher _passwordHasher = passwordHasher;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<RegisterCommandHandler> _logger = logger;
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task<RegisterCommandResponse> Handle(RegisterCommand command, CancellationToken cancellationToken)
         {

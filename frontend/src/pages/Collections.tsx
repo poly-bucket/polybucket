@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { PlusIcon, FolderIcon } from '@heroicons/react/24/outline';
 import CollectionCard from '../components/collections/CollectionCard';
+import NavigationBar from '../components/common/NavigationBar';
 import collectionsService, { Collection } from '../services/collectionsService';
 import { useAppSelector } from '../utils/hooks';
 
@@ -33,11 +34,11 @@ const Collections: React.FC = () => {
   };
 
   const handleCreateCollection = () => {
-    navigate('/collections/create');
+    navigate('/my-collections/create');
   };
 
   const handleEditCollection = (collection: Collection) => {
-    navigate(`/collections/${collection.id}/edit`);
+    navigate(`/my-collections/${collection.id}/edit`);
   };
 
   const handleDeleteCollection = (collection: Collection) => {
@@ -67,25 +68,13 @@ const Collections: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        {/* Navigation */}
-        <nav className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center h-16">
-              <Link
-                to="/dashboard"
-                className="flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Dashboard
-              </Link>
-              <div className="ml-6">
-                <h1 className="text-xl font-semibold text-gray-900">My Collections</h1>
-              </div>
-            </div>
-          </div>
-        </nav>
+        {/* Navigation Bar */}
+        <NavigationBar
+          title="My Collections"
+          showSearch={false}
+          showUploadButton={false}
+          showHomeLink={true}
+        />
 
         {/* Loading State */}
         <div className="flex items-center justify-center py-12">
@@ -97,35 +86,13 @@ const Collections: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <Link
-                to="/dashboard"
-                className="flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Dashboard
-              </Link>
-              <div className="ml-6">
-                <h1 className="text-xl font-semibold text-gray-900">My Collections</h1>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleCreateCollection}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              New Collection
-            </button>
-          </div>
-        </div>
-      </nav>
+              {/* Navigation Bar */}
+        <NavigationBar
+          title="My Collections"
+          showSearch={false}
+          showUploadButton={false}
+          showHomeLink={true}
+        />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

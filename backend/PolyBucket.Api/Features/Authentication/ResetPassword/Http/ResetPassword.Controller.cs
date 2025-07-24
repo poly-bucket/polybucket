@@ -9,16 +9,10 @@ namespace PolyBucket.Api.Features.Authentication.ResetPassword.Http
 {
     [ApiController]
     [Route("api/auth")]
-    public class ResetPasswordController : ControllerBase
+    public class ResetPasswordController(ResetPasswordCommandHandler handler, ILogger<ResetPasswordController> logger) : ControllerBase
     {
-        private readonly ResetPasswordCommandHandler _handler;
-        private readonly ILogger<ResetPasswordController> _logger;
-
-        public ResetPasswordController(ResetPasswordCommandHandler handler, ILogger<ResetPasswordController> logger)
-        {
-            _handler = handler;
-            _logger = logger;
-        }
+        private readonly ResetPasswordCommandHandler _handler = handler;
+        private readonly ILogger<ResetPasswordController> _logger = logger;
 
         /// <summary>
         /// Reset password using a valid reset token

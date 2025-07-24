@@ -9,18 +9,12 @@ namespace PolyBucket.Api.Features.SystemSettings.Http;
 [ApiController]
 [Route("api/system-settings/email")]
 [Authorize(Roles = "Admin")]
-public class TestEmailConfigurationController : ControllerBase
+public class TestEmailConfigurationController(
+    TestEmailConfigurationCommandHandler handler,
+    ILogger<TestEmailConfigurationController> logger) : ControllerBase
 {
-    private readonly TestEmailConfigurationCommandHandler _handler;
-    private readonly ILogger<TestEmailConfigurationController> _logger;
-
-    public TestEmailConfigurationController(
-        TestEmailConfigurationCommandHandler handler,
-        ILogger<TestEmailConfigurationController> logger)
-    {
-        _handler = handler;
-        _logger = logger;
-    }
+    private readonly TestEmailConfigurationCommandHandler _handler = handler;
+    private readonly ILogger<TestEmailConfigurationController> _logger = logger;
 
     /// <summary>
     /// Test email configuration by sending a test email

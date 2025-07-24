@@ -10,14 +10,9 @@ namespace PolyBucket.Api.Features.Comments.Queries
     [ApiController]
     [Route("api/comments")]
     [Authorize]
-    public class GetCommentsForModelController : ControllerBase
+    public class GetCommentsForModelController(ICommentsPlugin commentsPlugin) : ControllerBase
     {
-        private readonly ICommentsPlugin _commentsPlugin;
-
-        public GetCommentsForModelController(ICommentsPlugin commentsPlugin)
-        {
-            _commentsPlugin = commentsPlugin;
-        }
+        private readonly ICommentsPlugin _commentsPlugin = commentsPlugin;
 
         [HttpGet("model/{modelId}")]
         public async Task<IActionResult> GetCommentsForModel(Guid modelId)

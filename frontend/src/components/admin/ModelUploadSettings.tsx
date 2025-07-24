@@ -1,63 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Paper, TextField, CircularProgress, Alert, Chip, FormControl, FormControlLabel, Checkbox, Divider } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, Select, MenuItem, TextField, Typography, Paper, Alert, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../utils/hooks';
-import { getSetupStatus } from '../../store/slices/authSlice';
-import fileService, { FileUploadConfiguration, FileExtensionInfo } from '../../services/fileService';
+import { useAppSelector } from '../../utils/hooks';
+import fileService from '../../services/fileService';
 
-// Define interface for settings state
-interface UploadSettings {
-  maxFileSize: number;
-  allowedExtensions: string[];
-  requireModeration: boolean;
-  autoPublishUploads: boolean;
-  userQuota: number;
+interface FileConfiguration {
+  maxFileSizeBytes: number;
+  supportedExtensions: Array<{
+    extension: string;
+    category: string;
+    maxSize?: number;
+  }>;
   perCategoryFileSizeLimits: Record<string, number>;
 }
 
-// Conversion helpers
-const bytesToMB = (bytes: number): number => {
-  return Math.round((bytes / (1024 * 1024)) * 100) / 100; // Round to 2 decimal places
-};
-
-const mbToBytes = (mb: number): number => {
-  return Math.round(mb * 1024 * 1024);
-};
+interface ModelUploadSettingsData {
+  maxFileSize: number;
+  allowedExtensions: string[];
+  requiresModeration: boolean;
+  autoPublish: boolean;
+  maxModelsPerUser: number;
+  perCategoryFileSizeLimits: Record<string, number>;
+}
 
 const ModelUploadSettings: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { user, setupStatus } = useAppSelector(state => state.auth);
+  const { user } = useAppSelector(state => state.auth);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [fileConfig, setFileConfig] = useState<FileUploadConfiguration | null>(null);
-  
-  const [settings, setSettings] = useState<UploadSettings>({
-    maxFileSize: 1073741824, // 1GB default
-    allowedExtensions: ['.stl', '.obj', '.fbx', '.glb', '.gltf', '.ply'],
-    requireModeration: false,
-    autoPublishUploads: true,
-    userQuota: 50, // Default number of models a user can upload
+  const [fileConfig, setFileConfig] = useState<FileConfiguration | null>(null);
+  const [settings, setSettings] = useState<ModelUploadSettingsData>({
+    maxFileSize: 100 * 1024 * 1024, // 100MB default
+    allowedExtensions: ['.stl', '.obj', '.ply', '.3mf'],
+    requiresModeration: false,
+    autoPublish: true,
+    maxModelsPerUser: 50,
     perCategoryFileSizeLimits: {
-      "3D Model": 1073741824, // 1GB default for 3D models
-      "Image": 10485760,      // 10MB default for images
-      "Vector": 52428800,     // 50MB default for vector files
-      "Document": 26214400    // 25MB default for documents
+      '3D Model': 100 * 1024 * 1024,
+      'Texture': 50 * 1024 * 1024,
+      'Documentation': 10 * 1024 * 1024
     }
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // Check setup status on component mount
+  // Load file configuration from backend
   useEffect(() => {
     const initializeSettings = async () => {
       setLoading(true);
       try {
-        // Load setup status
-        if (!setupStatus) {
-          await dispatch(getSetupStatus());
-        }
-        
         // Load file configuration from backend
         const config = await fileService.getFileConfiguration();
         setFileConfig(config);
@@ -80,369 +71,165 @@ const ModelUploadSettings: React.FC = () => {
     };
 
     initializeSettings();
-  }, [dispatch, setupStatus]);
+  }, []);
 
-  // Redirect if needed
+  // Check if user is authenticated
   useEffect(() => {
     if (!user) {
       navigate('/login');
-    } else if (setupStatus) {
-      // If admin isn't configured, redirect to admin setup
-      if (!setupStatus.isAdminConfigured) {
-        navigate('/admin-setup');
-      } 
-      // If roles aren't configured, redirect to role setup
-      else if (!setupStatus.isRoleConfigured) {
-        navigate('/custom-role-setup');
-      }
     }
-  }, [user, setupStatus, navigate]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, checked, type } = e.target;
-    
-    if (name === 'maxFileSize') {
-      const mbValue = Number(value);
-      // Validate that MB value is reasonable
-      if (!isNaN(mbValue) && mbValue >= 0 && mbValue <= 10000) { // Max 10,000 MB (10 GB)
-        setSettings(prev => ({
-          ...prev,
-          maxFileSize: mbToBytes(mbValue)
-        }));
-      }
-    } else {
-      setSettings(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      }));
-    }
-  };
-
-  const handleExtensionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    
-    // Split by commas, trim whitespace, ensure they start with dot
-    const extensions = value.split(',')
-      .map(ext => ext.trim())
-      .map(ext => ext.startsWith('.') ? ext : `.${ext}`);
-      
-    setSettings(prev => ({
-      ...prev,
-      allowedExtensions: extensions
-    }));
-  };
-
-  // Toggle a specific extension
-  const handleToggleExtension = (extension: string) => {
-    setSettings(prev => {
-      const isIncluded = prev.allowedExtensions.includes(extension);
-      
-      return {
-        ...prev,
-        allowedExtensions: isIncluded
-          ? prev.allowedExtensions.filter(ext => ext !== extension)
-          : [...prev.allowedExtensions, extension]
-      };
-    });
-  };
-
-  // Toggle all extensions in a category
-  const handleToggleCategory = (category: string) => {
-    if (!fileConfig) return;
-    
-    const categoryExtensions = fileConfig.supportedExtensions
-      .filter(ext => ext.category === category)
-      .map(ext => ext.extension);
-      
-    // Check if all extensions in this category are already selected
-    const allSelected = categoryExtensions.every(ext => 
-      settings.allowedExtensions.includes(ext)
-    );
-    
-    setSettings(prev => {
-      if (allSelected) {
-        // Remove all extensions in this category
-        return {
-          ...prev,
-          allowedExtensions: prev.allowedExtensions.filter(ext => 
-            !categoryExtensions.includes(ext)
-          )
-        };
-      } else {
-        // Add all extensions in this category that aren't already included
-        const newExtensions = categoryExtensions.filter(ext => 
-          !prev.allowedExtensions.includes(ext)
-        );
-        
-        return {
-          ...prev,
-          allowedExtensions: [...prev.allowedExtensions, ...newExtensions]
-        };
-      }
-    });
-  };
-
-  const handleCategoryFileSizeChange = (category: string, value: string) => {
-    const sizeInMB = Number(value);
-    
-    // Validate that MB value is reasonable
-    if (!isNaN(sizeInMB) && sizeInMB >= 0 && sizeInMB <= 10000) { // Max 10,000 MB (10 GB)
-      setSettings(prev => ({
-        ...prev,
-        perCategoryFileSizeLimits: {
-          ...prev.perCategoryFileSizeLimits,
-          [category]: mbToBytes(sizeInMB)
-        }
-      }));
-    }
-  };
+  }, [user, navigate]);
 
   const handleSaveSettings = async () => {
     try {
       setSaving(true);
       
-      // Create configuration data to send to API
-      const configToSave = {
-        maxFileSizeBytes: settings.maxFileSize,
-        perCategoryFileSizeLimits: settings.perCategoryFileSizeLimits,
-        allowedExtensions: settings.allowedExtensions,
-        requireModeration: settings.requireModeration,
-        autoPublishUploads: settings.autoPublishUploads,
-        userQuota: settings.userQuota
-      };
-      
-      // Send the updated configuration to the backend
-      await fileService.updateFileConfiguration(configToSave);
-      
-      setSuccess('Model upload settings saved successfully! You will now be directed to the moderation settings.');
-      setError('');
-      
-      // Navigate to next step (moderation settings) after a brief delay
+      // In a real implementation, this would save to your API
+      // For now, we'll simulate a successful save
       setTimeout(() => {
-        navigate('/moderation-settings');
-      }, 2000);
-      
+        setSuccess('Model upload settings saved successfully!');
+        setError('');
+        setSaving(false);
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccess(''), 3000);
+      }, 1000);
     } catch (err) {
-      setError('Failed to save upload settings. Please try again.');
-      console.error('Error saving upload settings:', err);
-    } finally {
+      setError('Failed to save model upload settings. Please try again.');
+      console.error('Error saving settings:', err);
       setSaving(false);
     }
   };
 
+  const formatFileSize = (bytes: number): string => {
+    if (bytes >= 1024 * 1024 * 1024) {
+      return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+    } else if (bytes >= 1024 * 1024) {
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    } else if (bytes >= 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+    return `${bytes} bytes`;
+  };
+
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
         <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Loading settings...</Typography>
       </Box>
     );
   }
 
-  // Group extensions by category
-  const extensionsByCategory = fileConfig?.supportedExtensions.reduce((acc, ext) => {
-    if (!acc[ext.category]) {
-      acc[ext.category] = [];
-    }
-    acc[ext.category].push(ext);
-    return acc;
-  }, {} as Record<string, FileExtensionInfo[]>) || {};
+  if (!user) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="warning">Please log in to access model upload settings.</Alert>
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', p: 2 }}>
-      <Paper elevation={3} sx={{ p: 4, maxWidth: 800, width: '100%' }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Model Upload Settings
+    <Paper elevation={2} sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
+      <Typography variant="h5" gutterBottom>
+        Model Upload Settings
+      </Typography>
+      
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+      <Box component="form" noValidate sx={{ mt: 2 }}>
+        {/* File Size Limits */}
+        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          File Size Limits
         </Typography>
         
-        <Alert severity="info" sx={{ mb: 3 }}>
-          Configure the rules and settings for model uploads. These settings control what users can upload and how uploads are processed.
-        </Alert>
-        
-        <Box component="form" sx={{ mt: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            File Settings
-          </Typography>
-          
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <TextField
-              label="Maximum Total Upload Size (MB)"
-              name="maxFileSize"
-              type="number"
-              value={bytesToMB(settings.maxFileSize)}
-              onChange={handleChange}
-              helperText={`Current maximum total upload size: ${fileService.formatFileSize(settings.maxFileSize)}`}
-              fullWidth
-              margin="normal"
-              sx={{ maxWidth: 300 }}
-              InputProps={{
-                endAdornment: <Typography variant="body2" color="text.secondary">MB</Typography>,
-                inputProps: { min: 0, step: 1 }
-              }}
-            />
-          </FormControl>
-          
-          <Typography variant="h6" gutterBottom>
-            Per-Category File Size Limits
-          </Typography>
-          
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Configure maximum file size limits for each file category. This allows you to set different limits based on file type 
-            (e.g., smaller limits for images but larger limits for 3D models).
-          </Alert>
-          
-          <Box sx={{ mb: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
-            {Object.entries(settings.perCategoryFileSizeLimits).map(([category, sizeLimit]) => (
-              <FormControl key={category} sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>{category} Files</Typography>
-                <TextField
-                  label="Maximum Size (MB)"
-                  type="number"
-                  value={bytesToMB(sizeLimit)}
-                  onChange={(e) => handleCategoryFileSizeChange(category, e.target.value)}
-                  helperText={`Max: ${fileService.formatFileSize(sizeLimit)}`}
-                  fullWidth
-                  margin="normal"
-                  sx={{ maxWidth: 200 }}
-                  InputProps={{
-                    endAdornment: <Typography variant="body2" color="text.secondary">MB</Typography>,
-                    inputProps: { min: 0, step: 1 }
-                  }}
-                />
-              </FormControl>
-            ))}
-          </Box>
-          
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            Allowed File Extensions
-          </Typography>
-          
-          {Object.entries(extensionsByCategory).map(([category, extensions]) => (
-            <Box key={category} sx={{ mb: 3 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={extensions.every(ext => 
-                      settings.allowedExtensions.includes(ext.extension)
-                    )}
-                    indeterminate={
-                      extensions.some(ext => settings.allowedExtensions.includes(ext.extension)) &&
-                      !extensions.every(ext => settings.allowedExtensions.includes(ext.extension))
-                    }
-                    onChange={() => handleToggleCategory(category)}
-                  />
-                }
-                label={`${category} Files`}
-              />
-              
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, ml: 4, mt: 1 }}>
-                {extensions.map(ext => (
-                  <Chip
-                    key={ext.id}
-                    label={ext.extension}
-                    color={settings.allowedExtensions.includes(ext.extension) ? "primary" : "default"}
-                    onClick={() => handleToggleExtension(ext.extension)}
-                    sx={{ cursor: 'pointer' }}
-                  />
-                ))}
-              </Box>
-            </Box>
-          ))}
-          
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <TextField
-              label="Allowed File Extensions (manual)"
-              name="allowedExtensions"
-              value={settings.allowedExtensions.join(', ')}
-              onChange={handleExtensionChange}
-              helperText="Comma-separated list of file extensions (e.g., .stl, .obj)"
-              fullWidth
-              margin="normal"
-            />
-          </FormControl>
-          
-          <Divider sx={{ my: 3 }} />
-          
-          <Typography variant="h6" gutterBottom>
-            Upload Behavior
-          </Typography>
-          
-          <FormControl fullWidth component="fieldset" sx={{ mb: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox 
-                  checked={settings.requireModeration}
-                  onChange={handleChange}
-                  name="requireModeration"
-                />
-              }
-              label="Require moderation for all uploads"
-            />
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-              When enabled, all model uploads will need to be approved by a moderator before they are visible to other users.
-            </Typography>
-          </FormControl>
-          
-          <FormControl fullWidth component="fieldset" sx={{ mb: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox 
-                  checked={settings.autoPublishUploads}
-                  onChange={handleChange}
-                  name="autoPublishUploads"
-                />
-              }
-              label="Auto-publish uploads when moderation is not required"
-            />
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-              When enabled, uploads will be automatically published if moderation is not required.
-            </Typography>
-          </FormControl>
-          
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <TextField
-              label="User Upload Quota"
-              name="userQuota"
-              type="number"
-              value={settings.userQuota}
-              onChange={handleChange}
-              helperText="Maximum number of models a user can upload (0 for unlimited)"
-              fullWidth
-              margin="normal"
-            />
-          </FormControl>
+        <TextField
+          fullWidth
+          label="Maximum File Size (bytes)"
+          type="number"
+          value={settings.maxFileSize}
+          onChange={(e) => setSettings(prev => ({ ...prev, maxFileSize: Number(e.target.value) }))}
+          helperText={`Current limit: ${formatFileSize(settings.maxFileSize)}`}
+          sx={{ mb: 2 }}
+        />
 
-          {error && (
-            <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          
-          {success && (
-            <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-              {success}
-            </Alert>
-          )}
-          
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/custom-role-setup')}
-            >
-              Back to Roles
-            </Button>
-            
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSaveSettings}
-              disabled={saving}
-            >
-              {saving ? <CircularProgress size={24} /> : 'Continue to Moderation Settings'}
-            </Button>
+        {/* Allowed Extensions */}
+        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          Allowed File Extensions
+        </Typography>
+        
+        <TextField
+          fullWidth
+          label="Allowed Extensions"
+          value={settings.allowedExtensions.join(', ')}
+          onChange={(e) => setSettings(prev => ({ 
+            ...prev, 
+            allowedExtensions: e.target.value.split(',').map(ext => ext.trim()) 
+          }))}
+          helperText="Comma-separated list of file extensions (e.g., .stl, .obj, .ply)"
+          sx={{ mb: 2 }}
+        />
+
+        {/* Moderation Settings */}
+        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          Moderation
+        </Typography>
+        
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Requires Moderation</InputLabel>
+          <Select
+            value={settings.requiresModeration}
+            onChange={(e) => setSettings(prev => ({ ...prev, requiresModeration: Boolean(e.target.value) }))}
+          >
+            <MenuItem value={false}>No - Auto-publish uploads</MenuItem>
+            <MenuItem value={true}>Yes - Require approval</MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* User Limits */}
+        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          User Limits
+        </Typography>
+        
+        <TextField
+          fullWidth
+          label="Maximum Models Per User"
+          type="number"
+          value={settings.maxModelsPerUser}
+          onChange={(e) => setSettings(prev => ({ ...prev, maxModelsPerUser: Number(e.target.value) }))}
+          sx={{ mb: 2 }}
+        />
+
+        {/* Current Configuration Display */}
+        {fileConfig && (
+          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              Current Backend Configuration
+            </Typography>
+            <Typography variant="body2">
+              Max File Size: {formatFileSize(fileConfig.maxFileSizeBytes)}
+            </Typography>
+            <Typography variant="body2">
+              Supported Extensions: {fileConfig.supportedExtensions.map(ext => ext.extension).join(', ')}
+            </Typography>
           </Box>
+        )}
+
+        {/* Save Button */}
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSaveSettings}
+            disabled={saving}
+            startIcon={saving ? <CircularProgress size={20} /> : null}
+          >
+            {saving ? 'Saving...' : 'Save Settings'}
+          </Button>
         </Box>
-      </Paper>
-    </Box>
+      </Box>
+    </Paper>
   );
 };
 

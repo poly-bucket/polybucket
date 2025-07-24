@@ -6,14 +6,9 @@ namespace PolyBucket.Api.Features.Filaments.Http;
 
 [Route("api/filaments")]
 [ApiController]
-public class GetAllFilamentsController : ControllerBase
+public class GetAllFilamentsController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public GetAllFilamentsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
+    private readonly IMediator _mediator = mediator;
 
     [HttpGet]
     public async Task<IActionResult> GetAll()

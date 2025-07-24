@@ -6,6 +6,6 @@ namespace PolyBucket.Api.Features.Models.Domain
 {
     public interface IModelService
     {
-        Task<Model> GetModelByIdAsync(Guid id);
+        Task<Model?> GetModelByIdAsync(Guid id);
     }
 } 

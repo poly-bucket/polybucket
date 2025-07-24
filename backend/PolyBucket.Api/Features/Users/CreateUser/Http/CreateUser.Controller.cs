@@ -15,16 +15,10 @@ namespace PolyBucket.Api.Features.Users.CreateUser.Http
     [ApiController]
     [Route("api/admin/users")]
     [RequirePermission(PermissionConstants.ADMIN_MANAGE_USERS)]
-    public class CreateUserController : ControllerBase
+    public class CreateUserController(CreateUserCommandHandler handler, ILogger<CreateUserController> logger) : ControllerBase
     {
-        private readonly CreateUserCommandHandler _handler;
-        private readonly ILogger<CreateUserController> _logger;
-
-        public CreateUserController(CreateUserCommandHandler handler, ILogger<CreateUserController> logger)
-        {
-            _handler = handler;
-            _logger = logger;
-        }
+        private readonly CreateUserCommandHandler _handler = handler;
+        private readonly ILogger<CreateUserController> _logger = logger;
 
         /// <summary>
         /// Create a new user account with auto-generated password (Admin only)

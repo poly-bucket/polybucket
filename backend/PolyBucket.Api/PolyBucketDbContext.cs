@@ -11,15 +11,13 @@ using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.Federation.Domain;
+using ReportsDomain = PolyBucket.Api.Features.Reports.Domain;
 
 namespace PolyBucket.Api.Data
 {
-    public class PolyBucketDbContext : DbContext
+    public class PolyBucketDbContext(DbContextOptions<PolyBucketDbContext> options) : DbContext(options)
     {
-        public PolyBucketDbContext(DbContextOptions<PolyBucketDbContext> options) : base(options)
-        {
-        }
-
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<UserLogin> UserLogins { get; set; } = null!;
         public DbSet<UserSettings> UserSettings { get; set; } = null!;
@@ -27,10 +25,12 @@ namespace PolyBucket.Api.Data
         public DbSet<CommentDomain.Comment> Comments { get; set; } = null!;
         public DbSet<Model> Models { get; set; } = null!;
         public DbSet<ModelFile> ModelFiles { get; set; } = null!;
+        public DbSet<ModelVersion> ModelVersions { get; set; } = null!;
         public DbSet<Category> Categories { get; set; } = null!;
         public DbSet<Tag> Tags { get; set; } = null!;
         public DbSet<Filament> Filaments { get; set; } = null!;
         public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
+        public DbSet<SystemSetup> SystemSetups { get; set; } = null!;
         public DbSet<Collection> Collections { get; set; } = null!;
         public DbSet<CollectionModel> CollectionModels { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
@@ -45,6 +45,14 @@ namespace PolyBucket.Api.Data
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<RolePermission> RolePermissions { get; set; } = null!;
         public DbSet<UserPermission> UserPermissions { get; set; } = null!;
+        
+        // Federation System
+        public DbSet<FederationSettings> FederationSettings { get; set; } = null!;
+        public DbSet<FederatedInstance> FederatedInstances { get; set; } = null!;
+        public DbSet<FederatedModel> FederatedModels { get; set; } = null!;
+        public DbSet<FederationHandshake> FederationHandshakes { get; set; } = null!;
+        public DbSet<FederationAuditLog> FederationAuditLogs { get; set; } = null!;
+        public DbSet<ReportsDomain.Report> Reports { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +79,17 @@ namespace PolyBucket.Api.Data
 
             modelBuilder.Entity<ModelPreview>()
                 .HasIndex(p => new { p.ModelId, p.Size })
+                .IsUnique();
+
+            // Model Version Configuration
+            modelBuilder.Entity<ModelVersion>()
+                .HasOne(v => v.Model)
+                .WithMany(m => m.Versions)
+                .HasForeignKey(v => v.ModelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ModelVersion>()
+                .HasIndex(v => new { v.ModelId, v.VersionNumber })
                 .IsUnique();
 
             // ACL Configuration
@@ -111,6 +130,37 @@ namespace PolyBucket.Api.Data
                 .WithMany(r => r.ChildRoles)
                 .HasForeignKey(r => r.ParentRoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Federation Configuration
+            modelBuilder.Entity<FederatedModel>()
+                .HasOne(f => f.FederatedInstance)
+                .WithMany(i => i.SharedModels)
+                .HasForeignKey(f => f.FederatedInstanceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FederatedModel>()
+                .HasOne(f => f.LocalModel)
+                .WithMany()
+                .HasForeignKey(f => f.LocalModelId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<FederationHandshake>()
+                .HasOne(h => h.FederatedInstance)
+                .WithMany(i => i.Handshakes)
+                .HasForeignKey(h => h.FederatedInstanceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FederationAuditLog>()
+                .HasOne(a => a.FederatedInstance)
+                .WithMany(i => i.AuditLogs)
+                .HasForeignKey(a => a.FederatedInstanceId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<FederationAuditLog>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
                 
             modelBuilder.ApplyConfiguration(new FilamentMap());
             // modelBuilder.ApplyConfiguration(new UserMap());

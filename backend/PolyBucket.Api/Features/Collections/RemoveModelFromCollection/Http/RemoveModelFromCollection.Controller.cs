@@ -10,14 +10,9 @@ namespace PolyBucket.Api.Features.Collections.RemoveModelFromCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
-    public class RemoveModelFromCollectionController : ControllerBase
+    public class RemoveModelFromCollectionController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public RemoveModelFromCollectionController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpDelete("{collectionId}/models/{modelId}")]
         public async Task<IActionResult> RemoveModelFromCollection(Guid collectionId, Guid modelId)

@@ -1,232 +1,31 @@
-import { createSlice, createAsyncThunk, PayloadAction, ActionReducerMapBuilder } from '@reduxjs/toolkit';
-import authService, { 
-  RegisterRequest, 
-  AuthResponse,
-  CheckFirstRunResponse,
-  SystemSetupStatus
-} from '../../services/authService';
-import apiAuthService from '../../services/apiAuthService';
-import { LoginRequest, LoginResponse } from '../../services/api.client';
+import { createSlice, PayloadAction, ActionReducerMapBuilder } from '@reduxjs/toolkit';
+import { 
+  loginUser, 
+  registerUser, 
+  logoutUser, 
+  refreshUserToken 
+} from '../thunks/authThunks';
+import { AuthResponse } from '../thunks/authThunks';
+import { extractUserFromJWT } from '../../utils/jwtUtils';
 
-// Define the initial state
 interface AuthState {
   user: AuthResponse | null;
-  isFirstRun: boolean;
-  setupStatus: SystemSetupStatus | null;
   isLoading: boolean;
   isSuccess: boolean;
   isError: boolean;
   errorMessage: string;
+  isInitialized: boolean;
 }
 
-const user = authService.getCurrentUser();
-
 const initialState: AuthState = {
-  user: user,
-  isFirstRun: false,
-  setupStatus: null,
+  user: null,
   isLoading: false,
   isSuccess: false,
   isError: false,
-  errorMessage: ''
+  errorMessage: '',
+  isInitialized: false
 };
 
-// Async thunks
-export const checkFirstRun = createAsyncThunk(
-  'auth/checkFirstRun',
-  async (_: void, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return await authService.checkFirstRun();
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to check first run status';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-export const getSetupStatus = createAsyncThunk(
-  'auth/getSetupStatus',
-  async (_: void, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return await authService.getSetupStatus();
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to get setup status';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-export const setAdminConfigured = createAsyncThunk(
-  'auth/setAdminConfigured',
-  async (isConfigured: boolean, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return {
-        success: await authService.setAdminConfigured(isConfigured),
-        isConfigured
-      };
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to set admin configuration status';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-export const setRoleConfigured = createAsyncThunk(
-  'auth/setRoleConfigured',
-  async (isConfigured: boolean, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return {
-        success: await authService.setRoleConfigured(isConfigured),
-        isConfigured
-      };
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to set role configuration status';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-export const setModerationConfigured = createAsyncThunk(
-  'auth/setModerationConfigured',
-  async (isConfigured: boolean, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return {
-        success: await authService.setModerationConfigured(isConfigured),
-        isConfigured
-      };
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to set moderation configuration status';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-export const login = createAsyncThunk(
-  'auth/login',
-  async (credentials: { emailOrUsername: string; password: string }, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      // Convert to the format expected by apiAuthService
-      const apiCredentials = new LoginRequest({
-        email: credentials.emailOrUsername,
-        password: credentials.password
-      });
-      
-      const response = await apiAuthService.login(apiCredentials);
-      
-      // The login response only contains a token, so we need to construct a user object
-      // We'll use the credentials to create a basic user object
-      const userData: AuthResponse = {
-        id: '', // We don't have the user ID from login, but we can get it later if needed
-        username: credentials.emailOrUsername, // Use the email/username as username for now
-        email: credentials.emailOrUsername.includes('@') ? credentials.emailOrUsername : '',
-        accessToken: response.token || '',
-        refreshToken: '', // We don't have refresh token from this login flow
-        roles: ['Admin'] // Assume admin for now since this is the admin setup flow
-      };
-      
-      return userData;
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to login';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-export const register = createAsyncThunk(
-  'auth/register',
-  async (userData: RegisterRequest, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return await authService.register(userData);
-    } catch (error: any) {
-      // Extract detailed error message if available from axios response
-      let errorMessage = 'Failed to register';
-      
-      if (error.response?.data) {
-        // Check for different error formats from backend
-        if (typeof error.response.data === 'string') {
-          errorMessage = error.response.data;
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data.errors) {
-          // Handle validation errors
-          const errors = error.response.data.errors;
-          if (Array.isArray(errors)) {
-            errorMessage = errors.join(', ');
-          } else if (typeof errors === 'object') {
-            errorMessage = Object.values(errors).flat().join(', ');
-          }
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      console.error('Registration error details:', {
-        message: errorMessage,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
-      return rejectWithValue(errorMessage);
-    }
-  }
-);
-
-export const adminSetup = createAsyncThunk(
-  'auth/adminSetup',
-  async (userData: RegisterRequest, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return await authService.adminSetup(userData);
-    } catch (error: any) {
-      // Extract detailed error message if available from axios response
-      let errorMessage = 'Failed to create admin account';
-      
-      if (error.response?.data) {
-        // Check for different error formats from backend
-        if (typeof error.response.data === 'string') {
-          errorMessage = error.response.data;
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data.errors) {
-          // Handle validation errors
-          const errors = error.response.data.errors;
-          if (Array.isArray(errors)) {
-            errorMessage = errors.join(', ');
-          } else if (typeof errors === 'object') {
-            errorMessage = Object.values(errors).flat().join(', ');
-          }
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      console.error('Admin setup error details:', {
-        message: errorMessage,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
-      return rejectWithValue(errorMessage);
-    }
-  }
-);
-
-export const logout = createAsyncThunk('auth/logout', async () => {
-  authService.logout();
-});
-
-export const refreshToken = createAsyncThunk(
-  'auth/refreshToken',
-  async (_: void, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
-    try {
-      return await authService.refreshToken();
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to refresh token';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-// Create the auth slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -237,149 +36,126 @@ const authSlice = createSlice({
       state.isError = false;
       state.errorMessage = '';
     },
+    clearUser: (state: AuthState) => {
+      state.user = null;
+      state.isSuccess = false;
+      state.isError = false;
+      state.errorMessage = '';
+      
+      // Clear localStorage
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    },
+    updateUserDetails: (state: AuthState, action: PayloadAction<Partial<AuthResponse>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
+    setInitialized: (state: AuthState) => {
+      state.isInitialized = true;
+    }
   },
   extraReducers: (builder: ActionReducerMapBuilder<AuthState>) => {
     builder
-      // Check First Run
-      .addCase(checkFirstRun.pending, (state: AuthState) => {
-        state.isLoading = true;
-      })
-      .addCase(checkFirstRun.fulfilled, (state: AuthState, action: PayloadAction<CheckFirstRunResponse>) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.isFirstRun = action.payload.isFirstRun;
-      })
-      .addCase(checkFirstRun.rejected, (state: AuthState, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.errorMessage = action.payload;
-      })
-      // Get Setup Status
-      .addCase(getSetupStatus.pending, (state: AuthState) => {
-        state.isLoading = true;
-      })
-      .addCase(getSetupStatus.fulfilled, (state: AuthState, action: PayloadAction<SystemSetupStatus>) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.setupStatus = action.payload;
-        // Update isFirstRun based on setup status
-        state.isFirstRun = !action.payload.isAdminConfigured || !action.payload.isRoleConfigured;
-      })
-      .addCase(getSetupStatus.rejected, (state: AuthState, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.errorMessage = action.payload;
-      })
-      // Set Admin Configured
-      .addCase(setAdminConfigured.pending, (state: AuthState) => {
-        state.isLoading = true;
-      })
-      .addCase(setAdminConfigured.fulfilled, (state: AuthState, action: PayloadAction<{success: boolean, isConfigured: boolean}>) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        if (state.setupStatus) {
-          state.setupStatus.isAdminConfigured = action.payload.isConfigured;
-          // Update isFirstRun based on setup status
-          state.isFirstRun = !state.setupStatus.isAdminConfigured || !state.setupStatus.isRoleConfigured;
-        }
-      })
-      .addCase(setAdminConfigured.rejected, (state: AuthState, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.errorMessage = action.payload;
-      })
-      // Set Role Configured
-      .addCase(setRoleConfigured.pending, (state: AuthState) => {
-        state.isLoading = true;
-      })
-      .addCase(setRoleConfigured.fulfilled, (state: AuthState, action: PayloadAction<{success: boolean, isConfigured: boolean}>) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        if (state.setupStatus) {
-          state.setupStatus.isRoleConfigured = action.payload.isConfigured;
-          // Update isFirstRun based on setup status
-          state.isFirstRun = !state.setupStatus.isAdminConfigured || !state.setupStatus.isRoleConfigured;
-        }
-      })
-      .addCase(setRoleConfigured.rejected, (state: AuthState, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.errorMessage = action.payload;
-      })
-      // Set Moderation Configured
-      .addCase(setModerationConfigured.pending, (state: AuthState) => {
-        state.isLoading = true;
-      })
-      .addCase(setModerationConfigured.fulfilled, (state: AuthState, action: PayloadAction<{success: boolean, isConfigured: boolean}>) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        if (state.setupStatus) {
-          state.setupStatus.isModerationConfigured = action.payload.isConfigured;
-        }
-      })
-      .addCase(setModerationConfigured.rejected, (state: AuthState, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.errorMessage = action.payload;
-      })
       // Login
-      .addCase(login.pending, (state: AuthState) => {
+      .addCase(loginUser.pending, (state: AuthState) => {
         state.isLoading = true;
+        state.isError = false;
+        state.errorMessage = '';
       })
-      .addCase(login.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
+      .addCase(loginUser.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
+        console.log('=== AUTH SLICE LOGIN FULFILLED ===');
+        console.log('Setting user in Redux state:', action.payload);
         state.isLoading = false;
         state.isSuccess = true;
         state.user = action.payload;
+        state.isInitialized = true;
+        
+        // Store user data in localStorage for persistence
+        localStorage.setItem('user', JSON.stringify(action.payload));
+        localStorage.setItem('accessToken', action.payload.accessToken);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
-      .addCase(login.rejected, (state: AuthState, action: any) => {
+      .addCase(loginUser.rejected, (state: AuthState, action: any) => {
         state.isLoading = false;
         state.isError = true;
-        state.errorMessage = action.payload;
+        state.errorMessage = action.payload || 'Login failed';
         state.user = null;
+        state.isInitialized = true;
       })
       // Register
-      .addCase(register.pending, (state: AuthState) => {
+      .addCase(registerUser.pending, (state: AuthState) => {
         state.isLoading = true;
+        state.isError = false;
+        state.errorMessage = '';
       })
-      .addCase(register.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
+      .addCase(registerUser.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.user = action.payload;
+        state.isInitialized = true;
       })
-      .addCase(register.rejected, (state: AuthState, action: PayloadAction<string>) => {
+      .addCase(registerUser.rejected, (state: AuthState, action: any) => {
         state.isLoading = false;
         state.isError = true;
-        state.errorMessage = action.payload;
+        state.errorMessage = action.payload || 'Registration failed';
         state.user = null;
-      })
-      // Admin Setup
-      .addCase(adminSetup.pending, (state: AuthState) => {
-        state.isLoading = true;
-      })
-      .addCase(adminSetup.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.user = action.payload;
-      })
-      .addCase(adminSetup.rejected, (state: AuthState, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.errorMessage = action.payload;
-        state.user = null;
+        state.isInitialized = true;
       })
       // Logout
-      .addCase(logout.fulfilled, (state: AuthState) => {
+      .addCase(logoutUser.fulfilled, (state: AuthState) => {
         state.user = null;
+        state.isSuccess = false;
+        state.isError = false;
+        state.errorMessage = '';
+        state.isInitialized = true;
+        
+        // Clear localStorage
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       })
       // Refresh Token
-      .addCase(refreshToken.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
-        state.user = action.payload;
+      .addCase(refreshUserToken.fulfilled, (state: AuthState, action: PayloadAction<{ accessToken: string; refreshToken?: string }>) => {
+        if (state.user) {
+          // Extract user information from the new JWT token
+          const decodedUser = extractUserFromJWT(action.payload.accessToken);
+          console.log('Decoded user from refreshed JWT:', decodedUser);
+          
+          state.user = { 
+            ...state.user, 
+            id: decodedUser?.id || state.user.id,
+            username: decodedUser?.username || state.user.username,
+            email: decodedUser?.email || state.user.email,
+            roles: decodedUser?.role ? [decodedUser.role] : state.user.roles,
+            accessToken: action.payload.accessToken,
+            refreshToken: action.payload.refreshToken || state.user.refreshToken
+          };
+          
+          // Update localStorage with new tokens and user data
+          localStorage.setItem('accessToken', action.payload.accessToken);
+          if (action.payload.refreshToken) {
+            localStorage.setItem('refreshToken', action.payload.refreshToken);
+          }
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
       })
-      .addCase(refreshToken.rejected, (state: AuthState) => {
+      .addCase(refreshUserToken.rejected, (state: AuthState) => {
+        // Clear user and mark as initialized when refresh fails
         state.user = null;
+        state.isSuccess = false;
+        state.isError = false;
+        state.errorMessage = '';
+        state.isInitialized = true;
+        
+        // Clear localStorage
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       });
   },
 });
 
-export const { reset } = authSlice.actions;
+export const { reset, clearUser, updateUserDetails, setInitialized } = authSlice.actions;
 export default authSlice.reducer; 

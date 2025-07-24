@@ -17,16 +17,10 @@ namespace PolyBucket.Api.Features.Users.Queries
         public string Username { get; set; } = null!;
     }
 
-    public class GetUserByIdQueryHandler
+    public class GetUserByIdQueryHandler(IUserRepository userRepository, ILogger<GetUserByIdQueryHandler> logger)
     {
-        private readonly IUserRepository _userRepository;
-        private readonly ILogger<GetUserByIdQueryHandler> _logger;
-
-        public GetUserByIdQueryHandler(IUserRepository userRepository, ILogger<GetUserByIdQueryHandler> logger)
-        {
-            _userRepository = userRepository;
-            _logger = logger;
-        }
+        private readonly IUserRepository _userRepository = userRepository;
+        private readonly ILogger<GetUserByIdQueryHandler> _logger = logger;
 
         public async Task<GetUserByIdResponse> Handle(GetUserByIdQuery query)
         {

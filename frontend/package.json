@@ -31,7 +31,9 @@
     "react-dom": "^19.0.0",
     "react-redux": "^9.1.0",
     "react-router-dom": "^7.6.3",
+    "recharts": "^3.1.0",
     "redux": "^5.0.1",
+    "redux-persist": "^6.0.0",
     "three": "^0.178.0",
     "typescript": "^5.8.3",
     "web-vitals": "^5.0.3"
@@ -42,6 +44,7 @@
     "autoprefixer": "^10.4.21",
     "cypress": "^13.6.0",
     "eslint-plugin-cypress": "^2.15.1",
+    "nswag": "^14.4.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11",
     "vite": "^5.3.5"

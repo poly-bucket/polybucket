@@ -9,16 +9,10 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Http
 {
     [ApiController]
     [Route("api/auth")]
-    public class VerifyEmailController : ControllerBase
+    public class VerifyEmailController(VerifyEmailCommandHandler handler, ILogger<VerifyEmailController> logger) : ControllerBase
     {
-        private readonly VerifyEmailCommandHandler _handler;
-        private readonly ILogger<VerifyEmailController> _logger;
-
-        public VerifyEmailController(VerifyEmailCommandHandler handler, ILogger<VerifyEmailController> logger)
-        {
-            _handler = handler;
-            _logger = logger;
-        }
+        private readonly VerifyEmailCommandHandler _handler = handler;
+        private readonly ILogger<VerifyEmailController> _logger = logger;
 
         [HttpPost("verify-email")]
         [ProducesResponseType(200)]

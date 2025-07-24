@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Common.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,20 +9,74 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Comments.Plugins
 {
-    public class DefaultCommentsPlugin : ICommentsPlugin
+    public class DefaultCommentsPlugin(PolyBucketDbContext context) : ICommentsPlugin
     {
-        private readonly PolyBucketDbContext _context;
-
-        public DefaultCommentsPlugin(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         public string Id => "default-comments-plugin";
         public string Name => "Default Comments Plugin";
         public string Description => "Default implementation of the comments plugin using Entity Framework Core";
         public string Version => "1.0.0";
         public string Author => "Polybucket Team";
+
+        public IEnumerable<PluginComponent> FrontendComponents => new List<PluginComponent>
+        {
+            new PluginComponent
+            {
+                Id = "comments-widget",
+                Name = "Comments Widget",
+                ComponentPath = "plugins/comments/CommentsWidget",
+                Type = ComponentType.Widget,
+                Hooks = new List<PluginHook>
+                {
+                    new PluginHook
+                    {
+                        HookName = "model-details-sidebar",
+                        ComponentId = "comments-widget",
+                        Priority = 50
+                    },
+                    new PluginHook
+                    {
+                        HookName = "user-profile-tabs",
+                        ComponentId = "comments-widget",
+                        Priority = 30,
+                        Config = new Dictionary<string, object> { { "targetType", "user" } }
+                    }
+                }
+            }
+        };
+
+        public PluginMetadata Metadata => new PluginMetadata
+        {
+            MinimumAppVersion = "1.0.0",
+            RequiredPermissions = new List<string> { "comment.create", "comment.view" },
+            OptionalPermissions = new List<string> { "comment.moderate", "comment.delete.any" },
+            Settings = new Dictionary<string, PluginSetting>
+            {
+                ["maxCommentLength"] = new PluginSetting
+                {
+                    Name = "Max Comment Length",
+                    Description = "Maximum number of characters allowed in a comment",
+                    Type = PluginSettingType.Number,
+                    DefaultValue = 1000,
+                    Required = true
+                },
+                ["allowNestedComments"] = new PluginSetting
+                {
+                    Name = "Allow Nested Comments",
+                    Description = "Enable replies to comments",
+                    Type = PluginSettingType.Boolean,
+                    DefaultValue = true,
+                    Required = false
+                }
+            },
+            Lifecycle = new PluginLifecycle
+            {
+                AutoStart = true,
+                CanDisable = true,
+                CanUninstall = false
+            }
+        };
 
         public Task InitializeAsync() => Task.CompletedTask;
         public Task UnloadAsync() => Task.CompletedTask;

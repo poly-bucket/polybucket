@@ -9,16 +9,10 @@ namespace PolyBucket.Api.Features.Authentication.Register.Http
 {
     [ApiController]
     [Route("api/auth")]
-    public class RegisterController : ControllerBase
+    public class RegisterController(RegisterCommandHandler handler, ILogger<RegisterController> logger) : ControllerBase
     {
-        private readonly RegisterCommandHandler _handler;
-        private readonly ILogger<RegisterController> _logger;
-
-        public RegisterController(RegisterCommandHandler handler, ILogger<RegisterController> logger)
-        {
-            _handler = handler;
-            _logger = logger;
-        }
+        private readonly RegisterCommandHandler _handler = handler;
+        private readonly ILogger<RegisterController> _logger = logger;
 
         /// <summary>
         /// Register a new user account

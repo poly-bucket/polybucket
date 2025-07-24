@@ -4,14 +4,9 @@ using PolyBucket.Api.Features.Filaments.Domain;
 
 namespace PolyBucket.Api.Features.Filaments.Handlers;
 
-public class DeleteFilamentHandler : IRequestHandler<DeleteFilamentCommand, bool>
+public class DeleteFilamentHandler(PolyBucketDbContext context) : IRequestHandler<DeleteFilamentCommand, bool>
 {
-    private readonly PolyBucketDbContext _context;
-
-    public DeleteFilamentHandler(PolyBucketDbContext context)
-    {
-        _context = context;
-    }
+    private readonly PolyBucketDbContext _context = context;
 
     public async Task<bool> Handle(DeleteFilamentCommand request, CancellationToken cancellationToken)
     {

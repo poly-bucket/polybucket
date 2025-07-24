@@ -21,5 +21,6 @@ namespace PolyBucket.Api.Features.Authentication.Domain
         public string Role { get; set; } = string.Empty;
         public bool IsEmailVerified { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? Avatar { get; set; }
     }
 } 

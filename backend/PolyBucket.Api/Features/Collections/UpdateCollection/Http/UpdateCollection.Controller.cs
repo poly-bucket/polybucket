@@ -10,14 +10,9 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
-    public class UpdateCollectionController : ControllerBase
+    public class UpdateCollectionController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public UpdateCollectionController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCollection(Guid id, [FromBody] UpdateCollectionCommand command)

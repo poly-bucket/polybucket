@@ -10,14 +10,9 @@ namespace PolyBucket.Api.Features.Models.GenerateModelPreview.Http
     [Authorize]
     [ApiController]
     [Route("api/models")]
-    public class GenerateModelPreviewController : ControllerBase
+    public class GenerateModelPreviewController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public GenerateModelPreviewController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         /// <summary>
         /// Triggers generation of a preview image for a specific model and size

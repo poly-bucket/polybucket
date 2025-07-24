@@ -13,14 +13,9 @@ namespace PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Http
     [Authorize]
     [ApiController]
     [Route("api/admin/moderation")]
-    public class GetModerationAuditLogsController : ControllerBase
+    public class GetModerationAuditLogsController(PolyBucketDbContext context) : ControllerBase
     {
-        private readonly PolyBucketDbContext _context;
-
-        public GetModerationAuditLogsController(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         /// <summary>
         /// Get moderation audit logs for admin review

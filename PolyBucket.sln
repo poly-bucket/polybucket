@@ -4,8 +4,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "backend\\PolyBucket.Api\\Api.csproj", "{B8DC0370-2F7B-48FE-A8BB-3028851265D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugins", "backend\\PolyBucket.Plugins\\PolyBucket.Plugins\\Plugins.csproj", "{C9AADE04-74D6-46EC-8E1C-01D2BD8B70D9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyBucket.Tests", "backend\\PolyBucket.Tests\\PolyBucket.Tests.csproj", "{02BE8FAB-04D0-4854-B87E-A8A90C36CCCA}"
 EndProject
 Global

@@ -8,14 +8,9 @@ namespace PolyBucket.Api.Features.Plugins.Commands
     [ApiController]
     [Route("api/plugins")]
     [Authorize(Roles = "Admin")]
-    public class ReloadPluginsController : ControllerBase
+    public class ReloadPluginsController(PluginManager pluginManager) : ControllerBase
     {
-        private readonly PluginManager _pluginManager;
-
-        public ReloadPluginsController(PluginManager pluginManager)
-        {
-            _pluginManager = pluginManager;
-        }
+        private readonly PluginManager _pluginManager = pluginManager;
 
         [HttpPost("reload")]
         public async Task<IActionResult> ReloadPlugins()

@@ -8,16 +8,10 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.RemoveModelFromCollection.Domain
 {
-    public class RemoveModelFromCollectionCommandHandler : IRequestHandler<RemoveModelFromCollectionCommand>
+    public class RemoveModelFromCollectionCommandHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor) : IRequestHandler<RemoveModelFromCollectionCommand>
     {
-        private readonly ICollectionRepository _repository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public RemoveModelFromCollectionCommandHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor)
-        {
-            _repository = repository;
-            _httpContextAccessor = httpContextAccessor;
-        }
+        private readonly ICollectionRepository _repository = repository;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
         public async Task Handle(RemoveModelFromCollectionCommand request, CancellationToken cancellationToken)
         {

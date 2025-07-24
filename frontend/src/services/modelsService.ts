@@ -1,197 +1,391 @@
-import { 
-  GetModelsQueryClient, 
-  GetModelByIdQueryClient, 
-  SearchModelsClient,
-  GetModelsResponse,
-  GetModelByIdResponse,
-  Model 
-} from './api.client';
-import { 
-  getFeaturedDemoModels, 
-  getPopularDemoModels, 
-  getRecentDemoModels, 
-  searchDemoModels,
-  demoModels 
-} from './demoData';
+import store from '../store';
+import { PrivacySettings } from './api.client';
+import { ApiClientFactory } from '../api/clientFactory';
 
-// Extended model interface to include missing properties from backend
-export interface ExtendedModel extends Model {
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+
+// Helper function to get auth token from Redux store
+const getAuthToken = (): string | null => {
+  const state = store.getState();
+  return state.auth.user?.accessToken || null;
+};
+
+export interface ModelUploadData {
+  name: string;
+  description?: string;
+  privacy: PrivacySettings;
+  license?: string;
+  categories?: string[];
+  aiGenerated: boolean;
+  workInProgress: boolean;
+  nsfw: boolean;
+  remix: boolean;
+  thumbnailFileId?: string;
+}
+
+export interface ModelUploadRequest {
+  modelData: ModelUploadData;
+  files: File[];
+}
+
+export interface Model {
+  id: string;
+  name: string;
+  description: string;
+  userId: string;
+  license?: string;
+  privacy: PrivacySettings;
+  categories?: string[];
+  aiGenerated: boolean;
+  wip: boolean;
+  nsfw: boolean;
+  isRemix: boolean;
+  remixUrl?: string;
+  author?: any;
+  files?: any[];
+  isPublic: boolean;
+  isFeatured: boolean;
+  categoryCollection?: any[];
+  tags?: any[];
+  versions?: any[];
+  comments?: any[];
+  likes?: any[];
+  authorId: string;
+  createdAt: string;
+  updatedAt?: string;
   thumbnailUrl?: string;
+  fileUrl?: string;
   downloads?: number;
 }
 
-export interface ModelsQueryParams {
-  page?: number;
-  pageSize?: number;
-  searchQuery?: string;
-  category?: string;
-  sortBy?: 'popular' | 'newest' | 'downloads' | 'likes';
-  showWIP?: boolean;
-  showNSFW?: boolean;
-  showAI?: boolean;
-}
-
-export interface ModelsResponse {
-  models: ExtendedModel[];
+export interface GetModelsResponse {
+  models: Model[];
   totalCount: number;
   page: number;
   totalPages: number;
-  hasMore: boolean;
 }
 
-class ModelsService {
-  private getModelsClient: GetModelsQueryClient;
-  private getModelByIdClient: GetModelByIdQueryClient;
-  private searchModelsClient: SearchModelsClient;
+export interface GetModelByIdResponse {
+  model: Model;
+}
 
-  constructor() {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-    this.getModelsClient = new GetModelsQueryClient(baseUrl);
-    this.getModelByIdClient = new GetModelByIdQueryClient(baseUrl);
-    this.searchModelsClient = new SearchModelsClient(baseUrl);
+export interface ExtendedModel extends Model {
+  // Additional properties for the frontend
+  downloadCount?: number;
+  rating?: number;
+  isLiked?: boolean;
+  isInCollection?: boolean;
+}
+
+export class ModelsService {
+  static async uploadModel(request: ModelUploadRequest): Promise<Model> {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const formData = new FormData();
+    
+    // Add model data
+    formData.append('name', request.modelData.name);
+    formData.append('description', request.modelData.description || '');
+    formData.append('privacy', request.modelData.privacy.toString());
+    formData.append('license', request.modelData.license || 'MIT');
+    formData.append('categories', JSON.stringify(request.modelData.categories || []));
+    formData.append('aiGenerated', request.modelData.aiGenerated.toString());
+    formData.append('workInProgress', request.modelData.workInProgress.toString());
+    formData.append('nsfw', request.modelData.nsfw.toString());
+    formData.append('remix', request.modelData.remix.toString());
+
+    // Add files
+    request.files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    // Add thumbnail file ID if specified
+    if (request.modelData.thumbnailFileId) {
+      formData.append('thumbnailFileId', request.modelData.thumbnailFileId);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/models`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result;
   }
 
-  async getModels(params: ModelsQueryParams = {}): Promise<ModelsResponse> {
-    try {
-      const { page = 1, pageSize = 20 } = params;
-      
-      // For demo purposes, use demo data instead of API
-      // TODO: Replace with actual API call when backend is ready
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedModels = demoModels.slice(startIndex, endIndex);
-      
-      return {
-        models: paginatedModels,
-        totalCount: demoModels.length,
-        page,
-        totalPages: Math.ceil(demoModels.length / pageSize),
-        hasMore: endIndex < demoModels.length
-      };
-    } catch (error) {
-      console.error('Error fetching models:', error);
-      throw new Error('Failed to fetch models. Please try again later.');
+  static async getModels(page?: number, take?: number): Promise<GetModelsResponse> {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const params = new URLSearchParams();
+    if (page !== undefined) params.append('page', page.toString());
+    if (take !== undefined) params.append('take', take.toString());
+
+    const response = await fetch(`${API_BASE_URL}/api/models?${params}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get models: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  static async getModelById(id: string): Promise<GetModelByIdResponse> {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/models/${id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get model: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  static async deleteModel(id: string): Promise<void> {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/models/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to delete model: ${response.status} ${response.statusText} - ${errorText}`);
     }
   }
 
-  async getModelById(id: string): Promise<ExtendedModel | null> {
-    try {
-      // Using demo data for now
-      // TODO: Replace with actual API call when backend is ready
-      const model = demoModels.find(m => m.id === id);
-      return model || null;
-    } catch (error) {
-      console.error('Error fetching model by ID:', error);
-      throw new Error('Failed to fetch model details. Please try again later.');
+  static async updateModel(id: string, modelData: Partial<Model>): Promise<void> {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/models/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(modelData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Update failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
   }
 
-  async searchModels(params: ModelsQueryParams): Promise<ModelsResponse> {
+  static async createModelVersion(modelId: string, versionData: { name: string; files: File[] }): Promise<void> {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const formData = new FormData();
+    formData.append('name', versionData.name);
+    versionData.files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/models/${modelId}/versions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Version creation failed: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+  }
+
+  static async getModelVersions(modelId: string): Promise<any> {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/models/${modelId}/versions`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get model versions: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  // Dashboard methods for different model categories
+  static async getFeaturedModels(): Promise<ExtendedModel[]> {
     try {
-      const { searchQuery = '', page = 1, pageSize = 20 } = params;
+      // Use the generated API client instead of direct fetch
+      const client = ApiClientFactory.getModelsClient();
+      const response = await client.getModels(1, 50);
       
-      // Using demo data for search
-      let filteredModels = searchQuery ? searchDemoModels(searchQuery) : demoModels;
+      // Filter for featured models
+      const featuredModels = response.models?.filter((model: any) => model.isFeatured) || [];
+      
+      return featuredModels.map((model: any) => ({
+        ...model,
+        // The backend already provides thumbnailUrl correctly, don't override it
+        downloadCount: model.downloads || 0,
+        rating: 0, // TODO: Implement rating system
+        isLiked: false, // TODO: Check if current user liked this model
+        isInCollection: false // TODO: Check if model is in user's collections
+      }));
+    } catch (error) {
+      console.error('Error getting featured models:', error);
+      throw new Error('Failed to get featured models');
+    }
+  }
 
-      // Filter by flags
-      if (params.showWIP === false) {
-        filteredModels = filteredModels.filter(model => !model.wip);
-      }
-      if (params.showNSFW === false) {
-        filteredModels = filteredModels.filter(model => !model.nsfw);
-      }
-      if (params.showAI === false) {
-        filteredModels = filteredModels.filter(model => !model.aiGenerated);
-      }
+  static async getPopularModels(): Promise<ExtendedModel[]> {
+    try {
+      // Use the generated API client instead of direct fetch
+      const client = ApiClientFactory.getModelsClient();
+      const response = await client.getModels(1, 50);
+      
+      // Sort by downloads + likes (popularity score)
+      const popularModels = (response.models || [])
+        .sort((a: any, b: any) => {
+          const scoreA = (a.downloads || 0) + (a.likes || 0);
+          const scoreB = (b.downloads || 0) + (b.likes || 0);
+          return scoreB - scoreA;
+        })
+        .slice(0, 20); // Take top 20
+      
+      return popularModels.map((model: any) => ({
+        ...model,
+        // The backend already provides thumbnailUrl correctly, don't override it
+        downloadCount: model.downloads || 0,
+        rating: 0, // TODO: Implement rating system
+        isLiked: false, // TODO: Check if current user liked this model
+        isInCollection: false // TODO: Check if model is in user's collections
+      }));
+    } catch (error) {
+      console.error('Error getting popular models:', error);
+      throw new Error('Failed to get popular models');
+    }
+  }
 
-      // Simple sorting
-      if (params.sortBy) {
-        filteredModels.sort((a, b) => {
-          switch (params.sortBy) {
-            case 'popular':
-              return (b.likes?.length || 0) - (a.likes?.length || 0);
-            case 'downloads':
-              return (b.downloads || 0) - (a.downloads || 0);
-            case 'newest':
-              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-            default:
-              return 0;
-          }
-        });
-      }
+  static async getRecentModels(): Promise<ExtendedModel[]> {
+    try {
+      // Use the generated API client instead of direct fetch
+      const client = ApiClientFactory.getModelsClient();
+      const response = await client.getModels(1, 50);
+      
+      // Sort by creation date (most recent first)
+      const recentModels = (response.models || [])
+        .sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt || 0);
+          const dateB = new Date(b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        })
+        .slice(0, 20); // Take top 20
+      
+      return recentModels.map((model: any) => ({
+        ...model,
+        // The backend already provides thumbnailUrl correctly, don't override it
+        downloadCount: model.downloads || 0,
+        rating: 0, // TODO: Implement rating system
+        isLiked: false, // TODO: Check if current user liked this model
+        isInCollection: false // TODO: Check if model is in user's collections
+      }));
+    } catch (error) {
+      console.error('Error getting recent models:', error);
+      throw new Error('Failed to get recent models');
+    }
+  }
 
-      // Pagination
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedModels = filteredModels.slice(startIndex, endIndex);
+  static async searchModels(params: { searchQuery: string }): Promise<{ models: ExtendedModel[] }> {
+    try {
+      // Use the generated API client instead of direct fetch
+      const client = ApiClientFactory.getModelsClient();
+      const response = await client.getModels(1, 100);
+      
+      const searchResults = (response.models || []).filter((model: any) => {
+        const query = params.searchQuery.toLowerCase();
+        return (
+          model.name?.toLowerCase().includes(query) ||
+          model.description?.toLowerCase().includes(query)
+        );
+      });
       
       return {
-        models: paginatedModels,
-        totalCount: filteredModels.length,
-        page,
-        totalPages: Math.ceil(filteredModels.length / pageSize),
-        hasMore: endIndex < filteredModels.length
+        models: searchResults.map((model: any) => ({
+          ...model,
+          // The backend already provides thumbnailUrl correctly, don't override it
+          downloadCount: model.downloads || 0,
+          rating: 0, // TODO: Implement rating system
+          isLiked: false, // TODO: Check if current user liked this model
+          isInCollection: false // TODO: Check if model is in user's collections
+        }))
       };
     } catch (error) {
       console.error('Error searching models:', error);
-      throw new Error('Failed to search models. Please try again later.');
+      throw new Error('Failed to search models');
     }
-  }
-
-  async getFeaturedModels(): Promise<ExtendedModel[]> {
-    try {
-      // Using demo data for now
-      return getFeaturedDemoModels();
-    } catch (error) {
-      console.error('Error fetching featured models:', error);
-      return [];
-    }
-  }
-
-  async getPopularModels(): Promise<ExtendedModel[]> {
-    try {
-      // Using demo data for now
-      return getPopularDemoModels();
-    } catch (error) {
-      console.error('Error fetching popular models:', error);
-      return [];
-    }
-  }
-
-  async getRecentModels(): Promise<ExtendedModel[]> {
-    try {
-      // Using demo data for now
-      return getRecentDemoModels();
-    } catch (error) {
-      console.error('Error fetching recent models:', error);
-      return [];
-    }
-  }
-
-  // Utility methods for formatting
-  formatDownloadCount(downloads: number): string {
-    if (downloads >= 1000000) {
-      return (downloads / 1000000).toFixed(1) + 'M';
-    }
-    if (downloads >= 1000) {
-      return (downloads / 1000).toFixed(1) + 'K';
-    }
-    return downloads.toString();
-  }
-
-  formatLikeCount(likes: number): string {
-    return this.formatDownloadCount(likes);
-  }
-
-  getModelThumbnail(model: ExtendedModel): string {
-    return model.thumbnailUrl || 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=400&h=225&fit=crop';
-  }
-
-  getModelUrl(model: ExtendedModel): string {
-    return `/models/${model.id}`;
   }
 }
 
-// Export a singleton instance
-export const modelsService = new ModelsService();
+// Create a default export object with all the service methods
+const modelsService = {
+  uploadModel: ModelsService.uploadModel,
+  getModels: ModelsService.getModels,
+  getModelById: ModelsService.getModelById,
+  deleteModel: ModelsService.deleteModel,
+  updateModel: ModelsService.updateModel,
+  createModelVersion: ModelsService.createModelVersion,
+  getModelVersions: ModelsService.getModelVersions,
+  getFeaturedModels: ModelsService.getFeaturedModels,
+  getPopularModels: ModelsService.getPopularModels,
+  getRecentModels: ModelsService.getRecentModels,
+  searchModels: ModelsService.searchModels
+};
+
 export default modelsService; 

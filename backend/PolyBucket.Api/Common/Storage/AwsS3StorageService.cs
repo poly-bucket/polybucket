@@ -1,5 +1,6 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.S3.Util;
 using Microsoft.Extensions.Options;
 using PolyBucket.Api.Settings;
 
@@ -24,7 +25,7 @@ public class AwsS3StorageService : IStorageService
 
     private async Task EnsureBucketExistsAsync(CancellationToken ct)
     {
-        if (!await _s3.DoesS3BucketExistAsync(_settings.BucketName))
+        if (!await AmazonS3Util.DoesS3BucketExistV2Async(_s3, _settings.BucketName))
         {
             await _s3.PutBucketAsync(new PutBucketRequest { BucketName = _settings.BucketName }, ct);
         }
@@ -41,7 +42,7 @@ public class AwsS3StorageService : IStorageService
             ContentType = contentType
         };
         await _s3.PutObjectAsync(request, cancellationToken);
-        return await GetPresignedUrlAsync(objectName, TimeSpan.FromHours(1), cancellationToken);
+        return objectName; // Return the object key instead of presigned URL
     }
 
     public async Task<Stream> DownloadAsync(string objectName, CancellationToken cancellationToken = default)

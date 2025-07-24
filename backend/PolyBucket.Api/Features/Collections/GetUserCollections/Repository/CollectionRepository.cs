@@ -8,14 +8,9 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.GetUserCollections.Repository
 {
-    public class CollectionRepository : ICollectionRepository
+    public class CollectionRepository(PolyBucketDbContext context) : ICollectionRepository
     {
-        private readonly PolyBucketDbContext _context;
-
-        public CollectionRepository(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task<IEnumerable<Collection>> GetCollectionsByUserIdAsync(Guid userId)
         {

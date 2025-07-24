@@ -4,16 +4,11 @@ using PolyBucket.Api.Features.Models.Repository;
 
 namespace PolyBucket.Api.Features.Models.Domain
 {
-    public class ModelService : IModelService
+    public class ModelService(IModelsRepository modelsRepository) : IModelService
     {
-        private readonly IModelsRepository _modelsRepository;
+        private readonly IModelsRepository _modelsRepository = modelsRepository;
 
-        public ModelService(IModelsRepository modelsRepository)
-        {
-            _modelsRepository = modelsRepository;
-        }
-
-        public async Task<Model> GetModelByIdAsync(Guid id)
+        public async Task<Model?> GetModelByIdAsync(Guid id)
         {
             return await _modelsRepository.GetModelByIdAsync(id);
         }

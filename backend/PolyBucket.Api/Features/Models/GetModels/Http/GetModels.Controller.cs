@@ -7,14 +7,10 @@ namespace PolyBucket.Api.Features.Models.GetModels.Http
 {
     [ApiController]
     [Route("api/models")]
-    public class GetModelsController : ControllerBase
+    public class GetModelsController(IMediator mediator, ILogger<GetModelsController> logger) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public GetModelsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
+        private readonly ILogger<GetModelsController> _logger = logger;
 
         [HttpGet]
         public async Task<ActionResult<GetModelsResponse>> GetModels([FromQuery] GetModelsQuery query)

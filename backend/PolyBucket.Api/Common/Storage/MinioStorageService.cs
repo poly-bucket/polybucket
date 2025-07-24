@@ -46,8 +46,8 @@ public class MinioStorageService : IStorageService
 
         await _client.PutObjectAsync(putObjectArgs, cancellationToken).ConfigureAwait(false);
 
-        // Return a presigned URL for convenience
-        return await GetPresignedUrlAsync(objectName, TimeSpan.FromHours(1), cancellationToken);
+        // Return the object key instead of presigned URL
+        return objectName;
     }
 
     public async Task<Stream> DownloadAsync(string objectName, CancellationToken cancellationToken = default)
@@ -73,11 +73,23 @@ public class MinioStorageService : IStorageService
 
     public async Task<string> GetPresignedUrlAsync(string objectName, TimeSpan expiry, CancellationToken cancellationToken = default)
     {
+        // Use external endpoint for presigned URLs if configured
+        var endpoint = _settings.ExternalEndpoint ?? _settings.Endpoint;
+        var port = _settings.ExternalPort ?? _settings.Port;
+        var useSSL = _settings.ExternalUseSSL ?? _settings.UseSSL;
+
+        // Create a temporary client with external endpoint for presigned URL generation
+        var externalClient = new MinioClient()
+            .WithEndpoint(endpoint, port)
+            .WithCredentials(_settings.AccessKey, _settings.SecretKey)
+            .WithSSL(useSSL)
+            .Build();
+
         // MinIO SDK uses int seconds for expiry
         var args = new PresignedGetObjectArgs()
             .WithBucket(_settings.BucketName)
             .WithObject(objectName)
             .WithExpiry((int)expiry.TotalSeconds);
-        return await _client.PresignedGetObjectAsync(args).ConfigureAwait(false);
+        return await externalClient.PresignedGetObjectAsync(args).ConfigureAwait(false);
     }
 } 

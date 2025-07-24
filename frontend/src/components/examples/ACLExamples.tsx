@@ -55,14 +55,14 @@ const ACLExamples: React.FC = () => {
                   <Typography><strong>Role:</strong> {permissions.role.name} (Priority: {permissions.role.priority})</Typography>
                   <Typography><strong>Is Admin:</strong> {isAdmin() ? 'Yes' : 'No'}</Typography>
                   <Typography><strong>Is Moderator:</strong> {isModerator() ? 'Yes' : 'No'}</Typography>
-                  <Typography><strong>Total Permissions:</strong> {permissions.effectivePermissions.length}</Typography>
+                  <Typography><strong>Total Permissions:</strong> {permissions.effectivePermissions?.length || 0}</Typography>
                   
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2">Sample Permissions:</Typography>
-                    {permissions.effectivePermissions.slice(0, 5).map(permission => (
+                    {permissions.effectivePermissions?.slice(0, 5).map(permission => (
                       <Chip key={permission} label={permission} size="small" sx={{ mr: 1, mt: 1 }} />
                     ))}
-                    {permissions.effectivePermissions.length > 5 && (
+                    {permissions.effectivePermissions && permissions.effectivePermissions.length > 5 && (
                       <Chip label={`+${permissions.effectivePermissions.length - 5} more`} size="small" sx={{ mt: 1 }} />
                     )}
                   </Box>

@@ -11,26 +11,21 @@ namespace PolyBucket.Api.Features.Printers.Queries
     public class PrinterDto
     {
         public Guid Id { get; set; }
-        public string Manufacturer { get; set; }
-        public string Model { get; set; }
-        public string Type { get; set; }
-        public string Description { get; set; }
+        public required string Manufacturer { get; set; }
+        public required string Model { get; set; }
+        public required string Type { get; set; }
+        public required string Description { get; set; }
         public decimal? PriceUSD { get; set; }
     }
 
     public class GetPrintersResponse
     {
-        public List<PrinterDto> Printers { get; set; }
+        public required List<PrinterDto> Printers { get; set; }
     }
     
-    public class GetPrintersQueryHandler
+    public class GetPrintersQueryHandler(IPrintersRepository repository)
     {
-        private readonly IPrintersRepository _repository;
-
-        public GetPrintersQueryHandler(IPrintersRepository repository)
-        {
-            _repository = repository;
-        }
+        private readonly IPrintersRepository _repository = repository;
 
         public async Task<GetPrintersResponse> Handle(GetPrintersQuery query, CancellationToken cancellationToken)
         {
@@ -39,10 +34,10 @@ namespace PolyBucket.Api.Features.Printers.Queries
             var printerDtos = printers.Select(p => new PrinterDto
             {
                 Id = p.Id,
-                Manufacturer = p.Manufacturer,
-                Model = p.Model,
+                Manufacturer = p.Manufacturer ?? string.Empty,
+                Model = p.Model ?? string.Empty,
                 Type = p.Type.ToString(),
-                Description = p.Description,
+                Description = p.Description ?? string.Empty,
                 PriceUSD = p.PriceUSD
             }).ToList();
 

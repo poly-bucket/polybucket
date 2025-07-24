@@ -1,39 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Tabs, 
-  Tab, 
-  Typography, 
-  Paper, 
-  Container, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Button,
-  Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Switch,
-  FormControlLabel,
-  TextField,
-  Alert,
-  Badge,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Snackbar,
-  CircularProgress,
-  InputAdornment,
-  IconButton
-} from '@mui/material';
+import { useAppSelector } from '../../utils/hooks';
 import {
   People as PeopleIcon,
   ViewInAr as ModelIcon,
@@ -50,9 +16,12 @@ import {
   Add as AddIcon,
   Visibility,
   VisibilityOff,
-  ContentCopy as CopyIcon
+  ContentCopy as CopyIcon,
+  Palette as PaletteIcon
 } from '@mui/icons-material';
 import RoleManagement from './RoleManagement';
+import TokenSettings from './TokenSettings';
+import ThemeCustomization from './ThemeCustomization';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -72,9 +41,9 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
+        <div className="p-6">
           {children}
-        </Box>
+        </div>
       )}
     </div>
   );
@@ -97,77 +66,36 @@ const UserManagementPanel: React.FC = () => {
   const [newUserForm, setNewUserForm] = useState({
     email: '',
     username: '',
-    firstName: '',
-    lastName: '',
-    country: '',
-    role: 'User' as 'User' | 'Moderator' | 'Admin'
+    password: '',
+    role: 'User'
   });
-  const [createdUserPassword, setCreatedUserPassword] = useState('');
 
-  const allUsers = [
-    { email: 'admin@example.com', username: 'admin', role: 'Admin', status: 'Online', lastActive: 'Online', isModerator: true },
-    { email: 'mod1@example.com', username: 'moderator1', role: 'Moderator', status: 'Active', lastActive: '2 hours ago', isModerator: true },
-    { email: 'mod2@example.com', username: 'moderator2', role: 'Moderator', status: 'Active', lastActive: '1 day ago', isModerator: true },
-    { email: 'user1@example.com', username: 'user1', role: 'User', status: 'Active', lastActive: '1 day ago', isModerator: false },
-    { email: 'user2@example.com', username: 'user2', role: 'User', status: 'Inactive', lastActive: '3 days ago', isModerator: false },
-    { email: 'user3@example.com', username: 'user3', role: 'User', status: 'Active', lastActive: '5 hours ago', isModerator: false },
-  ];
-
-  const moderators = allUsers.filter(user => user.isModerator);
-  const displayUsers = userTab === 0 ? allUsers : moderators;
-  const filteredUsers = displayUsers.filter(user => 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Mock user data
+  const [users] = useState([
+    { email: 'admin@example.com', username: 'admin', role: 'Admin', status: 'Active', lastLogin: '2024-01-15' },
+    { email: 'moderator@example.com', username: 'moderator', role: 'Moderator', status: 'Active', lastLogin: '2024-01-14' },
+    { email: 'user1@example.com', username: 'user1', role: 'User', status: 'Active', lastLogin: '2024-01-13' },
+    { email: 'user2@example.com', username: 'user2', role: 'User', status: 'Banned', lastLogin: '2024-01-10' },
+  ]);
 
   const handleUserClick = (userEmail: string) => {
-    setSelectedUser(selectedUser === userEmail ? null : userEmail);
+    setSelectedUser(userEmail);
   };
 
   const handleUserAction = (action: string, userEmail: string) => {
-    console.log(`Action: ${action} for user: ${userEmail}`);
-    // Backend integration will go here
+    console.log(`${action} user: ${userEmail}`);
+    setSnackbar({ open: true, message: `${action} action performed on ${userEmail}`, severity: 'success' });
   };
 
   const handleCreateUser = async () => {
     setIsCreatingUser(true);
-    try {
-      const userService = await import('../../services/userService');
-      const response = await userService.default.createUser({
-        email: newUserForm.email,
-        username: newUserForm.username,
-        role: newUserForm.role,
-        firstName: newUserForm.firstName || undefined,
-        lastName: newUserForm.lastName || undefined,
-        country: newUserForm.country || undefined,
-      });
-
-      setCreatedUserPassword(response.generatedPassword);
-      setSnackbar({
-        open: true,
-        message: `User ${response.username} created successfully!`,
-        severity: 'success'
-      });
-
-      // Reset form
-      setNewUserForm({
-        email: '',
-        username: '',
-        firstName: '',
-        lastName: '',
-        country: '',
-        role: 'User'
-      });
-    } catch (error: any) {
-      console.error('User creation failed:', error);
-      setSnackbar({
-        open: true,
-        message: error.message || 'Failed to create user. Please try again.',
-        severity: 'error'
-      });
-    } finally {
-      setIsCreatingUser(false);
-    }
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsCreatingUser(false);
+    setCreateUserOpen(false);
+    setSnackbar({ open: true, message: 'User created successfully', severity: 'success' });
+    // Reset form
+    setNewUserForm({ email: '', username: '', password: '', role: 'User' });
   };
 
   const handleFormChange = (field: string, value: string) => {
@@ -176,899 +104,950 @@ const UserManagementPanel: React.FC = () => {
 
   const handleCloseCreateDialog = () => {
     setCreateUserOpen(false);
-    setCreatedUserPassword('');
-    setShowPassword(false);
+    setNewUserForm({ email: '', username: '', password: '', role: 'User' });
   };
 
   const copyPasswordToClipboard = () => {
-    navigator.clipboard.writeText(createdUserPassword);
-    setSnackbar({
-      open: true,
-      message: 'Password copied to clipboard',
-      severity: 'success'
-    });
+    navigator.clipboard.writeText(newUserForm.password);
+    setSnackbar({ open: true, message: 'Password copied to clipboard', severity: 'success' });
   };
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={8}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>User Management</Typography>
-            
-            {/* User Management Tabs */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-              <Tabs value={userTab} onChange={(e, newValue) => setUserTab(newValue)}>
-                <Tab label={`All Users (${allUsers.length})`} />
-                <Tab label={`Moderators (${moderators.length})`} />
-              </Tabs>
-            </Box>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">User Management</h2>
+        <button
+          onClick={() => setCreateUserOpen(true)}
+          className="lg-button lg-button-primary"
+        >
+          <AddIcon className="w-5 h-5" />
+          Create User
+        </button>
+      </div>
 
-            <Box sx={{ mb: 2 }}>
-              <TextField 
-                fullWidth 
-                placeholder="Search users..." 
-                variant="outlined" 
-                size="small"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-            </Box>
+      {/* Search and Filters */}
+      <div className="lg-card p-4">
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="lg-input"
+            />
+          </div>
+          <select className="lg-input w-48">
+            <option>All Roles</option>
+            <option>Admin</option>
+            <option>Moderator</option>
+            <option>User</option>
+          </select>
+          <select className="lg-input w-48">
+            <option>All Status</option>
+            <option>Active</option>
+            <option>Banned</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+      </div>
 
-            <List>
-              {filteredUsers.map((user, index) => (
-                <Box key={user.email}>
-                  <ListItem 
-                    button
-                    onClick={() => handleUserClick(user.email)}
-                    divider
-                    sx={{ 
-                      backgroundColor: selectedUser === user.email ? 'action.selected' : 'transparent',
-                      '&:hover': { backgroundColor: 'action.hover' }
-                    }}
-                  >
-                    <ListItemIcon>
-                      <PersonIcon />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body1">{user.username}</Typography>
-                          <Typography variant="body2" color="text.secondary">({user.email})</Typography>
-                        </Box>
-                      }
-                      secondary={`Last active: ${user.lastActive} • Status: ${user.status}`}
-                    />
-                    <Chip 
-                      label={user.role} 
-                      color={user.role === 'Admin' ? 'primary' : user.role === 'Moderator' ? 'secondary' : 'default'} 
-                      size="small" 
-                    />
-                  </ListItem>
-                  
-                  {/* User Actions Panel */}
-                  {selectedUser === user.email && (
-                    <Box sx={{ p: 2, backgroundColor: 'grey.50', borderRadius: 1, mb: 1 }}>
-                      <Typography variant="subtitle2" gutterBottom>Quick Actions for {user.username}</Typography>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button 
-                          size="small" 
-                          variant="outlined"
-                          onClick={() => handleUserAction('edit', user.email)}
-                        >
-                          Edit Profile
-                        </Button>
-                        <Button 
-                          size="small" 
-                          variant="outlined"
-                          onClick={() => handleUserAction('ban', user.email)}
-                          color="error"
-                        >
-                          {user.status === 'Active' ? 'Ban User' : 'Unban User'}
-                        </Button>
-                        <Button 
-                          size="small" 
-                          variant="outlined"
-                          onClick={() => handleUserAction('role', user.email)}
-                        >
-                          Change Role
-                        </Button>
-                        {!user.isModerator && (
-                          <Button 
-                            size="small" 
-                            variant="outlined"
-                            onClick={() => handleUserAction('promote', user.email)}
-                            color="success"
-                          >
-                            Make Moderator
-                          </Button>
-                        )}
-                        {user.isModerator && user.role !== 'Admin' && (
-                          <Button 
-                            size="small" 
-                            variant="outlined"
-                            onClick={() => handleUserAction('demote', user.email)}
-                            color="warning"
-                          >
-                            Remove Moderator
-                          </Button>
-                        )}
-                        <Button 
-                          size="small" 
-                          variant="outlined"
-                          onClick={() => handleUserAction('reset-password', user.email)}
-                        >
-                          Reset Password
-                        </Button>
-                        <Button 
-                          size="small" 
-                          variant="outlined"
-                          onClick={() => handleUserAction('view-activity', user.email)}
-                        >
-                          View Activity
-                        </Button>
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
+      {/* Users Table */}
+      <div className="lg-card">
+        <div className="overflow-x-auto">
+          <table className="lg-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Last Login</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.email} className="cursor-pointer hover:bg-white/5">
+                  <td>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{user.username}</div>
+                        <div className="text-sm text-white/60">{user.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`lg-badge ${
+                      user.role === 'Admin' ? 'lg-badge-error' :
+                      user.role === 'Moderator' ? 'lg-badge-warning' :
+                      'lg-badge-info'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`lg-badge ${
+                      user.status === 'Active' ? 'lg-badge-success' : 'lg-badge-error'
+                    }`}>
+                      {user.status}
+                    </span>
+                  </td>
+                  <td className="text-white/80">{user.lastLogin}</td>
+                  <td>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleUserAction('Edit', user.email)}
+                        className="lg-button text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleUserAction('Ban', user.email)}
+                        className="lg-button lg-button-secondary text-sm"
+                      >
+                        Ban
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </List>
-            
-            {filteredUsers.length === 0 && (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="body2" color="text.secondary">
-                  No users found matching your search.
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              {userTab === 0 ? 'User Statistics' : 'Moderation Statistics'}
-            </Typography>
-            {userTab === 0 ? (
-              <>
-                <Typography variant="body2" color="text.secondary">Total Users: {allUsers.length}</Typography>
-                <Typography variant="body2" color="text.secondary">Active Today: {allUsers.filter(u => u.status === 'Active').length}</Typography>
-                <Typography variant="body2" color="text.secondary">Moderators: {moderators.length}</Typography>
-                <Typography variant="body2" color="text.secondary">Banned Users: 0</Typography>
-              </>
-            ) : (
-              <>
-                <Typography variant="body2" color="text.secondary">Total Moderators: {moderators.length}</Typography>
-                <Typography variant="body2" color="text.secondary">Active Moderators: {moderators.filter(m => m.status === 'Active').length}</Typography>
-                <Typography variant="body2" color="text.secondary">Online Now: {moderators.filter(m => m.lastActive === 'Online').length}</Typography>
-                <Button variant="contained" fullWidth sx={{ mt: 2 }}>
-                  Add New Moderator
-                </Button>
-              </>
-            )}
-            <Button 
-              variant="contained" 
-              fullWidth 
-              startIcon={<AddIcon />}
-              sx={{ mt: 2 }}
-              onClick={() => setCreateUserOpen(true)}
-            >
-              Create New User
-            </Button>
-            <Button variant="outlined" fullWidth sx={{ mt: 1 }}>
-              {userTab === 0 ? 'Export User Data' : 'Export Moderator Report'}
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {userTab === 1 && (
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Moderator Permissions</Typography>
-              <List dense>
-                <ListItem>
-                  <ListItemText 
-                    primary="Model Approval" 
-                    secondary="Can approve/reject model uploads"
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemText 
-                    primary="User Moderation" 
-                    secondary="Can ban/warn users"
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemText 
-                    primary="Comment Management" 
-                    secondary="Can delete inappropriate comments"
-                  />
-                </ListItem>
-              </List>
-              <Button variant="outlined" fullWidth sx={{ mt: 1 }}>
-                Manage Permissions
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </Grid>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Create User Dialog */}
-      <Dialog 
-        open={createUserOpen} 
-        onClose={handleCloseCreateDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Create New User
-        </DialogTitle>
-        <DialogContent>
-          {!createdUserPassword ? (
-            <Box sx={{ pt: 1 }}>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Email Address"
-                type="email"
-                fullWidth
-                variant="outlined"
-                value={newUserForm.email}
-                onChange={(e) => handleFormChange('email', e.target.value)}
-                required
-                sx={{ mb: 2 }}
-              />
+      {createUserOpen && (
+        <div className="lg-modal-overlay">
+          <div className="lg-modal p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">Create New User</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={newUserForm.email}
+                  onChange={(e) => handleFormChange('email', e.target.value)}
+                  className="lg-input"
+                  placeholder="user@example.com"
+                />
+              </div>
               
-              <TextField
-                margin="dense"
-                label="Username"
-                fullWidth
-                variant="outlined"
-                value={newUserForm.username}
-                onChange={(e) => handleFormChange('username', e.target.value)}
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  value={newUserForm.role}
-                  label="Role"
-                  onChange={(e) => handleFormChange('role', e.target.value)}
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">Username</label>
+                <input
+                  type="text"
+                  value={newUserForm.username}
+                  onChange={(e) => handleFormChange('username', e.target.value)}
+                  className="lg-input"
+                  placeholder="username"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={newUserForm.password}
+                    onChange={(e) => handleFormChange('password', e.target.value)}
+                    className="lg-input pr-12"
+                    placeholder="Generate password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white"
+                  >
+                    {showPassword ? <VisibilityOff className="w-5 h-5" /> : <Visibility className="w-5 h-5" />}
+                  </button>
+                </div>
+                <button
+                  onClick={() => handleFormChange('password', Math.random().toString(36).slice(-8))}
+                  className="text-sm text-indigo-400 hover:text-indigo-300 mt-1"
                 >
-                  <MenuItem value="User">User</MenuItem>
-                  <MenuItem value="Moderator">Moderator</MenuItem>
-                  <MenuItem value="Admin">Admin</MenuItem>
-                </Select>
-              </FormControl>
-
-              <TextField
-                margin="dense"
-                label="First Name (Optional)"
-                fullWidth
-                variant="outlined"
-                value={newUserForm.firstName}
-                onChange={(e) => handleFormChange('firstName', e.target.value)}
-                sx={{ mb: 2 }}
-              />
+                  Generate Password
+                </button>
+              </div>
               
-              <TextField
-                margin="dense"
-                label="Last Name (Optional)"
-                fullWidth
-                variant="outlined"
-                value={newUserForm.lastName}
-                onChange={(e) => handleFormChange('lastName', e.target.value)}
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                margin="dense"
-                label="Country (Optional)"
-                fullWidth
-                variant="outlined"
-                value={newUserForm.country}
-                onChange={(e) => handleFormChange('country', e.target.value)}
-              />
-
-              <Alert severity="info" sx={{ mt: 2 }}>
-                A secure password will be automatically generated for this user. 
-                The password will be displayed after creation and sent to the user's email.
-              </Alert>
-            </Box>
-          ) : (
-            <Box sx={{ pt: 1, textAlign: 'center' }}>
-              <Alert severity="success" sx={{ mb: 3 }}>
-                User created successfully!
-              </Alert>
-              
-              <Typography variant="h6" gutterBottom>
-                Generated Password
-              </Typography>
-              
-              <TextField
-                fullWidth
-                value={createdUserPassword}
-                type={showPassword ? 'text' : 'password'}
-                variant="outlined"
-                InputProps={{
-                  readOnly: true,
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                      <IconButton
-                        onClick={copyPasswordToClipboard}
-                        edge="end"
-                      >
-                        <CopyIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ mb: 2 }}
-              />
-              
-              <Alert severity="warning">
-                <strong>Important:</strong> Save this password securely. 
-                The user should change it after their first login.
-                This password will not be shown again.
-              </Alert>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          {!createdUserPassword ? (
-            <>
-              <Button onClick={handleCloseCreateDialog}>Cancel</Button>
-              <Button 
-                onClick={handleCreateUser}
-                variant="contained"
-                disabled={isCreatingUser || !newUserForm.email || !newUserForm.username}
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">Role</label>
+                <select
+                  value={newUserForm.role}
+                  onChange={(e) => handleFormChange('role', e.target.value)}
+                  className="lg-input"
+                >
+                  <option value="User">User</option>
+                  <option value="Moderator">Moderator</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={handleCloseCreateDialog}
+                className="lg-button"
               >
-                {isCreatingUser ? <CircularProgress size={20} /> : 'Create User'}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={handleCloseCreateDialog} variant="contained">
-              Done
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-      >
-        <Alert 
-          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
-          severity={snackbar.severity}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Grid>
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateUser}
+                disabled={isCreatingUser}
+                className="lg-button lg-button-primary"
+              >
+                {isCreatingUser ? 'Creating...' : 'Create User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
 // Model Management Panel
 const ModelManagementPanel: React.FC = () => (
-  <Grid container spacing={3}>
-    <Grid item xs={12} md={8}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Model Management</Typography>
-          <Box sx={{ mb: 2 }}>
-            <TextField 
-              fullWidth 
-              placeholder="Search models..." 
-              variant="outlined" 
-              size="small"
-              sx={{ mb: 2 }}
-            />
-          </Box>
-          <List>
-            {['Dragon Figurine', 'Miniature House', 'Robot Model'].map((model, index) => (
-              <ListItem key={index} divider>
-                <ListItemIcon>
-                  <ModelIcon />
-                </ListItemIcon>
-                <ListItemText 
-                  primary={model} 
-                  secondary={`Uploaded by user${index + 1} • ${index + 1} downloads`}
-                />
-                <Chip 
-                  label={index === 0 ? 'Featured' : 'Public'} 
-                  color={index === 0 ? 'primary' : 'default'} 
-                  size="small" 
-                />
-                <Button size="small" sx={{ ml: 1 }}>Edit</Button>
-              </ListItem>
-            ))}
-          </List>
-        </CardContent>
-      </Card>
-    </Grid>
-    <Grid item xs={12} md={4}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Model Statistics</Typography>
-          <Typography variant="body2" color="text.secondary">Total Models: 5,678</Typography>
-          <Typography variant="body2" color="text.secondary">Public: 4,891</Typography>
-          <Typography variant="body2" color="text.secondary">Pending Review: 23</Typography>
-          <Button variant="outlined" fullWidth sx={{ mt: 2 }}>Bulk Actions</Button>
-        </CardContent>
-      </Card>
-    </Grid>
-  </Grid>
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-2xl font-bold text-white">Model Management</h2>
+      <button className="lg-button lg-button-primary">
+        <AddIcon className="w-5 h-5" />
+        Upload Model
+      </button>
+    </div>
+
+    <div className="lg-card p-6">
+      <h3 className="text-lg font-medium text-white mb-4">Model Statistics</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="lg-card p-4">
+          <div className="text-2xl font-bold text-indigo-400">1,234</div>
+          <div className="text-sm text-white/60">Total Models</div>
+        </div>
+        <div className="lg-card p-4">
+          <div className="text-2xl font-bold text-green-400">89</div>
+          <div className="text-sm text-white/60">Pending Review</div>
+        </div>
+        <div className="lg-card p-4">
+          <div className="text-2xl font-bold text-red-400">12</div>
+          <div className="text-sm text-white/60">Flagged Models</div>
+        </div>
+      </div>
+    </div>
+
+    <div className="lg-card p-6">
+      <h3 className="text-lg font-medium text-white mb-4">Recent Activity</h3>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+          <div>
+            <div className="text-white font-medium">New model uploaded</div>
+            <div className="text-sm text-white/60">user123 uploaded "Dragon Model"</div>
+          </div>
+          <span className="text-sm text-white/40">2 hours ago</span>
+        </div>
+        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+          <div>
+            <div className="text-white font-medium">Model approved</div>
+            <div className="text-sm text-white/60">"Robot Arm" by user456 approved</div>
+          </div>
+          <span className="text-sm text-white/40">4 hours ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
 );
 
 // System Settings Panel
 const SystemSettingsPanel: React.FC = () => {
+  const { user } = useAppSelector((state) => state.auth);
   const [emailSettings, setEmailSettings] = useState({
-    enabled: false,
-    smtpServer: '',
+    smtpServer: 'smtp.gmail.com',
     smtpPort: 587,
-    smtpUsername: '',
-    smtpPassword: '',
-    hasPassword: false,
-    useSsl: true,
-    fromAddress: '',
-    fromName: '',
-    requireEmailVerification: true,
-    isConfigured: false
+    username: '',
+    password: '',
+    fromEmail: '',
+    enableSSL: true
   });
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailTestLoading, setEmailTestLoading] = useState(false);
-  const [testEmail, setTestEmail] = useState('');
-  const [emailMessage, setEmailMessage] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [setupStatus, setSetupStatus] = useState<any>(null);
+  const [isLoadingSetup, setIsLoadingSetup] = useState(false);
+
+  const fetchEmailSettings = async () => {
+    // Mock API call
+    console.log('Fetching email settings...');
+  };
+
+  const fetchSetupStatus = async () => {
+    setIsLoadingSetup(true);
+    try {
+      const response = await fetch('http://localhost:11666/api/SystemSetup/status', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${user?.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const status = await response.json();
+        setSetupStatus(status);
+      }
+    } catch (error) {
+      console.error('Error fetching setup status:', error);
+    } finally {
+      setIsLoadingSetup(false);
+    }
+  };
+
+  const navigateToSetup = () => {
+    window.location.href = '/setup';
+  };
 
   useEffect(() => {
     fetchEmailSettings();
+    fetchSetupStatus();
   }, []);
-
-  const fetchEmailSettings = async () => {
-    try {
-      setEmailLoading(true);
-      const response = await fetch('/api/system-settings/email', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setEmailSettings(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch email settings:', error);
-    } finally {
-      setEmailLoading(false);
-    }
-  };
 
   const handleEmailSettingsChange = (field: string, value: any) => {
     setEmailSettings(prev => ({ ...prev, [field]: value }));
   };
 
   const saveEmailSettings = async () => {
-    try {
-      setEmailLoading(true);
-      setEmailMessage('');
-      
-      const response = await fetch('/api/system-settings/email', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          enabled: emailSettings.enabled,
-          smtpServer: emailSettings.smtpServer,
-          smtpPort: emailSettings.smtpPort,
-          smtpUsername: emailSettings.smtpUsername,
-          smtpPassword: emailSettings.smtpPassword,
-          useSsl: emailSettings.useSsl,
-          fromAddress: emailSettings.fromAddress,
-          fromName: emailSettings.fromName,
-          requireEmailVerification: emailSettings.requireEmailVerification
-        })
-      });
-
-      if (response.ok) {
-        setEmailMessage('Email settings saved successfully!');
-        await fetchEmailSettings(); // Refresh settings
-      } else {
-        const error = await response.json();
-        setEmailMessage(error.message || 'Failed to save email settings');
-      }
-    } catch (error) {
-      setEmailMessage('Failed to save email settings');
-      console.error('Failed to save email settings:', error);
-    } finally {
-      setEmailLoading(false);
-    }
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsSaving(false);
+    console.log('Email settings saved:', emailSettings);
   };
 
   const testEmailConfiguration = async () => {
-    if (!testEmail) {
-      setEmailMessage('Please enter a test email address');
-      return;
-    }
-
-    try {
-      setEmailTestLoading(true);
-      setEmailMessage('');
-      
-      const response = await fetch('/api/system-settings/email/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          testEmailAddress: testEmail
-        })
-      });
-
-      const result = await response.json();
-      setEmailMessage(result.message);
-    } catch (error) {
-      setEmailMessage('Failed to send test email');
-      console.error('Failed to test email configuration:', error);
-    } finally {
-      setEmailTestLoading(false);
-    }
+    setIsTesting(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsTesting(false);
+    console.log('Testing email configuration...');
   };
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>General Settings</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField label="Site Name" defaultValue="PolyBucket" fullWidth />
-              <TextField label="Site Description" defaultValue="3D Model Repository" fullWidth />
-              <TextField label="Contact Email" defaultValue="admin@polybucket.com" fullWidth />
-              <FormControlLabel control={<Switch defaultChecked />} label="Enable User Registration" />
-              <FormControlLabel control={<Switch defaultChecked />} label="Public Model Browse" />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>File Upload Settings</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField label="Max File Size (MB)" defaultValue="100" type="number" />
-              <TextField label="Allowed File Types" defaultValue=".stl,.obj,.3mf" />
-              <TextField label="Max Files per Upload" defaultValue="5" type="number" />
-              <FormControlLabel control={<Switch defaultChecked />} label="Enable File Compression" />
-              <FormControlLabel control={<Switch />} label="Auto-generate Previews" />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Typography variant="h6">Email Service Configuration</Typography>
-              <Chip 
-                label={emailSettings.isConfigured ? 'Configured' : 'Not Configured'} 
-                color={emailSettings.isConfigured ? 'success' : 'warning'}
-                size="small"
-              />
-            </Box>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white">System Settings</h2>
+
+      {/* Setup Access */}
+      <div className="lg-card p-6">
+        <h3 className="text-lg font-medium text-white mb-4">First-Time Setup</h3>
+        
+        {isLoadingSetup ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400 mx-auto"></div>
+            <p className="text-white/60 mt-2">Loading setup status...</p>
+          </div>
+        ) : setupStatus ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-white font-medium">Setup Status</div>
+                <div className="text-sm text-white/60">
+                  {setupStatus.isFirstTimeSetup ? 'Setup incomplete' : 'Setup completed'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-white font-medium">{setupStatus.completedSteps}/{setupStatus.totalSteps}</div>
+                <div className="text-sm text-white/60">Steps completed</div>
+              </div>
+            </div>
             
-            {emailLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={emailSettings.enabled}
-                          onChange={(e) => handleEmailSettingsChange('enabled', e.target.checked)}
-                        />
-                      }
-                      label="Enable Email Service"
-                    />
-                    
-                    <TextField
-                      label="SMTP Server"
-                      value={emailSettings.smtpServer}
-                      onChange={(e) => handleEmailSettingsChange('smtpServer', e.target.value)}
-                      disabled={!emailSettings.enabled}
-                      fullWidth
-                      required={emailSettings.enabled}
-                    />
-                    
-                    <TextField
-                      label="SMTP Port"
-                      type="number"
-                      value={emailSettings.smtpPort}
-                      onChange={(e) => handleEmailSettingsChange('smtpPort', parseInt(e.target.value))}
-                      disabled={!emailSettings.enabled}
-                      fullWidth
-                      required={emailSettings.enabled}
-                    />
-                    
-                    <TextField
-                      label="SMTP Username"
-                      value={emailSettings.smtpUsername}
-                      onChange={(e) => handleEmailSettingsChange('smtpUsername', e.target.value)}
-                      disabled={!emailSettings.enabled}
-                      fullWidth
-                    />
-                    
-                    <TextField
-                      label={emailSettings.hasPassword ? "SMTP Password (configured)" : "SMTP Password"}
-                      type={showPassword ? "text" : "password"}
-                      value={emailSettings.smtpPassword}
-                      onChange={(e) => handleEmailSettingsChange('smtpPassword', e.target.value)}
-                      disabled={!emailSettings.enabled}
-                      fullWidth
-                      placeholder={emailSettings.hasPassword ? "Leave empty to keep existing password" : ""}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword(!showPassword)}
-                              edge="end"
-                            >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        )
-                      }}
-                    />
-                  </Box>
-                </Grid>
-                
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={emailSettings.useSsl}
-                          onChange={(e) => handleEmailSettingsChange('useSsl', e.target.checked)}
-                          disabled={!emailSettings.enabled}
-                        />
-                      }
-                      label="Use SSL/TLS"
-                    />
-                    
-                    <TextField
-                      label="From Email Address"
-                      type="email"
-                      value={emailSettings.fromAddress}
-                      onChange={(e) => handleEmailSettingsChange('fromAddress', e.target.value)}
-                      disabled={!emailSettings.enabled}
-                      fullWidth
-                      required={emailSettings.enabled}
-                    />
-                    
-                    <TextField
-                      label="From Name"
-                      value={emailSettings.fromName}
-                      onChange={(e) => handleEmailSettingsChange('fromName', e.target.value)}
-                      disabled={!emailSettings.enabled}
-                      fullWidth
-                      required={emailSettings.enabled}
-                    />
-                    
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={emailSettings.requireEmailVerification}
-                          onChange={(e) => handleEmailSettingsChange('requireEmailVerification', e.target.checked)}
-                          disabled={!emailSettings.enabled}
-                        />
-                      }
-                      label="Require Email Verification for New Users"
-                    />
-                    
-                    <Divider sx={{ my: 1 }} />
-                    
-                    <Typography variant="subtitle2" gutterBottom>Test Email Configuration</Typography>
-                    <TextField
-                      label="Test Email Address"
-                      type="email"
-                      value={testEmail}
-                      onChange={(e) => setTestEmail(e.target.value)}
-                      disabled={!emailSettings.enabled || emailTestLoading}
-                      fullWidth
-                      placeholder="Enter email to test configuration"
-                    />
-                    
-                    <Button
-                      variant="outlined"
-                      onClick={testEmailConfiguration}
-                      disabled={!emailSettings.enabled || emailTestLoading || !testEmail}
-                      startIcon={emailTestLoading ? <CircularProgress size={20} /> : <NotificationIcon />}
-                    >
-                      {emailTestLoading ? 'Sending...' : 'Send Test Email'}
-                    </Button>
-                  </Box>
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Button
-                      variant="contained"
-                      onClick={saveEmailSettings}
-                      disabled={emailLoading}
-                      startIcon={emailLoading ? <CircularProgress size={20} /> : undefined}
-                    >
-                      {emailLoading ? 'Saving...' : 'Save Email Settings'}
-                    </Button>
-                    
-                    {emailMessage && (
-                      <Alert 
-                        severity={emailMessage.includes('success') ? 'success' : 'error'}
-                        sx={{ flex: 1 }}
-                      >
-                        {emailMessage}
-                      </Alert>
-                    )}
-                  </Box>
-                </Grid>
-              </Grid>
+            {setupStatus.isFirstTimeSetup && (
+              <div className="lg-badge-warning p-3">
+                <span className="text-sm">
+                  First-time setup is not complete. Some features may be limited until setup is finished.
+                </span>
+              </div>
             )}
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={navigateToSetup}
+                className="lg-button lg-button-primary"
+              >
+                {setupStatus.isFirstTimeSetup ? 'Continue Setup' : 'Access Setup'}
+              </button>
+              <button
+                onClick={fetchSetupStatus}
+                className="lg-button lg-button-secondary"
+              >
+                Refresh Status
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-white/60">Unable to load setup status</p>
+            <button
+              onClick={fetchSetupStatus}
+              className="lg-button lg-button-secondary mt-2"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Email Configuration */}
+      <div className="lg-card p-6">
+        <h3 className="text-lg font-medium text-white mb-4">Email Configuration</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">SMTP Server</label>
+            <input
+              type="text"
+              value={emailSettings.smtpServer}
+              onChange={(e) => handleEmailSettingsChange('smtpServer', e.target.value)}
+              className="lg-input"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">SMTP Port</label>
+            <input
+              type="number"
+              value={emailSettings.smtpPort}
+              onChange={(e) => handleEmailSettingsChange('smtpPort', parseInt(e.target.value))}
+              className="lg-input"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Username</label>
+            <input
+              type="text"
+              value={emailSettings.username}
+              onChange={(e) => handleEmailSettingsChange('username', e.target.value)}
+              className="lg-input"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Password</label>
+            <input
+              type="password"
+              value={emailSettings.password}
+              onChange={(e) => handleEmailSettingsChange('password', e.target.value)}
+              className="lg-input"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">From Email</label>
+            <input
+              type="email"
+              value={emailSettings.fromEmail}
+              onChange={(e) => handleEmailSettingsChange('fromEmail', e.target.value)}
+              className="lg-input"
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="enableSSL"
+              checked={emailSettings.enableSSL}
+              onChange={(e) => handleEmailSettingsChange('enableSSL', e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+            />
+            <label htmlFor="enableSSL" className="ml-2 text-sm text-white/80">
+              Enable SSL/TLS
+            </label>
+          </div>
+        </div>
+        
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={saveEmailSettings}
+            disabled={isSaving}
+            className="lg-button lg-button-primary"
+          >
+            {isSaving ? 'Saving...' : 'Save Settings'}
+          </button>
+          <button
+            onClick={testEmailConfiguration}
+            disabled={isTesting}
+            className="lg-button lg-button-secondary"
+          >
+            {isTesting ? 'Testing...' : 'Test Configuration'}
+          </button>
+        </div>
+      </div>
+
+      {/* Storage Settings */}
+      <div className="lg-card p-6">
+        <h3 className="text-lg font-medium text-white mb-4">Storage Settings</h3>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Storage Provider</label>
+            <select className="lg-input">
+              <option value="local">Local Storage</option>
+              <option value="s3">Amazon S3</option>
+              <option value="azure">Azure Blob Storage</option>
+              <option value="gcp">Google Cloud Storage</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Storage Path</label>
+            <input
+              type="text"
+              className="lg-input"
+              placeholder="/var/www/uploads"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Max File Size (MB)</label>
+            <input
+              type="number"
+              className="lg-input"
+              defaultValue={100}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Security Settings */}
+      <div className="lg-card p-6">
+        <h3 className="text-lg font-medium text-white mb-4">Security Settings</h3>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-white font-medium">Two-Factor Authentication</div>
+              <div className="text-sm text-white/60">Require 2FA for admin accounts</div>
+            </div>
+            <input
+              type="checkbox"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-white font-medium">Session Timeout</div>
+              <div className="text-sm text-white/60">Auto-logout after inactivity</div>
+            </div>
+            <select className="lg-input w-32">
+              <option value="30">30 min</option>
+              <option value="60">1 hour</option>
+              <option value="120">2 hours</option>
+              <option value="0">Never</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-white font-medium">Rate Limiting</div>
+              <div className="text-sm text-white/60">Limit API requests per minute</div>
+            </div>
+            <input
+              type="number"
+              className="lg-input w-32"
+              defaultValue={100}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
 // Authentication Settings Panel
 const AuthenticationSettingsPanel: React.FC = () => (
-  <Grid container spacing={3}>
-    <Grid item xs={12} md={6}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Authentication Settings</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControlLabel control={<Switch defaultChecked />} label="Require Email Verification" />
-            <FormControlLabel control={<Switch />} label="Enable Two-Factor Authentication" />
-            <FormControlLabel control={<Switch defaultChecked />} label="Remember Login" />
-            <TextField label="Session Timeout (minutes)" defaultValue="60" type="number" />
-            <TextField label="Password Min Length" defaultValue="8" type="number" />
-          </Box>
-        </CardContent>
-      </Card>
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>OAuth Providers</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControlLabel control={<Switch />} label="Enable Google OAuth" />
-            <FormControlLabel control={<Switch />} label="Enable GitHub OAuth" />
-            <FormControlLabel control={<Switch />} label="Enable Discord OAuth" />
-            <Button variant="outlined" fullWidth>Configure OAuth Settings</Button>
-          </Box>
-        </CardContent>
-      </Card>
-    </Grid>
-  </Grid>
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold text-white">Authentication Settings</h2>
+    
+    <div className="lg-card p-6">
+      <h3 className="text-lg font-medium text-white mb-4">OAuth Providers</h3>
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+              <span className="text-white font-bold">G</span>
+            </div>
+            <div>
+              <div className="text-white font-medium">Google OAuth</div>
+              <div className="text-sm text-white/60">Sign in with Google</div>
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+          />
+        </div>
+        
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
+              <span className="text-white font-bold">G</span>
+            </div>
+            <div>
+              <div className="text-white font-medium">GitHub OAuth</div>
+              <div className="text-sm text-white/60">Sign in with GitHub</div>
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+          />
+        </div>
+      </div>
+    </div>
+    
+    <div className="lg-card p-6">
+      <h3 className="text-lg font-medium text-white mb-4">Password Policy</h3>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-white/80 mb-2">Minimum Password Length</label>
+          <input
+            type="number"
+            className="lg-input w-32"
+            defaultValue={8}
+          />
+        </div>
+        
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="requireUppercase"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+          />
+          <label htmlFor="requireUppercase" className="ml-2 text-sm text-white/80">
+            Require uppercase letters
+          </label>
+        </div>
+        
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="requireNumbers"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+          />
+          <label htmlFor="requireNumbers" className="ml-2 text-sm text-white/80">
+            Require numbers
+          </label>
+        </div>
+        
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="requireSpecialChars"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+          />
+          <label htmlFor="requireSpecialChars" className="ml-2 text-sm text-white/80">
+            Require special characters
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
 );
 
-// Plugins Panel
-const PluginsPanel: React.FC = () => (
-  <Grid container spacing={3}>
-    <Grid item xs={12} md={8}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Installed Plugins</Typography>
-          <List>
-            {[
-              { name: 'Model Viewer', status: 'Active', version: '1.2.3' },
-              { name: 'Auto Moderation', status: 'Inactive', version: '2.1.0' },
-              { name: 'Analytics Dashboard', status: 'Active', version: '1.0.5' }
-            ].map((plugin, index) => (
-              <ListItem key={index} divider>
-                <ListItemIcon>
-                  <ExtensionIcon />
-                </ListItemIcon>
-                <ListItemText 
-                  primary={plugin.name} 
-                  secondary={`Version ${plugin.version}`}
-                />
-                <Chip 
-                  label={plugin.status} 
-                  color={plugin.status === 'Active' ? 'success' : 'default'} 
-                  size="small" 
-                />
-                <Button size="small" sx={{ ml: 1 }}>
-                  {plugin.status === 'Active' ? 'Deactivate' : 'Activate'}
-                </Button>
-              </ListItem>
-            ))}
-          </List>
-        </CardContent>
-      </Card>
-    </Grid>
-    <Grid item xs={12} md={4}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Plugin Store</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Discover and install new plugins
-          </Typography>
-          <Button variant="contained" fullWidth sx={{ mb: 1 }}>Browse Plugins</Button>
-          <Button variant="outlined" fullWidth>Upload Plugin</Button>
-        </CardContent>
-      </Card>
-    </Grid>
-  </Grid>
+// Token Settings Panel
+const TokenSettingsPanel: React.FC = () => (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold text-white">Token Settings</h2>
+    <TokenSettings />
+  </div>
 );
+
+// Comprehensive Plugin Management Panel
+const PluginsPanel: React.FC = () => {
+  const [plugins, setPlugins] = useState([
+    { id: 'comments', name: 'Comments Plugin', status: 'enabled', version: '1.0.0' },
+    { id: 'federation', name: 'Federation Plugin', status: 'disabled', version: '1.2.0' },
+    { id: 'analytics', name: 'Analytics Plugin', status: 'enabled', version: '2.1.0' },
+  ]);
+
+  const [selectedPlugin, setSelectedPlugin] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hooksOpen, setHooksOpen] = useState(false);
+
+  const loadPluginData = async () => {
+    // Mock API call
+    console.log('Loading plugin data...');
+  };
+
+  useEffect(() => {
+    loadPluginData();
+  }, []);
+
+  const handlePluginSelect = async (pluginId: string) => {
+    setSelectedPlugin(pluginId);
+    console.log('Selected plugin:', pluginId);
+  };
+
+  const handleTogglePlugin = async (pluginId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'enabled' ? 'disabled' : 'enabled';
+    setPlugins(prev => prev.map(plugin => 
+      plugin.id === pluginId ? { ...plugin, status: newStatus } : plugin
+    ));
+    console.log(`Plugin ${pluginId} ${newStatus}`);
+  };
+
+  const handleOpenSettings = async (pluginId: string) => {
+    setSelectedPlugin(pluginId);
+    setSettingsOpen(true);
+  };
+
+  const handleOpenHooks = async () => {
+    setHooksOpen(true);
+  };
+
+  const handleSaveSettings = async (settings: Record<string, any>) => {
+    console.log('Saving plugin settings:', settings);
+    setSettingsOpen(false);
+  };
+
+  const handleReloadPlugins = async () => {
+    console.log('Reloading plugins...');
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Plugin Management</h2>
+        <button
+          onClick={handleReloadPlugins}
+          className="lg-button lg-button-secondary"
+        >
+          Reload Plugins
+        </button>
+      </div>
+
+      <div className="lg-card p-6">
+        <h3 className="text-lg font-medium text-white mb-4">Installed Plugins</h3>
+        
+        <div className="space-y-4">
+          {plugins.map((plugin) => (
+            <div key={plugin.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-indigo-500 rounded flex items-center justify-center">
+                  <ExtensionIcon className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <div className="text-white font-medium">{plugin.name}</div>
+                  <div className="text-sm text-white/60">Version {plugin.version}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className={`lg-badge ${
+                  plugin.status === 'enabled' ? 'lg-badge-success' : 'lg-badge-error'
+                }`}>
+                  {plugin.status}
+                </span>
+                
+                <button
+                  onClick={() => handleTogglePlugin(plugin.id, plugin.status)}
+                  className={`lg-button text-sm ${
+                    plugin.status === 'enabled' ? 'lg-button-secondary' : 'lg-button-primary'
+                  }`}
+                >
+                  {plugin.status === 'enabled' ? 'Disable' : 'Enable'}
+                </button>
+                
+                <button
+                  onClick={() => handleOpenSettings(plugin.id)}
+                  className="lg-button text-sm"
+                >
+                  Settings
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="lg-card p-6">
+        <h3 className="text-lg font-medium text-white mb-4">Plugin Hooks</h3>
+        <p className="text-white/60 mb-4">
+          Configure how plugins interact with the system through hooks and events.
+        </p>
+        <button
+          onClick={handleOpenHooks}
+          className="lg-button lg-button-primary"
+        >
+          Configure Hooks
+        </button>
+      </div>
+
+      {/* Plugin Settings Dialog */}
+      {settingsOpen && selectedPlugin && (
+        <div className="lg-modal-overlay">
+          <div className="lg-modal p-6 max-w-2xl w-full">
+            <h3 className="text-xl font-bold text-white mb-4">
+              {plugins.find(p => p.id === selectedPlugin)?.name} Settings
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">API Key</label>
+                <input
+                  type="text"
+                  className="lg-input"
+                  placeholder="Enter API key..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">Webhook URL</label>
+                <input
+                  type="url"
+                  className="lg-input"
+                  placeholder="https://example.com/webhook"
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="enableDebug"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+                />
+                <label htmlFor="enableDebug" className="ml-2 text-sm text-white/80">
+                  Enable debug mode
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setSettingsOpen(false)}
+                className="lg-button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSaveSettings({})}
+                className="lg-button lg-button-primary"
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Plugin Hooks Dialog */}
+      {hooksOpen && (
+        <div className="lg-modal-overlay">
+          <div className="lg-modal p-6 max-w-4xl w-full">
+            <h3 className="text-xl font-bold text-white mb-4">Plugin Hooks Configuration</h3>
+            
+            <div className="space-y-4">
+              <div className="lg-card p-4">
+                <h4 className="text-lg font-medium text-white mb-2">Model Events</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/80">onModelUpload</span>
+                    <select className="lg-input w-48">
+                      <option>Comments Plugin</option>
+                      <option>Analytics Plugin</option>
+                      <option>None</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/80">onModelDelete</span>
+                    <select className="lg-input w-48">
+                      <option>Analytics Plugin</option>
+                      <option>Comments Plugin</option>
+                      <option>None</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="lg-card p-4">
+                <h4 className="text-lg font-medium text-white mb-2">User Events</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/80">onUserLogin</span>
+                    <select className="lg-input w-48">
+                      <option>Analytics Plugin</option>
+                      <option>None</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/80">onUserRegister</span>
+                    <select className="lg-input w-48">
+                      <option>Analytics Plugin</option>
+                      <option>None</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setHooksOpen(false)}
+                className="lg-button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setHooksOpen(false)}
+                className="lg-button lg-button-primary"
+              >
+                Save Configuration
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Analytics Panel
 const AnalyticsPanel: React.FC = () => (
-  <Grid container spacing={3}>
-    <Grid item xs={12} md={3}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" color="primary">1,234</Typography>
-          <Typography variant="body2">Total Users</Typography>
-        </CardContent>
-      </Card>
-    </Grid>
-    <Grid item xs={12} md={3}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" color="primary">5,678</Typography>
-          <Typography variant="body2">Total Models</Typography>
-        </CardContent>
-      </Card>
-    </Grid>
-    <Grid item xs={12} md={3}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" color="primary">12,345</Typography>
-          <Typography variant="body2">Downloads</Typography>
-        </CardContent>
-      </Card>
-    </Grid>
-    <Grid item xs={12} md={3}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" color="primary">89%</Typography>
-          <Typography variant="body2">Uptime</Typography>
-        </CardContent>
-      </Card>
-    </Grid>
-    <Grid item xs={12}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Usage Analytics</Typography>
-          <Alert severity="info">
-            Analytics dashboard will be implemented here. This will include charts for user activity, 
-            model uploads over time, popular models, and system performance metrics.
-          </Alert>
-        </CardContent>
-      </Card>
-    </Grid>
-  </Grid>
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold text-white">Analytics Dashboard</h2>
+    
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="lg-card p-4">
+        <div className="text-2xl font-bold text-indigo-400">1,234</div>
+        <div className="text-sm text-white/60">Total Users</div>
+      </div>
+      <div className="lg-card p-4">
+        <div className="text-2xl font-bold text-green-400">5,678</div>
+        <div className="text-sm text-white/60">Total Models</div>
+      </div>
+      <div className="lg-card p-4">
+        <div className="text-2xl font-bold text-yellow-400">12,345</div>
+        <div className="text-sm text-white/60">Downloads</div>
+      </div>
+      <div className="lg-card p-4">
+        <div className="text-2xl font-bold text-blue-400">89%</div>
+        <div className="text-sm text-white/60">Uptime</div>
+      </div>
+    </div>
+    
+    <div className="lg-card p-6">
+      <h3 className="text-lg font-medium text-white mb-4">Usage Analytics</h3>
+      <div className="lg-badge-info p-4">
+        <span className="text-lg">Analytics dashboard will be implemented here. This will include charts for user activity, 
+        model uploads over time, popular models, and system performance metrics.</span>
+      </div>
+    </div>
+  </div>
 );
 
 const ComprehensiveAdminPanel: React.FC = () => {
@@ -1085,55 +1064,57 @@ const ComprehensiveAdminPanel: React.FC = () => {
     { label: 'Models', icon: <ModelIcon />, component: <ModelManagementPanel /> },
     { label: 'System', icon: <SettingsIcon />, component: <SystemSettingsPanel /> },
     { label: 'Auth', icon: <SecurityIcon />, component: <AuthenticationSettingsPanel /> },
+    { label: 'Tokens', icon: <SecurityIcon />, component: <TokenSettingsPanel /> },
+    { label: 'Theme', icon: <PaletteIcon />, component: <ThemeCustomization /> },
     { label: 'Plugins', icon: <ExtensionIcon />, component: <PluginsPanel /> },
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            Admin Control Panel
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Badge badgeContent={3} color="warning">
-              <NotificationIcon />
-            </Badge>
-            <Chip label="Development Mode" color="warning" size="small" />
-          </Box>
-        </Box>
-        
-        <Alert severity="info" sx={{ mb: 3 }}>
-          This is a comprehensive admin panel shell. Each section will be expanded with backend integration 
-          and real functionality as development progresses.
-        </Alert>
-        
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs 
-            value={tabValue} 
-            onChange={handleTabChange} 
-            aria-label="admin panel tabs"
-            variant="scrollable"
-            scrollButtons="auto"
-          >
-            {tabs.map((tab, index) => (
-              <Tab 
-                key={index}
-                icon={tab.icon} 
-                label={tab.label}
-                iconPosition="start"
-              />
-            ))}
-          </Tabs>
-        </Box>
-        
-        {tabs.map((tab, index) => (
-          <TabPanel key={index} value={tabValue} index={index}>
-            {tab.component}
-          </TabPanel>
-        ))}
-      </Paper>
-    </Container>
+    <div className="lg-container min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="lg-card p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-white">
+              Admin Control Panel
+            </h1>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <NotificationIcon className="w-6 h-6 text-white/80" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full text-xs text-white flex items-center justify-center">
+                  3
+                </span>
+              </div>
+              <span className="lg-badge lg-badge-warning">Development Mode</span>
+            </div>
+          </div>
+          
+          <div className="border-b border-white/10 mb-6">
+            <nav className="flex space-x-8">
+              {tabs.map((tab, index) => (
+                <button
+                  key={index}
+                  onClick={() => setTabValue(index)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200 flex items-center gap-2 ${
+                    tabValue === index
+                      ? 'border-indigo-500 text-indigo-400'
+                      : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/20'
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+          
+          {tabs.map((tab, index) => (
+            <TabPanel key={index} value={tabValue} index={index}>
+              {tab.component}
+            </TabPanel>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using PolyBucket.Api.Common.Enums;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Domain;
@@ -14,6 +13,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using PolyBucket.Api.Features.ACL.Domain;
 using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
 
 namespace PolyBucket.Tests.Features.Authentication.Http
@@ -55,12 +55,20 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 RefreshToken = "valid-refresh-token"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User,
+                RoleId = userRole.Id,
+                Role = userRole,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -88,7 +96,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                     Id = user.Id,
                     Email = user.Email,
                     Username = user.Username,
-                    Role = user.Role.ToString()
+                    Role = user.Role?.Name ?? "User"
                 }
             };
 
@@ -157,12 +165,20 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 RefreshToken = "expired-refresh-token"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = userRole.Id,
+                Role = userRole
             };
 
             var expiredRefreshToken = new RefreshTokenModel
@@ -202,12 +218,20 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 RefreshToken = "revoked-refresh-token"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = userRole.Id,
+                Role = userRole
             };
 
             var revokedRefreshToken = new RefreshTokenModel
@@ -249,12 +273,20 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 RefreshToken = "valid-refresh-token"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = userRole.Id,
+                Role = userRole
             };
 
             var validRefreshToken = new RefreshTokenModel
@@ -272,7 +304,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Setup(x => x.GetRefreshTokenAsync(command.RefreshToken))
                 .ReturnsAsync(validRefreshToken);
             _authRepositoryMock.Setup(x => x.GetUserByEmailAsync(user.Email))
-                .ReturnsAsync((User?)null); // User not found
+                .ReturnsAsync((User?)null);
 
             // Act
             var result = await _controller.RefreshToken(command, CancellationToken.None);
@@ -282,7 +314,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             var unauthorizedResult = (UnauthorizedObjectResult)result;
             unauthorizedResult.Value.ShouldNotBeNull();
 
-            // Verify calls were made up to the point of failure
+            // Verify token lookup and user lookup were made
             _authRepositoryMock.Verify(x => x.GetRefreshTokenAsync(command.RefreshToken), Times.Once);
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(user.Email), Times.Once);
             _authRepositoryMock.Verify(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
@@ -332,9 +364,9 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             errorResult.StatusCode.ShouldBe(500);
             errorResult.Value.ShouldNotBeNull();
 
-            // Verify repository was called but other operations were not
+            // Verify only the first repository call was made
             _authRepositoryMock.Verify(x => x.GetRefreshTokenAsync(command.RefreshToken), Times.Once);
-            _authRepositoryMock.Verify(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
@@ -346,12 +378,20 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 RefreshToken = "valid-refresh-token"
             };
 
+            var userRole = new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+                Description = "Default user role"
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Username = "testuser",
-                Role = UserRole.User
+                RoleId = userRole.Id,
+                Role = userRole
             };
 
             var validRefreshToken = new RefreshTokenModel
@@ -384,11 +424,12 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             errorResult.StatusCode.ShouldBe(500);
             errorResult.Value.ShouldNotBeNull();
 
-            // Verify calls were made up to the point of failure
+            // Verify all expected calls were made up to the point of failure
             _authRepositoryMock.Verify(x => x.GetRefreshTokenAsync(command.RefreshToken), Times.Once);
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(user.Email), Times.Once);
             _authRepositoryMock.Verify(x => x.RevokeRefreshTokenAsync(command.RefreshToken, "Replaced by new token", "127.0.0.1"), Times.Once);
             _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(user), Times.Once);
+            _authRepositoryMock.Verify(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshTokenModel>()), Times.Never);
         }
     }
 } 

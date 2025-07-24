@@ -1,14 +1,33 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import authReducer from './slices/authSlice';
+import roleReducer from './slices/roleSlice';
 
-// We'll add reducers as we develop features
+const authPersistConfig = {
+  key: 'auth',
+  storage,
+  whitelist: ['user', 'isInitialized'] // Only persist user and isInitialized
+};
+
+const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
+
 const store = configureStore({
   reducer: {
-    auth: authReducer,
-    // Add more reducers as we develop features
+    auth: persistedAuthReducer,
+    roles: roleReducer,
   },
+  middleware: (getDefaultMiddleware: any) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }),
+  devTools: import.meta.env.MODE !== 'production',
 });
+
+export const persistor = persistStore(store);
 
 // Export types for hooks
 export type RootState = ReturnType<typeof store.getState>;

@@ -9,14 +9,9 @@ namespace PolyBucket.Api.Features.Collections.CreateCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
-    public class CreateCollectionController : ControllerBase
+    public class CreateCollectionController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public CreateCollectionController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpPost]
         public async Task<IActionResult> CreateCollection([FromBody] CreateCollectionCommand command)

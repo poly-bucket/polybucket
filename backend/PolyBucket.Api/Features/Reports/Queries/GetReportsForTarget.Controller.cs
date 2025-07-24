@@ -5,20 +5,18 @@ using System.Threading.Tasks;
 using System;
 using PolyBucket.Api.Features.Reports.Domain;
 using System.Collections.Generic;
+using PolyBucket.Api.Features.ACL.Authorization;
+using PolyBucket.Api.Features.ACL.Domain;
 
 namespace PolyBucket.Api.Features.Reports.Queries
 {
     [ApiController]
     [Route("api/reports")]
-    [Authorize(Roles = "Admin")]
-    public class GetReportsForTargetController : ControllerBase
+    [Authorize]
+    [RequirePermission(PermissionConstants.MODERATION_VIEW_REPORTS)]
+    public class GetReportsForTargetController(IReportingPlugin reportingPlugin) : ControllerBase
     {
-        private readonly IReportingPlugin _reportingPlugin;
-
-        public GetReportsForTargetController(IReportingPlugin reportingPlugin)
-        {
-            _reportingPlugin = reportingPlugin;
-        }
+        private readonly IReportingPlugin _reportingPlugin = reportingPlugin;
 
         [HttpGet("target/{targetId}")]
         public async Task<IActionResult> GetReportsForTarget(Guid targetId, [FromQuery] ReportType type)

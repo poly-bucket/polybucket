@@ -8,6 +8,8 @@ using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Models.Domain;
 using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.ACL.Authorization;
+using PolyBucket.Api.Features.ACL.Domain;
 using System.Linq;
 using System.Threading;
 using System.Security.Claims;
@@ -18,11 +20,12 @@ namespace PolyBucket.Api.Features.Models.Http
     [Authorize]
     [ApiController]
     [Route("api/models")]
-    public class UploadModelController : ControllerBase
+    [RequirePermission(PermissionConstants.MODEL_CREATE)]
+    public class UploadModelController(IStorageService storage, PolyBucketDbContext db, ILogger<UploadModelController> logger) : ControllerBase
     {
-        private readonly IStorageService _storage;
-        private readonly PolyBucketDbContext _db;
-        private readonly ILogger<UploadModelController> _logger;
+        private readonly IStorageService _storage = storage;
+        private readonly PolyBucketDbContext _db = db;
+        private readonly ILogger<UploadModelController> _logger = logger;
 
         // Supported file extensions
         private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb" };
@@ -32,13 +35,6 @@ namespace PolyBucket.Api.Features.Models.Http
         // File size limits (in bytes)
         private const long MaxFileSize = 100 * 1024 * 1024; // 100MB
         private const long Max3DModelSize = 500 * 1024 * 1024; // 500MB for 3D models
-
-        public UploadModelController(IStorageService storage, PolyBucketDbContext db, ILogger<UploadModelController> logger)
-        {
-            _storage = storage;
-            _db = db;
-            _logger = logger;
-        }
 
         [HttpPost]
         [DisableRequestSizeLimit]
@@ -87,13 +83,13 @@ namespace PolyBucket.Api.Features.Models.Http
 
                     var objectKey = $"models/{modelId}/{Guid.NewGuid()}_{file.FileName}";
                     await using var stream = file.OpenReadStream();
-                    var url = await _storage.UploadAsync(objectKey, stream, file.ContentType, cancellationToken);
+                    await _storage.UploadAsync(objectKey, stream, file.ContentType, cancellationToken);
 
                     var modelFile = new ModelFile
                     {
                         Id = Guid.NewGuid(),
                         Name = file.FileName,
-                        Path = url,
+                        Path = objectKey, // Store the object key, not the presigned URL
                         Size = file.Length,
                         MimeType = file.ContentType
                     };
@@ -103,7 +99,7 @@ namespace PolyBucket.Api.Features.Models.Http
                     // Check if this file should be the thumbnail
                     if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId))
                     {
-                        thumbnailUrl = url;
+                        thumbnailUrl = await _storage.GetPresignedUrlAsync(objectKey, TimeSpan.FromHours(1), cancellationToken);
                     }
                 }
 
@@ -113,12 +109,12 @@ namespace PolyBucket.Api.Features.Models.Http
                     var imageFile = modelFiles.FirstOrDefault(f => IsImageFile(f.Name));
                     if (imageFile != null)
                     {
-                        thumbnailUrl = imageFile.Path;
+                        thumbnailUrl = await _storage.GetPresignedUrlAsync(imageFile.Path, TimeSpan.FromHours(1), cancellationToken);
                     }
                     else
                     {
                         var first3DModel = modelFiles.FirstOrDefault(f => Is3DModelFile(f.Name));
-                        thumbnailUrl = first3DModel?.Path;
+                        thumbnailUrl = first3DModel?.Path != null ? await _storage.GetPresignedUrlAsync(first3DModel.Path, TimeSpan.FromHours(1), cancellationToken) : null;
                     }
                 }
 

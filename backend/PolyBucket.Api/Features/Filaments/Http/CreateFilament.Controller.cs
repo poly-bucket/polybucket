@@ -6,14 +6,9 @@ namespace PolyBucket.Api.Features.Filaments.Http;
 
 [Route("api/filaments")]
 [ApiController]
-public class CreateFilamentController : ControllerBase
+public class CreateFilamentController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public CreateFilamentController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
+    private readonly IMediator _mediator = mediator;
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateFilamentCommand command)

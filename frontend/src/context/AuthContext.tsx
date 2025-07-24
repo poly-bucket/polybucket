@@ -1,23 +1,30 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import { useAppDispatch, useAppSelector } from '../store';
+import { loginUser, logoutUser, registerUser } from '../store/thunks/authThunks';
+import { clearUser } from '../store/slices/authSlice';
+import { AuthResponse, LoginRequest, RegisterRequest } from '../store/thunks/authThunks';
 
 interface AuthContextType {
-  token: string | null;
-  user: any | null;
+  user: AuthResponse | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  isLoading: boolean;
+  isError: boolean;
+  errorMessage: string;
+  login: (credentials: LoginRequest) => Promise<boolean>;
+  logout: () => Promise<void>;
+  register: (userData: RegisterRequest) => Promise<boolean>;
 }
 
 const defaultContext: AuthContextType = {
-  token: null,
   user: null,
   isAuthenticated: false,
   isAdmin: false,
+  isLoading: false,
+  isError: false,
+  errorMessage: '',
   login: async () => false,
-  logout: () => {},
+  logout: async () => {},
   register: async () => false,
 };
 
@@ -30,60 +37,37 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [user, setUser] = useState<any | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+  const { user, isLoading, isError, errorMessage } = useAppSelector(state => state.auth);
+  
+  const isAuthenticated = !!user && !!user.accessToken;
+  const isAdmin = user?.roles?.includes('Admin') || false;
 
-  useEffect(() => {
-    const loadUser = async () => {
-      if (token) {
-        try {
-          const response = await axios.get('/api/auth/me', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          setUser(response.data);
-          setIsAdmin(response.data.roles?.includes('Admin') || false);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Failed to load user:', error);
-          logout();
-        }
-      }
-    };
-
-    if (token) {
-      loadUser();
-    }
-  }, [token]);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (credentials: LoginRequest): Promise<boolean> => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      const { token: authToken } = response.data;
-      
-      localStorage.setItem('token', authToken);
-      setToken(authToken);
-      return true;
+      const result = await dispatch(loginUser(credentials));
+      return loginUser.fulfilled.match(result);
     } catch (error) {
       console.error('Login failed:', error);
       return false;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsAdmin(false);
+  const logout = async (): Promise<void> => {
+    try {
+      await dispatch(logoutUser());
+      dispatch(clearUser());
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Even if logout fails, clear the user from state
+      dispatch(clearUser());
+    }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (userData: RegisterRequest): Promise<boolean> => {
     try {
-      await axios.post('/api/auth/register', { name, email, password });
-      return true;
+      const result = await dispatch(registerUser(userData));
+      return registerUser.fulfilled.match(result);
     } catch (error) {
       console.error('Registration failed:', error);
       return false;
@@ -91,10 +75,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const value: AuthContextType = {
-    token,
     user,
     isAuthenticated,
     isAdmin,
+    isLoading,
+    isError,
+    errorMessage,
     login,
     logout,
     register

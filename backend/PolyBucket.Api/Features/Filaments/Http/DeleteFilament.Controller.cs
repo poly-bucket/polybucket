@@ -6,14 +6,9 @@ namespace PolyBucket.Api.Features.Filaments.Http;
 
 [Route("api/filaments")]
 [ApiController]
-public class DeleteFilamentController : ControllerBase
+public class DeleteFilamentController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public DeleteFilamentController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
+    private readonly IMediator _mediator = mediator;
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)

@@ -9,14 +9,9 @@ namespace PolyBucket.Api.Features.Collections.GetUserCollections.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
-    public class GetUserCollectionsController : ControllerBase
+    public class GetUserCollectionsController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public GetUserCollectionsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpGet("mine")]
         public async Task<IActionResult> GetUserCollections()

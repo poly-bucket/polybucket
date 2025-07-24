@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Checkbox, FormControlLabel, Typography, Paper, TextField, Chip, CircularProgress, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../utils/hooks';
-import { getSetupStatus, setModerationConfigured } from '../../store/slices/authSlice';
-import axios from 'axios';
+import { useAppSelector } from '../../utils/hooks';
 
 const ModerationSettings: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { user, setupStatus } = useAppSelector(state => state.auth);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAppSelector(state => state.auth);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     requireUploadModeration: false,
@@ -19,44 +16,24 @@ const ModerationSettings: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Check setup status on component mount
-  useEffect(() => {
-    if (!setupStatus) {
-      dispatch(getSetupStatus());
-    }
-  }, [dispatch, setupStatus]);
-
-  // Check if user is authenticated and redirect if needed
+  // Check if user is authenticated
   useEffect(() => {
     if (!user) {
       navigate('/login');
-    } else if (setupStatus) {
-      // If admin isn't configured, redirect to admin setup
-      if (!setupStatus.isAdminConfigured) {
-        navigate('/admin-setup');
-      } 
-      // If roles aren't configured, redirect to role setup
-      else if (!setupStatus.isRoleConfigured) {
-        navigate('/custom-role-setup');
-      }
-      // Set loading to false when setup status is available
-      setLoading(false);
     }
-  }, [user, setupStatus, navigate]);
+  }, [user, navigate]);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         setLoading(true);
         // In a production environment, you would fetch these from an API
-        // For now we'll use the setupStatus if available
-        if (setupStatus) {
-          setSettings({
-            requireUploadModeration: setupStatus.requireUploadModeration || false,
-            moderatorRoles: setupStatus.moderatorRoles || '',
-            isModerationConfigured: setupStatus.isModerationConfigured || false
-          });
-        }
+        // For now we'll use default values
+        setSettings({
+          requireUploadModeration: false,
+          moderatorRoles: '',
+          isModerationConfigured: false
+        });
         setError('');
       } catch (err) {
         setError('Failed to load moderation settings. Please try again.');
@@ -69,7 +46,7 @@ const ModerationSettings: React.FC = () => {
     if (user) {
       fetchSettings();
     }
-  }, [user, setupStatus]);
+  }, [user]);
 
   const handleSaveSettings = async () => {
     try {
@@ -79,20 +56,16 @@ const ModerationSettings: React.FC = () => {
       // For now, we'll simulate a successful save with a timeout
       setTimeout(async () => {
         try {
-          // Update auth slice to show moderation is configured
-          await dispatch(setModerationConfigured(true)).unwrap();
-          
-          setSuccess('Moderation settings saved successfully! Your system setup is now complete.');
+          setSuccess('Moderation settings saved successfully!');
           setError('');
-  
-          // Clear success message after 2 seconds and redirect to dashboard
+
+          // Clear success message after 3 seconds
           setTimeout(() => {
             setSuccess('');
-            navigate('/dashboard');
-          }, 2000);
+          }, 3000);
         } catch (err) {
-          setError('Failed to update setup status. Please try again.');
-          console.error('Error updating setup status:', err);
+          setError('Failed to update moderation settings. Please try again.');
+          console.error('Error updating moderation settings:', err);
         } finally {
           setSaving(false);
         }
@@ -104,103 +77,118 @@ const ModerationSettings: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, checked, type } = e.target;
+  const handleToggleModerationRequired = () => {
     setSettings(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      requireUploadModeration: !prev.requireUploadModeration
     }));
   };
 
-  if (loading) {
+  if (!user) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
+      <Box sx={{ p: 3 }}>
+        <Alert severity="warning">Please log in to access moderation settings.</Alert>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', p: 2 }}>
-      <Paper elevation={3} sx={{ p: 4, maxWidth: 800, width: '100%' }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Upload Moderation Settings
-        </Typography>
-        
-        {!settings.isModerationConfigured && (
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="body2">
-              This is the final step in setting up your system. Configure moderation settings to determine whether uploads require approval.
-            </Typography>
-          </Alert>
-        )}
-        
-        <Box sx={{ mt: 3 }}>
+    <Paper elevation={2} sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
+      <Typography variant="h5" gutterBottom>
+        Moderation Settings
+      </Typography>
+      
+      <Typography variant="body1" paragraph>
+        Configure how uploaded models are moderated before being made public.
+      </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+      <Box component="form" sx={{ mt: 3 }}>
+        {/* Upload Moderation Toggle */}
+        <Box sx={{ mb: 3 }}>
           <FormControlLabel
             control={
               <Checkbox
                 checked={settings.requireUploadModeration}
-                onChange={handleChange}
-                name="requireUploadModeration"
+                onChange={handleToggleModerationRequired}
+                color="primary"
               />
             }
-            label="Require moderation for all uploads"
+            label="Require moderation for uploaded models"
           />
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-            When enabled, new model uploads will require approval from a moderator before becoming visible to other users.
+          <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+            When enabled, all uploaded models will need approval before becoming publicly visible.
           </Typography>
+        </Box>
 
+        {/* Moderator Roles */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Moderator Roles
+          </Typography>
           <TextField
             fullWidth
-            label="Moderator Roles (comma-separated role names or IDs)"
-            name="moderatorRoles"
+            label="Moderator Role Names"
             value={settings.moderatorRoles}
-            onChange={handleChange}
-            margin="normal"
-            helperText="Enter the role names or IDs that should have moderation privileges"
+            onChange={(e) => setSettings(prev => ({ ...prev, moderatorRoles: e.target.value }))}
+            placeholder="Admin, Moderator, Reviewer"
+            helperText="Comma-separated list of roles that can moderate content"
+            sx={{ mb: 2 }}
           />
-
+          
           {settings.moderatorRoles && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, my: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
               {settings.moderatorRoles.split(',').map((role, index) => (
-                <Chip key={index} label={role.trim()} size="small" />
+                <Chip 
+                  key={index} 
+                  label={role.trim()} 
+                  variant="outlined" 
+                  size="small"
+                />
               ))}
             </Box>
           )}
-
-          {error && (
-            <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {success && (
-            <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-              {success}
-            </Alert>
-          )}
-
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/model-upload-settings')}
-            >
-              Back to Upload Settings
-            </Button>
-            
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSaveSettings}
-              disabled={saving}
-            >
-              {saving ? <CircularProgress size={24} /> : (settings.isModerationConfigured ? 'Update Settings' : 'Complete Setup')}
-            </Button>
-          </Box>
         </Box>
-      </Paper>
-    </Box>
+
+        {/* Additional Settings */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Additional Options
+          </Typography>
+          
+          <FormControlLabel
+            control={<Checkbox />}
+            label="Auto-approve uploads from trusted users"
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 2 }}>
+            Users with specific roles or high reputation can have their uploads automatically approved.
+          </Typography>
+
+          <FormControlLabel
+            control={<Checkbox />}
+            label="Email notifications for new uploads"
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 2 }}>
+            Send email notifications to moderators when new content needs review.
+          </Typography>
+        </Box>
+
+        {/* Save Button */}
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSaveSettings}
+            disabled={saving || loading}
+            startIcon={saving ? <CircularProgress size={20} /> : null}
+          >
+            {saving ? 'Saving...' : 'Save Settings'}
+          </Button>
+        </Box>
+      </Box>
+    </Paper>
   );
 };
 

@@ -5,14 +5,9 @@ using PolyBucket.Api.Features.Filaments.Domain;
 
 namespace PolyBucket.Api.Features.Filaments.Queries;
 
-public class GetFilamentByIdHandler : IRequestHandler<GetFilamentByIdQuery, Filament?>
+public class GetFilamentByIdHandler(PolyBucketDbContext context) : IRequestHandler<GetFilamentByIdQuery, Filament?>
 {
-    private readonly PolyBucketDbContext _context;
-
-    public GetFilamentByIdHandler(PolyBucketDbContext context)
-    {
-        _context = context;
-    }
+    private readonly PolyBucketDbContext _context = context;
 
     public async Task<Filament?> Handle(GetFilamentByIdQuery request, CancellationToken cancellationToken)
     {

@@ -9,17 +9,12 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.ACL.Services
 {
-    public class PermissionService : IPermissionService
+    public class PermissionService(PolyBucketDbContext context) : IPermissionService
     {
-        private readonly PolyBucketDbContext _context;
+        private readonly PolyBucketDbContext _context = context;
         private readonly Dictionary<Guid, List<string>> _userPermissionCache = new();
         private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(15);
         private readonly Dictionary<Guid, DateTime> _cacheTimestamps = new();
-
-        public PermissionService(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
 
         #region Permission Checking
 

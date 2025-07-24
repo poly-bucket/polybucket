@@ -4,14 +4,9 @@ using PolyBucket.Api.Features.Filaments.Domain;
 
 namespace PolyBucket.Api.Features.Filaments.Handlers;
 
-public class UpdateFilamentHandler : IRequestHandler<UpdateFilamentCommand, Filament?>
+public class UpdateFilamentHandler(PolyBucketDbContext context) : IRequestHandler<UpdateFilamentCommand, Filament?>
 {
-    private readonly PolyBucketDbContext _context;
-
-    public UpdateFilamentHandler(PolyBucketDbContext context)
-    {
-        _context = context;
-    }
+    private readonly PolyBucketDbContext _context = context;
 
     public async Task<Filament?> Handle(UpdateFilamentCommand request, CancellationToken cancellationToken)
     {

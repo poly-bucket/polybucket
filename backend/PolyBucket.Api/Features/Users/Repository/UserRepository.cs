@@ -10,14 +10,9 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Users.Repository
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository(PolyBucketDbContext context) : IUserRepository
     {
-        private readonly PolyBucketDbContext _context;
-
-        public UserRepository(PolyBucketDbContext context)
-        {
-            _context = context;
-        }
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task<User?> GetByIdAsync(Guid id)
         {
@@ -181,12 +176,12 @@ namespace PolyBucket.Api.Features.Users.Repository
         //     return true;
         // }
 
-        public async Task<UserSettings?> GetSettingsByUserIdAsync(Guid userId)
+        public async Task<PolyBucket.Api.Features.Users.Domain.UserSettings?> GetSettingsByUserIdAsync(Guid userId)
         {
             return await _context.UserSettings.FirstOrDefaultAsync(s => s.UserId == userId);
         }
 
-        public async Task UpdateSettingsAsync(UserSettings settings)
+        public async Task UpdateSettingsAsync(PolyBucket.Api.Features.Users.Domain.UserSettings settings)
         {
             var existingSettings = await _context.UserSettings.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == settings.UserId);
             if (existingSettings != null)

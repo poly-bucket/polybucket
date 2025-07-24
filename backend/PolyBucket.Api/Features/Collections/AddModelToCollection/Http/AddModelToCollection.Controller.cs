@@ -10,14 +10,9 @@ namespace PolyBucket.Api.Features.Collections.AddModelToCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
-    public class AddModelToCollectionController : ControllerBase
+    public class AddModelToCollectionController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public AddModelToCollectionController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpPost("{collectionId}/models/{modelId}")]
         public async Task<IActionResult> AddModelToCollection(Guid collectionId, Guid modelId)

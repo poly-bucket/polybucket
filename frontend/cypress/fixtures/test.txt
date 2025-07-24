@@ -1,0 +1,1 @@
+This is a test text file that should not be accepted as a 3D model file. 

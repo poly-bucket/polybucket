@@ -10,14 +10,9 @@ namespace PolyBucket.Api.Features.Collections.DeleteCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
-    public class DeleteCollectionController : ControllerBase
+    public class DeleteCollectionController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public DeleteCollectionController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCollection(Guid id)

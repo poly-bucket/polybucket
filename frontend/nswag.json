@@ -1,0 +1,91 @@
+{
+  "runtime": "Net90",
+  "defaultVariables": null,
+  "documentGenerator": {
+    "fromDocument": {
+      "json": "http://localhost:11666/swagger/v1/swagger.json"
+    }
+  },
+  "codeGenerators": {
+    "openApiToTypeScriptClient": {
+      "className": "ApiClient",
+      "moduleName": "",
+      "namespace": "",
+      "typeScriptVersion": 4.3,
+      "template": "Axios",
+      "promiseType": "Promise",
+      "useSingleton": false,
+      "singletonInstance": "instance",
+      "generateClientInterfaces": true,
+      "generateOptionalParameters": false,
+      "exportTypes": true,
+      "wrapDtoExceptions": false,
+      "clientBaseClass": null,
+      "wrapResponses": false,
+      "wrapResponseMethods": [],
+      "generateResponseClasses": true,
+      "responseClass": "SwaggerResponse",
+      "protectedMethods": [],
+      "configurationClass": null,
+      "useTransformOptionsMethod": false,
+      "useTransformResultMethod": false,
+      "generateDataContracts": true,
+      "generateFile": true,
+      "generateFileResponse": true,
+      "generateFileResponseClass": "FileResponse",
+      "generateExceptionClasses": true,
+      "exceptionClass": "ApiException",
+      "wrapDtoExceptions": false,
+      "useGetBaseUrlMethod": false,
+      "baseUrlTokenName": "API_BASE_URL",
+      "queryNullValue": "",
+      "inlineNamedArrays": false,
+      "inlineNamedDictionaries": false,
+      "inlineNamedTuples": true,
+      "inlineNamedAny": false,
+      "generateDefaultValues": true,
+      "generateDataContractEnums": false,
+      "enumNameGenerator": {
+        "enumNameGenerator": "SingleClientFromOperationIdGenerator"
+      },
+      "operationNameGenerator": {
+        "operationNameGenerator": "SingleClientFromOperationIdGenerator"
+      },
+      "propertyNameGenerator": {
+        "propertyNameGenerator": "JsonNetPropertyNameGenerator"
+      },
+      "typeNameGenerator": {
+        "typeNameGenerator": "JsonNetTypeNameGenerator"
+      },
+      "dateType": "Date",
+      "dateTimeType": "Date",
+      "timeType": "string",
+      "timeSpanType": "string",
+      "arrayType": "Array",
+      "dictionaryKeyType": "string",
+      "dictionaryValueType": "any",
+      "dictionaryBaseType": "Object",
+      "arrayBaseType": "Array",
+      "arrayInstanceType": "Array",
+      "dictionaryInstanceType": "Object",
+      "arrayFormat": "CSV",
+      "objectType": "any",
+      "anyType": "any",
+      "dateFormat": "ISO8601",
+      "newLineBehavior": "Auto",
+      "generateNullableReferenceTypes": false,
+      "generateUnionTypes": false,
+      "enumStyle": "Enum",
+      "enumValues": "String",
+      "stringEnums": false,
+      "stringLiteralTypesInsteadOfEnums": false,
+      "templateDirectory": null,
+      "typeScriptVersion": 4.3,
+      "moduleName": "",
+      "namespace": "",
+      "exportTypes": true,
+      "output": "src/api/client.ts",
+      "operationGenerationMode": "SingleClientFromOperationId"
+    }
+  }
+} 

@@ -19,19 +19,13 @@ namespace PolyBucket.Api.Features.Reports.Domain
         Other
     }
 
-    public class Report
+    public class ReportsResponse
     {
-        public Guid Id { get; set; }
-        public ReportType Type { get; set; }
-        public Guid TargetId { get; set; }
-        public Guid ReporterId { get; set; }
-        public ReportReason Reason { get; set; }
-        public string Description { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public bool IsResolved { get; set; }
-        public string Resolution { get; set; }
-        public DateTime? ResolvedAt { get; set; }
-        public Guid? ResolvedById { get; set; }
+        public IEnumerable<Report> Reports { get; set; } = new List<Report>();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set; }
     }
 
     public interface IReportingPlugin : IPlugin
@@ -39,7 +33,16 @@ namespace PolyBucket.Api.Features.Reports.Domain
         Task<Report> SubmitReportAsync(ReportType type, Guid targetId, Guid reporterId, ReportReason reason, string description);
         Task<IEnumerable<Report>> GetReportsForTargetAsync(ReportType type, Guid targetId);
         Task<IEnumerable<Report>> GetUnresolvedReportsAsync();
+        Task<ReportsResponse> GetAllReportsAsync(int page = 1, int pageSize = 20, bool? isResolved = null, ReportType? type = null);
         Task ResolveReportAsync(Guid reportId, Guid resolverId, string resolution);
-        Task<Report> GetReportByIdAsync(Guid reportId);
+        Task<Report?> GetReportByIdAsync(Guid reportId);
+        
+        // Analytics methods
+        Task<ReportsAnalytics> GetReportsAnalyticsAsync(DateTime? fromDate = null, DateTime? toDate = null);
+        Task<List<TopReportedItem>> GetTopReportedModelsAsync(int limit = 10);
+        Task<List<TopReportedItem>> GetTopReportedUsersAsync(int limit = 10);
+        Task<List<TopReportedItem>> GetTopReportedCommentsAsync(int limit = 10);
+        Task<List<ReportTrend>> GetReportTrendsAsync(string period = "daily", int days = 30);
+        Task<List<ModeratorActivity>> GetModeratorActivityAsync(DateTime? fromDate = null, DateTime? toDate = null);
     }
 } 

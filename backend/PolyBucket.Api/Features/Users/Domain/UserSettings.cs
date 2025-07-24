@@ -2,6 +2,7 @@ using PolyBucket.Api.Common.Entities;
 using PolyBucket.Api.Common.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PolyBucket.Api.Features.Users.Domain
 {
@@ -15,6 +16,8 @@ namespace PolyBucket.Api.Features.Users.Domain
         public Guid? DefaultPrinterId { get; set; }
         public string MeasurementSystem { get; set; } = "metric";
         public string TimeZone { get; set; } = "UTC";
+        public bool AutoRotateModels { get; set; } = true;
+        [NotMapped]
         public Dictionary<string, string> CustomSettings { get; set; } = new();
     }
 } 

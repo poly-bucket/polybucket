@@ -19,9 +19,21 @@ public class StorageSettings
     public string Endpoint { get; set; } = string.Empty;
 
     /// <summary>
+    /// External endpoint for presigned URLs (accessible from frontend).
+    /// If not set, uses the internal Endpoint.
+    /// Example: "localhost" for local development, "your-domain.com" for production.
+    /// </summary>
+    public string? ExternalEndpoint { get; set; }
+
+    /// <summary>
     /// Endpoint port. Ignored for Azure Blob & AWS S3 default endpoints.
     /// </summary>
     public int Port { get; set; } = 0;
+
+    /// <summary>
+    /// External endpoint port. If not set, uses the internal Port.
+    /// </summary>
+    public int? ExternalPort { get; set; }
 
     /// <summary>
     /// Region for AWS S3-compatible providers.
@@ -29,6 +41,11 @@ public class StorageSettings
     public string Region { get; set; } = "us-east-1";
 
     public bool UseSSL { get; set; } = false;
+
+    /// <summary>
+    /// Use SSL for external endpoint. If not set, uses the internal UseSSL setting.
+    /// </summary>
+    public bool? ExternalUseSSL { get; set; }
 
     public string AccessKey { get; set; } = string.Empty;
     public string SecretKey { get; set; } = string.Empty;

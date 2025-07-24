@@ -20,16 +20,10 @@ namespace PolyBucket.Api.Features.ModelModeration.Http
     [ApiController]
     [Route("api/moderation/models")]
     [RequirePermission(PermissionConstants.MODERATION_EDIT_MODELS)]
-    public class ModeratorEditModelController : ControllerBase
+    public class ModeratorEditModelController(PolyBucketDbContext context, IPermissionService permissionService) : ControllerBase
     {
-        private readonly PolyBucketDbContext _context;
-        private readonly IPermissionService _permissionService;
-
-        public ModeratorEditModelController(PolyBucketDbContext context, IPermissionService permissionService)
-        {
-            _context = context;
-            _permissionService = permissionService;
-        }
+        private readonly PolyBucketDbContext _context = context;
+        private readonly IPermissionService _permissionService = permissionService;
 
         /// <summary>
         /// Allows moderators to edit model details and metadata

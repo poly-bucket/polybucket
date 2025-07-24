@@ -9,18 +9,12 @@ namespace PolyBucket.Api.Features.SystemSettings.Http;
 [ApiController]
 [Route("api/system-settings/email")]
 [Authorize(Roles = "Admin")]
-public class UpdateEmailSettingsController : ControllerBase
+public class UpdateEmailSettingsController(
+    UpdateEmailSettingsCommandHandler handler,
+    ILogger<UpdateEmailSettingsController> logger) : ControllerBase
 {
-    private readonly UpdateEmailSettingsCommandHandler _handler;
-    private readonly ILogger<UpdateEmailSettingsController> _logger;
-
-    public UpdateEmailSettingsController(
-        UpdateEmailSettingsCommandHandler handler,
-        ILogger<UpdateEmailSettingsController> logger)
-    {
-        _handler = handler;
-        _logger = logger;
-    }
+    private readonly UpdateEmailSettingsCommandHandler _handler = handler;
+    private readonly ILogger<UpdateEmailSettingsController> _logger = logger;
 
     /// <summary>
     /// Update email service configuration

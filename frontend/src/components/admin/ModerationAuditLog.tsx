@@ -47,7 +47,7 @@ interface ModerationAuditEntry {
 }
 
 const ModerationAuditLog: React.FC = () => {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [auditLogs, setAuditLogs] = useState<ModerationAuditEntry[]>([]);
   const [page, setPage] = useState(1);
@@ -76,7 +76,7 @@ const ModerationAuditLog: React.FC = () => {
 
       const response = await axios.get(`/api/admin/moderation/audit-logs?${params.toString()}`, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${user?.accessToken}`
         }
       });
       
@@ -92,10 +92,10 @@ const ModerationAuditLog: React.FC = () => {
   };
 
   useEffect(() => {
-    if (token) {
+    if (user?.accessToken) {
       fetchAuditLogs();
     }
-  }, [token, page, filterAction, searchUserId]);
+  }, [user?.accessToken, page, filterAction, searchUserId]);
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);

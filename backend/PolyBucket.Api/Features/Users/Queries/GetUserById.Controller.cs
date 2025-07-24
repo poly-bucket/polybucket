@@ -10,16 +10,10 @@ namespace PolyBucket.Api.Features.Users.Queries
     [ApiController]
     [Route("api/users")]
     [Authorize]
-    public class GetUserByIdController : ControllerBase
+    public class GetUserByIdController(GetUserByIdQueryHandler getUserByIdQueryHandler, ILogger<GetUserByIdController> logger) : ControllerBase
     {
-        private readonly GetUserByIdQueryHandler _getUserByIdQueryHandler;
-        private readonly ILogger<GetUserByIdController> _logger;
-
-        public GetUserByIdController(GetUserByIdQueryHandler getUserByIdQueryHandler, ILogger<GetUserByIdController> logger)
-        {
-            _getUserByIdQueryHandler = getUserByIdQueryHandler;
-            _logger = logger;
-        }
+        private readonly GetUserByIdQueryHandler _getUserByIdQueryHandler = getUserByIdQueryHandler;
+        private readonly ILogger<GetUserByIdController> _logger = logger;
 
         [HttpGet("{id}")]
         [ProducesResponseType(200, Type = typeof(GetUserByIdResponse))]

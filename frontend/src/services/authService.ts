@@ -23,8 +23,9 @@ export interface RegisterRequest {
   email: string;
   password: string;
   confirmPassword: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
+  country?: string;
   isAdmin?: boolean;
 }
 
@@ -35,159 +36,20 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   roles: string[];
-  profilePictureUrl?: string; // Optional: for when users upload profile pictures
-}
-
-export interface CheckFirstRunResponse {
-  isFirstRun: boolean;
-}
-
-export interface SystemSetupStatus {
-  isAdminConfigured: boolean;
-  isRoleConfigured: boolean;
-  isModerationConfigured: boolean;
+  avatar?: string;
+  requiresPasswordChange?: boolean;
+  requiresFirstTimeSetup?: boolean;
+  setupStep?: string;
 }
 
 // Mock implementation for testing
-let mockFirstRun = true;
 const mockUsers: AuthResponse[] = [];
 
-const checkFirstRun = async (): Promise<CheckFirstRunResponse> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: checkFirstRun', { isFirstRun: mockFirstRun });
-    return { isFirstRun: mockFirstRun };
-  }
-  
-  // Use the setup-status endpoint to determine if it's first run
-  const setupStatus = await getSetupStatus();
-  const isFirstRun = !setupStatus.isAdminConfigured;
-  
-  return { isFirstRun };
-};
-
-const getSetupStatus = async (): Promise<SystemSetupStatus> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: getSetupStatus');
-    return { 
-      isAdminConfigured: !mockFirstRun,
-      isRoleConfigured: !mockFirstRun,
-      isModerationConfigured: !mockFirstRun,
-    };
-  }
-  
-  // Create a new instance of axios without interceptors
-  const instance = axios.create({
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-  const response = await instance.get(`${baseUrl}/api/system-settings/setup-status`);
-  const data = response.data;
-  
-  // Map backend response to frontend interface
-  return {
-    isAdminConfigured: data.isAdminSetupComplete,
-    isRoleConfigured: data.isRoleSetupComplete,
-    isModerationConfigured: data.isModerationSetupComplete
-  };
-};
-
-const isAdminConfigured = async (): Promise<boolean> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: isAdminConfigured');
-    return !mockFirstRun;
-  }
-  
-  // Create a new instance of axios without interceptors
-  const instance = axios.create({
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  const response = await instance.get(`${API_URL}/is-admin-configured`);
-  return response.data.data;
-};
-
-const isRoleConfigured = async (): Promise<boolean> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: isRoleConfigured');
-    return !mockFirstRun;
-  }
-  
-  // Create a new instance of axios without interceptors
-  const instance = axios.create({
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  const response = await instance.get(`${API_URL}/is-role-configured`);
-  return response.data.data;
-};
-
-const setAdminConfigured = async (isConfigured: boolean): Promise<boolean> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: setAdminConfigured', isConfigured);
-    mockFirstRun = !isConfigured;
-    return true;
-  }
-  
-  const user = getCurrentUser();
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  
-  if (user?.accessToken) {
-    Object.assign(headers, { Authorization: `Bearer ${user.accessToken}` });
-  }
-  
-  const response = await axios.post(`${API_URL}/set-admin-configured`, isConfigured, { headers });
-  return response.data.data;
-};
-
-const setRoleConfigured = async (isConfigured: boolean): Promise<boolean> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: setRoleConfigured', isConfigured);
-    mockFirstRun = !isConfigured;
-    return true;
-  }
-  
-  const user = getCurrentUser();
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  
-  if (user?.accessToken) {
-    Object.assign(headers, { Authorization: `Bearer ${user.accessToken}` });
-  }
-  
-  const response = await axios.post(`${API_URL}/set-role-configured`, isConfigured, { headers });
-  return response.data.data;
-};
-
-const setModerationConfigured = async (isConfigured: boolean): Promise<boolean> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: setModerationConfigured', isConfigured);
-    return true;
-  }
-  
-  const user = getCurrentUser();
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  
-  if (user?.accessToken) {
-    Object.assign(headers, { Authorization: `Bearer ${user.accessToken}` });
-  }
-  
-  const response = await axios.post(`${API_URL}/set-moderation-configured`, isConfigured, { headers });
-  return response.data.data;
-};
-
 const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
+  console.log('=== LOGIN FUNCTION CALLED ===');
+  console.log('MOCK_MODE:', MOCK_MODE);
+  console.log('API_URL:', API_URL);
+  
   if (MOCK_MODE) {
     console.log('MOCK: login', credentials);
     return MOCK_ADMIN_USER;
@@ -195,6 +57,7 @@ const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
   
   try {
     console.log('Sending login credentials:', { emailOrUsername: credentials.emailOrUsername });
+    console.log('Full credentials object:', credentials);
     
     // Create a new instance of axios without interceptors to prevent authorization header
     // from being automatically added to login requests, which can cause 401 errors
@@ -206,76 +69,133 @@ const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     
     // Fix capitalization to match backend expectations
     const backendCredentials = {
-      EmailOrUsername: credentials.emailOrUsername,
+      Email: credentials.emailOrUsername,
       Password: credentials.password
     };
     
+    console.log('Making axios request to:', `${API_URL}/login`);
+    console.log('Request payload:', JSON.stringify(backendCredentials, null, 2));
+    
     const response = await instance.post(`${API_URL}/login`, backendCredentials);
+    console.log('Login response received!');
     console.log('Login response:', response.data);
     console.log('Login response structure:', JSON.stringify(response.data, null, 2));
+    console.log('Response status:', response.status);
     
     let authData: AuthResponse;
     
-    // Handle different response formats - prioritize the most common format we've seen
+    // The backend returns a simple format: { token: "...", requiresPasswordChange: boolean, etc. }
     if (response.data && typeof response.data === 'object') {
-      if (response.data.succeeded === true && response.data.data) {
-        console.log('Processing succeeded=true response with data property');
-        // Most common format: { succeeded: true, data: { user: {...}, accessToken: "..." } } 
-        const data = response.data.data;
-        
-        if (data.user && data.accessToken) {
-          // This is the actual format from the backend
-          console.log('Found user and accessToken in data');
-          const user = data.user;
-          authData = {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            roles: user.isAdmin ? ['Admin'] : ['User'] // Handle roles
-          };
-        } else {
-          // Fallback for other data structures
-          console.log('No user property but has data with accessToken');
-          authData = {
-            id: data.id || '',
-            username: data.username || '',
-            email: data.email || '',
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken || '',
-            roles: data.roles || []
-          };
-        }
+      if (response.data.token) {
+        console.log('Processing login response with token');
+        authData = {
+          id: '', // Will be extracted from /api/auth/me endpoint
+          username: credentials.emailOrUsername.split('@')[0], // Temporary username
+          email: credentials.emailOrUsername,
+          accessToken: response.data.token,
+          refreshToken: '', // No refresh token in this response
+          roles: [], // Will be populated from /api/auth/me endpoint
+          requiresPasswordChange: response.data.requiresPasswordChange || false,
+          requiresFirstTimeSetup: response.data.requiresFirstTimeSetup || false,
+          setupStep: response.data.setupStep || undefined
+        };
+      } else if (response.data.accessToken) {
+        // Alternative format with accessToken
+        authData = {
+          id: '',
+          username: credentials.emailOrUsername.split('@')[0],
+          email: credentials.emailOrUsername,
+          accessToken: response.data.accessToken,
+          refreshToken: response.data.refreshToken || '',
+          roles: [],
+          requiresPasswordChange: response.data.requiresPasswordChange || false,
+          requiresFirstTimeSetup: response.data.requiresFirstTimeSetup || false,
+          setupStep: response.data.setupStep || undefined
+        };
       } else {
-        // Other formats
-        console.log('Alternative response format detected');
-        if (response.data.accessToken) {
-          // Direct root level token
-          authData = response.data;
-          authData.roles = authData.roles || [];
-        } else {
-          console.error('Unrecognized login response format:', response.data);
-          throw new Error('Invalid login response format: missing accessToken');
-        }
+        console.error('Unrecognized login response format:', response.data);
+        throw new Error('Invalid login response format: missing token or accessToken');
       }
     } else {
       throw new Error('Invalid login response format: not an object');
     }
     
-    // Validate that we have an access token
-    if (!authData.accessToken) {
-      console.error('No access token found in response:', authData);
-      throw new Error('Login successful but no access token received');
+    // Store the initial auth data
+    localStorage.setItem('user', JSON.stringify(authData));
+    
+    // Now fetch the complete user information including role
+    try {
+      console.log('=== FETCHING USER DETAILS ===');
+      console.log('Fetching user details from /api/auth/me...');
+      console.log('Using token:', authData.accessToken.substring(0, 20) + '...');
+      console.log('API URL:', `${API_URL.replace('/auth', '')}/auth/me`);
+      
+      const userResponse = await instance.get(`${API_URL.replace('/auth', '')}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${authData.accessToken}`
+        }
+      });
+      
+      console.log('=== USER DETAILS RESPONSE ===');
+      console.log('Response status:', userResponse.status);
+      console.log('Response headers:', userResponse.headers);
+      
+      console.log('User details response:', userResponse.data);
+      console.log('User role from /api/auth/me:', userResponse.data.role);
+      console.log('User role type:', typeof userResponse.data.role);
+      
+      // Update auth data with complete user information
+      const userData = userResponse.data;
+      console.log('Before update - authData.roles:', authData.roles);
+      authData.id = userData.id;
+      authData.username = userData.username;
+      authData.email = userData.email;
+      authData.avatar = userData.avatar;
+      authData.roles = [userData.role]; // Convert role string to array
+      
+      console.log('After update - authData.roles:', authData.roles);
+      console.log('userData.role value:', userData.role);
+      
+      // Update localStorage with complete user data
+      localStorage.setItem('user', JSON.stringify(authData));
+      
+      console.log('Updated auth data with user details:', authData);
+    } catch (error: any) {
+      console.error('Failed to fetch user details from /api/auth/me:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      console.warn('Attempting to extract role from JWT token...');
+      
+      // Try to extract role from JWT token as fallback
+      try {
+        const tokenParts = authData.accessToken.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('JWT payload:', payload);
+          if (payload.role) {
+            console.log('Extracted role from JWT:', payload.role);
+            authData.roles = [payload.role];
+            localStorage.setItem('user', JSON.stringify(authData));
+          }
+        }
+      } catch (jwtError) {
+        console.error('Failed to extract role from JWT:', jwtError);
+      }
+      
+      console.warn('Continuing with basic auth data');
     }
     
-    // Store user in localStorage
-    localStorage.setItem('user', JSON.stringify(authData));
-    console.log('Saved auth data to localStorage:', authData);
-    
     return authData;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
     throw error;
   }
 };
@@ -289,40 +209,23 @@ const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
       email: userData.email,
       accessToken: 'fake-jwt-token',
       refreshToken: 'fake-refresh-token',
-      roles: ['User']
+      roles: userData.isAdmin ? ['Admin'] : ['User']
     };
     mockUsers.push(newUser);
     localStorage.setItem('user', JSON.stringify(newUser));
     return newUser;
   }
 
-  // Create a new instance of axios without interceptors
-  const instance = axios.create({
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  
   try {
-    const response = await instance.post(`${API_URL}/register`, userData);
+    const response = await axios.post(`${API_URL}/register`, userData);
     
-    // Handle different response formats
     if (response.data && typeof response.data === 'object') {
       let authData: AuthResponse;
-      if (response.data.succeeded && response.data.data) {
-        const data = response.data.data;
-        authData = {
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-          roles: data.roles || []
-        };
-      } else if (response.data.accessToken) {
+      if (response.data.accessToken) {
         authData = response.data;
+        authData.roles = authData.roles || [];
       } else {
-        throw new Error('Invalid registration response format');
+        throw new Error('Invalid registration response format: missing accessToken');
       }
       
       localStorage.setItem('user', JSON.stringify(authData));
@@ -336,91 +239,6 @@ const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
   }
 };
 
-const adminSetup = async (userData: RegisterRequest): Promise<AuthResponse> => {
-  if (MOCK_MODE) {
-    console.log('MOCK: adminSetup', userData);
-    const newAdmin: AuthResponse = {
-      id: Math.random().toString(),
-      username: userData.username,
-      email: userData.email,
-      accessToken: 'fake-jwt-token',
-      refreshToken: 'fake-refresh-token',
-      roles: ['Admin']
-    };
-    mockUsers.push(newAdmin);
-    localStorage.setItem('user', JSON.stringify(newAdmin));
-    return newAdmin;
-  }
-
-  // Create a new instance of axios without interceptors
-  const instance = axios.create({
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  try {
-    // Call the admin-setup endpoint with ReplaceDefaultAdmin flag
-    const adminSetupData = {
-      username: userData.username,
-      email: userData.email,
-      password: userData.password,
-      replaceDefaultAdmin: true
-    };
-    
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-    const response = await instance.post(`${baseUrl}/api/system-settings/admin-setup`, adminSetupData);
-    
-    // After successful admin setup, login with the new credentials
-    const loginData = {
-      emailOrUsername: userData.username,
-      password: userData.password
-    };
-    
-    const loginResponse = await instance.post(`${API_URL}/login`, loginData);
-    
-    // Handle login response
-    if (loginResponse.data && typeof loginResponse.data === 'object') {
-      let authData: AuthResponse;
-      if (loginResponse.data.succeeded && loginResponse.data.data) {
-        const data = loginResponse.data.data;
-        if (data.user) {
-          authData = {
-            id: data.user.id,
-            username: data.user.username,
-            email: data.user.email,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            roles: data.user.isAdmin ? ['Admin'] : ['User']
-          };
-        } else {
-          authData = {
-            id: data.id || '',
-            username: data.username || '',
-            email: data.email || '',
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken || '',
-            roles: data.roles || []
-          };
-        }
-      } else if (loginResponse.data.accessToken) {
-        authData = loginResponse.data;
-        authData.roles = authData.roles || [];
-      } else {
-        throw new Error('Invalid login response format after admin setup');
-      }
-      
-      localStorage.setItem('user', JSON.stringify(authData));
-      return authData;
-    } else {
-      throw new Error('Invalid login response format after admin setup');
-    }
-  } catch (error) {
-    console.error('Admin setup error:', error);
-    throw error;
-  }
-};
-
 const logout = (): void => {
   localStorage.removeItem('user');
 };
@@ -428,62 +246,34 @@ const logout = (): void => {
 const getCurrentUser = (): AuthResponse | null => {
   try {
     const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      return null;
+    if (userStr) {
+      return JSON.parse(userStr);
     }
-    
-    const user = JSON.parse(userStr) as AuthResponse;
-    
-    // Ensure the object is valid
-    if (!user || typeof user !== 'object') {
-      console.error('Invalid user data in localStorage');
-      return null;
-    }
-    
-    // Ensure we have an access token
-    if (!user.accessToken) {
-      console.error('User data in localStorage missing accessToken');
-      return null;
-    }
-    
-    // Ensure roles is never undefined
-    user.roles = user.roles || [];
-    
-    return user;
+    return null;
   } catch (error) {
-    console.error('Error retrieving user from localStorage:', error);
-    // Clear invalid data
-    localStorage.removeItem('user');
+    console.error('Error getting current user:', error);
     return null;
   }
 };
 
 const refreshToken = async (): Promise<AuthResponse> => {
+  const user = getCurrentUser();
+  if (!user?.refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
   if (MOCK_MODE) {
     console.log('MOCK: refreshToken');
-    const user = getCurrentUser();
-    if (!user) {
-      throw new Error('No user to refresh');
-    }
-    return { ...user, accessToken: 'new-fake-jwt-token' };
-  }
-  
-  const user = getCurrentUser();
-  if (!user || !user.refreshToken) {
-    throw new Error('No refresh token available');
+    return user;
   }
 
   try {
     const response = await axios.post(`${API_URL}/refresh-token`, {
       refreshToken: user.refreshToken
     });
-    
+
     if (response.data && response.data.accessToken) {
-      const updatedUser = {
-        ...user,
-        accessToken: response.data.accessToken,
-        refreshToken: response.data.refreshToken || user.refreshToken
-      };
+      const updatedUser = { ...user, accessToken: response.data.accessToken };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       return updatedUser;
     } else {
@@ -497,16 +287,8 @@ const refreshToken = async (): Promise<AuthResponse> => {
 };
 
 const authService = {
-  checkFirstRun,
-  getSetupStatus,
-  isAdminConfigured,
-  isRoleConfigured,
-  setAdminConfigured,
-  setRoleConfigured,
-  setModerationConfigured,
   login,
   register,
-  adminSetup,
   logout,
   getCurrentUser,
   refreshToken,

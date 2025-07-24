@@ -11,21 +11,14 @@ namespace PolyBucket.Api.Features.Authentication.OAuth.Http
 {
     [ApiController]
     [Route("api/auth/oauth")]
-    public class OAuthController : ControllerBase
+    public class OAuthController(
+        IOAuthService oauthService,
+        IConfiguration configuration,
+        ILogger<OAuthController> logger) : ControllerBase
     {
-        private readonly IOAuthService _oauthService;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<OAuthController> _logger;
-
-        public OAuthController(
-            IOAuthService oauthService,
-            IConfiguration configuration,
-            ILogger<OAuthController> logger)
-        {
-            _oauthService = oauthService;
-            _configuration = configuration;
-            _logger = logger;
-        }
+        private readonly IOAuthService _oauthService = oauthService;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<OAuthController> _logger = logger;
 
         [HttpGet("{provider}/authorize")]
         [ProducesResponseType(200)]

@@ -6,14 +6,9 @@ namespace PolyBucket.Api.Features.Filaments.Http;
 
 [Route("api/filaments")]
 [ApiController]
-public class GetFilamentByIdController : ControllerBase
+public class GetFilamentByIdController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public GetFilamentByIdController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
+    private readonly IMediator _mediator = mediator;
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)

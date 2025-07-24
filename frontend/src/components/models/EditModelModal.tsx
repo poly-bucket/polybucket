@@ -4,6 +4,7 @@ import { Model } from '../../services/api.client';
 import ModelEditForm from './ModelEditForm';
 import ModelVersionManager from './ModelVersionManager';
 import VersionEditor, { ExtendedModelVersion } from './VersionEditor';
+import { useAppSelector } from '../../store';
 
 interface EditModelModalProps {
   model: ExtendedModel;
@@ -30,6 +31,7 @@ const EditModelModal: React.FC<EditModelModalProps> = ({
   onVersionCreate,
   onVersionUpdate
 }) => {
+  const { user } = useAppSelector(state => state.auth);
   const [activeTab, setActiveTab] = useState<TabType>('edit');
   const [loading, setLoading] = useState(false);
   const [modelVersions, setModelVersions] = useState<ExtendedModelVersion[]>([]);
@@ -66,14 +68,30 @@ const EditModelModal: React.FC<EditModelModalProps> = ({
   const handleSaveModel = async (updatedModel: Partial<Model>) => {
     setLoading(true);
     try {
-      // TODO: Implement API call to update model
-      console.log('Updating model:', updatedModel);
+      if (!user?.accessToken) {
+        throw new Error('No authentication token found');
+      }
+
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${baseUrl}/api/models/${model.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${user.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedModel)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Update failed: ${response.statusText}`);
+      }
+
+      const updatedModelData = await response.json();
       
       // Update the model with new data
-      const updated = { ...model, ...updatedModel } as ExtendedModel;
+      const updated = { ...model, ...updatedModelData } as ExtendedModel;
       
       if (onModelUpdate) {
         onModelUpdate(updated);
@@ -82,7 +100,8 @@ const EditModelModal: React.FC<EditModelModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Failed to update model:', error);
-      // TODO: Add proper error handling
+      // TODO: Add proper error handling with toast notification
+      alert(`Failed to update model: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -91,20 +110,47 @@ const EditModelModal: React.FC<EditModelModalProps> = ({
   const handleCreateVersion = async (versionData: VersionFormData) => {
     setLoading(true);
     try {
-      // TODO: Implement API call to create new version
-      console.log('Creating new version:', versionData);
+      if (!user?.accessToken) {
+        throw new Error('No authentication token found');
+      }
+
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const formData = new FormData();
+      formData.append('name', versionData.name);
+      formData.append('notes', versionData.notes);
+      
+      // Add files
+      versionData.files.forEach((file) => {
+        formData.append('files', file.file);
+        if (file.isThumbnail) {
+          formData.append('thumbnailFileId', file.id);
+        }
+      });
+
+      const response = await fetch(`${baseUrl}/api/models/${model.id}/versions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.accessToken}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Version creation failed: ${response.statusText}`);
+      }
+
+      const newVersion = await response.json();
       
       if (onVersionCreate) {
-        onVersionCreate(model, versionData);
+        onVersionCreate(model, { ...versionData, id: newVersion.id });
       }
       
       onClose();
     } catch (error) {
       console.error('Failed to create version:', error);
-      // TODO: Add proper error handling
+      alert(`Failed to create version: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

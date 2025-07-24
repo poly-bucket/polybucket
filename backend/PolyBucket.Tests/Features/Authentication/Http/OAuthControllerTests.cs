@@ -236,9 +236,9 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             badRequestResult.Value.ShouldNotBeNull();
 
             // Verify error was included in response
-            var errorResponse = badRequestResult.Value.GetType().GetProperty("message");
+            var errorResponse = badRequestResult.Value?.GetType().GetProperty("message");
             errorResponse.ShouldNotBeNull();
-            errorResponse.GetValue(badRequestResult.Value).ShouldBe("User denied access");
+            errorResponse!.GetValue(badRequestResult.Value).ShouldBe("User denied access");
 
             // Verify service was not called
             _oauthServiceMock.Verify(x => x.AuthenticateWithOAuthAsync(
@@ -400,8 +400,8 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             // Assert
             result.ShouldBeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)result;
-            var errorResponse = badRequestResult.Value.GetType().GetProperty("message");
-            errorResponse.GetValue(badRequestResult.Value).ShouldBe("OAuth authentication failed");
+            var errorResponse = badRequestResult.Value?.GetType().GetProperty("message");
+            errorResponse!.GetValue(badRequestResult.Value).ShouldBe("OAuth authentication failed");
         }
     }
 } 

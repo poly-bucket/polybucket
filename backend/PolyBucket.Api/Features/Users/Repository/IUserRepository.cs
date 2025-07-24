@@ -13,8 +13,8 @@ namespace PolyBucket.Api.Features.Users.Repository
         Task<bool> IsEmailTakenAsync(string email, Guid? excludeUserId = null);
         Task<bool> IsUsernameTakenAsync(string username, Guid? excludeUserId = null);
         Task<UserProfile> GetUserProfileAsync(Guid id);
-        Task<UserSettings?> GetSettingsByUserIdAsync(Guid userId);
-        Task UpdateSettingsAsync(UserSettings settings);
+        Task<PolyBucket.Api.Features.Users.Domain.UserSettings?> GetSettingsByUserIdAsync(Guid userId);
+        Task UpdateSettingsAsync(PolyBucket.Api.Features.Users.Domain.UserSettings settings);
     }
 
     public class UserProfile

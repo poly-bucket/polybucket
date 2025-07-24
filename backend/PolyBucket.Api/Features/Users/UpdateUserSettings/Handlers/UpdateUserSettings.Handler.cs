@@ -8,16 +8,10 @@ using PolyBucket.Api.Features.Users.UpdateUserSettings.Domain;
 
 namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Handlers
 {
-    public class UpdateUserSettingsCommandHandler
+    public class UpdateUserSettingsCommandHandler(PolyBucketDbContext context, ILogger<UpdateUserSettingsCommandHandler> logger)
     {
-        private readonly PolyBucketDbContext _context;
-        private readonly ILogger<UpdateUserSettingsCommandHandler> _logger;
-
-        public UpdateUserSettingsCommandHandler(PolyBucketDbContext context, ILogger<UpdateUserSettingsCommandHandler> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+        private readonly PolyBucketDbContext _context = context;
+        private readonly ILogger<UpdateUserSettingsCommandHandler> _logger = logger;
 
         public async Task ExecuteAsync(UpdateUserSettingsCommand request)
         {
@@ -39,6 +33,7 @@ namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Handlers
             if (request.DefaultPrinterId.HasValue) settings.DefaultPrinterId = request.DefaultPrinterId;
             if (request.MeasurementSystem != null) settings.MeasurementSystem = request.MeasurementSystem;
             if (request.TimeZone != null) settings.TimeZone = request.TimeZone;
+            if (request.AutoRotateModels.HasValue) settings.AutoRotateModels = request.AutoRotateModels.Value;
             if (request.CustomSettings != null) settings.CustomSettings = request.CustomSettings;
 
             await _context.SaveChangesAsync();

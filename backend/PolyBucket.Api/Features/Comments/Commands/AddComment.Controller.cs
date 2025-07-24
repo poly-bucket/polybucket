@@ -10,14 +10,9 @@ namespace PolyBucket.Api.Features.Comments.Commands
     [ApiController]
     [Route("api/comments")]
     [Authorize]
-    public class AddCommentController : ControllerBase
+    public class AddCommentController(ICommentsPlugin commentsPlugin) : ControllerBase
     {
-        private readonly ICommentsPlugin _commentsPlugin;
-
-        public AddCommentController(ICommentsPlugin commentsPlugin)
-        {
-            _commentsPlugin = commentsPlugin;
-        }
+        private readonly ICommentsPlugin _commentsPlugin = commentsPlugin;
 
         [HttpPost("model/{modelId}")]
         public async Task<IActionResult> AddComment(Guid modelId, [FromBody] AddCommentRequest request)

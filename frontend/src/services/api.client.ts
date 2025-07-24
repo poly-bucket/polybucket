@@ -2936,6 +2936,7 @@ export class UserSettings extends BaseEntity implements IUserSettings {
     defaultPrinterId?: string | undefined;
     measurementSystem?: string;
     timeZone?: string;
+    autoRotateModels?: boolean;
     customSettings?: { [key: string]: string; };
 
     constructor(data?: IUserSettings) {
@@ -2953,6 +2954,7 @@ export class UserSettings extends BaseEntity implements IUserSettings {
             this.defaultPrinterId = _data["defaultPrinterId"];
             this.measurementSystem = _data["measurementSystem"];
             this.timeZone = _data["timeZone"];
+            this.autoRotateModels = _data["autoRotateModels"];
             if (_data["customSettings"]) {
                 this.customSettings = {} as any;
                 for (let key in _data["customSettings"]) {
@@ -2980,6 +2982,7 @@ export class UserSettings extends BaseEntity implements IUserSettings {
         data["defaultPrinterId"] = this.defaultPrinterId;
         data["measurementSystem"] = this.measurementSystem;
         data["timeZone"] = this.timeZone;
+        data["autoRotateModels"] = this.autoRotateModels;
         if (this.customSettings) {
             data["customSettings"] = {};
             for (let key in this.customSettings) {
@@ -3001,6 +3004,7 @@ export interface IUserSettings extends IBaseEntity {
     defaultPrinterId?: string | undefined;
     measurementSystem?: string;
     timeZone?: string;
+    autoRotateModels?: boolean;
     customSettings?: { [key: string]: string; };
 }
 
@@ -3207,6 +3211,7 @@ export class UpdateUserSettingsRequest implements IUpdateUserSettingsRequest {
     defaultPrinterId?: string | undefined;
     measurementSystem?: string | undefined;
     timeZone?: string | undefined;
+    autoRotateModels?: boolean | undefined;
     customSettings?: { [key: string]: string; } | undefined;
 
     constructor(data?: IUpdateUserSettingsRequest) {
@@ -3227,6 +3232,7 @@ export class UpdateUserSettingsRequest implements IUpdateUserSettingsRequest {
             this.defaultPrinterId = _data["defaultPrinterId"];
             this.measurementSystem = _data["measurementSystem"];
             this.timeZone = _data["timeZone"];
+            this.autoRotateModels = _data["autoRotateModels"];
             if (_data["customSettings"]) {
                 this.customSettings = {} as any;
                 for (let key in _data["customSettings"]) {
@@ -3253,6 +3259,7 @@ export class UpdateUserSettingsRequest implements IUpdateUserSettingsRequest {
         data["defaultPrinterId"] = this.defaultPrinterId;
         data["measurementSystem"] = this.measurementSystem;
         data["timeZone"] = this.timeZone;
+        data["autoRotateModels"] = this.autoRotateModels;
         if (this.customSettings) {
             data["customSettings"] = {};
             for (let key in this.customSettings) {
@@ -3272,6 +3279,7 @@ export interface IUpdateUserSettingsRequest {
     defaultPrinterId?: string | undefined;
     measurementSystem?: string | undefined;
     timeZone?: string | undefined;
+    autoRotateModels?: boolean | undefined;
     customSettings?: { [key: string]: string; } | undefined;
 }
 

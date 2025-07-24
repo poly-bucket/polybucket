@@ -10,18 +10,12 @@ namespace PolyBucket.Api.Features.SystemSettings.Http;
 [ApiController]
 [Route("api/system-settings/email")]
 [Authorize(Roles = "Admin")]
-public class GetEmailSettingsController : ControllerBase
+public class GetEmailSettingsController(
+    IEmailService emailService,
+    ILogger<GetEmailSettingsController> logger) : ControllerBase
 {
-    private readonly IEmailService _emailService;
-    private readonly ILogger<GetEmailSettingsController> _logger;
-
-    public GetEmailSettingsController(
-        IEmailService emailService,
-        ILogger<GetEmailSettingsController> logger)
-    {
-        _emailService = emailService;
-        _logger = logger;
-    }
+    private readonly IEmailService _emailService = emailService;
+    private readonly ILogger<GetEmailSettingsController> _logger = logger;
 
     /// <summary>
     /// Get current email service configuration

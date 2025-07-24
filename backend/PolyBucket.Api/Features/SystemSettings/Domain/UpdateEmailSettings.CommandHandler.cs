@@ -5,18 +5,12 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.SystemSettings.Domain;
 
-public class UpdateEmailSettingsCommandHandler
+public class UpdateEmailSettingsCommandHandler(
+    PolyBucketDbContext context,
+    ILogger<UpdateEmailSettingsCommandHandler> logger)
 {
-    private readonly PolyBucketDbContext _context;
-    private readonly ILogger<UpdateEmailSettingsCommandHandler> _logger;
-
-    public UpdateEmailSettingsCommandHandler(
-        PolyBucketDbContext context,
-        ILogger<UpdateEmailSettingsCommandHandler> logger)
-    {
-        _context = context;
-        _logger = logger;
-    }
+    private readonly PolyBucketDbContext _context = context;
+    private readonly ILogger<UpdateEmailSettingsCommandHandler> _logger = logger;
 
     public async Task<UpdateEmailSettingsResponse> Handle(UpdateEmailSettingsCommand command)
     {

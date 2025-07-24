@@ -15,14 +15,9 @@ namespace PolyBucket.Api.Features.ACL.Http
     [ApiController]
     [Route("api/admin/roles")]
     [RequirePermission(PermissionConstants.ADMIN_MANAGE_ROLES)]
-    public class RoleManagementController : ControllerBase
+    public class RoleManagementController(IPermissionService permissionService) : ControllerBase
     {
-        private readonly IPermissionService _permissionService;
-
-        public RoleManagementController(IPermissionService permissionService)
-        {
-            _permissionService = permissionService;
-        }
+        private readonly IPermissionService _permissionService = permissionService;
 
         /// <summary>
         /// Get all roles with their permissions

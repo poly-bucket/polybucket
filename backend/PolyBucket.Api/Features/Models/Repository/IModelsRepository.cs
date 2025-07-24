@@ -8,6 +8,6 @@ namespace PolyBucket.Api.Features.Models.Repository
     public interface IModelsRepository
     {
         Task<(IEnumerable<Model> Models, int TotalCount)> GetModelsAsync(int page, int take);
-        Task<Model> GetModelByIdAsync(Guid id);
+        Task<Model?> GetModelByIdAsync(Guid id);
     }
 } 

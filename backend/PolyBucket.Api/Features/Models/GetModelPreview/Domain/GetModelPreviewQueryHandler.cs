@@ -8,18 +8,12 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Models.GetModelPreview.Domain
 {
-    public class GetModelPreviewQueryHandler : IRequestHandler<GetModelPreviewQuery, GetModelPreviewResponse>
+    public class GetModelPreviewQueryHandler(
+        IModelPreviewRepository previewRepository,
+        ILogger<GetModelPreviewQueryHandler> logger) : IRequestHandler<GetModelPreviewQuery, GetModelPreviewResponse>
     {
-        private readonly IModelPreviewRepository _previewRepository;
-        private readonly ILogger<GetModelPreviewQueryHandler> _logger;
-
-        public GetModelPreviewQueryHandler(
-            IModelPreviewRepository previewRepository,
-            ILogger<GetModelPreviewQueryHandler> logger)
-        {
-            _previewRepository = previewRepository;
-            _logger = logger;
-        }
+        private readonly IModelPreviewRepository _previewRepository = previewRepository;
+        private readonly ILogger<GetModelPreviewQueryHandler> _logger = logger;
 
         public async Task<GetModelPreviewResponse> Handle(GetModelPreviewQuery request, CancellationToken cancellationToken)
         {

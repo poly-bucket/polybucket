@@ -30,7 +30,7 @@ interface PendingModel {
 }
 
 const ModelModeration: React.FC = () => {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [pendingModels, setPendingModels] = useState<PendingModel[]>([]);
   const [page, setPage] = useState(1);
@@ -49,7 +49,7 @@ const ModelModeration: React.FC = () => {
       setLoading(true);
       const response = await axios.get(`/api/moderation/models?page=${page}&pageSize=10`, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${user?.accessToken}`
         }
       });
       
@@ -66,10 +66,10 @@ const ModelModeration: React.FC = () => {
   };
 
   useEffect(() => {
-    if (token) {
+    if (user?.accessToken) {
       fetchPendingModels();
     }
-  }, [token, page]);
+  }, [user?.accessToken, page]);
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
@@ -80,7 +80,7 @@ const ModelModeration: React.FC = () => {
       setActionLoading(true);
       await axios.post(`/api/moderation/models/${modelId}/approve`, {}, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${user?.accessToken}`
         }
       });
       
@@ -111,7 +111,7 @@ const ModelModeration: React.FC = () => {
       // Fetch full model details for editing
       const response = await axios.get(`/api/moderation/models/${model.id}`, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${user?.accessToken}`
         }
       });
       
@@ -132,7 +132,7 @@ const ModelModeration: React.FC = () => {
       setActionLoading(true);
       await axios.put(`/api/moderation/models/${selectedModelForEdit.id}`, editRequest, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${user?.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -164,7 +164,7 @@ const ModelModeration: React.FC = () => {
         reason: rejectReason
       }, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${user?.accessToken}`
         }
       });
       

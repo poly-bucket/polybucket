@@ -7,6 +7,10 @@ using PolyBucket.Api.Features.Models.GetModels.Http;
 using PolyBucket.Api.Features.Models.Http;
 using Shouldly;
 using Xunit;
+using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
+using PolyBucket.Api.Features.Models.UpdateModel.Http;
+using PolyBucket.Api.Features.Models.DeleteModel.Http;
+using PolyBucket.Api.Features.Models.GetModelByUserId.Http;
 
 namespace PolyBucket.Tests.Features.Models;
 
@@ -24,7 +28,7 @@ public class ModelsControllerTests : IDisposable
             new object[] { typeof(DownloadModelController) },
             new object[] { typeof(GetModelByIdController) },
             new object[] { typeof(GetModelsController) },
-            new object[] { typeof(GetModelsByUserController) },
+            new object[] { typeof(GetModelByUserIdController) },
             new object[] { typeof(GetModelVersionsController) },
             new object[] { typeof(LikeModelController) },
             new object[] { typeof(RemoveCategoryFromModelController) },

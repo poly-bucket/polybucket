@@ -11,18 +11,11 @@ using System;
 
 namespace PolyBucket.Api.Features.Authentication.Services
 {
-    public class EmailService : IEmailService
+    public class EmailService(IConfiguration configuration, ILogger<EmailService> logger, PolyBucketDbContext context) : IEmailService
     {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailService> _logger;
-        private readonly PolyBucketDbContext _context;
-
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger, PolyBucketDbContext context)
-        {
-            _configuration = configuration;
-            _logger = logger;
-            _context = context;
-        }
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<EmailService> _logger = logger;
+        private readonly PolyBucketDbContext _context = context;
 
         public async Task SendPasswordResetEmailAsync(string email, string resetToken, string resetUrl)
         {

@@ -15,13 +15,52 @@ namespace PolyBucket.Api.Features.ACL.Http
     [Authorize]
     [ApiController]
     [Route("api/admin/user-permissions")]
-    public class UserPermissionManagementController : ControllerBase
+    public class UserPermissionManagementController(IPermissionService permissionService) : ControllerBase
     {
-        private readonly IPermissionService _permissionService;
+        private readonly IPermissionService _permissionService = permissionService;
 
-        public UserPermissionManagementController(IPermissionService permissionService)
+        /// <summary>
+        /// Get current user's permissions (no admin permission required)
+        /// </summary>
+        [HttpGet("me/permissions")]
+        [ProducesResponseType(typeof(UserPermissionsDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult<UserPermissionsDto>> GetCurrentUserPermissions()
         {
-            _permissionService = permissionService;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+
+            var userRole = await _permissionService.GetUserRoleAsync(userId);
+            if (userRole == null)
+                return NotFound("User not found");
+
+            var effectivePermissions = await _permissionService.GetUserPermissionsAsync(userId);
+            var permissionOverrides = await _permissionService.GetUserPermissionOverridesAsync(userId);
+
+            var dto = new UserPermissionsDto
+            {
+                UserId = userId,
+                Role = new UserRoleDto
+                {
+                    Id = userRole.Id,
+                    Name = userRole.Name,
+                    Priority = userRole.Priority
+                },
+                EffectivePermissions = effectivePermissions,
+                PermissionOverrides = permissionOverrides.Select(po => new PermissionOverrideDto
+                {
+                    Id = po.Id,
+                    PermissionName = po.Permission.Name,
+                    IsGranted = po.IsGranted,
+                    Reason = po.Reason,
+                    ExpiresAt = po.ExpiresAt,
+                    GrantedByUsername = po.GrantedByUser?.Username,
+                    CreatedAt = po.CreatedAt
+                }).ToList()
+            };
+
+            return Ok(dto);
         }
 
         /// <summary>

@@ -7,18 +7,12 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Authentication.ResetPassword.Domain
 {
-    public class ResetPasswordCommandHandler
+    public class ResetPasswordCommandHandler(
+        IAuthenticationRepository authRepository,
+        ILogger<ResetPasswordCommandHandler> logger)
     {
-        private readonly IAuthenticationRepository _authRepository;
-        private readonly ILogger<ResetPasswordCommandHandler> _logger;
-
-        public ResetPasswordCommandHandler(
-            IAuthenticationRepository authRepository,
-            ILogger<ResetPasswordCommandHandler> logger)
-        {
-            _authRepository = authRepository;
-            _logger = logger;
-        }
+        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly ILogger<ResetPasswordCommandHandler> _logger = logger;
 
         public async Task Handle(ResetPasswordCommand command, CancellationToken cancellationToken)
         {

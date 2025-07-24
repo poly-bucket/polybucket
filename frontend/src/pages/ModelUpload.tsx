@@ -8,6 +8,10 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import NavigationBar from '../components/common/NavigationBar';
+import { useAppSelector } from '../store';
+import { PrivacySettings } from '../services/api.client';
+import ThumbnailGenerator from '../components/models/ThumbnailGenerator';
 
 interface UploadedFile {
   id: string;
@@ -22,7 +26,7 @@ interface UploadedFile {
 interface ModelData {
   title: string;
   description: string;
-  privacy: 'public' | 'private';
+  privacy: PrivacySettings;
   license: string;
   categories: string[];
   aiGenerated: boolean;
@@ -228,8 +232,8 @@ const ViewModeControls = ({
         onClick={() => setShowViewControls(!showViewControls)}
         className={`${
           showViewControls 
-            ? 'bg-gray-700 text-blue-400' 
-            : 'bg-gray-800 hover:bg-gray-700 text-white'
+            ? 'lg-card text-blue-400' 
+            : 'lg-card hover:bg-gray-700 text-white'
         } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
         title="View Mode Controls"
       >
@@ -241,7 +245,7 @@ const ViewModeControls = ({
 
       {/* View Mode Panel */}
       {showViewControls && (
-        <div className="bg-gray-800 bg-opacity-95 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
+        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">View Mode</h3>
             <button
@@ -260,7 +264,7 @@ const ViewModeControls = ({
               <select
                 value={renderSettings.view}
                 onChange={(e) => setRenderSettings(prev => ({ ...prev, view: e.target.value as ViewMode }))}
-                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-blue-500"
+                className="lg-input text-xs"
               >
                 <option value="solid">Solid</option>
                 <option value="wireframe">Wireframe</option>
@@ -297,8 +301,8 @@ const MaterialControls = ({
         onClick={() => setShowMaterialControls(!showMaterialControls)}
         className={`${
           showMaterialControls 
-            ? 'bg-gray-700 text-purple-400' 
-            : 'bg-gray-800 hover:bg-gray-700 text-white'
+            ? 'lg-card text-purple-400' 
+            : 'lg-card hover:bg-gray-700 text-white'
         } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
         title="Material Controls"
       >
@@ -309,7 +313,7 @@ const MaterialControls = ({
 
       {/* Material Panel */}
       {showMaterialControls && (
-        <div className="bg-gray-800 bg-opacity-95 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
+        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">Material</h3>
             <button
@@ -397,8 +401,8 @@ const LightingControls = ({
         onClick={() => setShowLightingControls(!showLightingControls)}
         className={`${
           showLightingControls 
-            ? 'bg-gray-700 text-yellow-400' 
-            : 'bg-gray-800 hover:bg-gray-700 text-white'
+            ? 'lg-card text-yellow-400' 
+            : 'lg-card hover:bg-gray-700 text-white'
         } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
         title="Lighting Controls"
       >
@@ -409,7 +413,7 @@ const LightingControls = ({
 
       {/* Lighting Panel */}
       {showLightingControls && (
-        <div className="bg-gray-800 bg-opacity-95 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
+        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">Lighting</h3>
             <button
@@ -472,8 +476,8 @@ const AnimationControls = ({
         onClick={() => setShowAnimationControls(!showAnimationControls)}
         className={`${
           showAnimationControls 
-            ? 'bg-gray-700 text-green-400' 
-            : 'bg-gray-800 hover:bg-gray-700 text-white'
+            ? 'lg-card text-green-400' 
+            : 'lg-card hover:bg-gray-700 text-white'
         } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
         title="Animation Controls"
       >
@@ -484,7 +488,7 @@ const AnimationControls = ({
 
       {/* Animation Panel */}
       {showAnimationControls && (
-        <div className="bg-gray-800 bg-opacity-95 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
+        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">Animation</h3>
             <button
@@ -518,11 +522,12 @@ const AnimationControls = ({
 
 const ModelUpload: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAppSelector(state => state.auth);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [modelData, setModelData] = useState<ModelData>({
     title: '',
     description: '',
-    privacy: 'public',
+    privacy: PrivacySettings.Public,
     license: 'MIT',
     categories: [],
     aiGenerated: false,
@@ -547,6 +552,8 @@ const ModelUpload: React.FC = () => {
   const [showMaterialControls, setShowMaterialControls] = useState(false);
   const [showLightingControls, setShowLightingControls] = useState(false);
   const [showAnimationControls, setShowAnimationControls] = useState(false);
+  const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
+  const [thumbnailGeneratedMessage, setThumbnailGeneratedMessage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -610,12 +617,10 @@ const ModelUpload: React.FC = () => {
 
         setUploadedFiles(prev => [...prev, newFile]);
 
-        // Auto-preview 3D models
-        if (supported3DFormats.includes(fileExtension)) {
+        // Auto-preview 3D models and images
+        if (supported3DFormats.includes(fileExtension) || supportedImageFormats.includes(fileExtension)) {
           // Reset geometry state when switching files
           setCurrentGeometry(null);
-          setPreviewFile(newFile);
-        } else if (supportedImageFormats.includes(fileExtension)) {
           setPreviewFile(newFile);
         }
       }
@@ -648,12 +653,10 @@ const ModelUpload: React.FC = () => {
 
           setUploadedFiles(prev => [...prev, newFile]);
 
-          // Auto-preview 3D models
-          if (supported3DFormats.includes(fileExtension)) {
+          // Auto-preview 3D models and images
+          if (supported3DFormats.includes(fileExtension) || supportedImageFormats.includes(fileExtension)) {
             // Reset geometry state when switching files
             setCurrentGeometry(null);
-            setPreviewFile(newFile);
-          } else if (supportedImageFormats.includes(fileExtension)) {
             setPreviewFile(newFile);
           }
         }
@@ -661,13 +664,22 @@ const ModelUpload: React.FC = () => {
     }
   };
 
-  const setAsThumbnail = (fileId: string) => {
-    setUploadedFiles(prev => 
-      prev.map(file => ({
-        ...file,
-        isThumbnail: file.id === fileId
-      }))
-    );
+
+
+  const getFileType = (fileName: string) => {
+    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+    if (supported3DFormats.includes(fileExtension)) return '3d';
+    if (supportedImageFormats.includes(fileExtension)) return 'image';
+    return 'unknown';
+  };
+
+  const selectFileForPreview = (fileId: string) => {
+    const file = uploadedFiles.find(f => f.id === fileId);
+    if (file) {
+      setPreviewFile(file);
+      // Reset geometry state when switching files
+      setCurrentGeometry(null);
+    }
   };
 
   const removeFile = (fileId: string) => {
@@ -706,6 +718,29 @@ const ModelUpload: React.FC = () => {
     }));
   };
 
+  const handleThumbnailGenerated = (thumbnailBlob: Blob, fileName: string) => {
+    const thumbnailFile = new File([thumbnailBlob], fileName, { type: 'image/png' });
+    
+    // Add the generated image to the upload queue (not automatically set as thumbnail)
+    const newImageFile: UploadedFile = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: fileName,
+      size: thumbnailBlob.size,
+      type: 'image/png',
+      file: thumbnailFile,
+      progress: 0,
+      isThumbnail: false
+    };
+
+    setUploadedFiles(prev => [...prev, newImageFile]);
+    
+    setShowThumbnailGenerator(false);
+    setThumbnailGeneratedMessage(`Custom image "${fileName}" added to upload queue`);
+    
+    // Clear the message after 3 seconds
+    setTimeout(() => setThumbnailGeneratedMessage(null), 3000);
+  };
+
   const handleUpload = async () => {
     if (uploadedFiles.length === 0) return;
 
@@ -713,49 +748,32 @@ const ModelUpload: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      const formData = new FormData();
+      // Prepare model data
+      const modelUploadData = {
+        name: modelData.title,
+        description: modelData.description,
+        privacy: modelData.privacy,
+        license: modelData.license,
+        categories: modelData.categories,
+        aiGenerated: modelData.aiGenerated,
+        workInProgress: modelData.workInProgress,
+        nsfw: modelData.nsfw,
+        remix: modelData.remix,
+        thumbnailFileId: uploadedFiles.find(f => f.isThumbnail)?.id
+      };
+
+      // Prepare files - all files including thumbnails are already in uploadedFiles
+      const files = uploadedFiles.map(f => f.file);
+
+      // Import and use modelsService
+      const { default: modelsService } = await import('../services/modelsService');
       
-      // Add model data
-      formData.append('name', modelData.title);
-      formData.append('description', modelData.description);
-      formData.append('privacy', modelData.privacy);
-      formData.append('license', modelData.license);
-      formData.append('categories', JSON.stringify(modelData.categories));
-      formData.append('aiGenerated', modelData.aiGenerated.toString());
-      formData.append('workInProgress', modelData.workInProgress.toString());
-      formData.append('nsfw', modelData.nsfw.toString());
-      formData.append('remix', modelData.remix.toString());
-
-      // Add files
-      uploadedFiles.forEach((file, index) => {
-        formData.append(`files`, file.file);
-        if (file.isThumbnail) {
-          formData.append('thumbnailFileId', file.id);
-        }
+      const result = await modelsService.uploadModel({
+        modelData: modelUploadData,
+        files: files
       });
-
-      // Get auth token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
       
-      // Upload with progress tracking
-      const response = await fetch(`${baseUrl}/api/models`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      console.log('Upload successful:', result);
       
       // Navigate back to dashboard after successful upload
       setTimeout(() => {
@@ -772,7 +790,7 @@ const ModelUpload: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="lg-container min-h-screen text-white">
       <style>{`
         .slider::-webkit-slider-thumb {
           appearance: none;
@@ -792,23 +810,14 @@ const ModelUpload: React.FC = () => {
           border: none;
         }
       `}</style>
-      <nav className="bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center text-green-400 hover:text-green-300"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Upload
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      
+      {/* Navigation Bar */}
+      <NavigationBar
+        title="Upload Model"
+        showSearch={false}
+        showUploadButton={false}
+        showHomeLink={true}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
@@ -816,13 +825,19 @@ const ModelUpload: React.FC = () => {
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-green-400 mb-6">Upload New Model</h1>
             
-            {previewFile && (
+            {previewFile ? (
               <div className="mb-6">
                 <p className="text-sm text-gray-400 mb-2">
                   Previewing: {previewFile.name}
                 </p>
-                <div className="bg-gray-800 rounded-lg overflow-hidden h-96 relative">
-                  {supported3DFormats.includes(previewFile.name.toLowerCase().substring(previewFile.name.lastIndexOf('.'))) ? (
+                
+                {thumbnailGeneratedMessage && (
+                  <div className="mb-4 p-3 bg-green-900 border border-green-600 rounded text-green-200 text-sm">
+                    ✓ {thumbnailGeneratedMessage}
+                  </div>
+                )}
+                <div className="lg-card rounded-lg overflow-hidden h-96 relative">
+                  {getFileType(previewFile.name) === '3d' ? (
                     <>
                                           <Canvas 
                       shadows 
@@ -883,7 +898,7 @@ const ModelUpload: React.FC = () => {
                           setShowAnimationControls={setShowAnimationControls}
                         />
                     </>
-                  ) : (
+                  ) : getFileType(previewFile.name) === 'image' ? (
                     <div className="w-full h-full flex items-center justify-center">
                       <img 
                         src={URL.createObjectURL(previewFile.file)} 
@@ -891,25 +906,50 @@ const ModelUpload: React.FC = () => {
                         className="max-w-full max-h-full object-contain"
                       />
                     </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p className="text-gray-400">Preview not available for this file type</p>
+                      </div>
+                    </div>
                   )}
                 </div>
-                {supportedImageFormats.includes(previewFile.name.toLowerCase().substring(previewFile.name.lastIndexOf('.'))) && (
+
+                
+                {getFileType(previewFile.name) === '3d' && (
                   <button
-                    onClick={() => setAsThumbnail(previewFile.id)}
-                    className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+                    onClick={() => setShowThumbnailGenerator(true)}
+                    className="mt-4 lg-button lg-button-secondary"
                   >
-                    Set as Thumbnail
+                    Generate Custom Image
                   </button>
                 )}
                 
 
+              </div>
+            ) : (
+              <div className="mb-6">
+                <div className="lg-card rounded-lg overflow-hidden h-96 relative">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <p className="text-gray-400">Select a file from the upload queue to preview</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
             {/* File Upload Area */}
             <div className="mb-6">
               <div
-                className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-green-500 transition-colors"
+                className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-green-500 transition-colors"
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
@@ -920,7 +960,7 @@ const ModelUpload: React.FC = () => {
                 <p className="text-sm text-gray-500 mb-4">or</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium"
+                  className="lg-button lg-button-primary"
                 >
                   Choose Files
                 </button>
@@ -942,46 +982,47 @@ const ModelUpload: React.FC = () => {
             {/* Model Information */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                <label className="block text-sm font-medium text-white mb-2">Title</label>
                 <input
                   type="text"
                   value={modelData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:border-green-500"
+                  className="lg-input"
                   placeholder="Enter model title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <label className="block text-sm font-medium text-white mb-2">Description</label>
                 <textarea
                   value={modelData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:border-green-500 resize-none"
+                  className="lg-input resize-none"
                   placeholder="Enter model description"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Privacy</label>
+                  <label className="block text-sm font-medium text-white mb-2">Privacy</label>
                   <select
                     value={modelData.privacy}
-                    onChange={(e) => handleInputChange('privacy', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:border-green-500"
+                    onChange={(e) => handleInputChange('privacy', Number(e.target.value) as PrivacySettings)}
+                    className="lg-input"
                   >
-                    <option value="public">Public - Everyone can see this model</option>
-                    <option value="private">Private - Only you can see this model</option>
+                    <option value={PrivacySettings.Public}>Public - Everyone can see this model</option>
+                    <option value={PrivacySettings.Private}>Private - Only you can see this model</option>
+                    <option value={PrivacySettings.Unlisted}>Unlisted - Only people with the link can see this model</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">License</label>
+                  <label className="block text-sm font-medium text-white mb-2">License</label>
                   <select
                     value={modelData.license}
                     onChange={(e) => handleInputChange('license', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:border-green-500"
+                    className="lg-input"
                   >
                     {licenses.map(license => (
                       <option key={license} value={license}>{license}</option>
@@ -991,7 +1032,7 @@ const ModelUpload: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Categories</label>
+                <label className="block text-sm font-medium text-white mb-2">Categories</label>
                 <div className="flex flex-wrap gap-2">
                   {categories.map(category => (
                     <button
@@ -1010,7 +1051,7 @@ const ModelUpload: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-300">Options</label>
+                <label className="block text-sm font-medium text-white">Options</label>
                 <div className="space-y-2">
                   {[
                     { key: 'aiGenerated', label: 'AI Generated' },
@@ -1034,16 +1075,23 @@ const ModelUpload: React.FC = () => {
               <div className="flex justify-end space-x-4 pt-6">
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-2 border border-green-500 text-green-500 rounded-md hover:bg-green-500 hover:text-white transition-colors"
+                  className="lg-button"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpload}
                   disabled={isUploading || uploadedFiles.length === 0}
-                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="lg-button lg-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isUploading ? 'Uploading...' : 'Upload Model'}
+                  {isUploading ? (
+                    <div className="flex items-center">
+                      <div className="lg-spinner w-4 h-4 mr-2"></div>
+                      Uploading...
+                    </div>
+                  ) : (
+                    'Upload Model'
+                  )}
                 </button>
               </div>
             </div>
@@ -1051,7 +1099,7 @@ const ModelUpload: React.FC = () => {
 
           {/* Right Panel - Upload Queue */}
           <div className="w-80">
-            <div className="bg-gray-800 rounded-lg p-4">
+            <div className="lg-card p-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-green-400">Upload Queue</h3>
                 {uploadedFiles.length > 0 && (
@@ -1063,47 +1111,114 @@ const ModelUpload: React.FC = () => {
                   </button>
                 )}
               </div>
+              
+              {/* Help text for image selection */}
+              {uploadedFiles.some(f => getFileType(f.name) === 'image') && (
+                <div className="mb-4 p-3 bg-blue-900 border border-blue-600 rounded text-blue-200 text-sm">
+                  <strong>Tip:</strong> Use the checkboxes next to images to select which one will be used as the model's thumbnail/preview image.
+                </div>
+              )}
 
               {uploadedFiles.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">No files selected</p>
               ) : (
                 <div className="space-y-3">
-                  {uploadedFiles.map(file => (
-                    <div key={file.id} className="bg-gray-700 rounded p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">
-                            {file.name}
-                            {file.isThumbnail && (
-                              <span className="ml-2 text-xs text-green-400">Thumbnail</span>
+                  {uploadedFiles.map(file => {
+                    const isSelected = previewFile?.id === file.id;
+                    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                    const is3DModel = supported3DFormats.includes(fileExtension);
+                    const isImage = supportedImageFormats.includes(fileExtension);
+                    
+                    return (
+                      <div 
+                        key={file.id} 
+                        className={`bg-gray-700 rounded p-3 cursor-pointer transition-all duration-200 hover:bg-gray-600 ${
+                          isSelected ? 'ring-2 ring-green-500 bg-gray-600' : ''
+                        }`}
+                        onClick={() => selectFileForPreview(file.id)}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                                                  <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {isImage && (
+                              <input
+                                type="checkbox"
+                                checked={file.isThumbnail}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  if (e.target.checked) {
+                                    // Set this image as thumbnail, uncheck others
+                                    setUploadedFiles(prev => 
+                                      prev.map(f => ({
+                                        ...f,
+                                        isThumbnail: f.id === file.id
+                                      }))
+                                    );
+                                  } else {
+                                    // Uncheck this image
+                                    setUploadedFiles(prev => 
+                                      prev.map(f => 
+                                        f.id === file.id ? { ...f, isThumbnail: false } : f
+                                      )
+                                    );
+                                  }
+                                }}
+                                className="mr-2 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500"
+                                title="Set as thumbnail"
+                              />
                             )}
-                          </p>
+                            <p className="text-sm text-white truncate">
+                              {file.name}
+                              {file.isThumbnail && (
+                                <span className="ml-2 text-xs text-green-400">Thumbnail</span>
+                              )}
+                            </p>
+                            {is3DModel && (
+                              <span className="text-xs text-blue-400">3D</span>
+                            )}
+                            {isImage && (
+                              <span className="text-xs text-purple-400">Image</span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
                         </div>
-                        <button
-                          onClick={() => removeFile(file.id)}
-                          className="text-gray-400 hover:text-red-400 ml-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(file.id);
+                            }}
+                            className="text-gray-400 hover:text-red-400 ml-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="w-full bg-gray-600 rounded-full h-1">
+                          <div
+                            className="bg-green-500 h-1 rounded-full transition-all duration-300"
+                            style={{ width: `${file.progress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">{file.progress}% done</p>
                       </div>
-                      <div className="w-full bg-gray-600 rounded-full h-1">
-                        <div
-                          className="bg-green-500 h-1 rounded-full transition-all duration-300"
-                          style={{ width: `${file.progress}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">{file.progress}% done</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Thumbnail Generator Modal */}
+      {showThumbnailGenerator && previewFile && (
+        <ThumbnailGenerator
+          modelFile={previewFile.file}
+          onThumbnailGenerated={handleThumbnailGenerated}
+          onCancel={() => setShowThumbnailGenerator(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { EyeIcon, EyeSlashIcon, LinkIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, LinkIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '../UserAvatar';
+import CollectionAvatar from '../CollectionAvatar';
 import { Collection } from '../../services/collectionsService';
 
 interface CollectionCardProps {
@@ -35,8 +36,10 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
     // Fallback to a generated avatar-style background
     return (
       <div className="w-full h-48 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-        <UserAvatar 
-          username={collection.name} 
+        <CollectionAvatar 
+          collectionId={collection.id}
+          collectionName={collection.name}
+          avatar={collection.avatar}
           size="lg"
           className="w-16 h-16"
         />
@@ -49,7 +52,14 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
       case 'Public':
         return <EyeIcon className="w-4 h-4 text-green-600" title="Public" />;
       case 'Unlisted':
-        return <LinkIcon className="w-4 h-4 text-yellow-600" title="Unlisted" />;
+        return (
+          <div className="flex items-center">
+            <LinkIcon className="w-4 h-4 text-yellow-600" title="Unlisted" />
+            {collection.passwordHash && (
+              <LockClosedIcon className="w-3 h-3 text-yellow-600 ml-1" title="Password Protected" />
+            )}
+          </div>
+        );
       case 'Private':
       default:
         return <EyeSlashIcon className="w-4 h-4 text-gray-600" title="Private" />;
@@ -59,7 +69,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       {/* Thumbnail */}
-      <Link to={`/collections/${collection.id}`} className="block">
+      <Link to={`/my-collections/${collection.id}`} className="block">
         {getCollectionThumbnail()}
       </Link>
       
@@ -68,7 +78,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
           <Link 
-            to={`/collections/${collection.id}`} 
+            to={`/my-collections/${collection.id}`} 
             className="block flex-1 min-w-0"
           >
             <h3 className="text-lg font-semibold text-gray-900 truncate hover:text-indigo-600">
@@ -128,7 +138,9 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
           {showOwner && collection.owner && (
             <div className="flex items-center">
               <UserAvatar 
+                userId={collection.owner.id}
                 username={collection.owner.username}
+                avatar={collection.owner.avatar}
                 profilePictureUrl={collection.owner.profilePictureUrl}
                 size="xs"
                 className="w-4 h-4 mr-1"

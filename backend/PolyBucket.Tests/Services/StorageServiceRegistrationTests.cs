@@ -9,7 +9,7 @@ namespace PolyBucket.Tests.Services;
 
 public class StorageServiceRegistrationTests
 {
-    private IServiceProvider BuildServiceProvider(Dictionary<string, string> inMemorySettings)
+    private IServiceProvider BuildServiceProvider(Dictionary<string, string?> inMemorySettings)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemorySettings)
@@ -29,7 +29,7 @@ public class StorageServiceRegistrationTests
     public void AddObjectStorage_RegistersCorrectImplementation(string providerValue, Type expectedType)
     {
         // Arrange
-        var settings = new Dictionary<string, string>
+        var settings = new Dictionary<string, string?>
         {
             {"Storage:Provider", providerValue},
             {"Storage:BucketName", "unit-test"}
@@ -47,7 +47,7 @@ public class StorageServiceRegistrationTests
     [Fact]
     public void AddObjectStorage_DefaultsToMinio_WhenProviderMissing()
     {
-        var settings = new Dictionary<string, string>
+        var settings = new Dictionary<string, string?>
         {
             {"Storage:BucketName", "unit-test"}
         };

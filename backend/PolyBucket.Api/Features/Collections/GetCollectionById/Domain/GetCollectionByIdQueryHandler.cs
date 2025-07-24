@@ -10,16 +10,10 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.GetCollectionById.Domain
 {
-    public class GetCollectionByIdQueryHandler : IRequestHandler<GetCollectionByIdQuery, Collection?>
+    public class GetCollectionByIdQueryHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor) : IRequestHandler<GetCollectionByIdQuery, Collection?>
     {
-        private readonly ICollectionRepository _repository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public GetCollectionByIdQueryHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor)
-        {
-            _repository = repository;
-            _httpContextAccessor = httpContextAccessor;
-        }
+        private readonly ICollectionRepository _repository = repository;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
         public async Task<Collection?> Handle(GetCollectionByIdQuery request, CancellationToken cancellationToken)
         {

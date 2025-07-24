@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../utils/hooks';
+import { useAppSelector, useAppDispatch } from '../utils/hooks';
 import UserAvatar from '../components/UserAvatar';
+import NavigationBar from '../components/common/NavigationBar';
+import AvatarRegeneration from '../components/AvatarRegeneration';
+import { PrivacySettings } from '../services/api.client';
+import { useUserSettings } from '../context/UserSettingsContext';
+import { updateUserDetails } from '../store/slices/authSlice';
 
 interface UserSettings {
   language: string;
@@ -10,33 +15,56 @@ interface UserSettings {
   defaultPrinterId: string;
   measurementSystem: string;
   timeZone: string;
+  autoRotateModels: boolean;
   // Additional UI-focused settings for the future
   autoSaveInterval: number;
   showAdvancedOptions: boolean;
-  defaultPrivacy: string;
+  defaultPrivacy: PrivacySettings;
   notificationSound: boolean;
 }
 
 const UserSettings: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { settings, loading, updateSettings } = useUserSettings();
   
-  // Mock user settings data
-  const [settings, setSettings] = useState<UserSettings>({
+  // Local state for editing
+  const [localSettings, setLocalSettings] = useState<UserSettings>({
     language: 'en',
     theme: 'dark',
     emailNotifications: true,
     defaultPrinterId: '',
     measurementSystem: 'metric',
     timeZone: 'UTC',
+    autoRotateModels: true,
     autoSaveInterval: 5,
     showAdvancedOptions: false,
-    defaultPrivacy: 'public',
+    defaultPrivacy: PrivacySettings.Public,
     notificationSound: true,
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update local settings when context settings change
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings({
+        language: settings.language || 'en',
+        theme: settings.theme || 'dark',
+        emailNotifications: settings.emailNotifications ?? true,
+        defaultPrinterId: settings.defaultPrinterId || '',
+        measurementSystem: settings.measurementSystem || 'metric',
+        timeZone: settings.timeZone || 'UTC',
+        autoRotateModels: settings.autoRotateModels ?? true,
+        autoSaveInterval: 5,
+        showAdvancedOptions: false,
+        defaultPrivacy: PrivacySettings.Public,
+        notificationSound: true,
+      });
+    }
+  }, [settings]);
 
   // Mock printer options
   const printerOptions = [
@@ -67,7 +95,7 @@ const UserSettings: React.FC = () => {
   ];
 
   const handleSettingChange = (key: keyof UserSettings, value: any) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       [key]: value
     }));
@@ -75,12 +103,27 @@ const UserSettings: React.FC = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setIsEditing(false);
-    // In real implementation, this would save to the backend
-    console.log('Settings saved:', settings);
+    try {
+      const success = await updateSettings({
+        language: localSettings.language,
+        theme: localSettings.theme,
+        emailNotifications: localSettings.emailNotifications,
+        defaultPrinterId: localSettings.defaultPrinterId,
+        measurementSystem: localSettings.measurementSystem,
+        timeZone: localSettings.timeZone,
+        autoRotateModels: localSettings.autoRotateModels,
+      });
+      
+      if (success) {
+        setIsEditing(false);
+      } else {
+        console.error('Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -88,45 +131,42 @@ const UserSettings: React.FC = () => {
     // In real implementation, this would revert to original settings
   };
 
+  const handleAvatarUpdate = (newAvatar: string) => {
+    // Update the user's avatar in Redux store
+    dispatch(updateUserDetails({ avatar: newAvatar }));
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center text-gray-600 hover:text-gray-900"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Dashboard
-            </button>
-            <div className="ml-6">
-              <h1 className="text-xl font-semibold text-gray-900">User Settings</h1>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="lg-container min-h-screen">
+      {/* Navigation Bar */}
+      <NavigationBar
+        title="User Settings"
+        showSearch={false}
+        showUploadButton={false}
+        showHomeLink={true}
+      />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Section */}
-        <div className="bg-white shadow rounded-lg mb-6 p-6">
+        <div className="lg-card mb-6 p-6">
           <div className="flex items-center">
             <UserAvatar 
+              userId={user?.id || ''}
               username={user?.username || 'User'} 
+              avatar={user?.avatar}
               profilePictureUrl={user?.profilePictureUrl}
               size="xl"
               className="mr-6"
             />
             <div>
-              <h3 className="text-lg font-medium text-gray-900">{user?.username}</h3>
-              <p className="text-sm text-gray-600">{user?.email}</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <h3 className="text-lg font-medium text-white">{user?.username}</h3>
+              <p className="text-sm text-white/80">{user?.email}</p>
+              <p className="text-xs text-white/60 mt-1">
                 {user?.profilePictureUrl 
                   ? "Using your uploaded profile picture" 
+                  : user?.avatar
+                  ? "Using your custom generated avatar"
                   : "Your avatar is automatically generated from your username"
                 }
               </p>
@@ -134,16 +174,16 @@ const UserSettings: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white shadow rounded-lg">
+        <div className="lg-card">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-white/10">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Account Preferences</h2>
+              <h2 className="text-lg font-medium text-white">Account Preferences</h2>
               <div className="flex space-x-3">
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="lg-button"
                   >
                     Edit Settings
                   </button>
@@ -151,14 +191,14 @@ const UserSettings: React.FC = () => {
                   <>
                     <button
                       onClick={handleCancel}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="lg-button"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={isSaving}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="lg-button lg-button-primary"
                     >
                       {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -171,20 +211,23 @@ const UserSettings: React.FC = () => {
           {/* Settings Content */}
           <div className="p-6 space-y-6">
             
+            {/* Avatar Customization */}
+            <AvatarRegeneration onAvatarUpdate={handleAvatarUpdate} />
+            
             {/* Language & Localization */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Language & Region</h3>
+              <h3 className="text-lg font-medium text-white">Language & Region</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-white/80 mb-2">
                     Language
                   </label>
                   <select
-                    value={settings.language}
+                    value={localSettings.language}
                     onChange={(e) => handleSettingChange('language', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    className="lg-input disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {languageOptions.map(lang => (
                       <option key={lang.code} value={lang.code}>
@@ -195,14 +238,14 @@ const UserSettings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-white/80 mb-2">
                     Time Zone
                   </label>
                   <select
-                    value={settings.timeZone}
+                    value={localSettings.timeZone}
                     onChange={(e) => handleSettingChange('timeZone', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    className="lg-input disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {timeZoneOptions.map(tz => (
                       <option key={tz.code} value={tz.code}>
@@ -213,14 +256,14 @@ const UserSettings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-white/80 mb-2">
                     Measurement System
                   </label>
                   <select
-                    value={settings.measurementSystem}
+                    value={localSettings.measurementSystem}
                     onChange={(e) => handleSettingChange('measurementSystem', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    className="lg-input disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="metric">Metric (mm, kg, °C)</option>
                     <option value="imperial">Imperial (in, lb, °F)</option>
@@ -231,10 +274,10 @@ const UserSettings: React.FC = () => {
 
             {/* Appearance */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Appearance</h3>
+              <h3 className="text-lg font-medium text-white">Appearance</h3>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/80 mb-2">
                   Theme
                 </label>
                 <div className="flex space-x-4">
@@ -244,12 +287,12 @@ const UserSettings: React.FC = () => {
                         type="radio"
                         name="theme"
                         value={theme}
-                        checked={settings.theme === theme}
+                        checked={localSettings.theme === theme}
                         onChange={(e) => handleSettingChange('theme', e.target.value)}
                         disabled={!isEditing}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 disabled:text-gray-400"
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 bg-transparent disabled:text-white/40"
                       />
-                      <span className="ml-2 text-sm text-gray-700 capitalize">{theme}</span>
+                      <span className="ml-2 text-sm text-white/80 capitalize">{theme}</span>
                     </label>
                   ))}
                 </div>
@@ -259,30 +302,47 @@ const UserSettings: React.FC = () => {
                 <input
                   type="checkbox"
                   id="showAdvancedOptions"
-                  checked={settings.showAdvancedOptions}
+                  checked={localSettings.showAdvancedOptions}
                   onChange={(e) => handleSettingChange('showAdvancedOptions', e.target.checked)}
                   disabled={!isEditing}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded disabled:text-gray-400"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent disabled:text-white/40"
                 />
-                <label htmlFor="showAdvancedOptions" className="ml-2 text-sm text-gray-700">
+                <label htmlFor="showAdvancedOptions" className="ml-2 text-sm text-white/80">
                   Show advanced options in the interface
                 </label>
               </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="autoRotateModels"
+                  checked={localSettings.autoRotateModels}
+                  onChange={(e) => handleSettingChange('autoRotateModels', e.target.checked)}
+                  disabled={!isEditing}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent disabled:text-white/40"
+                />
+                <label htmlFor="autoRotateModels" className="ml-2 text-sm text-white/80">
+                  Auto-rotate models in preview
+                </label>
+              </div>
+              <p className="text-xs text-white/60 ml-6">
+                When enabled, 3D models will automatically rotate in the dashboard preview
+              </p>
             </div>
 
             {/* Printing */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">3D Printing</h3>
+              <h3 className="text-lg font-medium text-white">3D Printing</h3>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/80 mb-2">
                   Default Printer
                 </label>
                 <select
-                  value={settings.defaultPrinterId}
+                  value={localSettings.defaultPrinterId}
                   onChange={(e) => handleSettingChange('defaultPrinterId', e.target.value)}
                   disabled={!isEditing}
-                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="lg-input max-w-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {printerOptions.map(printer => (
                     <option key={printer.id} value={printer.id}>
@@ -290,43 +350,43 @@ const UserSettings: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-white/60">
                   This printer will be pre-selected when uploading models
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/80 mb-2">
                   Default Privacy Level for Uploads
                 </label>
                 <select
-                  value={settings.defaultPrivacy}
-                  onChange={(e) => handleSettingChange('defaultPrivacy', e.target.value)}
+                  value={localSettings.defaultPrivacy}
+                  onChange={(e) => handleSettingChange('defaultPrivacy', Number(e.target.value) as PrivacySettings)}
                   disabled={!isEditing}
-                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="lg-input max-w-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="public">Public</option>
-                  <option value="unlisted">Unlisted</option>
-                  <option value="private">Private</option>
+                  <option value={PrivacySettings.Public}>Public</option>
+                  <option value={PrivacySettings.Unlisted}>Unlisted</option>
+                  <option value={PrivacySettings.Private}>Private</option>
                 </select>
               </div>
             </div>
 
             {/* Notifications */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
+              <h3 className="text-lg font-medium text-white">Notifications</h3>
               
               <div className="space-y-3">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
                     id="emailNotifications"
-                    checked={settings.emailNotifications}
+                    checked={localSettings.emailNotifications}
                     onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
                     disabled={!isEditing}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded disabled:text-gray-400"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent disabled:text-white/40"
                   />
-                  <label htmlFor="emailNotifications" className="ml-2 text-sm text-gray-700">
+                  <label htmlFor="emailNotifications" className="ml-2 text-sm text-white/80">
                     Email notifications for comments, likes, and follows
                   </label>
                 </div>
@@ -335,12 +395,12 @@ const UserSettings: React.FC = () => {
                   <input
                     type="checkbox"
                     id="notificationSound"
-                    checked={settings.notificationSound}
+                    checked={localSettings.notificationSound}
                     onChange={(e) => handleSettingChange('notificationSound', e.target.checked)}
                     disabled={!isEditing}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded disabled:text-gray-400"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent disabled:text-white/40"
                   />
-                  <label htmlFor="notificationSound" className="ml-2 text-sm text-gray-700">
+                  <label htmlFor="notificationSound" className="ml-2 text-sm text-white/80">
                     Play notification sounds
                   </label>
                 </div>
@@ -349,17 +409,17 @@ const UserSettings: React.FC = () => {
 
             {/* Editor */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Editor Preferences</h3>
+              <h3 className="text-lg font-medium text-white">Editor Preferences</h3>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/80 mb-2">
                   Auto-save interval (minutes)
                 </label>
                 <select
-                  value={settings.autoSaveInterval}
-                  onChange={(e) => handleSettingChange('autoSaveInterval', parseInt(e.target.value))}
+                                      value={localSettings.autoSaveInterval}
+                    onChange={(e) => handleSettingChange('autoSaveInterval', parseInt(e.target.value))}
                   disabled={!isEditing}
-                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="lg-input max-w-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value={1}>1 minute</option>
                   <option value={5}>5 minutes</option>

@@ -9,27 +9,18 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Authentication.ForgotPassword.Domain
 {
-    public class ForgotPasswordCommandHandler
+    public class ForgotPasswordCommandHandler(
+        IAuthenticationRepository authRepository,
+        ITokenService tokenService,
+        IEmailService emailService,
+        IConfiguration configuration,
+        ILogger<ForgotPasswordCommandHandler> logger)
     {
-        private readonly IAuthenticationRepository _authRepository;
-        private readonly ITokenService _tokenService;
-        private readonly IEmailService _emailService;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<ForgotPasswordCommandHandler> _logger;
-
-        public ForgotPasswordCommandHandler(
-            IAuthenticationRepository authRepository,
-            ITokenService tokenService,
-            IEmailService emailService,
-            IConfiguration configuration,
-            ILogger<ForgotPasswordCommandHandler> logger)
-        {
-            _authRepository = authRepository;
-            _tokenService = tokenService;
-            _emailService = emailService;
-            _configuration = configuration;
-            _logger = logger;
-        }
+        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly IEmailService _emailService = emailService;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<ForgotPasswordCommandHandler> _logger = logger;
 
         public async Task Handle(ForgotPasswordCommand command, CancellationToken cancellationToken)
         {

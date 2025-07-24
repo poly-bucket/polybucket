@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Models.GetModelById.Domain;
 using PolyBucket.Api.Features.Models.GetModelById.Http;
@@ -14,12 +15,14 @@ namespace PolyBucket.Tests.Features.Models.GetModelById;
 public class GetModelByIdControllerTests
 {
     private readonly Mock<IMediator> _mediator;
+    private readonly Mock<ILogger<GetModelByIdController>> _logger;
     private readonly GetModelByIdController _controller;
 
     public GetModelByIdControllerTests()
     {
         _mediator = new Mock<IMediator>();
-        _controller = new GetModelByIdController(_mediator.Object);
+        _logger = new Mock<ILogger<GetModelByIdController>>();
+        _controller = new GetModelByIdController(_mediator.Object, _logger.Object);
     }
 
     [Fact]
@@ -39,7 +42,7 @@ public class GetModelByIdControllerTests
     public async Task GetModel_ReturnsNotFound_WhenModelMissing()
     {
         var id = Guid.NewGuid();
-        _mediator.Setup(m => m.Send(It.IsAny<GetModelByIdQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync((GetModelByIdResponse?)null);
+        _mediator.Setup(m => m.Send(It.IsAny<GetModelByIdQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync((GetModelByIdResponse)null!);
         var result = await _controller.GetModel(id);
         result.Result.ShouldBeOfType<NotFoundResult>();
     }

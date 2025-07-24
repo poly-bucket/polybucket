@@ -9,16 +9,10 @@ namespace PolyBucket.Api.Features.Authentication.Login.Http
 {
     [ApiController]
     [Route("api/auth")]
-    public class LoginController : ControllerBase
+    public class LoginController(LoginCommandHandler handler, ILogger<LoginController> logger) : ControllerBase
     {
-        private readonly LoginCommandHandler _handler;
-        private readonly ILogger<LoginController> _logger;
-
-        public LoginController(LoginCommandHandler handler, ILogger<LoginController> logger)
-        {
-            _handler = handler;
-            _logger = logger;
-        }
+        private readonly LoginCommandHandler _handler = handler;
+        private readonly ILogger<LoginController> _logger = logger;
 
         [HttpPost("login")]
         [ProducesResponseType(200, Type = typeof(LoginCommandResponse))]

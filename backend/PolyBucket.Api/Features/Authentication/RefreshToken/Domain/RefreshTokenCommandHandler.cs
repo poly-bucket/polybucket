@@ -8,21 +8,14 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Authentication.RefreshToken.Domain
 {
-    public class RefreshTokenCommandHandler
+    public class RefreshTokenCommandHandler(
+        IAuthenticationRepository authRepository,
+        ITokenService tokenService,
+        ILogger<RefreshTokenCommandHandler> logger)
     {
-        private readonly IAuthenticationRepository _authRepository;
-        private readonly ITokenService _tokenService;
-        private readonly ILogger<RefreshTokenCommandHandler> _logger;
-
-        public RefreshTokenCommandHandler(
-            IAuthenticationRepository authRepository,
-            ITokenService tokenService,
-            ILogger<RefreshTokenCommandHandler> logger)
-        {
-            _authRepository = authRepository;
-            _tokenService = tokenService;
-            _logger = logger;
-        }
+        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly ILogger<RefreshTokenCommandHandler> _logger = logger;
 
         public async Task<RefreshTokenCommandResponse> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
         {

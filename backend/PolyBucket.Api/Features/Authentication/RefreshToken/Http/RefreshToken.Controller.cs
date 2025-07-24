@@ -9,16 +9,10 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Http
 {
     [ApiController]
     [Route("api/auth")]
-    public class RefreshTokenController : ControllerBase
+    public class RefreshTokenController(RefreshTokenCommandHandler handler, ILogger<RefreshTokenController> logger) : ControllerBase
     {
-        private readonly RefreshTokenCommandHandler _handler;
-        private readonly ILogger<RefreshTokenController> _logger;
-
-        public RefreshTokenController(RefreshTokenCommandHandler handler, ILogger<RefreshTokenController> logger)
-        {
-            _handler = handler;
-            _logger = logger;
-        }
+        private readonly RefreshTokenCommandHandler _handler = handler;
+        private readonly ILogger<RefreshTokenController> _logger = logger;
 
         [HttpPost("refresh-token")]
         [ProducesResponseType(200, Type = typeof(RefreshTokenCommandResponse))]

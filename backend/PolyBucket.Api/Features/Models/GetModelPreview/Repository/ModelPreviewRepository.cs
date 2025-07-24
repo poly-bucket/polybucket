@@ -6,14 +6,9 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Models.GetModelPreview.Repository
 {
-    public class ModelPreviewRepository : IModelPreviewRepository
+    public class ModelPreviewRepository(PolyBucketDbContext db) : IModelPreviewRepository
     {
-        private readonly PolyBucketDbContext _db;
-
-        public ModelPreviewRepository(PolyBucketDbContext db)
-        {
-            _db = db;
-        }
+        private readonly PolyBucketDbContext _db = db;
 
         public async Task<ModelPreview?> GetPreviewAsync(Guid modelId, string size)
         {

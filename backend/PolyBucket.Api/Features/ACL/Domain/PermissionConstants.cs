@@ -248,7 +248,22 @@ namespace PolyBucket.Api.Features.ACL.Domain
                 },
                 [Categories.MODERATION] = new[]
                 {
+                    MODERATION_VIEW_QUEUE,
+                    MODERATION_APPROVE_MODELS,
+                    MODERATION_REJECT_MODELS,
+                    MODERATION_EDIT_MODELS,
+                    MODERATION_FLAG_CONTENT,
+                    MODERATION_VIEW_REPORTS,
+                    MODERATION_HANDLE_REPORTS,
+                    MODERATION_MODERATE_COMMENTS,
+                    MODERATION_VIEW_AUDIT_LOG,
                     MODERATION_MODERATE_USERS
+                },
+                [Categories.REPORTS] = new[]
+                {
+                    REPORT_VIEW_ALL,
+                    REPORT_HANDLE,
+                    REPORT_DELETE
                 }
             };
         }

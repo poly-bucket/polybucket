@@ -7,18 +7,12 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
 {
-    public class VerifyEmailCommandHandler
+    public class VerifyEmailCommandHandler(
+        IAuthenticationRepository authRepository,
+        ILogger<VerifyEmailCommandHandler> logger)
     {
-        private readonly IAuthenticationRepository _authRepository;
-        private readonly ILogger<VerifyEmailCommandHandler> _logger;
-
-        public VerifyEmailCommandHandler(
-            IAuthenticationRepository authRepository,
-            ILogger<VerifyEmailCommandHandler> logger)
-        {
-            _authRepository = authRepository;
-            _logger = logger;
-        }
+        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly ILogger<VerifyEmailCommandHandler> _logger = logger;
 
         public async Task Handle(VerifyEmailCommand command, CancellationToken cancellationToken)
         {

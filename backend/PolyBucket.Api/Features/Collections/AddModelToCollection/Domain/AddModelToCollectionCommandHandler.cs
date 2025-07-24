@@ -8,16 +8,10 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.AddModelToCollection.Domain
 {
-    public class AddModelToCollectionCommandHandler : IRequestHandler<AddModelToCollectionCommand>
+    public class AddModelToCollectionCommandHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor) : IRequestHandler<AddModelToCollectionCommand>
     {
-        private readonly ICollectionRepository _repository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public AddModelToCollectionCommandHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor)
-        {
-            _repository = repository;
-            _httpContextAccessor = httpContextAccessor;
-        }
+        private readonly ICollectionRepository _repository = repository;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
         public async Task Handle(AddModelToCollectionCommand request, CancellationToken cancellationToken)
         {
