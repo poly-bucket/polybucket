@@ -16015,6 +16015,8 @@ export class LoginCommandResponse implements ILoginCommandResponse {
     requiresPasswordChange?: boolean;
     requiresFirstTimeSetup?: boolean;
     setupStep?: string | undefined;
+    requiresTwoFactor?: boolean;
+    twoFactorToken?: string | undefined;
 
     constructor(data?: ILoginCommandResponse) {
         if (data) {
@@ -16034,6 +16036,8 @@ export class LoginCommandResponse implements ILoginCommandResponse {
             this.requiresPasswordChange = _data["requiresPasswordChange"];
             this.requiresFirstTimeSetup = _data["requiresFirstTimeSetup"];
             this.setupStep = _data["setupStep"];
+            this.requiresTwoFactor = _data["requiresTwoFactor"];
+            this.twoFactorToken = _data["twoFactorToken"];
         }
     }
 
@@ -16053,6 +16057,8 @@ export class LoginCommandResponse implements ILoginCommandResponse {
         data["requiresPasswordChange"] = this.requiresPasswordChange;
         data["requiresFirstTimeSetup"] = this.requiresFirstTimeSetup;
         data["setupStep"] = this.setupStep;
+        data["requiresTwoFactor"] = this.requiresTwoFactor;
+        data["twoFactorToken"] = this.twoFactorToken;
         return data;
     }
 }
@@ -16065,6 +16071,8 @@ export interface ILoginCommandResponse {
     requiresPasswordChange?: boolean;
     requiresFirstTimeSetup?: boolean;
     setupStep?: string | undefined;
+    requiresTwoFactor?: boolean;
+    twoFactorToken?: string | undefined;
 }
 
 export class LoginCommand implements ILoginCommand {

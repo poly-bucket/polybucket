@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.Models.GetModelById.Http;
 using PolyBucket.Api.Features.Models.GetModels.Http;
 using PolyBucket.Api.Features.Models.Http;
+using PolyBucket.Api.Features.Models.CreateModel.Http;
 using Shouldly;
 using Xunit;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
@@ -36,7 +37,7 @@ public class ModelsControllerTests : IDisposable
             new object[] { typeof(RemoveTagFromModelController) },
             new object[] { typeof(SearchModelsController) },
             new object[] { typeof(UpdateModelController) },
-            new object[] { typeof(UploadModelController) }
+            new object[] { typeof(CreateModelController) }
         };
     }
 

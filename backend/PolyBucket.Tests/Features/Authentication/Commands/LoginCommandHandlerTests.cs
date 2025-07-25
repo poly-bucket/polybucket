@@ -21,6 +21,8 @@ public class LoginCommandHandlerTests
     private readonly Mock<IPasswordHasher> _mockPasswordHasher;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<ILogger<LoginCommandHandler>> _mockLogger;
+    private readonly Mock<ITwoFactorAuthService> _mockTwoFactorAuthService;
+    private readonly Mock<ITwoFactorAuthRepository> _mockTwoFactorAuthRepository;
     private readonly LoginCommandHandler _handler;
 
     public LoginCommandHandlerTests()
@@ -30,6 +32,8 @@ public class LoginCommandHandlerTests
         _mockPasswordHasher = new Mock<IPasswordHasher>();
         _mockConfiguration = new Mock<IConfiguration>();
         _mockLogger = new Mock<ILogger<LoginCommandHandler>>();
+        _mockTwoFactorAuthService = new Mock<ITwoFactorAuthService>();
+        _mockTwoFactorAuthRepository = new Mock<ITwoFactorAuthRepository>();
 
         _handler = new LoginCommandHandler(
             _mockAuthRepository.Object,
@@ -37,7 +41,9 @@ public class LoginCommandHandlerTests
             _mockPasswordHasher.Object,
             _mockConfiguration.Object,
             _mockLogger.Object,
-            null // Context is not needed for this test
+            null, // Context is not needed for this test
+            _mockTwoFactorAuthService.Object,
+            _mockTwoFactorAuthRepository.Object
         );
     }
 
@@ -78,6 +84,8 @@ public class LoginCommandHandlerTests
             .ReturnsAsync(new RefreshToken());
         _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
             .Returns(Task.CompletedTask);
+        _mockTwoFactorAuthRepository.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((TwoFactorAuth?)null);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

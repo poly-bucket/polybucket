@@ -1,13 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../utils/hooks';
 
 const RootRedirect: React.FC = () => {
   const { user, isInitialized, isLoading } = useAppSelector((state) => state.auth);
   const location = useLocation();
+  const [setupStatus, setSetupStatus] = useState<any>(null);
+  const [isCheckingSetup, setIsCheckingSetup] = useState(false);
 
-  // Show loading while initializing
-  if (!isInitialized || isLoading) {
+  useEffect(() => {
+    const checkSetupStatus = async () => {
+      if (user && user.accessToken && user.roles?.includes('Admin')) {
+        setIsCheckingSetup(true);
+        try {
+          const response = await fetch('http://localhost:11666/api/SystemSetup/status', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${user.accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const status = await response.json();
+            setSetupStatus(status);
+          }
+        } catch (error) {
+          console.error('Error checking setup status:', error);
+        } finally {
+          setIsCheckingSetup(false);
+        }
+      }
+    };
+
+    checkSetupStatus();
+  }, [user]);
+
+  // Show loading while initializing or checking setup
+  if (!isInitialized || isLoading || isCheckingSetup) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
@@ -23,19 +53,32 @@ const RootRedirect: React.FC = () => {
     return <Navigate to={location.pathname} replace />;
   }
 
-  // TEMPORARY: Allow unauthenticated users to access dashboard for testing
-  // TODO: Remove this after fixing the thumbnail issue
-  if (!user) {
-    console.log('Allowing unauthenticated access to dashboard for testing');
+  // If user is logged in, check for setup requirements
+  if (user && user.accessToken && user.accessToken.length > 0) {
+    // Check if user requires password change
+    if (user.requiresPasswordChange) {
+      console.log('User requires password change, redirecting to setup');
+      return <Navigate to="/setup" replace />;
+    }
+
+    // Check if user requires first-time setup
+    if (user.requiresFirstTimeSetup) {
+      console.log('User requires first-time setup, redirecting to setup');
+      return <Navigate to="/setup" replace />;
+    }
+
+    // Check if admin user needs to complete system setup
+    if (user.roles?.includes('Admin') && setupStatus?.isFirstTimeSetup) {
+      console.log('Admin user needs to complete system setup, redirecting to setup');
+      return <Navigate to="/setup" replace />;
+    }
+
+    console.log('User is authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
-  // If user is logged in, go to dashboard
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // If no user, go to login (this should not be reached with the above change)
+  // If no user or no valid token, go to login
+  console.log('User is not authenticated, redirecting to login');
   return <Navigate to="/login" replace />;
 };
 

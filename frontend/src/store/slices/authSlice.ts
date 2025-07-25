@@ -36,6 +36,14 @@ const authSlice = createSlice({
       state.isError = false;
       state.errorMessage = '';
     },
+    resetAuthState: (state: AuthState) => {
+      state.user = null;
+      state.isLoading = false;
+      state.isSuccess = false;
+      state.isError = false;
+      state.errorMessage = '';
+      state.isInitialized = false;
+    },
     clearUser: (state: AuthState) => {
       state.user = null;
       state.isSuccess = false;
@@ -52,6 +60,12 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...action.payload };
       }
     },
+    setUser: (state: AuthState, action: PayloadAction<AuthResponse>) => {
+      state.user = action.payload;
+      state.isSuccess = true;
+      state.isError = false;
+      state.errorMessage = '';
+    },
     setInitialized: (state: AuthState) => {
       state.isInitialized = true;
     }
@@ -60,29 +74,55 @@ const authSlice = createSlice({
     builder
       // Login
       .addCase(loginUser.pending, (state: AuthState) => {
+        console.log('=== AUTH SLICE LOGIN PENDING ===');
         state.isLoading = true;
         state.isError = false;
         state.errorMessage = '';
+        state.isSuccess = false; // Reset success state on new login attempt
       })
       .addCase(loginUser.fulfilled, (state: AuthState, action: PayloadAction<AuthResponse>) => {
         console.log('=== AUTH SLICE LOGIN FULFILLED ===');
         console.log('Setting user in Redux state:', action.payload);
         state.isLoading = false;
-        state.isSuccess = true;
         state.user = action.payload;
         state.isInitialized = true;
         
-        // Store user data in localStorage for persistence
-        localStorage.setItem('user', JSON.stringify(action.payload));
-        localStorage.setItem('accessToken', action.payload.accessToken);
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
+        // Store user data in localStorage for persistence if we have a valid token
+        if (action.payload.accessToken && action.payload.accessToken.length > 0) {
+          console.log('Login successful - storing user data in localStorage');
+          localStorage.setItem('user', JSON.stringify(action.payload));
+          localStorage.setItem('accessToken', action.payload.accessToken);
+          localStorage.setItem('refreshToken', action.payload.refreshToken);
+          
+          // Set success if no 2FA is required
+          if (!action.payload.requiresTwoFactor) {
+            console.log('Login fully successful - setting isSuccess to true');
+            state.isSuccess = true;
+          } else {
+            console.log('2FA required - keeping isSuccess as false');
+            state.isSuccess = false;
+          }
+        } else {
+          console.log('No valid token - not storing in localStorage');
+          state.isSuccess = false;
+        }
       })
       .addCase(loginUser.rejected, (state: AuthState, action: any) => {
+        console.log('=== AUTH SLICE LOGIN REJECTED ===');
+        console.log('Action payload:', action.payload);
+        console.log('Action error:', action.error);
+        
         state.isLoading = false;
         state.isError = true;
         state.errorMessage = action.payload || 'Login failed';
         state.user = null;
         state.isInitialized = true;
+        
+        console.log('Updated state:', {
+          isError: state.isError,
+          errorMessage: state.errorMessage,
+          user: state.user
+        });
       })
       // Register
       .addCase(registerUser.pending, (state: AuthState) => {
@@ -157,5 +197,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { reset, clearUser, updateUserDetails, setInitialized } = authSlice.actions;
+export const { reset, clearUser, updateUserDetails, setUser, setInitialized, resetAuthState } = authSlice.actions;
 export default authSlice.reducer; 

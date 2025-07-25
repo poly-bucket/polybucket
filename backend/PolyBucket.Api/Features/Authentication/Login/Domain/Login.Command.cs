@@ -5,8 +5,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         public string EmailOrUsername { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string UserAgent { get; set; } = string.Empty;
-        
-        // Legacy support - will be mapped to EmailOrUsername
+        public string? TwoFactorToken { get; set; }
+        public string? BackupCode { get; set; }
         public string Email { get; set; } = string.Empty;
     }
 } 

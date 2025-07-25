@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../utils/hooks';
 import PasswordChangeStep from './PasswordChangeStep';
+import TwoFactorAuthStep from './TwoFactorAuthStep';
 import SiteSettingsStep from './SiteSettingsStep';
 import EmailSettingsStep from './EmailSettingsStep';
 import ModerationSettingsStep from './ModerationSettingsStep';
@@ -20,6 +21,12 @@ const setupSteps: SetupStep[] = [
     title: 'Change Admin Password',
     description: 'For security, please change your default admin password',
     component: PasswordChangeStep
+  },
+  {
+    id: 'twoFactor',
+    title: 'Two-Factor Authentication',
+    description: 'Set up two-factor authentication for enhanced security',
+    component: TwoFactorAuthStep
   },
   {
     id: 'site',
@@ -75,13 +82,16 @@ const FirstTimeSetup: React.FC = () => {
           // Determine starting step based on completed steps
           let startingStep = 0;
           if (status.isAdminConfigured) {
-            startingStep = 1; // Start at site configuration
+            startingStep = 1; // Start at 2FA setup
+          }
+          if (status.isTwoFactorConfigured) {
+            startingStep = 2; // Start at site configuration
           }
           if (status.isSiteConfigured) {
-            startingStep = 2; // Start at email configuration
+            startingStep = 3; // Start at email configuration
           }
           if (status.isEmailConfigured) {
-            startingStep = 3; // Start at moderation settings
+            startingStep = 4; // Start at moderation settings
           }
           if (status.isModerationConfigured) {
             // All steps completed, redirect to dashboard
@@ -180,23 +190,25 @@ const FirstTimeSetup: React.FC = () => {
         <div className="lg-card p-8">
           {/* Progress indicator */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              {setupSteps.map((step, index) => (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                    index <= currentStep 
-                      ? 'bg-blue-600 text-white shadow-lg' 
-                      : 'bg-gray-700 text-gray-400 border border-gray-600'
-                  }`}>
-                    {index + 1}
+            <div className="flex items-center justify-center mb-6">
+              <div className="flex items-center space-x-4 max-w-2xl">
+                {setupSteps.map((step, index) => (
+                  <div key={step.id} className="flex items-center">
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                      index <= currentStep 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'bg-gray-700 text-gray-400 border border-gray-600'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    {index < setupSteps.length - 1 && (
+                      <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
+                        index < currentStep ? 'bg-blue-600' : 'bg-gray-700'
+                      }`} />
+                    )}
                   </div>
-                  {index < setupSteps.length - 1 && (
-                    <div className={`flex-1 h-1 mx-4 transition-all duration-300 ${
-                      index < currentStep ? 'bg-blue-600' : 'bg-gray-700'
-                    }`} />
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
             
             <div className="text-center">

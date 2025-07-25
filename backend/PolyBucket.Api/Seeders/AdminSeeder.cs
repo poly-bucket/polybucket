@@ -74,7 +74,6 @@ namespace PolyBucket.Api.Data.Seeders
 
             var admin = new User
             {
-                Id = Guid.NewGuid(),
                 Username = "admin",
                 Email = "admin@polybucket.com",
                 PasswordHash = passwordHash,
@@ -86,7 +85,6 @@ namespace PolyBucket.Api.Data.Seeders
                 HasCompletedFirstTimeSetup = false,
                 Settings = new UserSettings
                 {
-                    Id = Guid.NewGuid(),
                     Language = "en",
                     Theme = "dark",
                     EmailNotifications = true,

@@ -1,5 +1,5 @@
 import { defaultAxiosClient } from '../api/axiosAdapter';
-import { LoginCommandClient, LoginCommand } from '../api/client';
+import { ApiClient, LoginCommand } from '../api/client';
 
 // For testing purposes
 const MOCK_MODE = false;
@@ -44,44 +44,40 @@ const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
   try {
     console.log('Sending login credentials:', credentials);
     
-    // Use the existing working client with axios adapter
-    const loginClient = new LoginCommandClient(undefined, defaultAxiosClient);
+    // Use the ApiClient with axios adapter
+    const apiClient = new ApiClient(undefined, defaultAxiosClient);
     const loginCommand = new LoginCommand({
       email: credentials.email,
       password: credentials.password,
       userAgent: navigator.userAgent
     });
-    const fileResponse = await loginClient.login(loginCommand);
+    const loginResponse = await apiClient.login_Login(loginCommand);
     
     console.log('Login response received!');
-    console.log('Login response:', fileResponse);
+    console.log('Login response:', loginResponse);
     
-    // Convert FileResponse blob to JSON
-    const responseText = await fileResponse.data.text();
-    const responseData = JSON.parse(responseText);
-    
-    console.log('Parsed response data:', responseData);
+    console.log('Parsed response data:', loginResponse);
     
     let authData: AuthResponse;
     
     // The backend returns a simple format: { token: "...", requiresPasswordChange: boolean, etc. }
-    if (responseData && typeof responseData === 'object') {
-      if (responseData.token) {
+    if (loginResponse && typeof loginResponse === 'object') {
+      if (loginResponse.token) {
         console.log('Processing login response with token');
         authData = {
           id: '', // Will be extracted from /api/auth/me endpoint
           username: credentials.email.split('@')[0], // Temporary username
           email: credentials.email,
-          accessToken: responseData.token,
+          accessToken: loginResponse.token,
           refreshToken: '', // No refresh token in this response
           roles: [], // Will be populated from /api/auth/me endpoint
-          requiresPasswordChange: responseData.requiresPasswordChange || false,
-          requiresFirstTimeSetup: responseData.requiresFirstTimeSetup || false,
-          setupStep: responseData.setupStep || undefined
+          requiresPasswordChange: loginResponse.requiresPasswordChange || false,
+          requiresFirstTimeSetup: loginResponse.requiresFirstTimeSetup || false,
+          setupStep: loginResponse.setupStep || undefined
         };
         
         // Store the token in localStorage
-        localStorage.setItem('accessToken', responseData.token);
+        localStorage.setItem('accessToken', loginResponse.token);
         
         return authData;
       } else {

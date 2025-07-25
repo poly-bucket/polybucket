@@ -29,6 +29,8 @@ namespace PolyBucket.Tests.Features.Authentication.Http
         private readonly Mock<IPasswordHasher> _passwordHasherMock;
         private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<ILogger<LoginCommandHandler>> _loggerMock;
+        private readonly Mock<ITwoFactorAuthService> _twoFactorAuthServiceMock;
+        private readonly Mock<ITwoFactorAuthRepository> _twoFactorAuthRepositoryMock;
         private readonly LoginController _controller;
         private readonly LoginCommandHandler _handler;
 
@@ -39,6 +41,8 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _passwordHasherMock = new Mock<IPasswordHasher>();
             _configurationMock = new Mock<IConfiguration>();
             _loggerMock = new Mock<ILogger<LoginCommandHandler>>();
+            _twoFactorAuthServiceMock = new Mock<ITwoFactorAuthService>();
+            _twoFactorAuthRepositoryMock = new Mock<ITwoFactorAuthRepository>();
             
             _handler = new LoginCommandHandler(
                 _authRepositoryMock.Object,
@@ -46,7 +50,9 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 _passwordHasherMock.Object,
                 _configurationMock.Object,
                 _loggerMock.Object,
-                null!); // Pass null for DbContext in tests
+                null!, // Pass null for DbContext in tests
+                _twoFactorAuthServiceMock.Object,
+                _twoFactorAuthRepositoryMock.Object);
                 
             _controller = new LoginController(_handler, Mock.Of<ILogger<LoginController>>())
             {
@@ -112,6 +118,8 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 .ReturnsAsync(It.IsAny<RefreshTokenModel>());
             _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
                 .Returns(Task.CompletedTask);
+            _twoFactorAuthRepositoryMock.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+                .ReturnsAsync((TwoFactorAuth?)null);
             
             // Note: The database context mock will return null for SystemSetups by default
             // This is sufficient for the tests since we're not testing the setup functionality
@@ -148,6 +156,8 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 .ReturnsAsync((User?)null);
             _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
                 .Returns(Task.CompletedTask);
+            _twoFactorAuthRepositoryMock.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+                .ReturnsAsync((TwoFactorAuth?)null);
 
             // Act
             var result = await _controller.Login(command, CancellationToken.None);
@@ -199,6 +209,8 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 .Returns(false);
             _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
                 .Returns(Task.CompletedTask);
+            _twoFactorAuthRepositoryMock.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+                .ReturnsAsync((TwoFactorAuth?)null);
 
             // Act
             var result = await _controller.Login(command, CancellationToken.None);

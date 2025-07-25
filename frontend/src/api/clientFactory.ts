@@ -1,24 +1,23 @@
 import { API_CONFIG } from './config';
 import { AxiosHttpClient } from './axiosAdapter';
 import {
-  GetUserByIdQueryClient,
-  GetUserSettingsQueryClient,
-  UpdateUserSettingsCommandClient,
-  AdminSetupClient,
-  GetSetupStatusClient,
-  GetReportQueryClient,
-  GetReportsForTargetQueryClient,
-  GetUnresolvedReportsQueryClient,
-  ResolveReportCommandClient,
-  SubmitReportCommandClient,
-  GetPrintersQueryClient,
-  GetPluginsQueryClient,
-  ReloadPluginsCommandClient,
-  GetModelByIdQueryClient,
+  GetUserByIdClient,
+  GetUserSettingsClient,
+  UpdateUserSettingsClient,
+  SystemSetupClient,
+  GetReportClient,
+  GetReportsForTargetClient,
+  GetUnresolvedReportsClient,
+  ResolveReportClient,
+  SubmitReportClient,
+  GetPrintersClient,
+  GetPluginsClient,
+  ReloadPluginsClient,
+  GetModelByIdClient,
   DeleteModelClient,
   UpdateModelClient,
-  GetModelsQueryClient,
-  UploadModelClient,
+  GetModelsClient,
+  CreateModelClient,
   AddCategoryToModelClient,
   RemoveCategoryFromModelClient,
   AddModelToCollectionClient,
@@ -27,7 +26,7 @@ import {
   CreateModelVersionClient,
   GetModelVersionsClient,
   DownloadModelClient,
-  GetModelsByUserClient,
+  GetModelByUserIdClient,
   LikeModelClient,
   RemoveTagFromModelClient,
   SearchModelsClient,
@@ -44,14 +43,11 @@ import {
   DeleteFilamentClient,
   GetFilamentByIdClient,
   UpdateFilamentClient,
-  GetCommentsForModelQueryClient,
-  AddCommentCommandClient,
-  DeleteCommentCommandClient,
-  DislikeCommentCommandClient,
-  LikeCommentCommandClient,
+  GetCommentsForModelClient,
+  AddCommentClient,
+  EnhancedCommentsClient,
   LoginClient,
-  LoginCommandClient,
-  GetSystemSettingsClient
+  GetEmailSettingsClient
 } from '../services/api.client';
 
 // Create a shared HTTP client instance
@@ -60,34 +56,34 @@ const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 // API Client Factory
 export class ApiClientFactory {
   // User-related clients
-  static getUserByIdClient = () => new GetUserByIdQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getUserSettingsClient = () => new GetUserSettingsQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getUpdateUserSettingsClient = () => new UpdateUserSettingsCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUserByIdClient = () => new GetUserByIdClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUserSettingsClient = () => new GetUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUpdateUserSettingsClient = () => new UpdateUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Admin-related clients
-  static getAdminSetupClient = () => new AdminSetupClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getSetupStatusClient = () => new GetSetupStatusClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getAdminSetupClient = () => new SystemSetupClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getSetupStatusClient = () => new SystemSetupClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Report-related clients
-  static getReportClient = () => new GetReportQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getReportsForTargetClient = () => new GetReportsForTargetQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getUnresolvedReportsClient = () => new GetUnresolvedReportsQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getResolveReportClient = () => new ResolveReportCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getSubmitReportClient = () => new SubmitReportCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getReportClient = () => new GetReportClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getReportsForTargetClient = () => new GetReportsForTargetClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUnresolvedReportsClient = () => new GetUnresolvedReportsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getResolveReportClient = () => new ResolveReportClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getSubmitReportClient = () => new SubmitReportClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Printer-related clients
-  static getPrintersClient = () => new GetPrintersQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getPrintersClient = () => new GetPrintersClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Plugin-related clients
-  static getPluginsClient = () => new GetPluginsQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getReloadPluginsClient = () => new ReloadPluginsCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getPluginsClient = () => new GetPluginsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getReloadPluginsClient = () => new ReloadPluginsClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Model-related clients
-  static getModelByIdClient = () => new GetModelByIdQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getModelByIdClient = () => new GetModelByIdClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getDeleteModelClient = () => new DeleteModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getUpdateModelClient = () => new UpdateModelClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getModelsClient = () => new GetModelsQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getUploadModelClient = () => new UploadModelClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getModelsClient = () => new GetModelsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUploadModelClient = () => new CreateModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getAddCategoryToModelClient = () => new AddCategoryToModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getRemoveCategoryFromModelClient = () => new RemoveCategoryFromModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getAddModelToCollectionClient = () => new AddModelToCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
@@ -96,7 +92,7 @@ export class ApiClientFactory {
   static getCreateModelVersionClient = () => new CreateModelVersionClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getModelVersionsClient = () => new GetModelVersionsClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getDownloadModelClient = () => new DownloadModelClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getModelsByUserClient = () => new GetModelsByUserClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getModelsByUserClient = () => new GetModelByUserIdClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getLikeModelClient = () => new LikeModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getRemoveTagFromModelClient = () => new RemoveTagFromModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getSearchModelsClient = () => new SearchModelsClient(API_CONFIG.baseUrl, sharedHttpClient);
@@ -119,18 +115,17 @@ export class ApiClientFactory {
   static getUpdateFilamentClient = () => new UpdateFilamentClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Comment-related clients
-  static getCommentsForModelClient = () => new GetCommentsForModelQueryClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getAddCommentClient = () => new AddCommentCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getDeleteCommentClient = () => new DeleteCommentCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getDislikeCommentClient = () => new DislikeCommentCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getLikeCommentClient = () => new LikeCommentCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getCommentsForModelClient = () => new GetCommentsForModelClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getAddCommentClient = () => new AddCommentClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getDeleteCommentClient = () => new EnhancedCommentsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getDislikeCommentClient = () => new EnhancedCommentsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getLikeCommentClient = () => new EnhancedCommentsClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Authentication-related clients
   static getLoginClient = () => new LoginClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getLoginCommandClient = () => new LoginCommandClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // System settings clients
-  static getSystemSettingsClient = () => new GetSystemSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getSystemSettingsClient = () => new GetEmailSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
 }
 
 // Export the factory as default

@@ -8,7 +8,7 @@ import roleReducer from './slices/roleSlice';
 const authPersistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['user', 'isInitialized'] // Only persist user and isInitialized
+  whitelist: ['isInitialized', 'user'] // Persist both isInitialized and user data
 };
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);

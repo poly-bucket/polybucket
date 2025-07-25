@@ -20,7 +20,9 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         IPasswordHasher passwordHasher,
         IConfiguration configuration,
         ILogger<LoginCommandHandler> logger,
-        PolyBucketDbContext context)
+        PolyBucketDbContext context,
+        ITwoFactorAuthService twoFactorAuthService,
+        ITwoFactorAuthRepository twoFactorAuthRepository)
     {
         private readonly IAuthenticationRepository _authRepository = authRepository;
         private readonly ITokenService _tokenService = tokenService;
@@ -28,6 +30,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         private readonly IConfiguration _configuration = configuration;
         private readonly ILogger<LoginCommandHandler> _logger = logger;
         private readonly PolyBucketDbContext _context = context;
+        private readonly ITwoFactorAuthService _twoFactorAuthService = twoFactorAuthService;
+        private readonly ITwoFactorAuthRepository _twoFactorAuthRepository = twoFactorAuthRepository;
 
 
         public async Task<LoginCommandResponse> Handle(LoginCommand command, CancellationToken cancellationToken)
@@ -48,17 +52,20 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
-            // Get authentication settings - temporarily disabled for testing
-            _logger.LogInformation("Auth settings service temporarily disabled for testing");
+            // Get authentication settings - temporarily disabled to fix DI issue
+            _logger.LogInformation("Auth settings validation temporarily disabled");
             
             // Determine if the identifier is an email or username
             var isEmail = IsEmailAddress(loginIdentifier);
             _logger.LogInformation("Identifier type - IsEmail: {IsEmail}, Identifier: {Identifier}", isEmail, loginIdentifier);
             
-            // Validate login method based on settings
-            // Temporarily bypass for testing
-            _logger.LogInformation("Skipping login method validation for testing");
+            // Validate login method based on settings - temporarily bypassed
+            _logger.LogInformation("Skipping login method validation temporarily");
             /*
+            var authSettings = await _authenticationSettingsService.GetAuthenticationSettingsAsync();
+            _logger.LogInformation("Retrieved authentication settings: AllowEmailLogin={AllowEmailLogin}, AllowUsernameLogin={AllowUsernameLogin}", 
+                authSettings.AllowEmailLogin, authSettings.AllowUsernameLogin);
+            
             if (isEmail && !authSettings.AllowEmailLogin)
             {
                 _logger.LogWarning("Email login attempted but not enabled for {Email}", loginIdentifier);
@@ -101,6 +108,45 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
+            // Check if user has 2FA enabled
+            var twoFactorAuth = await _twoFactorAuthRepository.GetByUserIdAsync(user.Id);
+            var requiresTwoFactor = twoFactorAuth?.IsEnabled ?? false;
+
+            if (requiresTwoFactor)
+            {
+                // If 2FA is required but no token provided, return 2FA requirement
+                if (string.IsNullOrEmpty(command.TwoFactorToken) && string.IsNullOrEmpty(command.BackupCode))
+                {
+                    _logger.LogInformation("2FA required for user {UserId}", user.Id);
+                    return new LoginCommandResponse
+                    {
+                        RequiresTwoFactor = true,
+                        TwoFactorToken = null
+                    };
+                }
+
+                // Validate 2FA token or backup code
+                bool isValidTwoFactor = false;
+                if (twoFactorAuth is not null)
+                {
+                    if (!string.IsNullOrEmpty(command.TwoFactorToken))
+                    {
+                        isValidTwoFactor = await _twoFactorAuthService.ValidateTokenAsync(twoFactorAuth, command.TwoFactorToken);
+                    }
+                    else if (!string.IsNullOrEmpty(command.BackupCode))
+                    {
+                        isValidTwoFactor = await _twoFactorAuthService.ValidateBackupCodeAsync(twoFactorAuth, command.BackupCode);
+                    }
+                }
+
+                if (!isValidTwoFactor)
+                {
+                    _logger.LogWarning("Invalid 2FA token/backup code for user {UserId}", user.Id);
+                    await LogLoginAttempt(loginIdentifier, false, user.Id);
+                    throw new UnauthorizedAccessException("Invalid two-factor authentication code");
+                }
+            }
+
             // Log successful login attempt (both application log and database record)
             await LogLoginAttempt(loginIdentifier, true, user.Id);
             
@@ -122,10 +168,10 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
 
             // Check if user requires password change or first-time setup
             var requiresPasswordChange = user.RequiresPasswordChange;
-            var requiresFirstTimeSetup = false;
+            var requiresFirstTimeSetup = user.HasCompletedFirstTimeSetup == false;
             var setupStep = (string?)null;
 
-            // If admin user, check system setup status
+            // If admin user, also check system setup status
             if (user.Role?.Name == "Admin" && _context != null)
             {
                 try
@@ -183,7 +229,6 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         {
             var loginRecord = new UserLogin
             {
-                Id = Guid.NewGuid(),
                 Email = identifier, // Store the identifier as email for backward compatibility
                 UserId = userId,
                 Successful = success,

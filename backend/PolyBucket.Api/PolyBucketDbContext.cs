@@ -13,6 +13,7 @@ using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Federation.Domain;
 using ReportsDomain = PolyBucket.Api.Features.Reports.Domain;
+using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
 namespace PolyBucket.Api.Data
 {
@@ -37,6 +38,8 @@ namespace PolyBucket.Api.Data
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; } = null!;
         public DbSet<ExternalAuthProvider> ExternalAuthProviders { get; set; } = null!;
+        public DbSet<TwoFactorAuthDomain.TwoFactorAuth> TwoFactorAuths { get; set; } = null!;
+        public DbSet<TwoFactorAuthDomain.BackupCode> BackupCodes { get; set; } = null!;
         public DbSet<ModelPreview> ModelPreviews { get; set; } = null!;
         public DbSet<ModerationAuditLog> ModerationAuditLogs { get; set; } = null!;
         

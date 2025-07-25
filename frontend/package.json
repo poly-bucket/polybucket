@@ -5,7 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@headlessui/react": "^2.2.4",
+    "@headlessui/react": "^2.2.5",
     "@heroicons/react": "^2.1.1",
     "@mui/icons-material": "^7.0.1",
     "@mui/material": "^7.0.1",
@@ -29,6 +29,7 @@
     "minidenticons": "^4.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-qr-code": "^2.0.18",
     "react-redux": "^9.1.0",
     "react-router-dom": "^7.6.3",
     "recharts": "^3.1.0",

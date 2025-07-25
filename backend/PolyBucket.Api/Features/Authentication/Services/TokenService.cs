@@ -52,16 +52,24 @@ namespace PolyBucket.Api.Features.Authentication.Services
                 accessTokenExpiryMinutes = Convert.ToInt32(_configuration["AppSettings:Security:AccessTokenExpiryMinutes"] ?? "60");
             }
             
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
+                new Claim(ClaimTypes.Role, user.Role?.Name ?? "User"),
+                new Claim("sub", user.Id.ToString()),
+                new Claim("email", user.Email ?? string.Empty),
+                new Claim("name", user.Username ?? string.Empty),
+                new Claim("role", user.Role?.Name ?? "User"),
+                new Claim("email_verified", "true"),
+                new Claim("jti", Guid.NewGuid().ToString()),
+                new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            };
+            
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                    new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-                    new Claim(JwtRegisteredClaimNames.Name, user.Username ?? string.Empty),
-                    new Claim("role", user.Role?.Name ?? "User"),
-                    new Claim("email_verified", "true") // TODO: Add email verification check
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes),
                 Issuer = jwtIssuer,
                 Audience = jwtAudience,

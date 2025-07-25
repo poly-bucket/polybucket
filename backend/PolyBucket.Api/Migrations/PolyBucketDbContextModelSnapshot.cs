@@ -287,6 +287,50 @@ namespace Api.Migrations
                     b.ToTable("UserPermissions");
                 });
 
+            modelBuilder.Entity("PolyBucket.Api.Features.Authentication.Domain.BackupCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TwoFactorAuthId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TwoFactorAuthId");
+
+                    b.ToTable("BackupCodes");
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Features.Authentication.Domain.EmailVerificationToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -437,6 +481,57 @@ namespace Api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Authentication.Domain.TwoFactorAuth", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("EnabledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecoveryEmail")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SecretKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("TwoFactorAuths");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.Collections.Domain.Collection", b =>
@@ -2143,6 +2238,17 @@ namespace Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PolyBucket.Api.Features.Authentication.Domain.BackupCode", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Features.Authentication.Domain.TwoFactorAuth", "TwoFactorAuth")
+                        .WithMany("BackupCodes")
+                        .HasForeignKey("TwoFactorAuthId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TwoFactorAuth");
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Features.Authentication.Domain.ExternalAuthProvider", b =>
                 {
                     b.HasOne("PolyBucket.Api.Common.Models.User", "User")
@@ -2159,6 +2265,17 @@ namespace Api.Migrations
                     b.HasOne("PolyBucket.Api.Common.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Authentication.Domain.TwoFactorAuth", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Common.Models.User", "User")
+                        .WithOne("TwoFactorAuth")
+                        .HasForeignKey("PolyBucket.Api.Features.Authentication.Domain.TwoFactorAuth", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2389,6 +2506,8 @@ namespace Api.Migrations
                     b.Navigation("Settings")
                         .IsRequired();
 
+                    b.Navigation("TwoFactorAuth");
+
                     b.Navigation("UserPermissions");
                 });
 
@@ -2406,6 +2525,11 @@ namespace Api.Migrations
                     b.Navigation("RolePermissions");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Authentication.Domain.TwoFactorAuth", b =>
+                {
+                    b.Navigation("BackupCodes");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.Collections.Domain.Collection", b =>

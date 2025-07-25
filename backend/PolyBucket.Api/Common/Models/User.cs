@@ -1,6 +1,7 @@
 using PolyBucket.Api.Common.Entities;
 using PolyBucket.Api.Features.Users.Domain;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.Authentication.Domain;
 using System;
 using System.Collections.Generic;
 
@@ -29,5 +30,6 @@ namespace PolyBucket.Api.Common.Models
         public virtual ICollection<UserLogin> Logins { get; set; } = new List<UserLogin>();
         public virtual UserSettings Settings { get; set; } = null!;
         public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
+        public virtual TwoFactorAuth? TwoFactorAuth { get; set; }
     }
 } 

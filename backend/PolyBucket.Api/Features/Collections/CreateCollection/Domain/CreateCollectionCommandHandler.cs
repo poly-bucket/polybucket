@@ -33,7 +33,11 @@ namespace PolyBucket.Api.Features.Collections.CreateCollection.Domain
                 Name = request.Name,
                 Description = request.Description,
                 Visibility = request.Visibility,
-                OwnerId = Guid.Parse(userId)
+                OwnerId = Guid.Parse(userId),
+                CreatedAt = DateTime.UtcNow,
+                CreatedById = Guid.Parse(userId),
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedById = Guid.Parse(userId)
             };
 
             // Hash password if provided for unlisted collections

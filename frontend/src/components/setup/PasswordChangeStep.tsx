@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAppSelector } from '../../utils/hooks';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 interface PasswordChangeStepProps {
   onComplete: (data: any) => void;
@@ -36,7 +37,11 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   };
 
@@ -51,6 +56,14 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
       newErrors.newPassword = 'New password is required';
     } else if (formData.newPassword.length < 8) {
       newErrors.newPassword = 'Password must be at least 8 characters long';
+    } else if (!/[A-Z]/.test(formData.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one uppercase letter';
+    } else if (!/[a-z]/.test(formData.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one lowercase letter';
+    } else if (!/\d/.test(formData.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one number';
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one special character';
     }
 
     if (!formData.confirmPassword) {
@@ -61,6 +74,18 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const isFormValid = (): boolean => {
+    return formData.currentPassword.trim() !== '' &&
+           formData.newPassword.trim() !== '' &&
+           formData.confirmPassword.trim() !== '' &&
+           formData.newPassword === formData.confirmPassword &&
+           formData.newPassword.length >= 8 &&
+           /[A-Z]/.test(formData.newPassword) &&
+           /[a-z]/.test(formData.newPassword) &&
+           /\d/.test(formData.newPassword) &&
+           /[!@#$%^&*(),.?":{}|<>]/.test(formData.newPassword);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,7 +110,9 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
       });
 
       if (response.ok) {
-        onComplete({ passwordChanged: true });
+        onComplete({ 
+          passwordChanged: true
+        });
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Failed to change password' });
@@ -107,7 +134,9 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
       });
 
       if (response.ok) {
-        onComplete({ passwordSkipped: true });
+        onComplete({ 
+          passwordSkipped: true
+        });
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Failed to skip password change' });
@@ -188,6 +217,7 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
             )}
           </button>
         </div>
+        {formData.newPassword && <PasswordStrengthIndicator password={formData.newPassword} />}
         {errors.newPassword && (
           <p className="mt-2 text-sm text-red-400">{errors.newPassword}</p>
         )}
@@ -253,7 +283,7 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
           </button>
           <button
             type="submit"
-            disabled={isLoading || isSkipping}
+            disabled={isLoading || isSkipping || !isFormValid()}
             className="lg-button lg-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (

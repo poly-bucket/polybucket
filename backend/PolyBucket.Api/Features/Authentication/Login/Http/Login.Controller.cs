@@ -22,7 +22,10 @@ namespace PolyBucket.Api.Features.Authentication.Login.Http
         {
             try
             {
+                _logger.LogInformation("Login attempt for {Email}", command.Email);
+                _logger.LogInformation("Login password: {Password}", command.Password);
                 var response = await _handler.Handle(command, cancellationToken);
+                _logger.LogInformation("Login response: {Response}", response);
                 return Ok(response);
             }
             catch (UnauthorizedAccessException ex)

@@ -27,6 +27,7 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Repository
 
         public async Task<Model> UpdateModelAsync(Model model, CancellationToken cancellationToken)
         {
+            model.UpdatedAt = DateTime.UtcNow;
             _dbContext.Models.Update(model);
             await _dbContext.SaveChangesAsync(cancellationToken);
             return model;
