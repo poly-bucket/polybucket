@@ -1,22 +1,24 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.Domain;
+using PolyBucket.Api.Features.Authentication.TwoFactorAuth.GetTwoFactorAuthStatus.Repository;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.GetTwoFactorAuthStatus.Domain
 {
     public class GetTwoFactorAuthStatusQueryHandler
     {
-        private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
+        private readonly IGetTwoFactorAuthStatusRepository _getTwoFactorAuthStatusRepository;
         private readonly ILogger<GetTwoFactorAuthStatusQueryHandler> _logger;
 
         public GetTwoFactorAuthStatusQueryHandler(
-            ITwoFactorAuthRepository twoFactorAuthRepository,
+            IGetTwoFactorAuthStatusRepository getTwoFactorAuthStatusRepository,
             ILogger<GetTwoFactorAuthStatusQueryHandler> logger)
         {
-            _twoFactorAuthRepository = twoFactorAuthRepository;
+            _getTwoFactorAuthStatusRepository = getTwoFactorAuthStatusRepository;
             _logger = logger;
         }
 
@@ -24,7 +26,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.GetTwoFactorAuthS
         {
             _logger.LogInformation("Getting 2FA status for user {UserId}", query.UserId);
 
-            var twoFactorAuth = await _twoFactorAuthRepository.GetByUserIdAsync(query.UserId);
+            var twoFactorAuth = await _getTwoFactorAuthStatusRepository.GetByUserIdAsync(query.UserId);
             
             if (twoFactorAuth is null)
             {

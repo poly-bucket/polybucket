@@ -10,7 +10,7 @@ namespace PolyBucket.Api.Common.Models
         public string? IpAddress { get; set; }
         public string UserAgent { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
-        public Guid UserId { get; set; }
-        public virtual User User { get; set; } = null!;
+        public Guid? UserId { get; set; }
+        public virtual User? User { get; set; }
     }
 } 

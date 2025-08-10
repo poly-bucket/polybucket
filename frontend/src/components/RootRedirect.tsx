@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../utils/hooks';
+import api from '../utils/axiosConfig';
 
 const RootRedirect: React.FC = () => {
   const { user, isInitialized, isLoading } = useAppSelector((state) => state.auth);
@@ -13,16 +14,10 @@ const RootRedirect: React.FC = () => {
       if (user && user.accessToken && user.roles?.includes('Admin')) {
         setIsCheckingSetup(true);
         try {
-          const response = await fetch('http://localhost:11666/api/SystemSetup/status', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${user.accessToken}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const response = await api.get('/SystemSetup/status');
 
-          if (response.ok) {
-            const status = await response.json();
+          if (response.status === 200) {
+            const status = response.data;
             setSetupStatus(status);
           }
         } catch (error) {

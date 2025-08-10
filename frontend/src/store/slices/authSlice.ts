@@ -61,7 +61,16 @@ const authSlice = createSlice({
       }
     },
     setUser: (state: AuthState, action: PayloadAction<AuthResponse>) => {
-      state.user = action.payload;
+      // Ensure roles is always an array
+      const userData = action.payload;
+      if (userData.roles && !Array.isArray(userData.roles)) {
+        // Handle case where roles might be stored as a single string
+        userData.roles = [userData.roles as any];
+      } else if (!userData.roles) {
+        userData.roles = [];
+      }
+      
+      state.user = userData;
       state.isSuccess = true;
       state.isError = false;
       state.errorMessage = '';
@@ -168,7 +177,7 @@ const authSlice = createSlice({
             id: decodedUser?.id || state.user.id,
             username: decodedUser?.username || state.user.username,
             email: decodedUser?.email || state.user.email,
-            roles: decodedUser?.role ? [decodedUser.role] : state.user.roles,
+            roles: decodedUser?.role ? [decodedUser.role] : (state.user.roles || []),
             accessToken: action.payload.accessToken,
             refreshToken: action.payload.refreshToken || state.user.refreshToken
           };

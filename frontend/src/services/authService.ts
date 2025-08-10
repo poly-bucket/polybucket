@@ -151,7 +151,10 @@ const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
       authData.username = userData.username;
       authData.email = userData.email;
       authData.avatar = userData.avatar;
-      authData.roles = [userData.role]; // Convert role string to array
+      // Only set roles if not already set from JWT to prevent duplication
+      if (!authData.roles || authData.roles.length === 0) {
+        authData.roles = [userData.role]; // Convert role string to array
+      }
       
       console.log('After update - authData.roles:', authData.roles);
       console.log('userData.role value:', userData.role);

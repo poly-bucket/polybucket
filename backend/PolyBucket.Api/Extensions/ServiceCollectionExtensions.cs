@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
 
         services.AddAuthorization();
         services.AddHttpContextAccessor();
+        services.AddHttpClient();
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
 
         return services;

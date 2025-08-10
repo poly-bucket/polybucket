@@ -18,13 +18,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpen, onClose, anchorEl }) => {
   const { isAdmin, isModerator } = useSimplePermissions();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Debug logging
-  console.log('UserMenu - User data:', user);
-  console.log('UserMenu - isAdmin function:', isAdmin);
-  console.log('UserMenu - isModerator function:', isModerator);
-  console.log('UserMenu - isAdmin():', isAdmin());
-  console.log('UserMenu - isModerator():', isModerator());
-  console.log('UserMenu - User roles:', user?.roles);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

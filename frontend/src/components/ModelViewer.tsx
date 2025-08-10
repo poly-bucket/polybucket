@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback, startTransition } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, useGLTF, useProgress, Html } from '@react-three/drei';
+import { OrbitControls, useGLTF, useProgress, Html, PerformanceMonitor } from '@react-three/drei';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { API_CONFIG } from '../api/config';
 
 // Types
@@ -10,7 +11,7 @@ export type ViewMode = 'solid' | 'wireframe' | 'points' | 'normals';
 
 interface ModelViewerProps {
   modelUrl?: string;
-  width?: number;
+  width?: number | string;
   height?: number;
   autoRotate?: boolean;
   className?: string;
@@ -18,10 +19,14 @@ interface ModelViewerProps {
   fileId?: string;
   modelId?: string;
   fileName?: string;
-  fileData?: ArrayBuffer;
+  fileData?: ArrayBuffer | File;
   fileType?: string;
   showControls?: boolean;
   onBoundingBoxCalculated?: (boundingBox: THREE.Box3) => void;
+  isUploadMode?: boolean;
+  modelFile?: File;
+  onShowThumbnailGenerator?: () => void;
+  showFPS?: boolean;
 }
 
 // Floating Control Panel Components
@@ -29,7 +34,9 @@ const ViewModeControls = ({
   renderSettings, 
   setRenderSettings, 
   showViewControls, 
-  setShowViewControls
+  setShowViewControls,
+  isUploadMode,
+  onShowThumbnailGenerator
 }: {
   renderSettings: {
     view: ViewMode;
@@ -37,6 +44,8 @@ const ViewModeControls = ({
   setRenderSettings: (settings: (prev: any) => any) => void;
   showViewControls: boolean;
   setShowViewControls: (show: boolean) => void;
+  isUploadMode?: boolean;
+  onShowThumbnailGenerator?: () => void;
 }) => {
   return (
     <div className="absolute top-4 left-4 z-10 pointer-events-none">
@@ -85,6 +94,7 @@ const ViewModeControls = ({
                 <option value="normals">Normals</option>
               </select>
             </div>
+
           </div>
         </div>
       )}
@@ -271,6 +281,30 @@ const LightingControls = ({
   );
 };
 
+const GenerateThumbnailControl = ({ 
+  isUploadMode, 
+  onShowThumbnailGenerator 
+}: {
+  isUploadMode?: boolean;
+  onShowThumbnailGenerator?: () => void;
+}) => {
+  if (!isUploadMode || !onShowThumbnailGenerator) return null;
+  
+  return (
+    <div className="absolute top-4 right-20 z-10 pointer-events-none">
+      <button
+        onClick={onShowThumbnailGenerator}
+        className="lg-card hover:bg-gray-700 text-white p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto"
+        title="Generate Custom Image"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </button>
+    </div>
+  );
+};
+
 const AnimationControls = ({ 
   autoRotate, 
   setAutoRotate, 
@@ -347,7 +381,7 @@ const AnimationControls = ({
 };
 
 // STL Loader component
-function STLModel({ url, accessToken, fileData, renderSettings, autoRotate, onBoundingBoxCalculated }: { 
+const STLModel = React.memo(({ url, accessToken, fileData, renderSettings, autoRotate, onBoundingBoxCalculated }: { 
   url?: string; 
   accessToken?: string; 
   fileData?: ArrayBuffer | Blob; 
@@ -359,7 +393,7 @@ function STLModel({ url, accessToken, fileData, renderSettings, autoRotate, onBo
   };
   autoRotate: boolean;
   onBoundingBoxCalculated?: (boundingBox: THREE.Box3) => void;
-}) {
+}) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
 
@@ -394,15 +428,19 @@ function STLModel({ url, accessToken, fileData, renderSettings, autoRotate, onBo
         }
         
         const geometry = loader.parse(arrayBuffer);
-        setGeometry(geometry);
         
-        // Calculate bounding box and report it
-        if (onBoundingBoxCalculated) {
-          geometry.computeBoundingBox();
-          const boundingBox = geometry.boundingBox!.clone();
-          console.log('STL bounding box calculated:', boundingBox);
-          onBoundingBoxCalculated(boundingBox);
-        }
+        // Use startTransition for expensive operations to prevent UI blocking
+        startTransition(() => {
+          setGeometry(geometry);
+          
+          // Calculate bounding box and report it
+          if (onBoundingBoxCalculated) {
+            geometry.computeBoundingBox();
+            const boundingBox = geometry.boundingBox!.clone();
+            console.log('STL bounding box calculated:', boundingBox);
+            onBoundingBoxCalculated(boundingBox);
+          }
+        });
       } catch (error) {
         console.error('Error loading STL:', error);
       }
@@ -411,39 +449,68 @@ function STLModel({ url, accessToken, fileData, renderSettings, autoRotate, onBo
     loadSTL();
   }, [url, accessToken, fileData, onBoundingBoxCalculated]);
 
+  // Cleanup geometry on unmount
+  useEffect(() => {
+    return () => {
+      if (geometry) {
+        geometry.dispose();
+      }
+    };
+  }, [geometry]);
+
+  // Memoize material to prevent recreation on every render
+  // IMPORTANT: This must be called before any conditional returns to follow rules of hooks
+  const material = useMemo(() => {
+    const materialProps = {
+      color: renderSettings.color,
+      metalness: renderSettings.metalness,
+      roughness: renderSettings.roughness,
+      wireframe: renderSettings.view === 'wireframe',
+      transparent: renderSettings.view === 'points',
+      opacity: renderSettings.view === 'points' ? 0.8 : 1
+    };
+    
+    if (renderSettings.view === 'points') {
+      return new THREE.PointsMaterial({ 
+        ...materialProps, 
+        size: 0.1,
+        sizeAttenuation: true 
+      });
+    } else {
+      return new THREE.MeshStandardMaterial(materialProps);
+    }
+  }, [renderSettings.color, renderSettings.metalness, renderSettings.roughness, renderSettings.view]);
+
+  const isPointsMode = renderSettings.view === 'points';
+
   useFrame((state: any) => {
     if (meshRef.current && autoRotate) {
       meshRef.current.rotation.y += 0.005;
     }
   });
 
+  // Dispose of material on unmount
+  useEffect(() => {
+    return () => {
+      if (material) {
+        material.dispose();
+      }
+    };
+  }, [material]);
+
   if (!geometry) {
     return null;
   }
 
-  // Apply view mode
-  const materialProps = {
-    color: renderSettings.color,
-    metalness: renderSettings.metalness,
-    roughness: renderSettings.roughness,
-    wireframe: renderSettings.view === 'wireframe',
-    transparent: renderSettings.view === 'points',
-    opacity: renderSettings.view === 'points' ? 0.8 : 1
-  };
-
-  return (
-    <mesh ref={meshRef} geometry={geometry}>
-      {renderSettings.view === 'points' ? (
-        <pointsMaterial {...materialProps} size={0.1} />
-      ) : (
-        <meshStandardMaterial {...materialProps} />
-      )}
-    </mesh>
+  return isPointsMode ? (
+    <points ref={meshRef} geometry={geometry} material={material} />
+  ) : (
+    <mesh ref={meshRef} geometry={geometry} material={material} />
   );
-}
+});
 
 // GLTF/GLB Model component
-function GLTFModel({ url, accessToken, fileData, renderSettings, autoRotate, onBoundingBoxCalculated }: { 
+const GLTFModel = React.memo(({ url, accessToken, fileData, renderSettings, autoRotate, onBoundingBoxCalculated }: { 
   url?: string; 
   accessToken?: string; 
   fileData?: ArrayBuffer | Blob; 
@@ -455,7 +522,7 @@ function GLTFModel({ url, accessToken, fileData, renderSettings, autoRotate, onB
   };
   autoRotate: boolean;
   onBoundingBoxCalculated?: (boundingBox: THREE.Box3) => void;
-}) {
+}) => {
   // For GLTF files, we need to use a custom loader with authentication
   const [scene, setScene] = useState<THREE.Group | null>(null);
   const meshRef = useRef<THREE.Group>(null);
@@ -463,7 +530,6 @@ function GLTFModel({ url, accessToken, fileData, renderSettings, autoRotate, onB
   useEffect(() => {
     const loadGLTF = async () => {
       try {
-        const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
         const loader = new GLTFLoader();
         
         let arrayBuffer: ArrayBuffer;
@@ -496,14 +562,17 @@ function GLTFModel({ url, accessToken, fileData, renderSettings, autoRotate, onB
           loader.parse(arrayBuffer, '', resolve, reject);
         });
         
-        setScene(gltf.scene);
-        
-        // Calculate bounding box and report it
-        if (onBoundingBoxCalculated) {
-          const boundingBox = new THREE.Box3().setFromObject(gltf.scene);
-          console.log('GLTF bounding box calculated:', boundingBox);
-          onBoundingBoxCalculated(boundingBox);
-        }
+        // Use startTransition for expensive operations to prevent UI blocking
+        startTransition(() => {
+          setScene(gltf.scene);
+          
+          // Calculate bounding box and report it
+          if (onBoundingBoxCalculated) {
+            const boundingBox = new THREE.Box3().setFromObject(gltf.scene);
+            console.log('GLTF bounding box calculated:', boundingBox);
+            onBoundingBoxCalculated(boundingBox);
+          }
+        });
       } catch (error) {
         console.error('Error loading GLTF:', error);
       }
@@ -523,11 +592,12 @@ function GLTFModel({ url, accessToken, fileData, renderSettings, autoRotate, onB
   }
 
   return <primitive ref={meshRef} object={scene} />;
-}
+});
 
 // Camera Controller component
 function CameraController({ 
-  cameraSettings
+  cameraSettings,
+  resetCamera
 }: { 
   cameraSettings: {
     position: [number, number, number];
@@ -535,19 +605,85 @@ function CameraController({
     maxDistance: number;
     target: [number, number, number];
   };
+  resetCamera?: boolean;
 }) {
   const { camera } = useThree();
+  const [hasSetInitialPosition, setHasSetInitialPosition] = useState(false);
   
   useEffect(() => {
-    // Update camera position when settings change
-    console.log('Updating camera position:', cameraSettings);
-    camera.position.set(...cameraSettings.position);
-    camera.lookAt(...cameraSettings.target);
-    camera.updateMatrixWorld();
-  }, [camera, cameraSettings]);
+    // Only set camera position on initial load or when explicitly reset
+    if (!hasSetInitialPosition || resetCamera) {
+      console.log('Setting initial camera position:', cameraSettings);
+      camera.position.set(...cameraSettings.position);
+      camera.lookAt(...cameraSettings.target);
+      camera.updateMatrixWorld();
+      setHasSetInitialPosition(true);
+    }
+  }, [camera, cameraSettings.position, cameraSettings.target, resetCamera, hasSetInitialPosition]);
 
   return null;
 }
+
+// Adaptive Pixel Ratio component for performance scaling
+const AdaptivePixelRatio = React.memo(() => {
+  const current = useThree((state) => state.performance.current);
+  const setPixelRatio = useThree((state) => state.setDpr);
+  
+  useEffect(() => {
+    const adaptiveRatio = window.devicePixelRatio * current;
+    setPixelRatio(Math.min(adaptiveRatio, 2)); // Cap at 2x for performance
+  }, [current, setPixelRatio]);
+  
+  return null;
+});
+
+// OrbitControls with movement regression for performance scaling
+const OrbitControlsWithRegression = React.memo((props: any) => {
+  const regress = useThree((state) => state.performance.regress);
+  
+  return (
+    <OrbitControls 
+      {...props}
+      onChange={regress} // Trigger performance regression on camera movement
+    />
+  );
+});
+
+// FPS Counter component - Optimized to reduce render calls
+const FPSCounter = React.memo(() => {
+  const [fps, setFps] = useState(0);
+  const frameCount = useRef(0);
+  const lastTime = useRef(performance.now());
+  const lastUpdateTime = useRef(performance.now());
+  
+  useFrame(() => {
+    frameCount.current++;
+    const currentTime = performance.now();
+    
+    // Update FPS every 500ms instead of 1000ms for more responsive updates
+    // but with throttling to prevent excessive re-renders
+    if (currentTime - lastUpdateTime.current >= 500) {
+      const newFps = Math.round(frameCount.current * 1000 / (currentTime - lastTime.current));
+      if (Math.abs(newFps - fps) > 1) { // Only update if FPS changed significantly
+        setFps(newFps);
+      }
+      frameCount.current = 0;
+      lastTime.current = currentTime;
+      lastUpdateTime.current = currentTime;
+    }
+  });
+
+  return (
+    <Html position={[0, 0, 0]} style={{ pointerEvents: 'none' }}>
+      <div 
+        className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded font-mono"
+        style={{ userSelect: 'none' }}
+      >
+        {fps} FPS
+      </div>
+    </Html>
+  );
+});
 
 // Loading component
 function Loader() {
@@ -564,9 +700,17 @@ function Loader() {
 /**
  * ModelViewer Component
  * 
- * A 3D model viewer that supports STL and GLTF/GLB files with automatic camera positioning.
+ * A high-performance 3D model viewer that supports STL and GLTF/GLB files with automatic camera positioning.
  * 
- * Features:
+ * Performance Features:
+ * - On-demand rendering (frameloop="demand") - only renders when necessary
+ * - Movement regression - quality scales down during camera movement  
+ * - Adaptive pixel ratio - automatic resolution scaling based on performance
+ * - React 18 concurrency - expensive operations use startTransition to prevent UI blocking
+ * - Material memoization - prevents GPU overhead from material recreation
+ * - Performance monitoring - automatic quality adjustment to maintain 60 FPS
+ * 
+ * Visual Features:
  * - Automatic camera positioning based on model bounding box
  * - Dynamic zoom limits (min/max distance) based on model size
  * - Multiple view modes (solid, wireframe, points, normals)
@@ -595,14 +739,18 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   fileData,
   fileType,
   showControls = false,
-  onBoundingBoxCalculated
+  onBoundingBoxCalculated,
+  isUploadMode = false,
+  modelFile,
+  onShowThumbnailGenerator,
+  showFPS = false
 }) => {
   console.log('ModelViewer props:', { 
     modelUrl, 
     fileId, 
     modelId, 
     fileName, 
-    fileData: fileData ? `ArrayBuffer(${fileData.byteLength} bytes)` : 'undefined',
+    fileData: fileData ? (fileData instanceof File ? `File(${fileData.size} bytes)` : `ArrayBuffer(${fileData.byteLength} bytes)`) : 'undefined',
     fileType,
     showControls 
   });
@@ -613,6 +761,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   
   // Camera control states
   const [currentAutoRotate, setCurrentAutoRotate] = useState(autoRotate);
+  const [adaptiveDpr, setAdaptiveDpr] = useState(Math.min(window.devicePixelRatio, 2));
   const [renderSettings, setRenderSettings] = useState({
     color: '#888888',
     view: 'solid' as ViewMode,
@@ -621,6 +770,13 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
     lightAngle: 0,
     lightHeight: 0
   });
+
+  // Memoize directional light position to avoid recalculation on every render
+  const directionalLightPosition = useMemo(() => [
+    Math.cos(renderSettings.lightAngle * Math.PI / 180) * 10,
+    renderSettings.lightHeight / 10,
+    Math.sin(renderSettings.lightAngle * Math.PI / 180) * 10
+  ] as [number, number, number], [renderSettings.lightAngle, renderSettings.lightHeight]);
   const [showViewControls, setShowViewControls] = useState(false);
   const [showMaterialControls, setShowMaterialControls] = useState(false);
   const [showLightingControls, setShowLightingControls] = useState(false);
@@ -629,7 +785,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   // Camera positioning state
   const [cameraSettings, setCameraSettings] = useState({
     position: [0, 0, 5] as [number, number, number],
-    minDistance: 1,
+    minDistance: 2,
     maxDistance: 2000,
     target: [0, 0, 0] as [number, number, number]
   });
@@ -686,17 +842,29 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   const handleBoundingBoxCalculated = (boundingBox: THREE.Box3) => {
     console.log('Bounding box received:', boundingBox);
     setLastBoundingBox(boundingBox);
-    calculateCameraPosition(boundingBox);
+    
+    // Use startTransition for expensive camera calculations
+    startTransition(() => {
+      calculateCameraPosition(boundingBox);
+    });
   };
 
   // Store the last calculated bounding box for reset functionality
   const [lastBoundingBox, setLastBoundingBox] = useState<THREE.Box3 | null>(null);
+  const [shouldResetCamera, setShouldResetCamera] = useState(false);
 
   // Reset camera to optimal position
   const handleResetCamera = () => {
     if (lastBoundingBox) {
       console.log('Resetting camera to optimal position');
-      calculateCameraPosition(lastBoundingBox);
+      
+      // Use startTransition for smooth camera reset
+      startTransition(() => {
+        calculateCameraPosition(lastBoundingBox);
+        setShouldResetCamera(true);
+        // Reset the flag after a short delay to allow the effect to run
+        setTimeout(() => setShouldResetCamera(false), 100);
+      });
     }
   };
 
@@ -854,22 +1022,52 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
           fov: 50 
         }}
         style={{ width, height }}
+        frameloop="demand"
+        gl={{ 
+          antialias: false,
+          alpha: false,
+          powerPreference: "high-performance",
+          stencil: false,
+          depth: true,
+          premultipliedAlpha: false,
+          preserveDrawingBuffer: false
+        }}
+        dpr={adaptiveDpr}
+        performance={{ 
+          min: 0.3,
+          max: 1,
+          debounce: 200
+        }}
       >
+        <PerformanceMonitor
+          onIncline={() => {
+            // Increase quality when performance allows (more conservative)
+            setAdaptiveDpr(Math.min(window.devicePixelRatio * 1.2, 2));
+          }}
+          onDecline={() => {
+            // Decrease quality when performance drops (less aggressive)
+            setAdaptiveDpr(Math.max(window.devicePixelRatio * 0.8, 1));
+          }}
+          onFallback={() => {
+            // Fallback to reasonable minimum quality (not too blurry)
+            setAdaptiveDpr(Math.max(window.devicePixelRatio * 0.7, 1));
+          }}
+          flipflops={5}
+          bounds={() => [55, 90]}
+        />
+        <AdaptivePixelRatio />
         <CameraController 
           cameraSettings={cameraSettings}
+          resetCamera={shouldResetCamera}
         />
-        <ambientLight intensity={0.4} />
+        <ambientLight intensity={0.6} />
         <directionalLight 
-          position={[
-            Math.cos(renderSettings.lightAngle * Math.PI / 180) * 10,
-            renderSettings.lightHeight / 10,
-            Math.sin(renderSettings.lightAngle * Math.PI / 180) * 10
-          ]} 
-          intensity={1} 
+          position={directionalLightPosition}
+          intensity={1.2} 
         />
-        <pointLight position={[-10, -10, -5]} intensity={0.5} />
         
         {isLoading && <Loader />}
+        {showFPS && <FPSCounter />}
         
         {isSTL && (
           <STLModel 
@@ -892,7 +1090,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
           />
         )}
         
-        <OrbitControls 
+        <OrbitControlsWithRegression 
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
@@ -914,6 +1112,8 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
             setRenderSettings={setRenderSettings}
             showViewControls={showViewControls}
             setShowViewControls={setShowViewControls}
+            isUploadMode={false}
+            onShowThumbnailGenerator={undefined}
           />
           <MaterialControls
             renderSettings={renderSettings}
@@ -926,6 +1126,10 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
             setRenderSettings={setRenderSettings}
             showLightingControls={showLightingControls}
             setShowLightingControls={setShowLightingControls}
+          />
+          <GenerateThumbnailControl
+            isUploadMode={isUploadMode}
+            onShowThumbnailGenerator={onShowThumbnailGenerator}
           />
           <AnimationControls
             autoRotate={currentAutoRotate}

@@ -59,9 +59,7 @@ namespace PolyBucket.Api.Features.Authentication.Services
                 new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
                 new Claim(ClaimTypes.Role, user.Role?.Name ?? "User"),
                 new Claim("sub", user.Id.ToString()),
-                new Claim("email", user.Email ?? string.Empty),
                 new Claim("name", user.Username ?? string.Empty),
-                new Claim("role", user.Role?.Name ?? "User"),
                 new Claim("email_verified", "true"),
                 new Claim("jti", Guid.NewGuid().ToString()),
                 new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)

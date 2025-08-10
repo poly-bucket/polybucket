@@ -3,28 +3,27 @@ import { useAppSelector } from '../utils/hooks';
 export const useSimplePermissions = () => {
   const { user } = useAppSelector((state) => state.auth);
 
-  // Debug logging
-  console.log('useSimplePermissions - User:', user);
-  console.log('useSimplePermissions - User roles:', user?.roles);
-
   const isAdmin = (): boolean => {
-    const hasAdminRole = user?.roles?.includes('Admin') || false;
-    console.log('useSimplePermissions - isAdmin():', hasAdminRole);
-    return hasAdminRole;
+    if (!user || !user.roles || !Array.isArray(user.roles)) {
+      return false;
+    }
+    return user.roles.includes('Admin');
   };
 
   const isModerator = (): boolean => {
-    const hasModeratorRole = user?.roles?.includes('Moderator') || false;
+    if (!user || !user.roles || !Array.isArray(user.roles)) {
+      return false;
+    }
+    const hasModeratorRole = user.roles.includes('Moderator');
     const hasAdminRole = isAdmin();
-    const result = hasModeratorRole || hasAdminRole;
-    console.log('useSimplePermissions - isModerator():', result);
-    return result;
+    return hasModeratorRole || hasAdminRole;
   };
 
   const isUser = (): boolean => {
-    const hasUserRole = user?.roles?.includes('User') || false;
-    console.log('useSimplePermissions - isUser():', hasUserRole);
-    return hasUserRole;
+    if (!user || !user.roles || !Array.isArray(user.roles)) {
+      return false;
+    }
+    return user.roles.includes('User');
   };
 
   return {

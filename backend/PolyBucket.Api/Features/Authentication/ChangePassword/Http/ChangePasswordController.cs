@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MediatR;
 using PolyBucket.Api.Features.Authentication.ChangePassword.Domain;
 
-namespace PolyBucket.Api.Features.Authentication.Http
+namespace PolyBucket.Api.Features.Authentication.ChangePassword.Http
 {
     [ApiController]
     [Route("api/[controller]")]

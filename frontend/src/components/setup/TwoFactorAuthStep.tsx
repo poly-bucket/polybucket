@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppSelector } from '../../utils/hooks';
 import { twoFactorAuthService } from '../../services/twoFactorAuthService';
 import QRCode from 'react-qr-code';
@@ -22,11 +22,31 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
   const { user } = useAppSelector((state) => state.auth);
   const [enable2FA, setEnable2FA] = useState(false);
   const [qrCode, setQrCode] = useState<string>('');
-  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [showQRSetup, setShowQRSetup] = useState(false);
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Auto-submit when all 6 digits are filled (only once)
+  useEffect(() => {
+    const code = verificationCode.join('');
+    if (code.length === 6 && !isVerifying && !hasAutoSubmitted) {
+      // Set the flag immediately to prevent multiple triggers
+      setHasAutoSubmitted(true);
+      
+      // Increased delay to ensure UI has fully updated and prevent race conditions
+      const timer = setTimeout(() => {
+        // Double-check that we're still in a valid state before submitting
+        if (!isVerifying) {
+          handleVerifyCode();
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [verificationCode, isVerifying, hasAutoSubmitted]);
 
   const handleEnable2FA = async () => {
     if (!enable2FA) {
@@ -47,14 +67,20 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
   };
 
   const handleVerifyCode = async () => {
-    if (!verificationCode.trim()) {
-      setErrors({ verification: 'Please enter the verification code' });
+    // Prevent multiple simultaneous requests
+    if (isVerifying) {
+      return;
+    }
+
+    const code = verificationCode.join('');
+    if (code.length !== 6) {
+      setErrors({ verification: 'Please enter the complete 6-digit verification code' });
       return;
     }
 
     setIsVerifying(true);
     try {
-      const response = await twoFactorAuthService.enable(verificationCode);
+      const response = await twoFactorAuthService.enable(code);
       
       if (response.success) {
         onComplete({ 
@@ -63,11 +89,47 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
         });
       } else {
         setErrors({ verification: response.message || 'Invalid verification code' });
+        // Reset auto-submit flag on error so user can manually retry
+        setHasAutoSubmitted(false);
       }
     } catch (error: any) {
       setErrors({ verification: error.response?.data?.message || 'An error occurred while verifying the code' });
+      // Reset auto-submit flag on error so user can manually retry
+      setHasAutoSubmitted(false);
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const handleCodeChange = (index: number, value: string) => {
+    // Only allow numeric input
+    if (!/^\d*$/.test(value)) {
+      return;
+    }
+
+    const newCode = [...verificationCode];
+    newCode[index] = value;
+    setVerificationCode(newCode);
+
+    // Clear verification error when user starts typing
+    if (errors.verification) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.verification;
+        return newErrors;
+      });
+    }
+
+    // Auto-advance to next input
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle backspace to go to previous input
+    if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -78,8 +140,9 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
   const handleBackToOptions = () => {
     setShowQRSetup(false);
     setQrCode('');
-    setVerificationCode('');
+    setVerificationCode(['', '', '', '', '', '']);
     setErrors({});
+    setHasAutoSubmitted(false);
   };
 
   return (
@@ -152,57 +215,69 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
         </div>
       ) : (
         <div className="space-y-6">
-                      <div className="text-center">
-              <h4 className="text-md font-medium text-white mb-4">
-                Scan QR Code with Your Authenticator App
-              </h4>
-              <div className="bg-white p-4 rounded-lg inline-block mb-4">
-                <QRCode
-                  value={qrCode}
-                  size={192}
-                  level="M"
-                  bgColor="#FFFFFF"
-                  fgColor="#000000"
-                  style={{ width: '100%', height: 'auto' }}
-                />
-              </div>
-              <p className="text-gray-300 text-sm mb-4">
-                Use apps like Google Authenticator, Authy, or Microsoft Authenticator to scan this QR code.
+          <div className="text-center">
+            <h4 className="text-md font-medium text-white mb-4">
+              Scan QR Code with Your Authenticator App
+            </h4>
+            <div className="bg-white p-4 rounded-lg inline-block mb-4">
+              <QRCode
+                value={qrCode}
+                size={192}
+                level="M"
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+                style={{ width: '100%', height: 'auto' }}
+              />
+            </div>
+            <p className="text-gray-300 text-sm mb-4">
+              Use apps like Google Authenticator, Authy, or Microsoft Authenticator to scan this QR code.
+            </p>
+            <div className="bg-gray-800 p-4 rounded-lg mb-4">
+              <p className="text-gray-300 text-sm mb-2">
+                <strong>Manual Entry:</strong> If scanning doesn't work, you can manually enter the setup key in your authenticator app.
               </p>
-              <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                <p className="text-gray-300 text-sm mb-2">
-                  <strong>Manual Entry:</strong> If scanning doesn't work, you can manually enter the setup key in your authenticator app.
-                </p>
-                <p className="text-gray-400 text-xs break-all">
-                  {qrCode}
-                </p>
-              </div>
+              <p className="text-gray-400 text-xs break-all">
+                {qrCode}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <h4 className="text-md font-medium text-white mb-4">
+              Two-Factor Verification
+            </h4>
+            <p className="text-gray-300 text-sm mb-6">
+              Enter the two-factor authentication code provided by the authenticator app
+            </p>
+            
+            <div className="flex justify-center space-x-2 mb-4">
+              {verificationCode.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                  type="text"
+                  value={digit}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  className="w-12 h-12 text-center text-lg font-semibold bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+                  maxLength={1}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                />
+              ))}
             </div>
 
-          <div>
-            <label htmlFor="verificationCode" className="block text-sm font-medium text-white mb-2">
-              Verification Code
-            </label>
-            <input
-              id="verificationCode"
-              type="text"
-              value={verificationCode}
-              onChange={(e) => {
-                setVerificationCode(e.target.value);
-                if (errors.verification) {
-                  setErrors(prev => {
-                    const newErrors = { ...prev };
-                    delete newErrors.verification;
-                    return newErrors;
-                  });
-                }
-              }}
-              className="lg-input"
-              placeholder="Enter the 6-digit code from your app"
-              maxLength={6}
-            />
             {errors.verification && (
               <p className="mt-2 text-sm text-red-400">{errors.verification}</p>
+            )}
+
+            {isVerifying && (
+              <div className="flex items-center justify-center mt-4">
+                <div className="lg-spinner w-4 h-4 mr-2"></div>
+                <span className="text-gray-300">Verifying...</span>
+              </div>
             )}
           </div>
 
@@ -217,17 +292,10 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
             <button
               type="button"
               onClick={handleVerifyCode}
-              disabled={isLoading || isVerifying || !verificationCode.trim()}
+              disabled={isLoading || isVerifying || verificationCode.join('').length !== 6}
               className="lg-button lg-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isVerifying ? (
-                <div className="flex items-center">
-                  <div className="lg-spinner w-4 h-4 mr-2"></div>
-                  Verifying...
-                </div>
-              ) : (
-                'Verify & Continue'
-              )}
+              Verify & Continue
             </button>
           </div>
         </div>

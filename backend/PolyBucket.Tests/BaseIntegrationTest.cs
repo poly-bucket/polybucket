@@ -5,8 +5,14 @@ using PolyBucket.Api;
 using PolyBucket.Api.Data;
 using PolyBucket.Tests.Factories;
 using System;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Xunit;
+using PolyBucket.Api.Common.Models;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace PolyBucket.Tests
 {
@@ -19,6 +25,7 @@ namespace PolyBucket.Tests
         protected readonly TestModelFactory ModelFactory;
         protected readonly IServiceScope ServiceScope;
         protected readonly PolyBucketDbContext DbContext;
+        protected readonly HttpClient Client;
 
         protected BaseIntegrationTest(TestCollectionFixture testFixture)
         {
@@ -28,9 +35,10 @@ namespace PolyBucket.Tests
             DbContext = ServiceScope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
             UserFactory = new TestUserFactory(DbContext);
             ModelFactory = new TestModelFactory(DbContext);
+            Client = Factory.CreateClient();
         }
 
-        protected async Task InitializeAsync()
+        protected virtual async Task InitializeAsync()
         {
             await TestFixture.InitializeAsync();
             await CleanupDatabaseAsync();
@@ -78,6 +86,47 @@ namespace PolyBucket.Tests
                 // Log the error but don't fail the test
                 Console.WriteLine($"Warning: Database cleanup failed: {ex.Message}");
             }
+        }
+
+        protected async Task<User> CreateTestUser(string email = null, string password = "TestPassword123!")
+        {
+            return await UserFactory.CreateTestUser(email, password);
+        }
+
+        protected async Task<string> GetAuthToken(string email, string password)
+        {
+            var loginCommand = new
+            {
+                Email = email,
+                Password = password
+            };
+
+            var loginContent = new StringContent(
+                JsonSerializer.Serialize(loginCommand),
+                Encoding.UTF8,
+                "application/json");
+
+            var loginResponse = await Client.PostAsync("/api/auth/login", loginContent);
+            
+            if (loginResponse.IsSuccessStatusCode)
+            {
+                var loginResult = await loginResponse.Content.ReadFromJsonAsync<dynamic>();
+                return loginResult?.GetProperty("token").GetString() ?? "test-token";
+            }
+
+            return "test-token";
+        }
+
+        protected HttpRequestMessage GetAuthHeaders(string token)
+        {
+            var request = new HttpRequestMessage();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return request;
+        }
+
+        protected void SetAuthHeaders(string token)
+        {
+            Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
         public async ValueTask DisposeAsync()

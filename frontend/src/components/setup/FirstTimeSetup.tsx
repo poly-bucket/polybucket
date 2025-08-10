@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../utils/hooks';
+import api from '../../utils/axiosConfig';
 import PasswordChangeStep from './PasswordChangeStep';
 import TwoFactorAuthStep from './TwoFactorAuthStep';
 import SiteSettingsStep from './SiteSettingsStep';
@@ -67,16 +68,10 @@ const FirstTimeSetup: React.FC = () => {
     // Check current setup status
     const checkSetupStatus = async () => {
       try {
-        const response = await fetch('http://localhost:11666/api/SystemSetup/status', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${user.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await api.get('/SystemSetup/status');
 
-        if (response.ok) {
-          const status = await response.json();
+        if (response.status === 200) {
+          const status = response.data;
           setSetupStatus(status);
           
           // Determine starting step based on completed steps
@@ -130,16 +125,9 @@ const FirstTimeSetup: React.FC = () => {
   const handleSetupComplete = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:11666/api/SystemSetup/complete', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(setupData)
-      });
+      const response = await api.post('/SystemSetup/complete', setupData);
 
-      if (response.ok) {
+      if (response.status === 200) {
         setIsComplete(true);
       } else {
         console.error('Failed to complete setup');

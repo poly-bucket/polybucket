@@ -15,17 +15,10 @@ namespace PolyBucket.Tests
 {
     public static class TestDatabaseManager
     {
-        private static readonly object _lock = new object();
-        private static bool _databaseInitialized = false;
+
 
         public static async Task EnsureTestDatabaseCreatedAsync()
         {
-            lock (_lock)
-            {
-                if (_databaseInitialized)
-                    return;
-            }
-
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.Test.json", optional: false)
@@ -38,8 +31,15 @@ namespace PolyBucket.Tests
 
             using var context = new PolyBucketDbContext(optionsBuilder.Options);
             
-            // Ensure database is created
-            await context.Database.EnsureCreatedAsync();
+            // Always force database recreation to ensure fresh schema for each test run
+            Console.WriteLine("Dropping test database...");
+            await context.Database.EnsureDeletedAsync();
+            Console.WriteLine("Test database dropped successfully.");
+            
+            // Use migrations instead of EnsureCreatedAsync to ensure latest schema
+            Console.WriteLine("Applying migrations to test database...");
+            await context.Database.MigrateAsync();
+            Console.WriteLine("Migrations applied successfully.");
 
             // Dynamically seed all permissions from PermissionConstants
             if (!await context.Permissions.AnyAsync())
@@ -119,10 +119,7 @@ namespace PolyBucket.Tests
                 await context.SaveChangesAsync();
             }
 
-            lock (_lock)
-            {
-                _databaseInitialized = true;
-            }
+
         }
 
         private static async Task SeedRequiredDataAsync(PolyBucketDbContext context)

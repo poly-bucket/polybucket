@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Authentication.Domain;
+using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 
@@ -21,8 +22,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         IConfiguration configuration,
         ILogger<LoginCommandHandler> logger,
         PolyBucketDbContext context,
-        ITwoFactorAuthService twoFactorAuthService,
-        ITwoFactorAuthRepository twoFactorAuthRepository)
+        ILoginTwoFactorAuthService loginTwoFactorAuthService,
+        ILoginTwoFactorAuthRepository loginTwoFactorAuthRepository)
     {
         private readonly IAuthenticationRepository _authRepository = authRepository;
         private readonly ITokenService _tokenService = tokenService;
@@ -30,8 +31,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         private readonly IConfiguration _configuration = configuration;
         private readonly ILogger<LoginCommandHandler> _logger = logger;
         private readonly PolyBucketDbContext _context = context;
-        private readonly ITwoFactorAuthService _twoFactorAuthService = twoFactorAuthService;
-        private readonly ITwoFactorAuthRepository _twoFactorAuthRepository = twoFactorAuthRepository;
+        private readonly ILoginTwoFactorAuthService _loginTwoFactorAuthService = loginTwoFactorAuthService;
+        private readonly ILoginTwoFactorAuthRepository _loginTwoFactorAuthRepository = loginTwoFactorAuthRepository;
 
 
         public async Task<LoginCommandResponse> Handle(LoginCommand command, CancellationToken cancellationToken)
@@ -96,7 +97,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             {
                 _logger.LogWarning("User not found for identifier: {Identifier}", loginIdentifier);
                 // Log failed login attempt
-                await LogLoginAttempt(loginIdentifier, false, Guid.Empty);
+                await LogLoginAttempt(loginIdentifier, false, null);
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
@@ -109,7 +110,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             }
 
             // Check if user has 2FA enabled
-            var twoFactorAuth = await _twoFactorAuthRepository.GetByUserIdAsync(user.Id);
+            var twoFactorAuth = await _loginTwoFactorAuthRepository.GetByUserIdAsync(user.Id);
             var requiresTwoFactor = twoFactorAuth?.IsEnabled ?? false;
 
             if (requiresTwoFactor)
@@ -131,11 +132,11 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 {
                     if (!string.IsNullOrEmpty(command.TwoFactorToken))
                     {
-                        isValidTwoFactor = await _twoFactorAuthService.ValidateTokenAsync(twoFactorAuth, command.TwoFactorToken);
+                        isValidTwoFactor = await _loginTwoFactorAuthService.ValidateTokenAsync(twoFactorAuth, command.TwoFactorToken);
                     }
                     else if (!string.IsNullOrEmpty(command.BackupCode))
                     {
-                        isValidTwoFactor = await _twoFactorAuthService.ValidateBackupCodeAsync(twoFactorAuth, command.BackupCode);
+                        isValidTwoFactor = await _loginTwoFactorAuthService.ValidateBackupCodeAsync(twoFactorAuth, command.BackupCode);
                     }
                 }
 
@@ -225,8 +226,15 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             return identifier.Contains("@") && identifier.Contains(".");
         }
 
-        private async Task LogLoginAttempt(string identifier, bool success, Guid userId)
+        private async Task LogLoginAttempt(string identifier, bool success, Guid? userId)
         {
+            // Skip logging failed login attempts for non-existent users to avoid foreign key constraint issues
+            if (!success && userId == null)
+            {
+                _logger.LogWarning("Skipping login attempt logging for non-existent user: {Identifier}", identifier);
+                return;
+            }
+
             var loginRecord = new UserLogin
             {
                 Email = identifier, // Store the identifier as email for backward compatibility

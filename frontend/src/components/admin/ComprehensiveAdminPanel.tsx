@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '../../utils/hooks';
+import api from '../../utils/axiosConfig';
 import {
   People as PeopleIcon,
   ViewInAr as ModelIcon,
@@ -386,16 +387,10 @@ const SystemSettingsPanel: React.FC = () => {
   const fetchSetupStatus = async () => {
     setIsLoadingSetup(true);
     try {
-      const response = await fetch('http://localhost:11666/api/SystemSetup/status', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.get('/SystemSetup/status');
 
-      if (response.ok) {
-        const status = await response.json();
+      if (response.status === 200) {
+        const status = response.data;
         setSetupStatus(status);
       }
     } catch (error) {

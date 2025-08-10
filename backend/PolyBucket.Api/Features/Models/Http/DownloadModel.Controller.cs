@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.ACL.Authorization;
@@ -8,13 +10,14 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.Domain;
 using PolyBucket.Api.Features.Models.Domain.Enums;
 using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Api.Settings;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace PolyBucket.Api.Features.Models.Http
 {
@@ -24,19 +27,22 @@ namespace PolyBucket.Api.Features.Models.Http
     {
         private readonly PolyBucketDbContext _context;
         private readonly IPermissionService _permissionService;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IStorageService _storageService;
+        private readonly ILogger<DownloadModelController> _logger;
+        private readonly StorageSettings _storageSettings;
 
         public DownloadModelController(
             PolyBucketDbContext context,
             IPermissionService permissionService,
-            IHttpClientFactory httpClientFactory,
-            IStorageService storageService)
+            IStorageService storageService,
+            ILogger<DownloadModelController> logger,
+            IOptions<StorageSettings> storageOptions)
         {
             _context = context;
             _permissionService = permissionService;
-            _httpClientFactory = httpClientFactory;
             _storageService = storageService;
+            _logger = logger;
+            _storageSettings = storageOptions.Value;
         }
 
         [HttpGet("{id}/download")]
@@ -51,6 +57,11 @@ namespace PolyBucket.Api.Features.Models.Http
                     .Include(m => m.Files)
                     .Include(m => m.Author)
                     .FirstOrDefaultAsync(m => m.Id == id);
+
+                // Also get model previews/thumbnails
+                var modelPreviews = await _context.Set<ModelPreview>()
+                    .Where(p => p.ModelId == id && p.Status == PreviewStatus.Completed)
+                    .ToListAsync();
 
                 if (model == null)
                 {
@@ -72,93 +83,210 @@ namespace PolyBucket.Api.Features.Models.Http
                     await _context.SaveChangesAsync();
                 }
 
-                // If there's only one file, return it directly
-                if (model.Files.Count == 1)
+                // This section has been moved above for better logic flow
+
+                // If there are multiple files or we need to include previews, create a zip archive
+                var needsZip = model.Files.Count > 1 || modelPreviews.Any();
+                
+                if (!needsZip && model.Files.Count == 1)
                 {
+                    // Single file download without previews
                     var file = model.Files.First();
                     
-                    // Extract object key from path - handle both object keys and presigned URLs
-                    string objectKey;
-                    if (file.Path.StartsWith("http"))
+                    var objectKey = ExtractObjectKey(file.Path);
+                    if (string.IsNullOrEmpty(objectKey))
                     {
-                        // This is a presigned URL, extract the object key
-                        var uri = new Uri(file.Path);
-                        var pathSegments = uri.AbsolutePath.Split('/');
-                        // Find the bucket name and extract everything after it
-                        var bucketIndex = Array.IndexOf(pathSegments, "polybucket-uploads");
-                        if (bucketIndex >= 0 && bucketIndex + 1 < pathSegments.Length)
+                        _logger.LogError("Could not extract object key from path: {FilePath} for single file download: {FileName}", file.Path, file.Name);
+                        return StatusCode(500, "Invalid file path format");
+                    }
+                    
+                    try
+                    {
+                        var fileStream = await _storageService.DownloadAsync(objectKey);
+                        _logger.LogInformation("Successfully downloaded single file {FileName} for model {ModelId}", file.Name, model.Id);
+                        return File(fileStream, file.MimeType, file.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to download single file {FileName} for model {ModelId}: {ErrorMessage}", file.Name, model.Id, ex.Message);
+                        return StatusCode(500, "Failed to download the file");
+                    }
+                }
+                
+                // Create a zip archive that includes model files and previews
+                var zipFileName = $"{model.Name.Replace(" ", "_")}_{DateTime.UtcNow:yyyyMMdd}.zip";
+                var failedFiles = new List<string>();
+                
+                // Use Microsoft documentation pattern: Create ZIP in memory, return as byte array
+                using (var memoryStream = new MemoryStream())
+                {
+                    using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                    {
+                        var totalFilesAdded = 0;
+                        
+                        // Add model files
+                        foreach (var file in model.Files)
                         {
-                            objectKey = string.Join("/", pathSegments.Skip(bucketIndex + 1));
+                            try
+                            {
+                                var objectKey = ExtractObjectKey(file.Path);
+                                if (string.IsNullOrEmpty(objectKey))
+                                {
+                                    _logger.LogWarning("Could not extract object key from path: {FilePath} for file: {FileName}", file.Path, file.Name);
+                                    failedFiles.Add(file.Name);
+                                    continue;
+                                }
+                                
+                                using var fileStream = await _storageService.DownloadAsync(objectKey);
+                                if (fileStream == null || fileStream.Length == 0)
+                                {
+                                    _logger.LogWarning("File stream is null or empty for file: {FileName}", file.Name);
+                                    failedFiles.Add(file.Name);
+                                    continue;
+                                }
+                                
+                                var entry = archive.CreateEntry($"files/{file.Name}", CompressionLevel.Optimal);
+                                
+                                using var entryStream = entry.Open();
+                                await fileStream.CopyToAsync(entryStream);
+                                await entryStream.FlushAsync(); // Ensure data is written
+                                
+                                totalFilesAdded++;
+                                _logger.LogDebug("Successfully added file {FileName} ({FileSize} bytes) to archive for model {ModelId}", 
+                                    file.Name, fileStream.Length, model.Id);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to download file {FileName} (ID: {FileId}) for model {ModelId}: {ErrorMessage}", 
+                                    file.Name, file.Id, model.Id, ex.Message);
+                                failedFiles.Add(file.Name);
+                            }
                         }
-                        else
+                        
+                        // Add model previews/thumbnails
+                        foreach (var preview in modelPreviews)
                         {
-                            return StatusCode(500, "Invalid file path format");
+                            try
+                            {
+                                var objectKey = ExtractObjectKey(preview.StorageKey);
+                                if (string.IsNullOrEmpty(objectKey))
+                                {
+                                    _logger.LogWarning("Could not extract object key from storage key: {StorageKey} for preview: {PreviewId}", preview.StorageKey, preview.Id);
+                                    failedFiles.Add($"preview_{preview.Size}");
+                                    continue;
+                                }
+                                
+                                using var previewStream = await _storageService.DownloadAsync(objectKey);
+                                if (previewStream == null || previewStream.Length == 0)
+                                {
+                                    _logger.LogWarning("Preview stream is null or empty for preview: {PreviewId}", preview.Id);
+                                    failedFiles.Add($"preview_{preview.Size}");
+                                    continue;
+                                }
+                                
+                                var fileName = $"preview_{preview.Size}_{preview.Width}x{preview.Height}.jpg";
+                                var entry = archive.CreateEntry($"previews/{fileName}", CompressionLevel.Optimal);
+                                
+                                using var entryStream = entry.Open();
+                                await previewStream.CopyToAsync(entryStream);
+                                await entryStream.FlushAsync(); // Ensure data is written
+                                
+                                totalFilesAdded++;
+                                _logger.LogDebug("Successfully added preview {PreviewSize} ({FileSize} bytes) to archive for model {ModelId}", 
+                                    preview.Size, previewStream.Length, model.Id);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to download preview {PreviewId} for model {ModelId}: {ErrorMessage}", 
+                                    preview.Id, model.Id, ex.Message);
+                                failedFiles.Add($"preview_{preview.Size}");
+                            }
                         }
+                        
+                        // Add model thumbnail if available and not already included as preview
+                        if (!string.IsNullOrEmpty(model.ThumbnailUrl) && !modelPreviews.Any())
+                        {
+                            try
+                            {
+                                var objectKey = ExtractObjectKey(model.ThumbnailUrl);
+                                if (!string.IsNullOrEmpty(objectKey))
+                                {
+                                    using var thumbnailStream = await _storageService.DownloadAsync(objectKey);
+                                    if (thumbnailStream != null && thumbnailStream.Length > 0)
+                                    {
+                                        var entry = archive.CreateEntry("thumbnail.jpg", CompressionLevel.Optimal);
+                                        
+                                        using var entryStream = entry.Open();
+                                        await thumbnailStream.CopyToAsync(entryStream);
+                                        await entryStream.FlushAsync(); // Ensure data is written
+                                        
+                                        totalFilesAdded++;
+                                        _logger.LogDebug("Successfully added thumbnail ({FileSize} bytes) to archive for model {ModelId}", 
+                                            thumbnailStream.Length, model.Id);
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning("Thumbnail stream is null or empty for model {ModelId}", model.Id);
+                                        failedFiles.Add("thumbnail");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to download thumbnail for model {ModelId}: {ErrorMessage}", model.Id, ex.Message);
+                                failedFiles.Add("thumbnail");
+                            }
+                        }
+                        
+                        // If no files were added, create a simple text file to ensure the ZIP is valid
+                        if (totalFilesAdded == 0)
+                        {
+                            var entry = archive.CreateEntry("README.txt", CompressionLevel.Optimal);
+                            using var entryStream = entry.Open();
+                            using var writer = new StreamWriter(entryStream);
+                            await writer.WriteLineAsync($"Model: {model.Name}");
+                            await writer.WriteLineAsync($"Download Date: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+                            await writer.WriteLineAsync("Note: No files were available for download.");
+                            await writer.FlushAsync();
+                            await entryStream.FlushAsync();
+                            
+                            totalFilesAdded++;
+                            _logger.LogInformation("Created README.txt as no files were available for model {ModelId}", model.Id);
+                        }
+                        
+                        _logger.LogInformation("ZIP archive creation completed for model {ModelId}: {TotalFiles} files added, {FailedFiles} failures", 
+                            model.Id, totalFilesAdded, failedFiles.Count);
+                    }
+                    
+                    // Verify the ZIP was created successfully
+                    if (memoryStream.Length == 0)
+                    {
+                        _logger.LogError("ZIP archive is empty after creation for model {ModelId}", model.Id);
+                        return StatusCode(500, "Failed to create download archive - archive is empty");
+                    }
+                    
+                    // Log summary of failed files
+                    if (failedFiles.Any())
+                    {
+                        _logger.LogWarning("Download completed for model {ModelId} with {FailedCount} failed files: {FailedFiles}", 
+                            model.Id, failedFiles.Count, string.Join(", ", failedFiles));
                     }
                     else
                     {
-                        // This is already an object key
-                        objectKey = file.Path;
+                        _logger.LogInformation("Successfully created download archive for model {ModelId} with {FileCount} files and {PreviewCount} previews", 
+                            model.Id, model.Files.Count, modelPreviews.Count);
                     }
+
+                    _logger.LogInformation("Returning ZIP file for model {ModelId}: {FileName} ({FileSize} bytes)", 
+                        model.Id, zipFileName, memoryStream.Length);
                     
-                    var fileStream = await _storageService.DownloadAsync(objectKey);
-                    return File(fileStream, file.MimeType, file.Name);
+                    // CRITICAL: Use ToArray() to create a proper byte array - this is the Microsoft recommended pattern
+                    return File(memoryStream.ToArray(), "application/zip", zipFileName);
                 }
-
-                // If there are multiple files, create a zip archive
-                var zipFileName = $"{model.Name.Replace(" ", "_")}_{DateTime.UtcNow:yyyyMMdd}.zip";
-                
-                using var memoryStream = new MemoryStream();
-                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-                {
-                    foreach (var file in model.Files)
-                    {
-                        try
-                        {
-                            // Extract object key from path - handle both object keys and presigned URLs
-                            string objectKey;
-                            if (file.Path.StartsWith("http"))
-                            {
-                                // This is a presigned URL, extract the object key
-                                var uri = new Uri(file.Path);
-                                var pathSegments = uri.AbsolutePath.Split('/');
-                                // Find the bucket name and extract everything after it
-                                var bucketIndex = Array.IndexOf(pathSegments, "polybucket-uploads");
-                                if (bucketIndex >= 0 && bucketIndex + 1 < pathSegments.Length)
-                                {
-                                    objectKey = string.Join("/", pathSegments.Skip(bucketIndex + 1));
-                                }
-                                else
-                                {
-                                    continue; // Skip this file if we can't parse the path
-                                }
-                            }
-                            else
-                            {
-                                // This is already an object key
-                                objectKey = file.Path;
-                            }
-                            
-                            var fileStream = await _storageService.DownloadAsync(objectKey);
-                            var entry = archive.CreateEntry(file.Name, CompressionLevel.Optimal);
-                            
-                            using var entryStream = entry.Open();
-                            await fileStream.CopyToAsync(entryStream);
-                        }
-                        catch (Exception ex)
-                        {
-                            // Log the error but continue with other files
-                            // You might want to add proper logging here
-                            continue;
-                        }
-                    }
-                }
-
-                memoryStream.Position = 0;
-                return File(memoryStream, "application/zip", zipFileName);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Critical error occurred while downloading model {ModelId}: {ErrorMessage}", id, ex.Message);
                 return StatusCode(500, "An error occurred while downloading the model");
             }
         }
@@ -202,12 +330,48 @@ namespace PolyBucket.Api.Features.Models.Http
             }
 
             // For Unlisted models, anyone with the link can access
-            if (model.Privacy == PrivacySettings.Unlisted)
+            return model.Privacy == PrivacySettings.Unlisted;
+        }
+
+        /// <summary>
+        /// Extracts the object key from either a presigned URL or direct object key path.
+        /// </summary>
+        /// <param name="filePath">The file path, which could be a presigned URL or object key</param>
+        /// <returns>The extracted object key, or null if extraction fails</returns>
+        private string? ExtractObjectKey(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return null;
+
+            // If it's not a URL, assume it's already an object key
+            if (!filePath.StartsWith("http"))
             {
-                return true;
+                return filePath;
             }
 
-            return false;
+            try
+            {
+                // This is a presigned URL, extract the object key
+                var uri = new Uri(filePath);
+                var pathSegments = uri.AbsolutePath.Split('/');
+                
+                // Find the bucket name and extract everything after it
+                var bucketIndex = Array.IndexOf(pathSegments, _storageSettings.BucketName);
+                if (bucketIndex >= 0 && bucketIndex + 1 < pathSegments.Length)
+                {
+                    var objectKey = string.Join("/", pathSegments.Skip(bucketIndex + 1));
+                    // URL decode the object key to handle spaces and other encoded characters
+                    return Uri.UnescapeDataString(objectKey);
+                }
+                
+                _logger.LogWarning("Could not find bucket name '{BucketName}' in URL path: {FilePath}", _storageSettings.BucketName, filePath);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to parse URL for object key extraction: {FilePath}", filePath);
+                return null;
+            }
         }
     }
 } 

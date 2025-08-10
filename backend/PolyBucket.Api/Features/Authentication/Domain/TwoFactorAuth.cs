@@ -15,6 +15,9 @@ namespace PolyBucket.Api.Features.Authentication.Domain
         public DateTime? LastUsedAt { get; set; }
         public string? RecoveryEmail { get; set; }
         public virtual ICollection<BackupCode> BackupCodes { get; set; } = new List<BackupCode>();
+        
+        // CONCURRENCY FIX: Add version field for optimistic concurrency control
+        public int Version { get; set; } = 1;
     }
 
     public class BackupCode : Auditable
@@ -24,6 +27,9 @@ namespace PolyBucket.Api.Features.Authentication.Domain
         public string Code { get; set; } = null!;
         public bool IsUsed { get; set; } = false;
         public DateTime? UsedAt { get; set; }
+        
+        // CONCURRENCY FIX: Add version field for optimistic concurrency control
+        public int Version { get; set; } = 1;
     }
 
     public class TwoFactorAuthSettings

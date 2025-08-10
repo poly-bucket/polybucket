@@ -33,6 +33,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
         [ProducesResponseType(500)]
         public async Task<IActionResult> Enable([FromBody] EnableTwoFactorAuthCommand command, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("EnableTwoFactorAuthController.Enable: Enabling 2FA for user {UserId}", command.UserId);
             try
             {
                 // Get user ID from the authenticated user using the standard claim type
@@ -50,21 +51,23 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 
                 if (response.Success)
                 {
+                    _logger.LogInformation("EnableTwoFactorAuthController.Enable: 2FA enabled successfully for user {UserId}", command.UserId);
                     return Ok(response);
                 }
                 else
                 {
+                    _logger.LogWarning("EnableTwoFactorAuthController.Enable: 2FA enablement failed for user {UserId}", command.UserId);
                     return BadRequest(response);
                 }
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogWarning(ex, "Invalid operation for 2FA enablement");
+                _logger.LogWarning(ex, "EnableTwoFactorAuthController.Enable: Invalid operation for 2FA enablement");
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during 2FA enablement");
+                _logger.LogError(ex, "EnableTwoFactorAuthController.Enable: Error during 2FA enablement");
                 return StatusCode(500, new { message = "An unexpected error occurred" });
             }
         }

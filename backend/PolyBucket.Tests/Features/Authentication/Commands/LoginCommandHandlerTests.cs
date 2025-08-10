@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Login.Domain;
+using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Common.Models;
@@ -21,8 +22,8 @@ public class LoginCommandHandlerTests
     private readonly Mock<IPasswordHasher> _mockPasswordHasher;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<ILogger<LoginCommandHandler>> _mockLogger;
-    private readonly Mock<ITwoFactorAuthService> _mockTwoFactorAuthService;
-    private readonly Mock<ITwoFactorAuthRepository> _mockTwoFactorAuthRepository;
+    private readonly Mock<ILoginTwoFactorAuthService> _mockLoginTwoFactorAuthService;
+    private readonly Mock<ILoginTwoFactorAuthRepository> _mockLoginTwoFactorAuthRepository;
     private readonly LoginCommandHandler _handler;
 
     public LoginCommandHandlerTests()
@@ -32,8 +33,8 @@ public class LoginCommandHandlerTests
         _mockPasswordHasher = new Mock<IPasswordHasher>();
         _mockConfiguration = new Mock<IConfiguration>();
         _mockLogger = new Mock<ILogger<LoginCommandHandler>>();
-        _mockTwoFactorAuthService = new Mock<ITwoFactorAuthService>();
-        _mockTwoFactorAuthRepository = new Mock<ITwoFactorAuthRepository>();
+        _mockLoginTwoFactorAuthService = new Mock<ILoginTwoFactorAuthService>();
+        _mockLoginTwoFactorAuthRepository = new Mock<ILoginTwoFactorAuthRepository>();
 
         _handler = new LoginCommandHandler(
             _mockAuthRepository.Object,
@@ -42,8 +43,8 @@ public class LoginCommandHandlerTests
             _mockConfiguration.Object,
             _mockLogger.Object,
             null, // Context is not needed for this test
-            _mockTwoFactorAuthService.Object,
-            _mockTwoFactorAuthRepository.Object
+            _mockLoginTwoFactorAuthService.Object,
+            _mockLoginTwoFactorAuthRepository.Object
         );
     }
 
@@ -84,8 +85,8 @@ public class LoginCommandHandlerTests
             .ReturnsAsync(new RefreshToken());
         _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
             .Returns(Task.CompletedTask);
-        _mockTwoFactorAuthRepository.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
-            .ReturnsAsync((TwoFactorAuth?)null);
+        _mockLoginTwoFactorAuthRepository.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((PolyBucket.Api.Features.Authentication.Domain.TwoFactorAuth?)null);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

@@ -1,17 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Stage } from '@react-three/drei';
-import { Suspense } from 'react';
-import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import NavigationBar from '../components/common/NavigationBar';
 import { useAppSelector } from '../store';
 import { PrivacySettings } from '../services/api.client';
 import ThumbnailGenerator from '../components/models/ThumbnailGenerator';
+import ModelViewer, { ViewMode } from '../components/ModelViewer';
+import { parseModelMarkdown, isMarkdownFile, generateMarkdownTemplate } from '../utils/markdownParser';
 
 interface UploadedFile {
   id: string;
@@ -35,491 +29,6 @@ interface ModelData {
   remix: boolean;
 }
 
-type ViewMode = 'solid' | 'wireframe' | 'points' | 'normals';
-
-// Model component for React Three Fiber
-const Model = ({ 
-  file, 
-  color, 
-  metalness, 
-  roughness, 
-  viewMode,
-  onGeometryLoaded
-}: { 
-  file: File | null;
-  color: string;
-  metalness: number;
-  roughness: number;
-  viewMode: ViewMode;
-  onGeometryLoaded?: (geometry: THREE.BufferGeometry | null) => void;
-}) => {
-  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const [centeredGeometry, setCenteredGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!file) {
-      setGeometry(null);
-      setCenteredGeometry(null);
-      if (onGeometryLoaded) {
-        onGeometryLoaded(null);
-      }
-      return;
-    }
-
-    const loadModel = async () => {
-      setIsLoading(true);
-      setGeometry(null);
-      setCenteredGeometry(null);
-      
-      try {
-        const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-        let loader: any;
-
-        switch (fileExtension) {
-        case '.stl':
-          loader = new STLLoader();
-          break;
-        case '.obj':
-          loader = new OBJLoader();
-          break;
-        case '.gltf':
-        case '.glb':
-          loader = new GLTFLoader();
-          break;
-        case '.fbx':
-          loader = new FBXLoader();
-          break;
-        default:
-          console.warn('Unsupported 3D format:', fileExtension);
-          setIsLoading(false);
-          return;
-      }
-
-      const arrayBuffer = await file.arrayBuffer();
-      console.log('File loaded, size:', arrayBuffer.byteLength);
-
-      let geom: THREE.BufferGeometry;
-
-      if (fileExtension === '.stl') {
-        console.log('Parsing STL file...');
-        geom = loader.parse(arrayBuffer);
-        console.log('STL geometry:', geom);
-      } else if (fileExtension === '.obj') {
-        const text = new TextDecoder().decode(arrayBuffer);
-        const obj = loader.parse(text);
-        // For OBJ, we need to extract geometry from the loaded object
-        if (obj.children.length > 0 && obj.children[0] instanceof THREE.Mesh) {
-          geom = obj.children[0].geometry;
-        } else {
-          setIsLoading(false);
-          return;
-        }
-      } else if (fileExtension === '.gltf' || fileExtension === '.glb') {
-        const result = await loader.parseAsync(arrayBuffer);
-        if (result.scene.children.length > 0 && result.scene.children[0] instanceof THREE.Mesh) {
-          geom = result.scene.children[0].geometry;
-        } else {
-          setIsLoading(false);
-          return;
-        }
-      } else {
-        const result = await loader.parseAsync(arrayBuffer);
-        if (result.children.length > 0 && result.children[0] instanceof THREE.Mesh) {
-          geom = result.children[0].geometry;
-        } else {
-          setIsLoading(false);
-          return;
-        }
-      }
-
-              setGeometry(geom);
-        setCenteredGeometry(geom);
-        
-        // Notify parent component
-        if (onGeometryLoaded) {
-          onGeometryLoaded(geom);
-        }
-    } catch (error) {
-      console.error('Error loading model:', error);
-    } finally {
-      setIsLoading(false);
-    }
-    };
-
-    loadModel();
-  }, [file]);
-
-
-
-  if (isLoading) {
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#666666" />
-      </mesh>
-    );
-  }
-
-  if (!centeredGeometry) {
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#888888" />
-      </mesh>
-    );
-  }
-
-  // Ensure geometry is valid before rendering
-  if (!centeredGeometry.attributes.position || centeredGeometry.attributes.position.count === 0) {
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#888888" />
-      </mesh>
-    );
-  }
-
-  if (viewMode === 'points') {
-    return (
-      <group>
-        <points geometry={centeredGeometry}>
-          <pointsMaterial 
-            size={0.5}
-            color={color}
-            sizeAttenuation={true}
-          />
-        </points>
-      </group>
-    );
-  }
-
-  return (
-    <group>
-      <mesh geometry={centeredGeometry}>
-        <meshStandardMaterial 
-          color={color}
-          metalness={metalness}
-          roughness={roughness}
-          wireframe={viewMode === 'wireframe'}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-    </group>
-  );
-};
-
-
-
-// Floating Control Panel Components
-const ViewModeControls = ({ 
-  renderSettings, 
-  setRenderSettings, 
-  showViewControls, 
-  setShowViewControls
-}: {
-  renderSettings: {
-    view: ViewMode;
-  };
-  setRenderSettings: (settings: (prev: any) => any) => void;
-  showViewControls: boolean;
-  setShowViewControls: (show: boolean) => void;
-}) => {
-  return (
-    <div className="absolute top-4 left-4 z-10 pointer-events-none">
-      {/* Toggle Button */}
-      <button
-        onClick={() => setShowViewControls(!showViewControls)}
-        className={`${
-          showViewControls 
-            ? 'lg-card text-blue-400' 
-            : 'lg-card hover:bg-gray-700 text-white'
-        } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
-        title="View Mode Controls"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-        </svg>
-      </button>
-
-      {/* View Mode Panel */}
-      {showViewControls && (
-        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">View Mode</h3>
-            <button
-              onClick={() => setShowViewControls(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-gray-300 mb-2">Render Mode</label>
-              <select
-                value={renderSettings.view}
-                onChange={(e) => setRenderSettings(prev => ({ ...prev, view: e.target.value as ViewMode }))}
-                className="lg-input text-xs"
-              >
-                <option value="solid">Solid</option>
-                <option value="wireframe">Wireframe</option>
-                <option value="points">Points</option>
-                <option value="normals">Normals</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const MaterialControls = ({ 
-  renderSettings, 
-  setRenderSettings, 
-  showMaterialControls, 
-  setShowMaterialControls
-}: {
-  renderSettings: {
-    color: string;
-    metalness: number;
-    roughness: number;
-  };
-  setRenderSettings: (settings: (prev: any) => any) => void;
-  showMaterialControls: boolean;
-  setShowMaterialControls: (show: boolean) => void;
-}) => {
-  return (
-    <div className="absolute top-4 left-20 z-10 pointer-events-none">
-      {/* Toggle Button */}
-      <button
-        onClick={() => setShowMaterialControls(!showMaterialControls)}
-        className={`${
-          showMaterialControls 
-            ? 'lg-card text-purple-400' 
-            : 'lg-card hover:bg-gray-700 text-white'
-        } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
-        title="Material Controls"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
-        </svg>
-      </button>
-
-      {/* Material Panel */}
-      {showMaterialControls && (
-        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">Material</h3>
-            <button
-              onClick={() => setShowMaterialControls(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {/* Color Picker */}
-            <div>
-              <label className="block text-xs text-gray-300 mb-2">Color</label>
-              <div className="flex items-center space-x-2">
-                <div 
-                  className="w-6 h-6 rounded border border-gray-600"
-                  style={{ backgroundColor: renderSettings.color }}
-                />
-                <input
-                  type="color"
-                  value={renderSettings.color}
-                  onChange={(e) => setRenderSettings(prev => ({ ...prev, color: e.target.value }))}
-                  className="w-6 h-6 border border-gray-600 rounded cursor-pointer"
-                />
-              </div>
-            </div>
-
-            {/* Material Properties */}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-gray-300 mb-1">Metalness</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={renderSettings.metalness}
-                  onChange={(e) => setRenderSettings(prev => ({ ...prev, metalness: parseFloat(e.target.value) }))}
-                  className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-                />
-                <span className="text-xs text-gray-400">{renderSettings.metalness}</span>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-300 mb-1">Roughness</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={renderSettings.roughness}
-                  onChange={(e) => setRenderSettings(prev => ({ ...prev, roughness: parseFloat(e.target.value) }))}
-                  className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-                />
-                <span className="text-xs text-gray-400">{renderSettings.roughness}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const LightingControls = ({ 
-  renderSettings, 
-  setRenderSettings, 
-  showLightingControls, 
-  setShowLightingControls
-}: {
-  renderSettings: {
-    lightAngle: number;
-    lightHeight: number;
-  };
-  setRenderSettings: (settings: (prev: any) => any) => void;
-  showLightingControls: boolean;
-  setShowLightingControls: (show: boolean) => void;
-}) => {
-  return (
-    <div className="absolute top-4 left-36 z-10 pointer-events-none">
-      {/* Toggle Button */}
-      <button
-        onClick={() => setShowLightingControls(!showLightingControls)}
-        className={`${
-          showLightingControls 
-            ? 'lg-card text-yellow-400' 
-            : 'lg-card hover:bg-gray-700 text-white'
-        } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
-        title="Lighting Controls"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-      </button>
-
-      {/* Lighting Panel */}
-      {showLightingControls && (
-        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">Lighting</h3>
-            <button
-              onClick={() => setShowLightingControls(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-gray-300 mb-1">Light Angle</label>
-              <input
-                type="range"
-                min="0"
-                max="360"
-                value={renderSettings.lightAngle}
-                onChange={(e) => setRenderSettings(prev => ({ ...prev, lightAngle: parseInt(e.target.value) }))}
-                className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-              />
-              <span className="text-xs text-gray-400">{renderSettings.lightAngle}°</span>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-300 mb-1">Light Height</label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={renderSettings.lightHeight}
-                onChange={(e) => setRenderSettings(prev => ({ ...prev, lightHeight: parseInt(e.target.value) }))}
-                className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-              />
-              <span className="text-xs text-gray-400">{renderSettings.lightHeight}</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AnimationControls = ({ 
-  autoRotate, 
-  setAutoRotate, 
-  showAnimationControls, 
-  setShowAnimationControls
-}: {
-  autoRotate: boolean;
-  setAutoRotate: (rotate: boolean) => void;
-  showAnimationControls: boolean;
-  setShowAnimationControls: (show: boolean) => void;
-}) => {
-  return (
-    <div className="absolute top-4 right-4 z-10 pointer-events-none">
-      {/* Toggle Button */}
-      <button
-        onClick={() => setShowAnimationControls(!showAnimationControls)}
-        className={`${
-          showAnimationControls 
-            ? 'lg-card text-green-400' 
-            : 'lg-card hover:bg-gray-700 text-white'
-        } p-2 rounded-lg shadow-lg transition-all duration-200 mb-2 pointer-events-auto`}
-        title="Animation Controls"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-      </button>
-
-      {/* Animation Panel */}
-      {showAnimationControls && (
-        <div className="lg-card p-4 shadow-xl border border-gray-700 min-w-48 pointer-events-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">Animation</h3>
-            <button
-              onClick={() => setShowAnimationControls(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-300">Auto Rotate</span>
-              <button
-                onClick={() => setAutoRotate(!autoRotate)}
-                className={`px-3 py-1 text-white text-xs rounded transition-colors ${
-                  autoRotate ? 'bg-red-600 hover:bg-red-700' : 'bg-purple-600 hover:bg-purple-700'
-                }`}
-              >
-                {autoRotate ? 'Stop' : 'Start'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const ModelUpload: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAppSelector(state => state.auth);
@@ -538,55 +47,15 @@ const ModelUpload: React.FC = () => {
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [renderSettings, setRenderSettings] = useState({
-    color: '#888888',
-    view: 'solid' as ViewMode,
-    metalness: 0.5,
-    roughness: 0.5,
-    lightAngle: 0,
-    lightHeight: 0
-  });
   const [autoRotate, setAutoRotate] = useState(false);
-  const [currentGeometry, setCurrentGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const [showViewControls, setShowViewControls] = useState(false);
-  const [showMaterialControls, setShowMaterialControls] = useState(false);
-  const [showLightingControls, setShowLightingControls] = useState(false);
-  const [showAnimationControls, setShowAnimationControls] = useState(false);
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
   const [thumbnailGeneratedMessage, setThumbnailGeneratedMessage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Keyboard shortcuts for controls
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
-        event.preventDefault();
-        setShowViewControls(prev => !prev);
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'm') {
-        event.preventDefault();
-        setShowMaterialControls(prev => !prev);
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
-        event.preventDefault();
-        setShowLightingControls(prev => !prev);
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
-        event.preventDefault();
-        setShowAnimationControls(prev => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-
-
   const supported3DFormats = ['.stl', '.obj', '.fbx', '.gltf', '.glb'];
   const supportedImageFormats = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-  const allSupportedFormats = [...supported3DFormats, ...supportedImageFormats];
+  const supportedDocumentFormats = ['.md', '.markdown'];
+  const allSupportedFormats = [...supported3DFormats, ...supportedImageFormats, ...supportedDocumentFormats];
 
   const categories = [
     'Art', 'Technology', 'Toys', 'Tools', 'Games', 
@@ -597,14 +66,50 @@ const ModelUpload: React.FC = () => {
     'MIT', 'GPL', 'Creative Commons', 'Commercial', 'Custom'
   ];
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Process markdown file and populate model data
+  const processMarkdownFile = async (file: File) => {
+    try {
+      const content = await file.text();
+      const parsedData = parseModelMarkdown(content);
+      
+      // Update model data with parsed information
+      setModelData(prev => ({
+        ...prev,
+        ...(parsedData.title && { title: parsedData.title }),
+        ...(parsedData.description && { description: parsedData.description }),
+        ...(parsedData.privacy && { privacy: parsedData.privacy }),
+        ...(parsedData.license && { license: parsedData.license }),
+        ...(parsedData.categories && { categories: parsedData.categories }),
+        ...(parsedData.aiGenerated !== undefined && { aiGenerated: parsedData.aiGenerated }),
+        ...(parsedData.workInProgress !== undefined && { workInProgress: parsedData.workInProgress }),
+        ...(parsedData.nsfw !== undefined && { nsfw: parsedData.nsfw }),
+        ...(parsedData.remix !== undefined && { remix: parsedData.remix })
+      }));
+
+      // Show confirmation message
+      setThumbnailGeneratedMessage(`Markdown file processed! Model details have been populated from ${file.name}`);
+      
+      console.log('Processed markdown data:', parsedData);
+    } catch (error) {
+      console.error('Error processing markdown file:', error);
+      alert('Error processing markdown file. Please check the file format.');
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
-    Array.from(files).forEach(file => {
+    for (const file of Array.from(files)) {
       const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
       
       if (allSupportedFormats.includes(fileExtension)) {
+        // Process markdown files immediately
+        if (isMarkdownFile(file.name)) {
+          await processMarkdownFile(file);
+          continue; // Don't add markdown files to upload queue
+        }
+
         const newFile: UploadedFile = {
           id: Math.random().toString(36).substr(2, 9),
           name: file.name,
@@ -619,28 +124,31 @@ const ModelUpload: React.FC = () => {
 
         // Auto-preview 3D models and images
         if (supported3DFormats.includes(fileExtension) || supportedImageFormats.includes(fileExtension)) {
-          // Reset geometry state when switching files
-          setCurrentGeometry(null);
           setPreviewFile(newFile);
         }
       }
-    });
+    }
   };
 
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
   };
 
-  const handleDrop = (event: React.DragEvent) => {
+  const handleDrop = async (event: React.DragEvent) => {
     event.preventDefault();
     const files = event.dataTransfer.files;
     
     if (files.length > 0) {
-      const fileArray = Array.from(files);
-      fileArray.forEach(file => {
+      for (const file of Array.from(files)) {
         const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
         
         if (allSupportedFormats.includes(fileExtension)) {
+          // Process markdown files immediately
+          if (isMarkdownFile(file.name)) {
+            await processMarkdownFile(file);
+            continue; // Don't add markdown files to upload queue
+          }
+
           const newFile: UploadedFile = {
             id: Math.random().toString(36).substr(2, 9),
             name: file.name,
@@ -655,12 +163,10 @@ const ModelUpload: React.FC = () => {
 
           // Auto-preview 3D models and images
           if (supported3DFormats.includes(fileExtension) || supportedImageFormats.includes(fileExtension)) {
-            // Reset geometry state when switching files
-            setCurrentGeometry(null);
             setPreviewFile(newFile);
           }
         }
-      });
+      }
     }
   };
 
@@ -677,8 +183,6 @@ const ModelUpload: React.FC = () => {
     const file = uploadedFiles.find(f => f.id === fileId);
     if (file) {
       setPreviewFile(file);
-      // Reset geometry state when switching files
-      setCurrentGeometry(null);
     }
   };
 
@@ -825,159 +329,149 @@ const ModelUpload: React.FC = () => {
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-green-400 mb-6">Upload New Model</h1>
             
-            {previewFile ? (
+            {/* Show drag and drop prominently when no files uploaded */}
+            {uploadedFiles.length === 0 ? (
               <div className="mb-6">
-                <p className="text-sm text-gray-400 mb-2">
-                  Previewing: {previewFile.name}
-                </p>
-                
-                {thumbnailGeneratedMessage && (
-                  <div className="mb-4 p-3 bg-green-900 border border-green-600 rounded text-green-200 text-sm">
-                    ✓ {thumbnailGeneratedMessage}
-                  </div>
-                )}
-                <div className="lg-card rounded-lg overflow-hidden h-96 relative">
-                  {getFileType(previewFile.name) === '3d' ? (
-                    <>
-                                          <Canvas 
-                      shadows 
-                      camera={{ position: [0, 0, 200], fov: 45 }}
-                      style={{ height: '100%' }}
-                    >
-                        <ambientLight intensity={0.5} />
-                        <pointLight position={[10, 10, 10]} />
-                        <Suspense fallback={null}>
-                          <Stage environment="city" intensity={0.6}>
-                            <Model 
-                              file={previewFile.file}
-                              color={renderSettings.color}
-                              metalness={renderSettings.metalness}
-                              roughness={renderSettings.roughness}
-                              viewMode={renderSettings.view}
-                              onGeometryLoaded={setCurrentGeometry}
-                            />
-                          </Stage>
-                        </Suspense>
-  
-                                              <OrbitControls 
-                        autoRotate={autoRotate}
-                        autoRotateSpeed={1}
-                        enableZoom={true}
-                        enablePan={true}
-                        enableRotate={true}
-                        maxDistance={2000}
-                        minDistance={1}
-                        target={[0, 0, 0]}
-                        zoomSpeed={0.8}
-                        panSpeed={0.8}
-                        rotateSpeed={0.8}
-                      />
-                      </Canvas>
-                                             <ViewModeControls
-                          renderSettings={renderSettings}
-                          setRenderSettings={setRenderSettings}
-                          showViewControls={showViewControls}
-                          setShowViewControls={setShowViewControls}
-                        />
-                        <MaterialControls
-                          renderSettings={renderSettings}
-                          setRenderSettings={setRenderSettings}
-                          showMaterialControls={showMaterialControls}
-                          setShowMaterialControls={setShowMaterialControls}
-                        />
-                        <LightingControls
-                          renderSettings={renderSettings}
-                          setRenderSettings={setRenderSettings}
-                          showLightingControls={showLightingControls}
-                          setShowLightingControls={setShowLightingControls}
-                        />
-                        <AnimationControls
-                          autoRotate={autoRotate}
-                          setAutoRotate={setAutoRotate}
-                          showAnimationControls={showAnimationControls}
-                          setShowAnimationControls={setShowAnimationControls}
-                        />
-                    </>
-                  ) : getFileType(previewFile.name) === 'image' ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <img 
-                        src={URL.createObjectURL(previewFile.file)} 
-                        alt="Preview" 
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <p className="text-gray-400">Preview not available for this file type</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                
-                {getFileType(previewFile.name) === '3d' && (
+                <div
+                  className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-12 text-center hover:border-green-500 transition-colors"
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  <svg className="mx-auto h-16 w-16 text-gray-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p className="text-2xl text-gray-300 mb-3">Drag files to upload</p>
+                  <p className="text-gray-500 mb-6">or</p>
                   <button
-                    onClick={() => setShowThumbnailGenerator(true)}
-                    className="mt-4 lg-button lg-button-secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="lg-button lg-button-primary text-lg px-8 py-3"
                   >
-                    Generate Custom Image
+                    Choose Files
                   </button>
-                )}
-                
-
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept={allSupportedFormats.join(',')}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <div className="mt-6 text-gray-400">
+                    <p className="mb-1">Supported 3D formats: {supported3DFormats.join(', ')}</p>
+                    <p className="mb-1">Supported image formats: {supportedImageFormats.join(', ')}</p>
+                    <p className="mb-2">Supported document formats: {supportedDocumentFormats.join(', ')}</p>
+                    <button
+                      onClick={() => {
+                        const template = generateMarkdownTemplate();
+                        const blob = new Blob([template], { type: 'text/markdown' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'model-template.md';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="text-green-400 hover:text-green-300 text-sm underline"
+                    >
+                      Download markdown template
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="mb-6">
-                <div className="lg-card rounded-lg overflow-hidden h-96 relative">
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      <p className="text-gray-400">Select a file from the upload queue to preview</p>
-                    </div>
+              <>
+                {/* Compact drag and drop area after files are uploaded */}
+                <div className="mb-6">
+                  <div
+                    className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-green-500 transition-colors"
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                  >
+                    <svg className="mx-auto h-8 w-8 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p className="text-gray-300 mb-2">Add more files</p>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="lg-button lg-button-primary text-sm"
+                    >
+                      Choose Files
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept={allSupportedFormats.join(',')}
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* File Upload Area */}
-            <div className="mb-6">
-              <div
-                className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-green-500 transition-colors"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              >
-                <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <p className="text-lg text-gray-300 mb-2">Drag files to upload</p>
-                <p className="text-sm text-gray-500 mb-4">or</p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="lg-button lg-button-primary"
-                >
-                  Choose Files
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept={allSupportedFormats.join(',')}
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <div className="mt-4 text-sm text-gray-400">
-                  <p>Supported 3D formats: {supported3DFormats.join(', ')}</p>
-                  <p>Supported image formats: {supportedImageFormats.join(', ')}</p>
-                </div>
-              </div>
-            </div>
+                {/* Model Preview Area */}
+                {previewFile ? (
+                  <div className="mb-6">
+                    <p className="text-sm text-gray-400 mb-2">
+                      Previewing: {previewFile.name}
+                    </p>
+                    
+                    {thumbnailGeneratedMessage && (
+                      <div className="mb-4 p-3 bg-green-900 border border-green-600 rounded text-green-200 text-sm">
+                        ✓ {thumbnailGeneratedMessage}
+                      </div>
+                    )}
+                    <div className="lg-card rounded-lg overflow-hidden h-96 relative">
+                      {getFileType(previewFile.name) === '3d' ? (
+                        <ModelViewer
+                          fileData={previewFile.file}
+                          fileType={previewFile.name}
+                          width="100%"
+                          height={384}
+                          autoRotate={autoRotate}
+                          showControls={true}
+                          isUploadMode={true}
+                          modelFile={previewFile.file}
+                          onShowThumbnailGenerator={() => setShowThumbnailGenerator(true)}
+                          showFPS={true}
+                          className="w-full h-full"
+                        />
+                      ) : getFileType(previewFile.name) === 'image' ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <img 
+                            src={URL.createObjectURL(previewFile.file)} 
+                            alt="Preview" 
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-center">
+                            <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p className="text-gray-400">Preview not available for this file type</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-6">
+                    <div className="lg-card rounded-lg overflow-hidden h-96 relative">
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="text-center">
+                          <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          <p className="text-gray-400">Select a file from the upload queue to preview</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Model Information */}
             <div className="space-y-6">
@@ -1008,7 +502,7 @@ const ModelUpload: React.FC = () => {
                   <label className="block text-sm font-medium text-white mb-2">Privacy</label>
                   <select
                     value={modelData.privacy}
-                    onChange={(e) => handleInputChange('privacy', Number(e.target.value) as PrivacySettings)}
+                    onChange={(e) => handleInputChange('privacy', parseInt(e.target.value))}
                     className="lg-input"
                   >
                     <option value={PrivacySettings.Public}>Public - Everyone can see this model</option>
