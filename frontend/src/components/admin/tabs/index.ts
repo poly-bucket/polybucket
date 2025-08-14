@@ -1,0 +1,10 @@
+export { default as DashboardTab } from './DashboardTab';
+export { default as UsersTab } from './UsersTab';
+export { default as RolesTab } from './RolesTab';
+export { default as ModelsTab } from './ModelsTab';
+export { default as SystemTab } from './SystemTab';
+export { default as AuthTab } from './AuthTab';
+export { default as TokensTab } from './TokensTab';
+export { default as ThemeTab } from './ThemeTab';
+export { default as PluginsTab } from './PluginsTab';
+export { default as FontAwesomeTab } from './FontAwesomeTab';

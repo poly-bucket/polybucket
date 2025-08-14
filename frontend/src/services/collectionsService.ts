@@ -38,6 +38,7 @@ export interface CreateCollectionRequest {
   description?: string;
   visibility: 'Public' | 'Private' | 'Unlisted';
   password?: string;
+  avatar?: string;
 }
 
 export interface UpdateCollectionRequest {
@@ -56,7 +57,7 @@ const collectionsService = {
   // Get all collections for the current user
   async getUserCollections(): Promise<Collection[]> {
     const response = await api.get(`${API_URL}/mine`);
-    return response.data;
+    return response.data.collections || response.data;
   },
 
   // Get a specific collection by ID

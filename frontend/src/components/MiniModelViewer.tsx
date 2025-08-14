@@ -353,6 +353,8 @@ const MiniModelViewer: React.FC<MiniModelViewerProps> = ({
       if (url.includes('.obj')) return 'obj';
       if (url.includes('.fbx')) return 'fbx';
       if (url.includes('.gltf') || url.includes('.glb')) return 'gltf';
+      if (url.includes('.3mf')) return '3mf';
+      if (url.includes('.step') || url.includes('.stp')) return 'step';
     }
     return 'stl';
   };
@@ -360,8 +362,10 @@ const MiniModelViewer: React.FC<MiniModelViewerProps> = ({
   const fileTypeLower = getFileType();
   const isSTL = fileTypeLower === 'stl';
   const isGLTF = fileTypeLower === 'gltf' || fileTypeLower === 'glb';
+  const is3MF = fileTypeLower === '3mf';
+  const isSTEP = fileTypeLower === 'step';
 
-  if (!isSTL && !isGLTF) {
+  if (!isSTL && !isGLTF && !is3MF && !isSTEP) {
     return (
       <div 
         className={`bg-gray-800 rounded-lg flex items-center justify-center ${className}`}

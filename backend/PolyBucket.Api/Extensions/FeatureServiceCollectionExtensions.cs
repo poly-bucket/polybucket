@@ -66,13 +66,19 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Collections.UpdateCollection.Domain.UpdateCollectionCommandHandler>();
         services.AddTransient<Features.Collections.DeleteCollection.Domain.DeleteCollectionCommandHandler>();
         services.AddTransient<Features.Collections.GetCollectionById.Domain.GetCollectionByIdQueryHandler>();
-        services.AddTransient<Features.Collections.GetUserCollections.Domain.GetUserCollectionsQueryHandler>();
+
         services.AddTransient<Features.Collections.AddModelToCollection.Domain.AddModelToCollectionCommandHandler>();
         services.AddTransient<Features.Collections.RemoveModelFromCollection.Domain.RemoveModelFromCollectionCommandHandler>();
         services.AddTransient<Features.Collections.AccessCollection.Domain.AccessCollectionCommandHandler>();
 
         // Users
         services.AddTransient<Features.Users.Repository.IUserRepository, Features.Users.Repository.UserRepository>();
+        
+        // User Profile Services
+        services.AddTransient<Features.Users.Services.IUserStatisticsService, Features.Users.Services.UserStatisticsService>();
+        services.AddTransient<Features.Users.Queries.GetUserProfile.GetUserProfileQueryHandler>();
+        services.AddTransient<Features.Users.UpdateUserProfile.Handlers.UpdateUserProfileCommandHandler>();
+        services.AddTransient<Features.Users.Queries.GetUserModels.GetUserModelsQueryHandler>();
         
         // Authentication
         services.AddTransient<Features.Authentication.Repository.IAuthenticationRepository, Features.Authentication.Repository.AuthenticationRepository>();
@@ -111,8 +117,18 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.SystemSettings.Services.IAuthenticationSettingsService, Features.SystemSettings.Services.AuthenticationSettingsService>();
         services.AddTransient<Features.SystemSettings.Services.ITokenSettingsService, Features.SystemSettings.Services.TokenSettingsService>();
         
+        // FontAwesome Settings
+        services.AddTransient<Features.SystemSettings.Domain.IFontAwesomeSettingsService, Features.SystemSettings.Services.FontAwesomeSettingsService>();
+        services.AddTransient<Features.SystemSettings.Repository.IFontAwesomeSettingsRepository, Features.SystemSettings.Repository.FontAwesomeSettingsRepository>();
+        
         // ACL Services
         services.AddTransient<IPermissionService, Features.ACL.Services.PermissionService>();
+        services.AddTransient<Features.ACL.Services.IRoleManagementService, Features.ACL.Services.RoleManagementService>();
+        services.AddTransient<Features.ACL.Repository.IRoleRepository, Features.ACL.Repository.RoleRepository>();
+        
+        // Admin Model Statistics
+        services.AddTransient<Features.Admin.GetAdminModelStatistics.Domain.IGetAdminModelStatisticsService, Features.Admin.GetAdminModelStatistics.Domain.GetAdminModelStatisticsService>();
+        services.AddTransient<Features.Admin.GetAdminModelStatistics.Repository.IGetAdminModelStatisticsRepository, Features.Admin.GetAdminModelStatistics.Repository.GetAdminModelStatisticsRepository>();
         
         // Avatar Service
         services.AddTransient<Common.Services.IAvatarService, Common.Services.AvatarService>();
@@ -124,6 +140,7 @@ public static class FeatureServiceCollectionExtensions
         // User Settings Services
         services.AddTransient<Features.Users.UpdateUserSettings.Handlers.UpdateUserSettingsCommandHandler>();
         services.AddTransient<Features.Users.Queries.GetUserSettingsQueryHandler>();
+        services.AddTransient<Features.Users.Queries.GetUsers.GetUsersQueryHandler>();
 
         // Authorization Filters
         services.AddScoped<Features.Files.Http.PublicModelAuthorizationFilter>();
@@ -160,6 +177,20 @@ public static class FeatureServiceCollectionExtensions
 
         // Seeders
         services.AddTransient<PolyBucket.Api.Data.Seeders.AdminSeeder>();
+        services.AddTransient<PolyBucket.Api.Seeders.CategorySeeder>();
+        
+        // Theme Management
+        services.AddTransient<Features.ThemeManagement.Repository.IThemeRepository, Features.ThemeManagement.Repository.ThemeRepository>();
+        
+        // Categories
+        services.AddScoped<Features.Categories.CreateCategory.Domain.ICreateCategoryService, Features.Categories.CreateCategory.Domain.CreateCategoryService>();
+        services.AddTransient<Features.Categories.CreateCategory.Repository.ICreateCategoryRepository, Features.Categories.CreateCategory.Repository.CreateCategoryRepository>();
+        services.AddScoped<Features.Categories.DeleteCategory.Domain.IDeleteCategoryService, Features.Categories.DeleteCategory.Domain.DeleteCategoryService>();
+        services.AddTransient<Features.Categories.DeleteCategory.Repository.IDeleteCategoryRepository, Features.Categories.DeleteCategory.Repository.DeleteCategoryRepository>();
+        services.AddScoped<Features.Categories.UpdateCategory.Domain.IUpdateCategoryService, Features.Categories.UpdateCategory.Domain.UpdateCategoryService>();
+        services.AddTransient<Features.Categories.UpdateCategory.Repository.IUpdateCategoryRepository, Features.Categories.UpdateCategory.Repository.UpdateCategoryRepository>();
+        services.AddScoped<Features.Categories.GetCategories.Domain.IGetCategoriesService, Features.Categories.GetCategories.Domain.GetCategoriesService>();
+        services.AddTransient<Features.Categories.GetCategories.Repository.IGetCategoriesRepository, Features.Categories.GetCategories.Repository.GetCategoriesRepository>();
 
         return services;
     }

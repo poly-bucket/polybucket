@@ -4,16 +4,19 @@ import {
   ShieldCheckIcon, 
   FlagIcon, 
   UserMinusIcon, 
-  ClockIcon 
+  ClockIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useSimplePermissions } from '../../hooks/useSimplePermissions';
 import { useAppSelector } from '../../utils/hooks';
 import NavigationBar from '../common/NavigationBar';
 
-import { ReportsDashboard } from './ReportsDashboard';
-import { BannedUsersTab } from './BannedUsersTab';
-import { AuditLogsTab } from './AuditLogsTab';
+import { 
+  ReportsDashboard, 
+  BannedUsersTab, 
+  AuditLogsTab 
+} from './tabs';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -33,7 +36,7 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
       {value === index && (
-        <div className="p-6">
+        <div>
           {children}
         </div>
       )}
@@ -43,13 +46,13 @@ function TabPanel(props: TabPanelProps) {
 
 export const ModerationDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(0);
+  const [tabValue, setTabValue] = useState(0);
   const { permissions, hasPermission, hasMinimumRole, isAdmin, isModerator, loading } = usePermissions();
   const { isAdmin: simpleIsAdmin, isModerator: simpleIsModerator } = useSimplePermissions();
   const { user } = useAppSelector((state) => state.auth);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+    setTabValue(newValue);
   };
 
   const handleBackToDashboard = () => {
@@ -59,18 +62,11 @@ export const ModerationDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="lg-container min-h-screen">
-        {/* Navigation Bar */}
-        <NavigationBar
-          title="Moderation Dashboard"
-          showSearch={false}
-          showUploadButton={false}
-          showHomeLink={true}
-        />
         <div className="py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="lg-card p-6">
               <div className="flex items-center justify-center">
-                <div className="lg-spinner"></div>
+                <div className="lg-spinner h-8 w-8"></div>
                 <span className="ml-3 text-lg text-white">Loading moderation dashboard...</span>
               </div>
             </div>
@@ -80,16 +76,12 @@ export const ModerationDashboard: React.FC = () => {
     );
   }
 
-  // Check if user has moderation permissions
-  // Roles above moderator (Admin) should be able to see reports dashboard
-  // Use fallback to simple permissions if detailed permissions are not loaded
   const isAdminUser = simpleIsAdmin() || (user?.roles?.includes('Admin') || false);
   const canViewReports = hasPermission('moderation.view.reports') || isAdmin() || isAdminUser;
   const canHandleReports = hasPermission('moderation.handle.reports') || isAdmin() || isAdminUser;
   const canBanUsers = hasPermission('admin.ban.users') || isAdmin() || isAdminUser;
   const canViewAuditLogs = hasPermission('moderation.view.audit_log') || isAdmin() || isAdminUser;
 
-  // Debug logging
   console.log('ModerationDashboard - User:', user);
   console.log('ModerationDashboard - Permissions:', permissions);
   console.log('ModerationDashboard - isAdmin():', isAdmin());
@@ -100,24 +92,16 @@ export const ModerationDashboard: React.FC = () => {
   console.log('ModerationDashboard - canBanUsers:', canBanUsers);
   console.log('ModerationDashboard - canViewAuditLogs:', canViewAuditLogs);
 
-  // Check if user has any moderation permissions at all
-  // Allow admin users to access even if permissions are not loaded yet
   const hasAnyModerationPermission = canViewReports || canBanUsers || canViewAuditLogs;
   
   if (!hasAnyModerationPermission && !isAdminUser) {
     return (
       <div className="lg-container min-h-screen">
-        <NavigationBar
-          title="Moderation Dashboard"
-          showSearch={false}
-          showUploadButton={false}
-          showHomeLink={true}
-        />
         <div className="py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="lg-card p-6">
-              <div className="lg-badge-error p-4">
-                <span className="text-lg">You do not have permission to access the moderation dashboard.</span>
+              <div className="lg-badge lg-badge-error p-4">
+                <span className="text-lg text-white">You do not have permission to access the moderation dashboard.</span>
               </div>
             </div>
           </div>
@@ -125,6 +109,24 @@ export const ModerationDashboard: React.FC = () => {
       </div>
     );
   }
+
+  const tabs = [
+    ...(canViewReports ? [{
+      label: 'Reports',
+      icon: <FlagIcon className="w-5 h-5" />,
+      component: <ReportsDashboard canHandleReports={canHandleReports} />
+    }] : []),
+    ...(canBanUsers ? [{
+      label: 'Banned Users',
+      icon: <UserMinusIcon className="w-5 h-5" />,
+      component: <BannedUsersTab />
+    }] : []),
+    ...(canViewAuditLogs ? [{
+      label: 'Audit Logs',
+      icon: <ClockIcon className="w-5 h-5" />,
+      component: <AuditLogsTab />
+    }] : [])
+  ];
 
   return (
     <div className="lg-container min-h-screen">
@@ -136,83 +138,33 @@ export const ModerationDashboard: React.FC = () => {
         showHomeLink={true}
       />
 
-      {/* Main Content */}
-      <div className="py-6">
+      {/* Navigation Tabs */}
+      <div className="lg-tabs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <ShieldCheckIcon className="w-8 h-8 text-indigo-400" />
-              <h1 className="text-3xl font-bold text-white">Moderation Dashboard</h1>
-            </div>
-            <p className="text-lg text-white/80">
-              Manage reports, banned users, and review moderation actions
-            </p>
-          </div>
-
-          <div className="lg-card">
-            <div className="border-b border-white/10">
-              <nav className="flex space-x-8 px-6">
-                {canViewReports && (
-                  <button
-                    onClick={() => setActiveTab(0)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200 flex items-center gap-2 ${
-                      activeTab === 0
-                        ? 'border-indigo-500 text-indigo-400'
-                        : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/20'
-                    }`}
-                  >
-                    <FlagIcon className="w-5 h-5" />
-                    Reports
-                  </button>
-                )}
-                {canBanUsers && (
-                  <button
-                    onClick={() => setActiveTab(canViewReports ? 1 : 0)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200 flex items-center gap-2 ${
-                      activeTab === (canViewReports ? 1 : 0)
-                        ? 'border-indigo-500 text-indigo-400'
-                        : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/20'
-                    }`}
-                  >
-                    <UserMinusIcon className="w-5 h-5" />
-                    Banned Users
-                  </button>
-                )}
-                {canViewAuditLogs && (
-                  <button
-                    onClick={() => setActiveTab((canViewReports ? 1 : 0) + (canBanUsers ? 1 : 0))}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200 flex items-center gap-2 ${
-                      activeTab === ((canViewReports ? 1 : 0) + (canBanUsers ? 1 : 0))
-                        ? 'border-indigo-500 text-indigo-400'
-                        : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/20'
-                    }`}
-                  >
-                    <ClockIcon className="w-5 h-5" />
-                    Audit Logs
-                  </button>
-                )}
-              </nav>
-            </div>
-
-            {canViewReports && (
-              <TabPanel value={activeTab} index={0}>
-                <ReportsDashboard canHandleReports={canHandleReports} />
-              </TabPanel>
-            )}
-
-            {canBanUsers && (
-              <TabPanel value={activeTab} index={canViewReports ? 1 : 0}>
-                <BannedUsersTab />
-              </TabPanel>
-            )}
-
-            {canViewAuditLogs && (
-              <TabPanel value={activeTab} index={(canViewReports ? 1 : 0) + (canBanUsers ? 1 : 0)}>
-                <AuditLogsTab />
-              </TabPanel>
-            )}
-          </div>
+          <nav>
+            {tabs.map((tab, index) => (
+              <button
+                key={index}
+                onClick={() => setTabValue(index)}
+                className={`lg-tab-button ${tabValue === index ? 'active' : ''}`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </nav>
         </div>
+      </div>
+      
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {tabs.map((tab, index) => (
+          <TabPanel key={index} value={tabValue} index={index}>
+            <div className="lg-tab-panel">
+              {tab.component}
+            </div>
+          </TabPanel>
+        ))}
       </div>
     </div>
   );

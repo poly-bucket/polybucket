@@ -1,9 +1,11 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback, startTransition } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, useGLTF, useProgress, Html, PerformanceMonitor } from '@react-three/drei';
+import { OrbitControls, useGLTF, useProgress, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { ThreeMFLoader } from 'three-stdlib';
+import { exportTo3MF } from 'three-3mf-exporter';
 import { API_CONFIG } from '../api/config';
 
 // Types
@@ -36,7 +38,8 @@ const ViewModeControls = ({
   showViewControls, 
   setShowViewControls,
   isUploadMode,
-  onShowThumbnailGenerator
+  onShowThumbnailGenerator,
+  onExport3MF
 }: {
   renderSettings: {
     view: ViewMode;
@@ -46,6 +49,7 @@ const ViewModeControls = ({
   setShowViewControls: (show: boolean) => void;
   isUploadMode?: boolean;
   onShowThumbnailGenerator?: () => void;
+  onExport3MF?: () => void;
 }) => {
   return (
     <div className="absolute top-4 left-4 z-10 pointer-events-none">
@@ -94,6 +98,18 @@ const ViewModeControls = ({
                 <option value="normals">Normals</option>
               </select>
             </div>
+
+            {onExport3MF && (
+              <div>
+                <button
+                  onClick={onExport3MF}
+                  className="w-full px-3 py-2 text-white text-xs rounded transition-colors bg-green-600 hover:bg-green-700"
+                  title="Export to 3MF format"
+                >
+                  Export to 3MF
+                </button>
+              </div>
+            )}
 
           </div>
         </div>
@@ -437,12 +453,11 @@ const STLModel = React.memo(({ url, accessToken, fileData, renderSettings, autoR
           if (onBoundingBoxCalculated) {
             geometry.computeBoundingBox();
             const boundingBox = geometry.boundingBox!.clone();
-            console.log('STL bounding box calculated:', boundingBox);
             onBoundingBoxCalculated(boundingBox);
           }
         });
       } catch (error) {
-        console.error('Error loading STL:', error);
+        // Error loading STL
       }
     };
     
@@ -569,16 +584,96 @@ const GLTFModel = React.memo(({ url, accessToken, fileData, renderSettings, auto
           // Calculate bounding box and report it
           if (onBoundingBoxCalculated) {
             const boundingBox = new THREE.Box3().setFromObject(gltf.scene);
-            console.log('GLTF bounding box calculated:', boundingBox);
             onBoundingBoxCalculated(boundingBox);
           }
         });
       } catch (error) {
-        console.error('Error loading GLTF:', error);
+        // Error loading GLTF
       }
     };
     
     loadGLTF();
+  }, [url, accessToken, fileData, onBoundingBoxCalculated]);
+
+  useFrame((state: any) => {
+    if (meshRef.current && autoRotate) {
+      meshRef.current.rotation.y += 0.005;
+    }
+  });
+
+  if (!scene) {
+    return null;
+  }
+
+  return <primitive ref={meshRef} object={scene} />;
+});
+
+// 3MF Model component
+const ThreeMFModel = React.memo(({ url, accessToken, fileData, renderSettings, autoRotate, onBoundingBoxCalculated }: { 
+  url?: string; 
+  accessToken?: string; 
+  fileData?: ArrayBuffer | Blob; 
+  renderSettings: { 
+    color: string; 
+    view: ViewMode; 
+    metalness: number; 
+    roughness: number; 
+  };
+  autoRotate: boolean;
+  onBoundingBoxCalculated?: (boundingBox: THREE.Box3) => void;
+}) => {
+  const [scene, setScene] = useState<THREE.Group | null>(null);
+  const meshRef = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    const load3MF = async () => {
+      try {
+        const loader = new ThreeMFLoader();
+        
+        let arrayBuffer: ArrayBuffer;
+        
+        if (fileData) {
+          // Use direct file data if provided
+          if (fileData instanceof Blob) {
+            arrayBuffer = await fileData.arrayBuffer();
+          } else {
+            arrayBuffer = fileData;
+          }
+        } else if (url) {
+          // Fallback to fetching from URL
+          const headers: HeadersInit = {};
+          if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+          }
+          
+          const response = await fetch(url, { headers });
+          if (!response.ok) {
+            throw new Error(`Failed to fetch 3MF: ${response.status}`);
+          }
+          
+          arrayBuffer = await response.arrayBuffer();
+        } else {
+          throw new Error('No file data or URL provided');
+        }
+        
+        const group = loader.parse(arrayBuffer);
+        
+        // Use startTransition for expensive operations to prevent UI blocking
+        startTransition(() => {
+          setScene(group);
+          
+          // Calculate bounding box and report it
+          if (onBoundingBoxCalculated) {
+            const boundingBox = new THREE.Box3().setFromObject(group);
+            onBoundingBoxCalculated(boundingBox);
+          }
+        });
+      } catch (error) {
+        // Error loading 3MF
+      }
+    };
+    
+    load3MF();
   }, [url, accessToken, fileData, onBoundingBoxCalculated]);
 
   useFrame((state: any) => {
@@ -613,7 +708,6 @@ function CameraController({
   useEffect(() => {
     // Only set camera position on initial load or when explicitly reset
     if (!hasSetInitialPosition || resetCamera) {
-      console.log('Setting initial camera position:', cameraSettings);
       camera.position.set(...cameraSettings.position);
       camera.lookAt(...cameraSettings.target);
       camera.updateMatrixWorld();
@@ -624,29 +718,11 @@ function CameraController({
   return null;
 }
 
-// Adaptive Pixel Ratio component for performance scaling
-const AdaptivePixelRatio = React.memo(() => {
-  const current = useThree((state) => state.performance.current);
-  const setPixelRatio = useThree((state) => state.setDpr);
-  
-  useEffect(() => {
-    const adaptiveRatio = window.devicePixelRatio * current;
-    setPixelRatio(Math.min(adaptiveRatio, 2)); // Cap at 2x for performance
-  }, [current, setPixelRatio]);
-  
-  return null;
-});
 
-// OrbitControls with movement regression for performance scaling
-const OrbitControlsWithRegression = React.memo((props: any) => {
-  const regress = useThree((state) => state.performance.regress);
-  
-  return (
-    <OrbitControls 
-      {...props}
-      onChange={regress} // Trigger performance regression on camera movement
-    />
-  );
+
+// OrbitControls component
+const OrbitControlsComponent = React.memo((props: any) => {
+  return <OrbitControls {...props} />;
 });
 
 // FPS Counter component - Optimized to reduce render calls
@@ -700,24 +776,25 @@ function Loader() {
 /**
  * ModelViewer Component
  * 
- * A high-performance 3D model viewer that supports STL and GLTF/GLB files with automatic camera positioning.
+ * A 3D model viewer that supports STL, GLTF/GLB, and 3MF files with automatic camera positioning.
  * 
- * Performance Features:
+ * Features:
  * - On-demand rendering (frameloop="demand") - only renders when necessary
- * - Movement regression - quality scales down during camera movement  
- * - Adaptive pixel ratio - automatic resolution scaling based on performance
  * - React 18 concurrency - expensive operations use startTransition to prevent UI blocking
  * - Material memoization - prevents GPU overhead from material recreation
- * - Performance monitoring - automatic quality adjustment to maintain 60 FPS
- * 
- * Visual Features:
  * - Automatic camera positioning based on model bounding box
  * - Dynamic zoom limits (min/max distance) based on model size
  * - Multiple view modes (solid, wireframe, points, normals)
  * - Material controls (color, metalness, roughness)
  * - Lighting controls (light angle, height)
  * - Animation controls (auto-rotate, reset camera)
+ * - 3MF export functionality for 3D printing workflows
  * - Keyboard shortcuts for all controls
+ * 
+ * Supported Formats:
+ * - STL: Standard triangle format with material support
+ * - GLTF/GLB: Modern 3D format with animations and materials
+ * - 3MF: 3D Manufacturing Format with colors, materials, and print settings
  * 
  * Keyboard Shortcuts (when showControls=true):
  * - Ctrl/Cmd + V: Toggle view mode controls
@@ -725,6 +802,7 @@ function Loader() {
  * - Ctrl/Cmd + L: Toggle lighting controls
  * - Ctrl/Cmd + A: Toggle animation controls
  * - Ctrl/Cmd + R: Reset camera to optimal position
+ * - Ctrl/Cmd + E: Export current model to 3MF format
  */
 const ModelViewer: React.FC<ModelViewerProps> = ({
   modelUrl,
@@ -745,15 +823,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   onShowThumbnailGenerator,
   showFPS = false
 }) => {
-  console.log('ModelViewer props:', { 
-    modelUrl, 
-    fileId, 
-    modelId, 
-    fileName, 
-    fileData: fileData ? (fileData instanceof File ? `File(${fileData.size} bytes)` : `ArrayBuffer(${fileData.byteLength} bytes)`) : 'undefined',
-    fileType,
-    showControls 
-  });
+
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -761,7 +831,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   
   // Camera control states
   const [currentAutoRotate, setCurrentAutoRotate] = useState(autoRotate);
-  const [adaptiveDpr, setAdaptiveDpr] = useState(Math.min(window.devicePixelRatio, 2));
   const [renderSettings, setRenderSettings] = useState({
     color: '#888888',
     view: 'solid' as ViewMode,
@@ -826,21 +895,10 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
       maxDistance,
       target: [center.x, center.y, center.z]
     });
-    
-    console.log('Camera settings calculated:', {
-      modelSize: size,
-      modelCenter: center,
-      maxDimension: effectiveMaxDimension,
-      optimalDistance: clampedDistance,
-      minDistance,
-      maxDistance,
-      cameraPosition
-    });
   };
 
   // Handle bounding box calculation
   const handleBoundingBoxCalculated = (boundingBox: THREE.Box3) => {
-    console.log('Bounding box received:', boundingBox);
     setLastBoundingBox(boundingBox);
     
     // Use startTransition for expensive camera calculations
@@ -856,8 +914,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   // Reset camera to optimal position
   const handleResetCamera = () => {
     if (lastBoundingBox) {
-      console.log('Resetting camera to optimal position');
-      
       // Use startTransition for smooth camera reset
       startTransition(() => {
         calculateCameraPosition(lastBoundingBox);
@@ -867,6 +923,8 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
       });
     }
   };
+
+
 
   // Keyboard shortcuts for controls
   useEffect(() => {
@@ -892,6 +950,10 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
       if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
         event.preventDefault();
         handleResetCamera();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+        event.preventDefault();
+        handleExport3MF();
       }
     };
 
@@ -947,7 +1009,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
           setIsLoading(false);
         })
         .catch(err => {
-          console.error('Model loading error:', err);
           setError('Failed to load model');
           setIsLoading(false);
         });
@@ -955,18 +1016,14 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   }, [modelUrl, fileId, modelId, fileName, fileData, accessToken]);
 
   const getFileType = () => {
-    console.log('getFileType called with:', { fileType, fileName, streamUrl });
-    
     if (fileType) {
       // Extract file extension from fileType (which might be a filename)
       const lastDotIndex = fileType.lastIndexOf('.');
       if (lastDotIndex !== -1) {
         const extension = fileType.substring(lastDotIndex + 1).toLowerCase();
-        console.log('Extracted extension from fileType:', extension);
         return extension;
       }
       // If no extension found, treat the whole string as the type
-      console.log('No extension found in fileType, using as-is:', fileType.toLowerCase());
       return fileType.toLowerCase();
     }
     if (fileName) {
@@ -974,7 +1031,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
       const lastDotIndex = fileName.lastIndexOf('.');
       if (lastDotIndex !== -1) {
         const extension = fileName.substring(lastDotIndex + 1).toLowerCase();
-        console.log('Extracted extension from fileName:', extension);
         return extension;
       }
     }
@@ -984,19 +1040,112 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
       if (url.includes('.obj')) return 'obj';
       if (url.includes('.fbx')) return 'fbx';
       if (url.includes('.gltf') || url.includes('.glb')) return 'gltf';
+      if (url.includes('.3mf')) return '3mf';
+      if (url.includes('.step') || url.includes('.stp')) return 'step';
     }
-    console.log('Defaulting to stl');
     return 'stl'; // Default to STL
   };
 
   const fileTypeLower = getFileType();
   const isSTL = fileTypeLower === 'stl';
   const isGLTF = fileTypeLower === 'gltf' || fileTypeLower === 'glb';
-  
-  console.log('File type detection:', { fileTypeLower, isSTL, isGLTF });
+  const is3MF = fileTypeLower === '3mf';
+  const isSTEP = fileTypeLower === 'step';
 
-  if (!isSTL && !isGLTF) {
-    console.log('Unsupported format detected:', { fileTypeLower, isSTL, isGLTF });
+  // Export to 3MF functionality
+  const handleExport3MF = useCallback(async () => {
+    try {
+      // Get the current scene from the canvas
+      const canvas = document.querySelector('canvas');
+      if (!canvas) {
+        return;
+      }
+
+      // Create a temporary scene with the current model
+      const tempScene = new THREE.Scene();
+      
+      // Clone the current model based on file type
+      if (isSTL && fileData) {
+        // For STL, we need to recreate the geometry and material
+        const loader = new STLLoader();
+        let arrayBuffer: ArrayBuffer;
+        
+        if (fileData instanceof Blob) {
+          arrayBuffer = await fileData.arrayBuffer();
+        } else {
+          arrayBuffer = fileData;
+        }
+        
+        const geometry = loader.parse(arrayBuffer);
+        const material = new THREE.MeshStandardMaterial({
+          color: renderSettings.color,
+          metalness: renderSettings.metalness,
+          roughness: renderSettings.roughness
+        });
+        
+        const mesh = new THREE.Mesh(geometry, material);
+        tempScene.add(mesh);
+      } else if (isGLTF && fileData) {
+        // For GLTF, we need to load and add the model
+        const loader = new GLTFLoader();
+        let arrayBuffer: ArrayBuffer;
+        
+        if (fileData instanceof Blob) {
+          arrayBuffer = await fileData.arrayBuffer();
+        } else {
+          arrayBuffer = fileData;
+        }
+        
+        const gltf = await new Promise<{ scene: THREE.Group }>((resolve, reject) => {
+          loader.parse(arrayBuffer, '', resolve, reject);
+        });
+        
+        tempScene.add(gltf.scene);
+      } else if (is3MF && fileData) {
+        // For 3MF, we need to load and add the model
+        const loader = new ThreeMFLoader();
+        let arrayBuffer: ArrayBuffer;
+        
+        if (fileData instanceof Blob) {
+          arrayBuffer = await fileData.arrayBuffer();
+        } else {
+          arrayBuffer = fileData;
+        }
+        
+        const group = loader.parse(arrayBuffer);
+        tempScene.add(group);
+      } else {
+        return;
+      }
+
+      // Export to 3MF
+      const blob = await exportTo3MF(tempScene, {
+        printer_name: 'Generic 3D Printer',
+        filament: 'Generic PLA',
+        printableWidth: 256,
+        printableDepth: 256,
+        printableHeight: 256,
+        printerSettingsId: 'Generic 0.4 nozzle',
+        printSettingsId: '0.20mm Standard'
+      });
+
+      // Download the file
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${fileName || 'model'}.3mf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+
+    } catch (error) {
+      // Error exporting to 3MF
+    }
+  }, [isSTL, isGLTF, is3MF, fileData, fileName, renderSettings]);
+
+  if (!isSTL && !isGLTF && !is3MF && !isSTEP) {
     return (
       <div 
         className={`bg-gray-800 rounded-lg flex items-center justify-center ${className}`}
@@ -1004,8 +1153,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
       >
         <div className="text-gray-400 text-sm">
           Unsupported format: {fileTypeLower}
-          <br />
-          <small>Debug: fileType={fileType}, fileName={fileName}</small>
         </div>
       </div>
     );
@@ -1032,30 +1179,9 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
           premultipliedAlpha: false,
           preserveDrawingBuffer: false
         }}
-        dpr={adaptiveDpr}
-        performance={{ 
-          min: 0.3,
-          max: 1,
-          debounce: 200
-        }}
+        dpr={Math.min(window.devicePixelRatio, 2)}
       >
-        <PerformanceMonitor
-          onIncline={() => {
-            // Increase quality when performance allows (more conservative)
-            setAdaptiveDpr(Math.min(window.devicePixelRatio * 1.2, 2));
-          }}
-          onDecline={() => {
-            // Decrease quality when performance drops (less aggressive)
-            setAdaptiveDpr(Math.max(window.devicePixelRatio * 0.8, 1));
-          }}
-          onFallback={() => {
-            // Fallback to reasonable minimum quality (not too blurry)
-            setAdaptiveDpr(Math.max(window.devicePixelRatio * 0.7, 1));
-          }}
-          flipflops={5}
-          bounds={() => [55, 90]}
-        />
-        <AdaptivePixelRatio />
+
         <CameraController 
           cameraSettings={cameraSettings}
           resetCamera={shouldResetCamera}
@@ -1089,8 +1215,18 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
             onBoundingBoxCalculated={handleBoundingBoxCalculated}
           />
         )}
+        {is3MF && (
+          <ThreeMFModel 
+            url={streamUrl || undefined} 
+            accessToken={accessToken} 
+            fileData={fileData}
+            renderSettings={renderSettings}
+            autoRotate={currentAutoRotate}
+            onBoundingBoxCalculated={handleBoundingBoxCalculated}
+          />
+        )}
         
-        <OrbitControlsWithRegression 
+        <OrbitControlsComponent 
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
@@ -1114,6 +1250,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
             setShowViewControls={setShowViewControls}
             isUploadMode={false}
             onShowThumbnailGenerator={undefined}
+            onExport3MF={handleExport3MF}
           />
           <MaterialControls
             renderSettings={renderSettings}

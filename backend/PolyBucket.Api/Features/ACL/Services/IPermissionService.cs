@@ -17,6 +17,7 @@ namespace PolyBucket.Api.Features.ACL.Services
         // Role Management
         Task<bool> IsAdminAsync(Guid userId);
         Task<bool> CanManageRoleAsync(Guid userId, Guid roleId);
+        Task<bool> CanDeleteRoleAsync(Guid userId, Guid roleId);
         Task<Role?> GetUserRoleAsync(Guid userId);
         Task<List<Role>> GetAllRolesAsync();
         Task<bool> AssignRoleAsync(Guid userId, Guid roleId, Guid assignedByUserId);
@@ -31,5 +32,8 @@ namespace PolyBucket.Api.Features.ACL.Services
         Task InitializeDefaultPermissionsAsync();
         Task InitializeDefaultRolesAsync();
         Task<bool> ValidateUserCanPerformActionOnResourceAsync(Guid userId, string action, string resourceType, Guid? resourceOwnerId = null);
+        
+        // Permission Management
+        Task<List<Permission>> GetAllPermissionsAsync();
     }
 } 

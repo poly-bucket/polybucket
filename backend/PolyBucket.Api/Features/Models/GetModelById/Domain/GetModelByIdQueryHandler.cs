@@ -61,34 +61,18 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 
                 _logger.LogDebug("User has permission to access model");
 
-                // Generate fresh presigned URLs for the model files
+                // Generate fresh presigned URLs for the model files (stored as object keys)
                 if (model.FileUrl != null)
                 {
                     _logger.LogDebug("Generating presigned URL for FileUrl: {FileUrl}", model.FileUrl);
-                    // Check if it's already a presigned URL (contains query parameters)
-                    if (!model.FileUrl.Contains("?"))
-                    {
-                        model.FileUrl = await _storageService.GetPresignedUrlAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
-                        _logger.LogDebug("Generated presigned URL for FileUrl: {FileUrl}", model.FileUrl);
-                    }
-                    else
-                    {
-                        _logger.LogDebug("FileUrl is already a presigned URL, skipping generation");
-                    }
+                    model.FileUrl = await _storageService.GetPresignedUrlAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
+                    _logger.LogDebug("Generated presigned URL for FileUrl: {FileUrl}", model.FileUrl);
                 }
                 if (model.ThumbnailUrl != null)
                 {
                     _logger.LogDebug("Generating presigned URL for ThumbnailUrl: {ThumbnailUrl}", model.ThumbnailUrl);
-                    // Check if it's already a presigned URL (contains query parameters)
-                    if (!model.ThumbnailUrl.Contains("?"))
-                    {
-                        model.ThumbnailUrl = await _storageService.GetPresignedUrlAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
-                        _logger.LogDebug("Generated presigned URL for ThumbnailUrl: {ThumbnailUrl}", model.ThumbnailUrl);
-                    }
-                    else
-                    {
-                        _logger.LogDebug("ThumbnailUrl is already a presigned URL, skipping generation");
-                    }
+                    model.ThumbnailUrl = await _storageService.GetPresignedUrlAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
+                    _logger.LogDebug("Generated presigned URL for ThumbnailUrl: {ThumbnailUrl}", model.ThumbnailUrl);
                 }
 
                 // Generate fresh presigned URLs for all files

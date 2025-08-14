@@ -7,6 +7,7 @@ namespace PolyBucket.Api.Features.ACL.Domain
         public const string ADMIN_VIEW_AUDIT_LOGS = "admin.view.audit_logs";
         public const string ADMIN_MANAGE_ROLES = "admin.manage.roles";
         public const string ADMIN_MANAGE_PERMISSIONS = "admin.manage.permissions";
+        public const string ADMIN_MANAGE_CATEGORIES = "admin.manage.categories";
         public const string ADMIN_MANAGE_USERS = "admin.manage.users";
         public const string ADMIN_DELETE_ANY_USER = "admin.delete.any_user";
         public const string ADMIN_BAN_USERS = "admin.ban.users";
@@ -208,6 +209,7 @@ namespace PolyBucket.Api.Features.ACL.Domain
                     ADMIN_VIEW_AUDIT_LOGS,
                     ADMIN_MANAGE_ROLES,
                     ADMIN_MANAGE_PERMISSIONS,
+                    ADMIN_MANAGE_CATEGORIES,
                     ADMIN_MANAGE_USERS,
                     ADMIN_DELETE_ANY_USER,
                     ADMIN_BAN_USERS,

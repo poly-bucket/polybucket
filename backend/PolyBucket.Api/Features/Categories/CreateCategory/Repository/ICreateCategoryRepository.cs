@@ -1,0 +1,13 @@
+using PolyBucket.Api.Features.Models.Domain;
+using System;
+using System.Threading.Tasks;
+
+namespace PolyBucket.Api.Features.Categories.CreateCategory.Repository
+{
+    public interface ICreateCategoryRepository
+    {
+        Task<Category> CreateCategoryAsync(Category category);
+        Task<Category?> GetCategoryByIdAsync(Guid id);
+        Task<Category?> GetCategoryByNameAsync(string name);
+    }
+}

@@ -14,6 +14,7 @@ namespace PolyBucket.Api.Features.ACL.Domain
         public bool IsDefault { get; set; } = false;
         public bool CanBeDeleted { get; set; } = true;
         public bool IsActive { get; set; } = true;
+        public string Color { get; set; } = "#3B82F6"; // Default blue color
         
         // Hierarchy support
         public Guid? ParentRoleId { get; set; }

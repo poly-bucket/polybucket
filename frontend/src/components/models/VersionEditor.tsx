@@ -104,7 +104,7 @@ const VersionEditor: React.FC<VersionEditorProps> = ({
         >
           {versions.map((version) => (
             <option key={version.id} value={version.id}>
-              {version.name} (v{version.version})
+              {version.name} (v{version.versionNumber})
             </option>
           ))}
         </select>
@@ -164,8 +164,8 @@ const VersionEditor: React.FC<VersionEditorProps> = ({
                 <input
                   type="number"
                   min="1"
-                  value={selectedVersion.version || 1}
-                  onChange={(e) => handleVersionDetailsUpdate('version', parseInt(e.target.value) || 1)}
+                  value={selectedVersion.versionNumber || 1}
+                  onChange={(e) => handleVersionDetailsUpdate('versionNumber', parseInt(e.target.value) || 1)}
                   disabled={loading}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50"
                 />

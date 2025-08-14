@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace PolyBucket.Api.Features.ACL.Http
 {
@@ -15,23 +17,66 @@ namespace PolyBucket.Api.Features.ACL.Http
     [ApiController]
     [Route("api/admin/roles")]
     [RequirePermission(PermissionConstants.ADMIN_MANAGE_ROLES)]
-    public class RoleManagementController(IPermissionService permissionService) : ControllerBase
+    public class RoleManagementController : ControllerBase
     {
-        private readonly IPermissionService _permissionService = permissionService;
+        private readonly IRoleManagementService _roleManagementService;
+        private readonly IPermissionService _permissionService;
+
+        public RoleManagementController(IRoleManagementService roleManagementService, IPermissionService permissionService)
+        {
+            _roleManagementService = roleManagementService;
+            _permissionService = permissionService;
+        }
 
         /// <summary>
-        /// Get all roles with their permissions
+        /// Get all roles with their permissions (paginated)
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(List<RoleDto>), 200)]
-        public async Task<ActionResult<List<RoleDto>>> GetAllRoles()
+        [ProducesResponseType(typeof(PaginatedRolesResponse), 200)]
+        public async Task<ActionResult<PaginatedRolesResponse>> GetAllRoles(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = "priority",
+            [FromQuery] bool sortDescending = true)
         {
-            var roles = await _permissionService.GetAllRolesAsync();
+            // Validate pagination parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+            var roles = await _roleManagementService.GetAllRolesAsync();
             var roleDtos = new List<RoleDto>();
 
-            foreach (var role in roles)
+            // Apply search filter if provided
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var permissions = await GetRolePermissionsAsync(role.Id);
+                roles = roles.Where(r => 
+                    r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    r.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+
+            // Apply sorting
+            roles = sortBy?.ToLower() switch
+            {
+                "name" => sortDescending ? roles.OrderByDescending(r => r.Name).ToList() : roles.OrderBy(r => r.Name).ToList(),
+                "priority" => sortDescending ? roles.OrderByDescending(r => r.Priority).ToList() : roles.OrderBy(r => r.Priority).ToList(),
+                "users" => sortDescending ? roles.OrderByDescending(r => r.Users.Count).ToList() : roles.OrderBy(r => r.Users.Count).ToList(),
+                _ => sortDescending ? roles.OrderByDescending(r => r.Priority).ToList() : roles.OrderBy(r => r.Priority).ToList()
+            };
+
+            // Calculate pagination
+            var totalCount = roles.Count;
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            var skip = (page - 1) * pageSize;
+            var pagedRoles = roles.Skip(skip).Take(pageSize).ToList();
+
+            // Build DTOs for the current page
+            foreach (var role in pagedRoles)
+            {
+                var permissions = await _roleManagementService.GetRolePermissionsAsync(role.Id);
+                var userCount = await _roleManagementService.GetUserCountAsync(role.Id);
+                
                 roleDtos.Add(new RoleDto
                 {
                     Id = role.Id,
@@ -43,7 +88,58 @@ namespace PolyBucket.Api.Features.ACL.Http
                     CanBeDeleted = role.CanBeDeleted,
                     IsActive = role.IsActive,
                     ParentRoleId = role.ParentRoleId,
-                    Permissions = permissions
+                    Permissions = permissions,
+                    UserCount = userCount,
+                    Color = role.Color
+                });
+            }
+
+            var response = new PaginatedRolesResponse
+            {
+                Roles = roleDtos,
+                Pagination = new PaginationInfo
+                {
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalCount = totalCount,
+                    TotalPages = totalPages,
+                    HasNextPage = page < totalPages,
+                    HasPreviousPage = page > 1
+                }
+            };
+
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get all roles without pagination (for backward compatibility)
+        /// </summary>
+        [HttpGet("unpaginated")]
+        [ProducesResponseType(typeof(List<RoleDto>), 200)]
+        public async Task<ActionResult<List<RoleDto>>> GetAllRolesUnpaginated()
+        {
+            var roles = await _roleManagementService.GetAllRolesAsync();
+            var roleDtos = new List<RoleDto>();
+
+            foreach (var role in roles)
+            {
+                var permissions = await _roleManagementService.GetRolePermissionsAsync(role.Id);
+                var userCount = await _roleManagementService.GetUserCountAsync(role.Id);
+                
+                roleDtos.Add(new RoleDto
+                {
+                    Id = role.Id,
+                    Name = role.Name,
+                    Description = role.Description,
+                    Priority = role.Priority,
+                    IsSystemRole = role.IsSystemRole,
+                    IsDefault = role.IsDefault,
+                    CanBeDeleted = role.CanBeDeleted,
+                    IsActive = role.IsActive,
+                    ParentRoleId = role.ParentRoleId,
+                    Permissions = permissions,
+                    UserCount = userCount,
+                    Color = role.Color
                 });
             }
 
@@ -58,13 +154,12 @@ namespace PolyBucket.Api.Features.ACL.Http
         [ProducesResponseType(404)]
         public async Task<ActionResult<RoleDto>> GetRole(Guid id)
         {
-            var roles = await _permissionService.GetAllRolesAsync();
-            var role = roles.Find(r => r.Id == id);
-            
+            var role = await _roleManagementService.GetRoleByIdAsync(id);
             if (role == null)
                 return NotFound("Role not found");
 
-            var permissions = await GetRolePermissionsAsync(role.Id);
+            var permissions = await _roleManagementService.GetRolePermissionsAsync(role.Id);
+            var userCount = await _roleManagementService.GetUserCountAsync(role.Id);
             
             var roleDto = new RoleDto
             {
@@ -77,7 +172,9 @@ namespace PolyBucket.Api.Features.ACL.Http
                 CanBeDeleted = role.CanBeDeleted,
                 IsActive = role.IsActive,
                 ParentRoleId = role.ParentRoleId,
-                Permissions = permissions
+                Permissions = permissions,
+                UserCount = userCount,
+                Color = role.Color
             };
 
             return Ok(roleDto);
@@ -95,35 +192,46 @@ namespace PolyBucket.Api.Features.ACL.Http
             if (!Guid.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
-            // Validate hierarchy
-            if (!await _permissionService.ValidateRoleHierarchyAsync(request.ParentRoleId, request.Priority))
-                return BadRequest("Invalid role hierarchy: child role must have lower priority than parent");
-
-            // Only admins can create system roles or roles with admin-level priority
-            var isAdmin = await _permissionService.IsAdminAsync(userId);
-            if (!isAdmin && (request.IsSystemRole || request.Priority >= 1000))
-                return Forbid("Only administrators can create system roles or high-priority roles");
-
             try
             {
-                var role = await CreateRoleAsync(request);
-                var permissions = await GetRolePermissionsAsync(role.Id);
+                var role = new Role
+                {
+                    Name = request.Name,
+                    Description = request.Description,
+                    Priority = request.Priority,
+                    IsSystemRole = request.IsSystemRole,
+                    IsDefault = request.IsDefault,
+                    ParentRoleId = request.ParentRoleId,
+                    IsActive = true,
+                    CanBeDeleted = !request.IsSystemRole,
+                    Color = request.Color
+                };
+
+                var createdRole = await _roleManagementService.CreateRoleAsync(role, request.InitialPermissions);
+                var permissions = await _roleManagementService.GetRolePermissionsAsync(createdRole.Id);
+                var userCount = await _roleManagementService.GetUserCountAsync(createdRole.Id);
                 
                 var roleDto = new RoleDto
                 {
-                    Id = role.Id,
-                    Name = role.Name,
-                    Description = role.Description,
-                    Priority = role.Priority,
-                    IsSystemRole = role.IsSystemRole,
-                    IsDefault = role.IsDefault,
-                    CanBeDeleted = role.CanBeDeleted,
-                    IsActive = role.IsActive,
-                    ParentRoleId = role.ParentRoleId,
-                    Permissions = permissions
+                    Id = createdRole.Id,
+                    Name = createdRole.Name,
+                    Description = createdRole.Description,
+                    Priority = createdRole.Priority,
+                    IsSystemRole = createdRole.IsSystemRole,
+                    IsDefault = createdRole.IsDefault,
+                    CanBeDeleted = createdRole.CanBeDeleted,
+                    IsActive = createdRole.IsActive,
+                    ParentRoleId = createdRole.ParentRoleId,
+                    Permissions = permissions,
+                    UserCount = userCount,
+                    Color = createdRole.Color
                 };
 
-                return CreatedAtAction(nameof(GetRole), new { id = role.Id }, roleDto);
+                return CreatedAtAction(nameof(GetRole), new { id = createdRole.Id }, roleDto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -144,16 +252,18 @@ namespace PolyBucket.Api.Features.ACL.Http
             if (!Guid.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
-            if (!await _permissionService.CanManageRoleAsync(userId, id))
+            if (!await _roleManagementService.CanManageRoleAsync(userId, id))
                 return Forbid("Insufficient privileges to manage this role");
 
             try
             {
-                var updatedRole = await UpdateRoleAsync(id, request);
-                if (updatedRole == null)
+                var existingRole = await _roleManagementService.GetRoleByIdAsync(id);
+                if (existingRole == null)
                     return NotFound("Role not found");
 
-                var permissions = await GetRolePermissionsAsync(updatedRole.Id);
+                var updatedRole = await _roleManagementService.UpdateRoleAsync(id, request);
+                var permissions = await _roleManagementService.GetRolePermissionsAsync(updatedRole.Id);
+                var userCount = await _roleManagementService.GetUserCountAsync(updatedRole.Id);
                 
                 var roleDto = new RoleDto
                 {
@@ -166,10 +276,16 @@ namespace PolyBucket.Api.Features.ACL.Http
                     CanBeDeleted = updatedRole.CanBeDeleted,
                     IsActive = updatedRole.IsActive,
                     ParentRoleId = updatedRole.ParentRoleId,
-                    Permissions = permissions
+                    Permissions = permissions,
+                    UserCount = userCount,
+                    Color = updatedRole.Color
                 };
 
                 return Ok(roleDto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -190,16 +306,20 @@ namespace PolyBucket.Api.Features.ACL.Http
             if (!Guid.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
-            if (!await _permissionService.CanManageRoleAsync(userId, id))
-                return Forbid("Insufficient privileges to manage this role");
+            if (!await _roleManagementService.CanDeleteRoleAsync(userId, id))
+                return Forbid("Insufficient privileges to delete this role");
 
             try
             {
-                var success = await DeleteRoleAsync(id);
+                var success = await _roleManagementService.DeleteRoleAsync(id);
                 if (!success)
                     return NotFound("Role not found or cannot be deleted");
 
                 return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -220,12 +340,12 @@ namespace PolyBucket.Api.Features.ACL.Http
             if (!Guid.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
-            if (!await _permissionService.CanManageRoleAsync(userId, id))
+            if (!await _roleManagementService.CanManageRoleAsync(userId, id))
                 return Forbid("Insufficient privileges to manage this role");
 
             try
             {
-                await AssignPermissionsToRoleAsync(id, request.PermissionNames);
+                await _roleManagementService.AssignPermissionsToRoleAsync(id, request.PermissionNames);
                 return Ok(new { message = "Permissions assigned successfully" });
             }
             catch (Exception ex)
@@ -234,41 +354,85 @@ namespace PolyBucket.Api.Features.ACL.Http
             }
         }
 
+        /// <summary>
+        /// Remove permissions from a role
+        /// </summary>
+        [HttpDelete("{id}/permissions")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult> RemovePermissionsFromRole(Guid id, [FromBody] RemovePermissionsRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+
+            if (!await _roleManagementService.CanManageRoleAsync(userId, id))
+                return Forbid("Insufficient privileges to manage this role");
+
+            try
+            {
+                await _roleManagementService.RemovePermissionsFromRoleAsync(id, request.PermissionNames);
+                return Ok(new { message = "Permissions removed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Failed to remove permissions: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Get all available permissions
+        /// </summary>
+        [HttpGet("permissions")]
+        [ProducesResponseType(typeof(List<PermissionDto>), 200)]
+        public async Task<ActionResult<List<PermissionDto>>> GetAllPermissions()
+        {
+            var permissions = await _permissionService.GetAllPermissionsAsync();
+            var permissionDtos = new List<PermissionDto>();
+
+            foreach (var permission in permissions)
+            {
+                permissionDtos.Add(new PermissionDto
+                {
+                    Name = permission.Name,
+                    Category = GetPermissionCategory(permission.Name),
+                    Description = GeneratePermissionDescription(permission.Name)
+                });
+            }
+
+            return Ok(permissionDtos.OrderBy(p => p.Category).ThenBy(p => p.Name).ToList());
+        }
+
         #region Private Helper Methods
 
-        private async Task<List<string>> GetRolePermissionsAsync(Guid roleId)
+        private string GetPermissionCategory(string permissionName)
         {
-            // This would typically be implemented in the permission service
-            // For now, return empty list as placeholder
-            return new List<string>();
+            return permissionName.Split('.')[0] switch
+            {
+                "admin" => PermissionConstants.Categories.ADMINISTRATION,
+                "user" => PermissionConstants.Categories.USER_MANAGEMENT,
+                "model" => PermissionConstants.Categories.MODEL_MANAGEMENT,
+                "moderation" => PermissionConstants.Categories.MODERATION,
+                "collection" => PermissionConstants.Categories.COLLECTIONS,
+                "comment" => PermissionConstants.Categories.COMMENTS,
+                "report" => PermissionConstants.Categories.REPORTS,
+                "plugin" => PermissionConstants.Categories.PLUGINS,
+                "api" => PermissionConstants.Categories.API_ACCESS,
+                "storage" => PermissionConstants.Categories.STORAGE,
+                _ => "Other"
+            };
         }
 
-        private async Task<Role> CreateRoleAsync(CreateRoleRequest request)
+        private string GeneratePermissionDescription(string permissionName)
         {
-            // Implementation would create role in database
-            // Placeholder implementation
-            throw new NotImplementedException("Role creation not yet implemented");
-        }
+            var parts = permissionName.Split('.');
+            if (parts.Length < 2) return permissionName;
 
-        private async Task<Role?> UpdateRoleAsync(Guid id, UpdateRoleRequest request)
-        {
-            // Implementation would update role in database
-            // Placeholder implementation
-            throw new NotImplementedException("Role update not yet implemented");
-        }
+            var action = parts[1].Replace('_', ' ');
+            var resource = parts[0].Replace('_', ' ');
 
-        private async Task<bool> DeleteRoleAsync(Guid id)
-        {
-            // Implementation would delete role from database
-            // Placeholder implementation
-            throw new NotImplementedException("Role deletion not yet implemented");
-        }
-
-        private async Task AssignPermissionsToRoleAsync(Guid roleId, List<string> permissionNames)
-        {
-            // Implementation would assign permissions to role
-            // Placeholder implementation
-            throw new NotImplementedException("Permission assignment not yet implemented");
+            return $"{action} {resource}";
         }
 
         #endregion
@@ -288,6 +452,9 @@ namespace PolyBucket.Api.Features.ACL.Http
         public bool IsActive { get; set; }
         public Guid? ParentRoleId { get; set; }
         public List<string> Permissions { get; set; } = new List<string>();
+        [JsonPropertyName("userCount")]
+        public int UserCount { get; set; } = 1;
+        public string Color { get; set; } = "#3B82F6";
     }
 
     public class CreateRoleRequest
@@ -307,6 +474,10 @@ namespace PolyBucket.Api.Features.ACL.Http
         public bool IsDefault { get; set; } = false;
         public Guid? ParentRoleId { get; set; }
         public List<string> InitialPermissions { get; set; } = new List<string>();
+        
+        [StringLength(7, MinimumLength = 7)]
+        [RegularExpression(@"^#[0-9A-Fa-f]{6}$", ErrorMessage = "Color must be a valid hex color code (e.g., #3B82F6)")]
+        public string Color { get; set; } = "#3B82F6";
     }
 
     public class UpdateRoleRequest
@@ -323,12 +494,45 @@ namespace PolyBucket.Api.Features.ACL.Http
         public bool? IsDefault { get; set; }
         public bool? IsActive { get; set; }
         public Guid? ParentRoleId { get; set; }
+        
+        [StringLength(7, MinimumLength = 7)]
+        [RegularExpression(@"^#[0-9A-Fa-f]{6}$", ErrorMessage = "Color must be a valid hex color code (e.g., #3B82F6)")]
+        public string? Color { get; set; }
     }
 
     public class AssignPermissionsRequest
     {
         [Required]
         public List<string> PermissionNames { get; set; } = new List<string>();
+    }
+
+    public class RemovePermissionsRequest
+    {
+        [Required]
+        public List<string> PermissionNames { get; set; } = new List<string>();
+    }
+
+    public class PermissionDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    public class PaginatedRolesResponse
+    {
+        public List<RoleDto> Roles { get; set; } = new List<RoleDto>();
+        public PaginationInfo Pagination { get; set; } = new PaginationInfo();
+    }
+
+    public class PaginationInfo
+    {
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
+        public int TotalPages { get; set; }
+        public bool HasNextPage { get; set; }
+        public bool HasPreviousPage { get; set; }
     }
 
     #endregion

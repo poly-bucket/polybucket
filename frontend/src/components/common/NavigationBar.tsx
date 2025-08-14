@@ -6,6 +6,8 @@ import UserMenu from '../UserMenu';
 
 interface NavigationBarProps {
   title?: string;
+  icon?: React.ReactNode;
+  description?: string;
   showSearch?: boolean;
   onSearch?: (query: string) => void;
   searchPlaceholder?: string;
@@ -16,7 +18,9 @@ interface NavigationBarProps {
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
-  title = "PolyBucket",
+  title = "Polybucket",
+  icon,
+  description,
   showSearch = true,
   onSearch,
   searchPlaceholder = "Search models...",
@@ -50,23 +54,44 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   return (
     <>
       <header className="lg-nav">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1.5">
               {showHomeLink && (
                 <Link
                   to="/dashboard"
-                  className="flex items-center text-white/60 hover:text-white mr-4 transition-colors duration-200"
+                  className="flex items-center text-white/60 hover:text-white transition-colors duration-200"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
-                  Dashboard
+                  <span className="text-xs">Dashboard</span>
                 </Link>
               )}
-              <h1 className="text-2xl font-bold text-white">{title}</h1>
+              
+              {showHomeLink && (
+                <div className="w-px h-3 bg-white/20 mx-1"></div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                {icon && (
+                  <div className="flex items-center justify-center w-5 h-5 text-white/80">
+                    {icon}
+                  </div>
+                )}
+                <h1 className="text-lg font-semibold text-white">
+                  {title}
+                </h1>
+              </div>
+              
+              {description && (
+                <span className="text-gray-300 text-xs ml-2 max-w-md truncate">
+                  {description}
+                </span>
+              )}
+              
               {searchQuery && (
-                <span className="ml-4 px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-sm border border-indigo-500/30">
+                <span className="ml-2 px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full text-xs border border-indigo-500/30">
                   Search: "{searchQuery}"
                 </span>
               )}
@@ -74,18 +99,18 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
             
             {/* Search Bar */}
             {showSearch && (
-              <div className="flex-1 max-w-lg mx-8">
+              <div className="flex-1 max-w-lg mx-4">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder={searchPlaceholder}
-                    className="lg-input w-full px-4 py-2"
+                    className="lg-input w-full px-3 py-1 text-sm"
                     onKeyPress={handleSearch}
                     disabled={isSearching}
                   />
                   {isSearching && (
-                    <div className="absolute right-3 top-2.5">
-                      <div className="lg-spinner h-5 w-5"></div>
+                    <div className="absolute right-2 top-1">
+                      <div className="lg-spinner h-3.5 w-3.5"></div>
                     </div>
                   )}
                 </div>
@@ -93,13 +118,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
             )}
 
             {/* User Menu */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               {showUploadButton && (
                 <Link
                   to="/upload-model"
-                  className="lg-button lg-button-primary flex items-center space-x-2"
+                  className="lg-button lg-button-primary flex items-center space-x-1.5 px-2.5 py-1 text-sm"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   <span>Upload Model</span>
@@ -108,7 +133,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               
               <button
                 onClick={handleUserMenuOpen}
-                className="flex items-center space-x-2 hover:bg-white/10 rounded-lg p-2 transition-colors duration-200"
+                className="flex items-center space-x-1 hover:bg-white/10 rounded p-1 transition-colors duration-200"
               >
                 <UserAvatar 
                   userId={user?.id || ''}
@@ -116,7 +141,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   avatar={user?.avatar}
                   profilePictureUrl={user?.profilePictureUrl}
                 />
-                <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>

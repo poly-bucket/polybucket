@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Federation.Domain;
+using PolyBucket.Api.Features.ThemeManagement.Domain;
 using ReportsDomain = PolyBucket.Api.Features.Reports.Domain;
 using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
@@ -26,12 +27,15 @@ namespace PolyBucket.Api.Data
         public DbSet<CommentDomain.Comment> Comments { get; set; } = null!;
         public DbSet<Model> Models { get; set; } = null!;
         public DbSet<ModelFile> ModelFiles { get; set; } = null!;
+        public DbSet<Like> Likes { get; set; } = null!;
         public DbSet<ModelVersion> ModelVersions { get; set; } = null!;
         public DbSet<Category> Categories { get; set; } = null!;
         public DbSet<Tag> Tags { get; set; } = null!;
         public DbSet<Filament> Filaments { get; set; } = null!;
         public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
         public DbSet<SystemSetup> SystemSetups { get; set; } = null!;
+        public DbSet<FontAwesomeSettings> FontAwesomeSettings { get; set; } = null!;
+        public DbSet<FileTypeSettings> FileTypeSettings { get; set; } = null!;
         public DbSet<Collection> Collections { get; set; } = null!;
         public DbSet<CollectionModel> CollectionModels { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
@@ -56,6 +60,9 @@ namespace PolyBucket.Api.Data
         public DbSet<FederationHandshake> FederationHandshakes { get; set; } = null!;
         public DbSet<FederationAuditLog> FederationAuditLogs { get; set; } = null!;
         public DbSet<ReportsDomain.Report> Reports { get; set; } = null!;
+        
+        // Theme Management
+        public DbSet<Theme> Themes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -168,6 +175,17 @@ namespace PolyBucket.Api.Data
             modelBuilder.ApplyConfiguration(new FilamentMap());
             // modelBuilder.ApplyConfiguration(new UserMap());
             // modelBuilder.ApplyConfiguration(new UserLoginMap());
+            
+            // Theme Configuration
+            modelBuilder.Entity<Theme>()
+                .HasOne(t => t.Colors)
+                .WithOne(c => c.Theme)
+                .HasForeignKey<ThemeColors>(c => c.ThemeId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            modelBuilder.Entity<Theme>()
+                .HasIndex(t => t.Name)
+                .IsUnique();
         }
     }
 } 

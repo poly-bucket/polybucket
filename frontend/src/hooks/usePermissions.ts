@@ -49,7 +49,6 @@ export const usePermissions = () => {
         }
       });
       
-      console.log('usePermissions - API Response:', response.data);
       setPermissions(response.data);
       setError(null);
     } catch (err) {
@@ -143,9 +142,11 @@ export const DEFAULT_ROLE_HIERARCHY: Record<string, number> = {
 export const PERMISSIONS = {
   // Administration
   ADMIN_SYSTEM_SETTINGS: 'admin.system.settings',
+  ADMIN_MANAGE_SYSTEM_SETTINGS: 'admin.manage.system_settings',
   ADMIN_VIEW_AUDIT_LOGS: 'admin.view.audit_logs',
   ADMIN_MANAGE_ROLES: 'admin.manage.roles',
   ADMIN_MANAGE_PERMISSIONS: 'admin.manage.permissions',
+  ADMIN_MANAGE_CATEGORIES: 'admin.manage.categories',
   ADMIN_MANAGE_USERS: 'admin.manage.users',
   ADMIN_DELETE_ANY_USER: 'admin.delete.any_user',
   ADMIN_BAN_USERS: 'admin.ban.users',

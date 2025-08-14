@@ -88,7 +88,7 @@ namespace PolyBucket.Tests
             }
         }
 
-        protected async Task<User> CreateTestUser(string email = null, string password = "TestPassword123!")
+        protected async Task<User> CreateTestUser(string? email = null, string password = "TestPassword123!")
         {
             return await UserFactory.CreateTestUser(email, password);
         }

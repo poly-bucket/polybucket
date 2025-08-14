@@ -11,17 +11,14 @@ import RegisterForm from './components/auth/RegisterForm';
 import Dashboard from './components/Dashboard';
 import RootRedirect from './components/RootRedirect';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminDashboard from './pages/admin/AdminDashboard';
+
 import AdminControlPanel from './pages/admin/AdminControlPanel';
 import ModelModeration from './components/moderation/ModelModeration';
 import { ModerationDashboard } from './components/moderation/ModerationDashboard';
-import ModelUploadSettings from './components/admin/ModelUploadSettings';
-import ModerationSettings from './components/admin/ModerationSettings';
-import RoleManagement from './pages/admin/RoleManagement';
-import ModelUploadSettingsPage from './pages/admin/ModelUploadSettings';
+
 import ModelUpload from './pages/ModelUpload';
 import ModelDetails from './pages/ModelDetails';
-import UserSettings from './pages/UserSettings';
+import { UserControlPanel } from './components/user';
 import Collections from './pages/Collections';
 import AvatarDemo from './components/AvatarDemo';
 import LiquidGlassDemo from './components/LiquidGlassDemo';
@@ -33,6 +30,7 @@ import { UserSettingsProvider } from './context/UserSettingsContext';
 import CreateCollection from './pages/CreateCollection';
 import CollectionDetails from './pages/CollectionDetails';
 import EditCollection from './pages/EditCollection';
+import UserProfile from './pages/UserProfile';
 
 const App: React.FC = () => {
   return (
@@ -47,7 +45,7 @@ const App: React.FC = () => {
                   <Router>
               <Routes>
                 {/* Root route - determines where to go */}
-                <Route path="/" element={<RootRedirect />} />
+                {/* <Route path="/" element={<RootRedirect />} /> */}
                 
                 {/* Auth routes */}
                 <Route path="/login" element={<LoginForm />} />
@@ -59,6 +57,9 @@ const App: React.FC = () => {
                 <Route path="/liquid-glass-demo" element={<LiquidGlassDemo />} />
                 <Route path="/test-models" element={<TestModels />} />
                 <Route path="/public-dashboard" element={<PublicDashboard />} />
+                
+                {/* Public routes */}
+                <Route path="/profile/:id" element={<UserProfile />} />
                 
                 {/* Protected routes */}
                 <Route 
@@ -88,7 +89,7 @@ const App: React.FC = () => {
                   path="/settings" 
                   element={
                     <ProtectedRoute>
-                      <UserSettings />
+                      <UserControlPanel />
                     </ProtectedRoute>
                   } 
                 />
@@ -129,47 +130,15 @@ const App: React.FC = () => {
                   } 
                 />
                 
-                {/* Admin Control Panel - Accessible for development purposes */}
-                <Route 
-                  path="/admin-panel" 
-                  element={<AdminControlPanel />}
-                />
-                
-                {/* Admin routes - Use the new AdminDashboard and nested routes */}
+                {/* Admin routes - Use the new AdminControlPanel */}
                 <Route 
                   path="/admin" 
                   element={
                     <ProtectedRoute requiredRole="admin">
-                      <AdminDashboard />
+                      <AdminControlPanel />
                     </ProtectedRoute>
                   } 
-                >
-                  {/* Nested routes within the Admin Dashboard */}
-                  <Route 
-                    path="roles" 
-                    element={
-                      <ProtectedRoute requiredRole="admin">
-                        <RoleManagement />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="model-settings" 
-                    element={
-                      <ProtectedRoute requiredRole="admin">
-                        <ModelUploadSettingsPage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="moderation-settings" 
-                    element={
-                      <ProtectedRoute requiredRole="admin">
-                        <ModerationSettings />
-                      </ProtectedRoute>
-                    } 
-                  />
-                </Route>
+                />
                 
                 {/* Moderation routes */}
                 <Route 

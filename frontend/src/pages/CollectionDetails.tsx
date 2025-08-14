@@ -5,6 +5,9 @@ import NavigationBar from '../components/common/NavigationBar';
 import collectionsService, { Collection } from '../services/collectionsService';
 import { useAppSelector } from '../utils/hooks';
 import PasswordPrompt from '../components/collections/PasswordPrompt';
+import ModelGrid from '../components/ModelGrid';
+import CollectionsBar from '../components/collections/CollectionsBar';
+import { ExtendedModel } from '../services/modelsService';
 
 const CollectionDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +20,11 @@ const CollectionDetails: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  
+  // Collections sidebar state
+  const [isCollectionsSidebarCollapsed, setIsCollectionsSidebarCollapsed] = useState(
+    localStorage.getItem('collectionsSidebarCollapsed') === 'true'
+  );
 
   useEffect(() => {
     if (id) {
@@ -72,7 +80,7 @@ const CollectionDetails: React.FC = () => {
 
   const handleEdit = () => {
     if (collection) {
-      navigate(`/collections/${collection.id}/edit`);
+      navigate(`/my-collections/${collection.id}/edit`);
     }
   };
 
@@ -92,19 +100,81 @@ const CollectionDetails: React.FC = () => {
     }
   };
 
+  const handleModelClick = (model: ExtendedModel) => {
+    navigate(`/models/${model.id}`);
+  };
+
+  const toggleCollectionsSidebar = () => {
+    const newCollapsedState = !isCollectionsSidebarCollapsed;
+    setIsCollectionsSidebarCollapsed(newCollapsedState);
+    localStorage.setItem('collectionsSidebarCollapsed', newCollapsedState.toString());
+  };
+
   const isOwner = collection?.ownerId === user?.id;
+
+  // Convert collection models to ExtendedModel format for ModelGrid
+  const getCollectionModels = (): ExtendedModel[] => {
+    if (!collection?.collectionModels) return [];
+    
+    return collection.collectionModels
+      .filter(collectionModel => collectionModel.model)
+      .map((collectionModel) => ({
+        id: collectionModel.model!.id,
+        name: collectionModel.model!.name || 'Untitled Model',
+        description: collectionModel.model!.description || '',
+        thumbnailUrl: collectionModel.model!.thumbnailUrl || undefined,
+        author: collection.owner ? {
+          id: collection.owner.id,
+          username: collection.owner.username
+        } : undefined,
+        likes: [],
+        comments: [],
+        wip: false,
+        aiGenerated: false,
+        nsfw: false,
+        privacy: 'Public' as any,
+        license: '',
+        categories: [],
+        createdAt: collectionModel.addedAt,
+        updatedAt: collectionModel.addedAt,
+        userId: collection.owner?.id || '',
+        isRemix: false,
+        isPublic: true,
+        isFeatured: false,
+        authorId: collection.owner?.id || '',
+        downloads: 0,
+        fileUrl: '',
+        versions: [],
+        tags: [],
+        categoryCollection: []
+      }));
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <NavigationBar
-          title="Collection Details"
-          showSearch={false}
-          showUploadButton={false}
-          showHomeLink={true}
+      <div className="min-h-screen flex relative">
+        {/* Collections Sidebar */}
+        <CollectionsBar 
+          isCollapsed={isCollectionsSidebarCollapsed}
+          onToggle={toggleCollectionsSidebar}
         />
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        
+        {/* Main Content */}
+        <div className="flex-1 transition-all duration-300">
+          {/* Navigation Bar */}
+          <NavigationBar
+            title="Collection Details"
+            showSearch={true}
+            showUploadButton={true}
+            showHomeLink={true}
+          />
+
+          {/* Main Content Area */}
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex items-center justify-center py-12">
+              <div className="lg-spinner h-12 w-12"></div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -112,60 +182,81 @@ const CollectionDetails: React.FC = () => {
 
   if (error || !collection) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <NavigationBar
-          title="Collection Details"
-          showSearch={false}
-          showUploadButton={false}
-          showHomeLink={true}
+      <div className="min-h-screen flex relative">
+        {/* Collections Sidebar */}
+        <CollectionsBar 
+          isCollapsed={isCollectionsSidebarCollapsed}
+          onToggle={toggleCollectionsSidebar}
         />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md mx-auto">
-              <p className="text-red-800">{error || 'Collection not found'}</p>
-              <button 
-                onClick={() => navigate('/my-collections')}
-                className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-              >
-                Back to Collections
-              </button>
+        
+        {/* Main Content */}
+        <div className="flex-1 transition-all duration-300">
+          {/* Navigation Bar */}
+          <NavigationBar
+            title="Collection Details"
+            showSearch={true}
+            showUploadButton={true}
+            showHomeLink={true}
+          />
+
+          {/* Main Content Area */}
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center py-12">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-md p-4 max-w-md mx-auto">
+                <p className="text-red-200">{error || 'Collection not found'}</p>
+                <button 
+                  onClick={() => navigate('/my-collections')}
+                  className="mt-2 text-sm text-red-400 hover:text-red-300 underline"
+                >
+                  Back to Collections
+                </button>
+              </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavigationBar
-        title={collection.name}
-        showSearch={false}
-        showUploadButton={false}
-        showHomeLink={true}
+    <div className="min-h-screen flex relative">
+      {/* Collections Sidebar */}
+      <CollectionsBar 
+        isCollapsed={isCollectionsSidebarCollapsed}
+        onToggle={toggleCollectionsSidebar}
       />
+      
+      {/* Main Content */}
+      <div className="flex-1 transition-all duration-300">
+        {/* Navigation Bar */}
+        <NavigationBar
+          title={collection.name}
+          showSearch={true}
+          showUploadButton={true}
+          showHomeLink={true}
+        />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center">
-                             <button
-                 onClick={() => navigate('/my-collections')}
-                 className="mr-4 p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-               >
+        {/* Main Content Area */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Collection Header */}
+          <div className="mb-6">
+            <div className="flex items-center mb-4">
+              <button
+                onClick={() => navigate('/my-collections')}
+                className="mr-4 p-2 text-gray-400 hover:text-gray-300 rounded-lg hover:bg-white/10 transition-colors"
+              >
                 <ArrowLeftIcon className="w-5 h-5" />
               </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{collection.name}</h1>
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-white">{collection.name}</h1>
                 {collection.description && (
-                  <p className="mt-2 text-gray-600">{collection.description}</p>
+                  <p className="mt-2 text-gray-300">{collection.description}</p>
                 )}
-                <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
+                <div className="mt-4 flex items-center space-x-4 text-sm text-gray-400">
                   <span className={`px-3 py-1 rounded-full ${
-                    collection.visibility === 'Public' ? 'bg-green-100 text-green-800' :
-                    collection.visibility === 'Unlisted' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
+                    collection.visibility === 'Public' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                    collection.visibility === 'Unlisted' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                    'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                   }`}>
                     {collection.visibility}
                   </span>
@@ -175,125 +266,62 @@ const CollectionDetails: React.FC = () => {
                   )}
                 </div>
               </div>
-            </div>
-            
-            {isOwner && (
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleEdit}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <PencilIcon className="w-4 h-4 mr-2" />
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  <TrashIcon className="w-4 h-4 mr-2" />
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Models Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Models in Collection</h2>
-            {isOwner && (
-              <button
-                onClick={() => navigate('/upload-model')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Add Model
-              </button>
-            )}
-          </div>
-
-                     {collection.collectionModels && collection.collectionModels.length > 0 ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-               {collection.collectionModels
-                 .filter(collectionModel => collectionModel.model)
-                 .map((collectionModel) => (
-                   <div
-                     key={collectionModel.model!.id}
-                     className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 cursor-pointer transition-colors"
-                     onClick={() => navigate(`/models/${collectionModel.model!.id}`)}
-                   >
-                     <div className="aspect-w-1 aspect-h-1 mb-3">
-                       {collectionModel.model!.thumbnailUrl ? (
-                         <img
-                           src={collectionModel.model!.thumbnailUrl}
-                           alt={collectionModel.model!.name}
-                           className="w-full h-32 object-cover rounded-md"
-                         />
-                       ) : (
-                         <div className="w-full h-32 bg-gray-200 rounded-md flex items-center justify-center">
-                           <span className="text-gray-400">No thumbnail</span>
-                         </div>
-                       )}
-                     </div>
-                     <h3 className="font-medium text-gray-900 truncate">
-                       {collectionModel.model!.name}
-                     </h3>
-                     <p className="text-sm text-gray-500 truncate">
-                       {collectionModel.model!.description || 'No description'}
-                     </p>
-                   </div>
-                 ))}
-             </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No models yet</h3>
-              <p className="text-gray-500 mb-4">
-                This collection doesn't have any models yet.
-              </p>
+              
               {isOwner && (
-                <button
-                  onClick={() => navigate('/upload-model')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Upload Model
-                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleEdit}
+                    className="lg-button"
+                  >
+                    <PencilIcon className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="lg-button bg-red-600 hover:bg-red-700 border-red-600"
+                  >
+                    <TrashIcon className="w-4 h-4 mr-2" />
+                    Delete
+                  </button>
+                </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+
+          {/* Models Grid */}
+          <ModelGrid 
+            models={getCollectionModels()} 
+            loading={loading}
+            error={error}
+            onModelClick={handleModelClick}
+          />
+        </main>
       </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-gray-800 border-gray-600">
             <div className="mt-3 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <TrashIcon className="h-6 w-6 text-red-600" />
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/20">
+                <TrashIcon className="h-6 w-6 text-red-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-2">Delete Collection</h3>
+              <h3 className="text-lg font-medium text-white mt-2">Delete Collection</h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-300">
                   Are you sure you want to delete "{collection.name}"? This action cannot be undone.
                 </p>
               </div>
               <div className="flex gap-4 justify-center mt-4">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  className="lg-button"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="lg-button bg-red-600 hover:bg-red-700 border-red-600"
                 >
                   Delete
                 </button>

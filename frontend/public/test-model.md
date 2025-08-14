@@ -31,3 +31,4 @@ The articulated joints use a snap-fit design that requires no additional hardwar
 ## Remix Information
 
 This is a remix of the original "Simple Dragon" by OriginalCreator, with added articulation and enhanced wing details. Original design used under Creative Commons license.
+

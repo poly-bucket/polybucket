@@ -26,8 +26,90 @@ namespace PolyBucket.Api.Features.Models.GetModelByUserId.Domain
             _storageService = storageService;
         }
 
+        /// <summary>
+        /// Checks if a string is already a presigned URL or just an object key.
+        /// </summary>
+        /// <param name="value">The value to check</param>
+        /// <returns>True if it's already a URL, false if it's an object key</returns>
+        private static bool IsPresignedUrl(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return false;
+            
+            // Check if it starts with http/https (presigned URL)
+            if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+                value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            
+            // Check if it contains query parameters (presigned URL)
+            if (value.Contains('?'))
+            {
+                return true;
+            }
+            
+            // Check if it contains encoded URL parts (double-encoded presigned URL)
+            if (value.Contains("%3A") || value.Contains("%2F") || value.Contains("%3F"))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// Safely generates a presigned URL only if the value is an object key.
+        /// </summary>
+        /// <param name="value">The value (object key or presigned URL)</param>
+        /// <param name="expiry">Expiry time for the presigned URL</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The presigned URL (either existing or newly generated)</returns>
+        private async Task<string> GetPresignedUrlSafelyAsync(string value, TimeSpan expiry, CancellationToken cancellationToken)
+        {
+            if (IsPresignedUrl(value))
+            {
+                return value;
+            }
+            
+            return await _storageService.GetPresignedUrlAsync(value, expiry, cancellationToken);
+        }
+
         public async Task<GetModelByUserIdResponse> GetModelsByUserIdAsync(Guid userId, GetModelByUserIdRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
+            // Handle public access (no authenticated user)
+            if (user == null)
+            {
+                // For public access, only show public models, no private or deleted
+                var (publicModels, publicTotalCount) = await _repository.GetModelsByUserIdAsync(userId, request.Page, request.Take, false, false, cancellationToken);
+
+                // Generate fresh presigned URLs for thumbnail and file URLs (stored as object keys)
+                foreach (var model in publicModels)
+                {
+                    if (!string.IsNullOrEmpty(model.ThumbnailUrl))
+                    {
+                        model.ThumbnailUrl = await GetPresignedUrlSafelyAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
+                    }
+
+                    if (!string.IsNullOrEmpty(model.FileUrl))
+                    {
+                        model.FileUrl = await GetPresignedUrlSafelyAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
+                    }
+                }
+
+                var publicTotalPages = (int)Math.Ceiling((double)publicTotalCount / request.Take);
+
+                return new GetModelByUserIdResponse
+                {
+                    Models = publicModels,
+                    TotalCount = publicTotalCount,
+                    Page = request.Page,
+                    Take = request.Take,
+                    TotalPages = publicTotalPages
+                };
+            }
+
+            // Handle authenticated user access
             var currentUserIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
             {
@@ -47,40 +129,32 @@ namespace PolyBucket.Api.Features.Models.GetModelByUserId.Domain
             var includePrivate = isOwnModels && request.IncludePrivate;
             var includeDeleted = isOwnModels && request.IncludeDeleted;
 
-            var (models, totalCount) = await _repository.GetModelsByUserIdAsync(userId, request.Page, request.Take, includePrivate, includeDeleted, cancellationToken);
+            var (authModels, authTotalCount) = await _repository.GetModelsByUserIdAsync(userId, request.Page, request.Take, includePrivate, includeDeleted, cancellationToken);
 
-            // Generate fresh presigned URLs for thumbnail and file URLs
-            foreach (var model in models)
+            // Generate fresh presigned URLs for thumbnail and file URLs (stored as object keys)
+            foreach (var model in authModels)
             {
                 // Generate fresh presigned URLs for thumbnail and file URLs
                 if (!string.IsNullOrEmpty(model.ThumbnailUrl))
                 {
-                    // Check if it's already a presigned URL (contains query parameters)
-                    if (!model.ThumbnailUrl.Contains("?"))
-                    {
-                        model.ThumbnailUrl = await _storageService.GetPresignedUrlAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
-                    }
+                    model.ThumbnailUrl = await GetPresignedUrlSafelyAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
                 }
 
                 if (!string.IsNullOrEmpty(model.FileUrl))
                 {
-                    // Check if it's already a presigned URL (contains query parameters)
-                    if (!model.FileUrl.Contains("?"))
-                    {
-                        model.FileUrl = await _storageService.GetPresignedUrlAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
-                    }
+                    model.FileUrl = await GetPresignedUrlSafelyAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
                 }
             }
 
-            var totalPages = (int)Math.Ceiling((double)totalCount / request.Take);
+            var authTotalPages = (int)Math.Ceiling((double)authTotalCount / request.Take);
 
             return new GetModelByUserIdResponse
             {
-                Models = models,
-                TotalCount = totalCount,
+                Models = authModels,
+                TotalCount = authTotalCount,
                 Page = request.Page,
                 Take = request.Take,
-                TotalPages = totalPages
+                TotalPages = authTotalPages
             };
         }
     }

@@ -7,6 +7,6 @@ namespace PolyBucket.Api.Features.Collections.GetUserCollections.Repository
 {
     public interface ICollectionRepository
     {
-        Task<IEnumerable<Collection>> GetCollectionsByUserIdAsync(Guid userId);
+        Task<(IEnumerable<Collection> Collections, int TotalCount)> GetCollectionsByUserIdAsync(Guid userId, int page, int pageSize, string? searchQuery);
     }
 } 

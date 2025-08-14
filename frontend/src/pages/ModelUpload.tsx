@@ -5,7 +5,11 @@ import { useAppSelector } from '../store';
 import { PrivacySettings } from '../services/api.client';
 import ThumbnailGenerator from '../components/models/ThumbnailGenerator';
 import ModelViewer, { ViewMode } from '../components/ModelViewer';
+import PDFViewer from '../components/common/PDFViewer';
+import MarkdownViewer from '../components/common/MarkdownViewer';
 import { parseModelMarkdown, isMarkdownFile, generateMarkdownTemplate } from '../utils/markdownParser';
+import { extractZipFile, isValidZipFile, convertToFiles } from '../utils/zipExtractor';
+import fileTypeSettingsService, { FileTypeSettingsData } from '../services/fileTypeSettingsService';
 
 interface UploadedFile {
   id: string;
@@ -50,12 +54,18 @@ const ModelUpload: React.FC = () => {
   const [autoRotate, setAutoRotate] = useState(false);
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
   const [thumbnailGeneratedMessage, setThumbnailGeneratedMessage] = useState<string | null>(null);
+  const [isExtractingZip, setIsExtractingZip] = useState(false);
+  const [fileTypeSettings, setFileTypeSettings] = useState<FileTypeSettingsData[]>([]);
+  const [fileTypeSettingsLoading, setFileTypeSettingsLoading] = useState(true);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supported3DFormats = ['.stl', '.obj', '.fbx', '.gltf', '.glb'];
-  const supportedImageFormats = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-  const supportedDocumentFormats = ['.md', '.markdown'];
-  const allSupportedFormats = [...supported3DFormats, ...supportedImageFormats, ...supportedDocumentFormats];
+  
+  // Get supported formats from API settings
+  const supported3DFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === '3D').map(ft => ft.fileExtension);
+  const supportedImageFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === 'Image').map(ft => ft.fileExtension);
+  const supportedDocumentFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === 'Document').map(ft => ft.fileExtension);
+  const supportedZipFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === 'Archive').map(ft => ft.fileExtension);
+  const allSupportedFormats = [...supported3DFormats, ...supportedImageFormats, ...supportedDocumentFormats, ...supportedZipFormats];
 
   const categories = [
     'Art', 'Technology', 'Toys', 'Tools', 'Games', 
@@ -65,6 +75,25 @@ const ModelUpload: React.FC = () => {
   const licenses = [
     'MIT', 'GPL', 'Creative Commons', 'Commercial', 'Custom'
   ];
+
+  // Fetch file type settings on component mount
+  useEffect(() => {
+    const fetchFileTypeSettings = async () => {
+      try {
+        setFileTypeSettingsLoading(true);
+        const response = await fileTypeSettingsService.getFileSettings();
+        if (response.success && response.fileTypes) {
+          setFileTypeSettings(response.fileTypes);
+        }
+      } catch (error) {
+        console.error('Error fetching file type settings:', error);
+      } finally {
+        setFileTypeSettingsLoading(false);
+      }
+    };
+
+    fetchFileTypeSettings();
+  }, []);
 
   // Process markdown file and populate model data
   const processMarkdownFile = async (file: File) => {
@@ -96,14 +125,182 @@ const ModelUpload: React.FC = () => {
     }
   };
 
+  // Process zip file and extract contents
+  const processZipFile = async (file: File) => {
+    try {
+      setIsExtractingZip(true);
+      setThumbnailGeneratedMessage(`Extracting zip file: ${file.name}...`);
+      
+      // Validate zip file
+      const isValidZip = await isValidZipFile(file);
+      if (!isValidZip) {
+        if (file.size < 22) {
+          alert('Invalid zip file: File is too small to be a valid zip archive.');
+        } else if (file.size > 1000 * 1024 * 1024) {
+          alert('Invalid zip file: File is too large. Maximum size is 1000MB.');
+        } else {
+          alert('Invalid zip file: Please check that this is a valid zip archive.');
+        }
+        return;
+      }
+
+      // Extract zip contents
+      const extractionResult = await extractZipFile(file);
+      
+      if (!extractionResult.success) {
+        let errorMessage = 'Failed to extract zip file.';
+        if (extractionResult.error) {
+          if (extractionResult.error.includes('Too many files')) {
+            errorMessage = 'Zip file contains too many files. Maximum allowed is 100 files.';
+          } else if (extractionResult.error.includes('zip bomb')) {
+            errorMessage = 'Security check failed: This zip file appears to be malicious.';
+          } else {
+            errorMessage = `Extraction failed: ${extractionResult.error}`;
+          }
+        }
+        alert(errorMessage);
+        return;
+      }
+
+      // Convert extracted files to File objects
+      const extractedFiles = convertToFiles(extractionResult.files);
+      
+      // Add extracted files to upload queue
+      const newFiles: UploadedFile[] = extractedFiles.map(extFile => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: extFile.name,
+        size: extFile.size,
+        type: extFile.type,
+        file: extFile,
+        progress: 0,
+        isThumbnail: false
+      }));
+
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+
+      // Auto-preview first 3D model, image, PDF, or markdown found
+      const firstPreviewableFile = newFiles.find(f => {
+        const fileExtension = f.name.toLowerCase().substring(f.name.lastIndexOf('.'));
+        return supported3DFormats.includes(fileExtension) || 
+               supportedImageFormats.includes(fileExtension) ||
+               f.name.toLowerCase().endsWith('.pdf') ||
+               isMarkdownFile(f.name);
+      });
+
+      if (firstPreviewableFile) {
+        setPreviewFile(firstPreviewableFile);
+      }
+
+      // Show success message with file count
+      const modelFiles = newFiles.filter(f => {
+        const fileExtension = f.name.toLowerCase().substring(f.name.lastIndexOf('.'));
+        return supported3DFormats.includes(fileExtension);
+      }).length;
+      
+      const imageFiles = newFiles.filter(f => {
+        const fileExtension = f.name.toLowerCase().substring(f.name.lastIndexOf('.'));
+        return supportedImageFormats.includes(fileExtension);
+      }).length;
+      
+      const pdfFiles = newFiles.filter(f => f.name.toLowerCase().endsWith('.pdf')).length;
+      const markdownFiles = newFiles.filter(f => isMarkdownFile(f.name)).length;
+      const otherFiles = newFiles.length - modelFiles - imageFiles - pdfFiles - markdownFiles;
+      
+      let message = `Zip file extracted successfully! ${extractedFiles.length} files added to upload queue.`;
+      if (modelFiles > 0) message += ` (${modelFiles} 3D models)`;
+      if (imageFiles > 0) message += ` (${imageFiles} images)`;
+      if (pdfFiles > 0) message += ` (${pdfFiles} PDFs)`;
+      if (markdownFiles > 0) message += ` (${markdownFiles} markdown)`;
+      if (otherFiles > 0) message += ` (${otherFiles} other files)`;
+      
+      setThumbnailGeneratedMessage(message);
+      
+      console.log('Extracted files from zip:', extractedFiles);
+    } catch (error) {
+      console.error('Error processing zip file:', error);
+      let errorMessage = 'Error processing zip file.';
+      if (error instanceof Error) {
+        if (error.message.includes('JSZip')) {
+          errorMessage = 'Failed to read zip file. The file may be corrupted or password protected.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      alert(errorMessage);
+    } finally {
+      setIsExtractingZip(false);
+    }
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
     for (const file of Array.from(files)) {
+      if (!isFileAllowed(file)) {
+        alert(`File ${file.name} is not allowed or exceeds size limit.`);
+        continue;
+      }
+      
       const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
       
-      if (allSupportedFormats.includes(fileExtension)) {
+      // Process zip files immediately
+      if (supportedZipFormats.includes(fileExtension)) {
+        await processZipFile(file);
+        continue; // Don't add zip files to upload queue
+      }
+
+      // Process markdown files immediately
+      if (isMarkdownFile(file.name)) {
+        await processMarkdownFile(file);
+        continue; // Don't add markdown files to upload queue
+      }
+
+      const newFile: UploadedFile = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file: file,
+        progress: 0,
+        isThumbnail: false
+      };
+
+      setUploadedFiles(prev => [...prev, newFile]);
+
+      // Auto-preview 3D models, images, PDFs, and markdown files
+      if (supported3DFormats.includes(fileExtension) || 
+          supportedImageFormats.includes(fileExtension) ||
+          file.name.toLowerCase().endsWith('.pdf') ||
+          isMarkdownFile(file.name)) {
+        setPreviewFile(newFile);
+      }
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+  };
+
+  const handleDrop = async (event: React.DragEvent) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    
+    if (files.length > 0) {
+      for (const file of Array.from(files)) {
+        if (!isFileAllowed(file)) {
+          alert(`File ${file.name} is not allowed or exceeds size limit.`);
+          continue;
+        }
+        
+        const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+        
+        // Process zip files immediately
+        if (supportedZipFormats.includes(fileExtension)) {
+          await processZipFile(file);
+          continue; // Don't add zip files to upload queue
+        }
+
         // Process markdown files immediately
         if (isMarkdownFile(file.name)) {
           await processMarkdownFile(file);
@@ -122,49 +319,12 @@ const ModelUpload: React.FC = () => {
 
         setUploadedFiles(prev => [...prev, newFile]);
 
-        // Auto-preview 3D models and images
-        if (supported3DFormats.includes(fileExtension) || supportedImageFormats.includes(fileExtension)) {
+        // Auto-preview 3D models, images, PDFs, and markdown files
+        if (supported3DFormats.includes(fileExtension) || 
+            supportedImageFormats.includes(fileExtension) ||
+            file.name.toLowerCase().endsWith('.pdf') ||
+            isMarkdownFile(file.name)) {
           setPreviewFile(newFile);
-        }
-      }
-    }
-  };
-
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-  };
-
-  const handleDrop = async (event: React.DragEvent) => {
-    event.preventDefault();
-    const files = event.dataTransfer.files;
-    
-    if (files.length > 0) {
-      for (const file of Array.from(files)) {
-        const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-        
-        if (allSupportedFormats.includes(fileExtension)) {
-          // Process markdown files immediately
-          if (isMarkdownFile(file.name)) {
-            await processMarkdownFile(file);
-            continue; // Don't add markdown files to upload queue
-          }
-
-          const newFile: UploadedFile = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            file: file,
-            progress: 0,
-            isThumbnail: false
-          };
-
-          setUploadedFiles(prev => [...prev, newFile]);
-
-          // Auto-preview 3D models and images
-          if (supported3DFormats.includes(fileExtension) || supportedImageFormats.includes(fileExtension)) {
-            setPreviewFile(newFile);
-          }
         }
       }
     }
@@ -176,7 +336,26 @@ const ModelUpload: React.FC = () => {
     const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
     if (supported3DFormats.includes(fileExtension)) return '3d';
     if (supportedImageFormats.includes(fileExtension)) return 'image';
+    if (fileName.toLowerCase().endsWith('.pdf')) return 'pdf';
+    if (isMarkdownFile(fileName)) return 'markdown';
     return 'unknown';
+  };
+
+  const getFileTypeSettings = (fileName: string) => {
+    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+    return fileTypeSettings.find(ft => ft.enabled && ft.fileExtension.toLowerCase() === fileExtension);
+  };
+
+  const isFileAllowed = (file: File) => {
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    const fileType = fileTypeSettings.find(ft => ft.enabled && ft.fileExtension.toLowerCase() === fileExtension);
+    
+    if (!fileType) return false;
+    
+    // Check file size
+    if (file.size > fileType.maxFileSizeBytes) return false;
+    
+    return true;
   };
 
   const selectFileForPreview = (fileId: string) => {
@@ -317,7 +496,7 @@ const ModelUpload: React.FC = () => {
       
       {/* Navigation Bar */}
       <NavigationBar
-        title="Upload Model"
+        title="Upload New Model"
         showSearch={false}
         showUploadButton={false}
         showHomeLink={true}
@@ -327,10 +506,16 @@ const ModelUpload: React.FC = () => {
         <div className="flex gap-8">
           {/* Left Panel - Upload Form */}
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-green-400 mb-6">Upload New Model</h1>
             
             {/* Show drag and drop prominently when no files uploaded */}
-            {uploadedFiles.length === 0 ? (
+            {fileTypeSettingsLoading ? (
+              <div className="mb-6">
+                <div className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-12 text-center">
+                  <div className="lg-spinner w-8 h-8 mx-auto mb-4"></div>
+                  <p className="text-gray-400">Loading file type settings...</p>
+                </div>
+              </div>
+            ) : uploadedFiles.length === 0 ? (
               <div className="mb-6">
                 <div
                   className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-12 text-center hover:border-green-500 transition-colors"
@@ -359,7 +544,14 @@ const ModelUpload: React.FC = () => {
                   <div className="mt-6 text-gray-400">
                     <p className="mb-1">Supported 3D formats: {supported3DFormats.join(', ')}</p>
                     <p className="mb-1">Supported image formats: {supportedImageFormats.join(', ')}</p>
-                    <p className="mb-2">Supported document formats: {supportedDocumentFormats.join(', ')}</p>
+                    <p className="mb-1">Supported document formats: {supportedDocumentFormats.join(', ')}</p>
+                    <p className="mb-2">Supported archive formats: {supportedZipFormats.join(', ')}</p>
+                    <div className="mb-3 p-2 bg-blue-900 border border-blue-600 rounded text-blue-200 text-xs">
+                      <strong>Zip Security:</strong> Files are extracted client-side with protection against zip bombs, path traversal, and oversized files. Maximum: 100 files, 100MB total, 50MB per file.
+                    </div>
+                    <div className="mb-3 p-2 bg-green-900 border border-green-600 rounded text-green-200 text-xs">
+                      <strong>💡 Tip:</strong> You can upload a zip file containing multiple 3D models, images, and documentation. All files will be automatically extracted and added to your upload queue. PDF and markdown files can be previewed directly in the browser. 3MF files are excellent for 3D printing as they preserve colors, materials, and multiple objects.
+                    </div>
                     <button
                       onClick={() => {
                         const template = generateMarkdownTemplate();
@@ -417,7 +609,14 @@ const ModelUpload: React.FC = () => {
                     
                     {thumbnailGeneratedMessage && (
                       <div className="mb-4 p-3 bg-green-900 border border-green-600 rounded text-green-200 text-sm">
-                        ✓ {thumbnailGeneratedMessage}
+                        {isExtractingZip ? (
+                          <div className="flex items-center">
+                            <div className="lg-spinner w-4 h-4 mr-2"></div>
+                            {thumbnailGeneratedMessage}
+                          </div>
+                        ) : (
+                          `✓ ${thumbnailGeneratedMessage}`
+                        )}
                       </div>
                     )}
                     <div className="lg-card rounded-lg overflow-hidden h-96 relative">
@@ -443,6 +642,20 @@ const ModelUpload: React.FC = () => {
                             className="max-w-full max-h-full object-contain"
                           />
                         </div>
+                      ) : getFileType(previewFile.name) === 'pdf' ? (
+                        <PDFViewer
+                          file={previewFile.file}
+                          width="100%"
+                          height={384}
+                          className="w-full h-full"
+                        />
+                      ) : getFileType(previewFile.name) === 'markdown' ? (
+                        <MarkdownViewer
+                          file={previewFile.file}
+                          width="100%"
+                          height={384}
+                          className="w-full h-full"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <div className="text-center">
@@ -622,6 +835,8 @@ const ModelUpload: React.FC = () => {
                     const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
                     const is3DModel = supported3DFormats.includes(fileExtension);
                     const isImage = supportedImageFormats.includes(fileExtension);
+                    const isPDF = file.name.toLowerCase().endsWith('.pdf');
+                    const isMarkdown = isMarkdownFile(file.name);
                     
                     return (
                       <div 
@@ -632,50 +847,56 @@ const ModelUpload: React.FC = () => {
                         onClick={() => selectFileForPreview(file.id)}
                       >
                         <div className="flex justify-between items-start mb-2">
-                                                  <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            {isImage && (
-                              <input
-                                type="checkbox"
-                                checked={file.isThumbnail}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  if (e.target.checked) {
-                                    // Set this image as thumbnail, uncheck others
-                                    setUploadedFiles(prev => 
-                                      prev.map(f => ({
-                                        ...f,
-                                        isThumbnail: f.id === file.id
-                                      }))
-                                    );
-                                  } else {
-                                    // Uncheck this image
-                                    setUploadedFiles(prev => 
-                                      prev.map(f => 
-                                        f.id === file.id ? { ...f, isThumbnail: false } : f
-                                      )
-                                    );
-                                  }
-                                }}
-                                className="mr-2 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500"
-                                title="Set as thumbnail"
-                              />
-                            )}
-                            <p className="text-sm text-white truncate">
-                              {file.name}
-                              {file.isThumbnail && (
-                                <span className="ml-2 text-xs text-green-400">Thumbnail</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              {isImage && (
+                                <input
+                                  type="checkbox"
+                                  checked={file.isThumbnail}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    if (e.target.checked) {
+                                      // Set this image as thumbnail, uncheck others
+                                      setUploadedFiles(prev => 
+                                        prev.map(f => ({
+                                          ...f,
+                                          isThumbnail: f.id === file.id
+                                        }))
+                                      );
+                                    } else {
+                                      // Uncheck this image
+                                      setUploadedFiles(prev => 
+                                        prev.map(f => 
+                                          f.id === file.id ? { ...f, isThumbnail: false } : f
+                                        )
+                                      );
+                                    }
+                                  }}
+                                  className="mr-2 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500"
+                                  title="Set as thumbnail"
+                                />
                               )}
-                            </p>
-                            {is3DModel && (
-                              <span className="text-xs text-blue-400">3D</span>
-                            )}
-                            {isImage && (
-                              <span className="text-xs text-purple-400">Image</span>
-                            )}
+                              <p className="text-sm text-white truncate">
+                                {file.name}
+                                {file.isThumbnail && (
+                                  <span className="ml-2 text-xs text-green-400">Thumbnail</span>
+                                )}
+                              </p>
+                              {is3DModel && (
+                                <span className="text-xs text-blue-400">3D</span>
+                              )}
+                              {isImage && (
+                                <span className="text-xs text-purple-400">Image</span>
+                              )}
+                              {isPDF && (
+                                <span className="text-xs text-red-400">PDF</span>
+                              )}
+                              {isMarkdown && (
+                                <span className="text-xs text-yellow-400">MD</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
                           </div>
-                          <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
-                        </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

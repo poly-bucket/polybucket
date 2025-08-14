@@ -14,7 +14,7 @@ namespace PolyBucket.Tests.Factories
         private readonly PolyBucketDbContext _context = context;
         private static int _userCounter = 0;
 
-        public async Task<User> CreateTestUser(string email = null, string password = "TestPassword123!")
+        public async Task<User> CreateTestUser(string? email = null, string password = "TestPassword123!")
         {
             _userCounter++;
             var uniqueEmail = email ?? $"testuser{_userCounter}@example.com";
@@ -70,7 +70,7 @@ namespace PolyBucket.Tests.Factories
             return user;
         }
 
-        public async Task<User> CreateAndSaveTestUser(string email = null, string password = "TestPassword123!")
+        public async Task<User> CreateAndSaveTestUser(string? email = null, string password = "TestPassword123!")
         {
             return await CreateTestUser(email, password);
         }

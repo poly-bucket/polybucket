@@ -177,11 +177,9 @@ namespace PolyBucket.Api.Features.ACL.Services
 
             if (user == null || targetRole == null) return false;
 
-            // Admins can manage all roles except they cannot delete the admin role
+            // Admins can manage all roles (including the admin role for editing)
             if (await IsAdminAsync(userId))
             {
-                if (targetRole.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase) && !targetRole.CanBeDeleted)
-                    return false; // Admin role cannot be deleted
                 return true;
             }
 
@@ -189,6 +187,25 @@ namespace PolyBucket.Api.Features.ACL.Services
             if (user.Role != null && user.Role.Priority > targetRole.Priority)
                 return await HasPermissionAsync(userId, PermissionConstants.ADMIN_MANAGE_ROLES);
 
+            return false;
+        }
+
+        public async Task<bool> CanDeleteRoleAsync(Guid userId, Guid roleId)
+        {
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            var targetRole = await _context.Roles.FindAsync(roleId);
+
+            if (user == null || targetRole == null) return false;
+
+            // Admins can delete most roles, but not the admin role itself
+            if (await IsAdminAsync(userId))
+            {
+                if (targetRole.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase) && !targetRole.CanBeDeleted)
+                    return false; // Admin role cannot be deleted
+                return true;
+            }
+
+            // Non-admins cannot delete any roles
             return false;
         }
 
@@ -407,6 +424,15 @@ namespace PolyBucket.Api.Features.ACL.Services
 
             // For other actions, permission check was sufficient
             return true;
+        }
+
+        public async Task<List<Permission>> GetAllPermissionsAsync()
+        {
+            return await _context.Permissions
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.Category)
+                .ThenBy(p => p.Name)
+                .ToListAsync();
         }
 
         #endregion

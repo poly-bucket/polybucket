@@ -17,7 +17,7 @@ namespace PolyBucket.Api.Features.Collections.CreateCollection.Http
         public async Task<IActionResult> CreateCollection([FromBody] CreateCollectionCommand command)
         {
             var collection = await _mediator.Send(command);
-            return CreatedAtAction(nameof(collection), new { id = collection.Id }, collection);
+            return Created($"/api/collections/{collection.Id}", collection);
         }
     }
 } 

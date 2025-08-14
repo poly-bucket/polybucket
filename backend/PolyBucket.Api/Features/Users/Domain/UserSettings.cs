@@ -17,6 +17,16 @@ namespace PolyBucket.Api.Features.Users.Domain
         public string MeasurementSystem { get; set; } = "metric";
         public string TimeZone { get; set; } = "UTC";
         public bool AutoRotateModels { get; set; } = true;
+        
+        // Profile settings
+        public bool ShowProfileInSearch { get; set; } = true;
+        public bool AllowDirectMessages { get; set; } = true;
+        public bool ShowActivityStatus { get; set; } = true;
+        public bool NotifyOnMentions { get; set; } = true;
+        public bool NotifyOnFollows { get; set; } = true;
+        public bool NotifyOnLikes { get; set; } = true;
+        public bool NotifyOnComments { get; set; } = true;
+        
         [NotMapped]
         public Dictionary<string, string> CustomSettings { get; set; } = new();
     }

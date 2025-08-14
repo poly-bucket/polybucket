@@ -9,6 +9,9 @@ import NavigationBar from '../components/common/NavigationBar';
 import UserAvatar from '../components/UserAvatar';
 import EditModelModal from '../components/models/EditModelModal';
 import ModelViewer from '../components/ModelViewer';
+import ZipDownloadTest from '../components/ZipDownloadTest';
+import PDFViewer from '../components/common/PDFViewer';
+import MarkdownViewer from '../components/common/MarkdownViewer';
 
 interface BillOfMaterial {
   id: string;
@@ -52,11 +55,12 @@ const ModelDetails: React.FC = () => {
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set());
   const [carouselItems, setCarouselItems] = useState<Array<{
     id: string;
-    type: 'image' | '3d';
+    type: 'image' | '3d' | 'pdf' | 'markdown';
     url?: string;
     fileData?: ArrayBuffer;
     fileName?: string;
     fileType?: string;
+    file?: File;
   }>>([]);
 
   // Demo data for bill of materials and print settings
@@ -104,8 +108,8 @@ const ModelDetails: React.FC = () => {
             id: response.model.id,
             name: response.model.name,
             description: response.model.description || '',
-            userId: response.model.userId || response.model.authorId || '',
-            authorId: response.model.authorId || response.model.userId || '',
+            userId: response.model.authorId || response.model.authorId || '',
+            authorId: response.model.authorId || response.model.authorId || '',
             license: response.model.license?.toString(),
             privacy: response.model.privacy || PrivacySettings.Public,
             categories: response.model.categories?.map(cat => cat.toString()) || [],
@@ -120,19 +124,21 @@ const ModelDetails: React.FC = () => {
             downloadCount: 0,
             rating: 0,
             isLiked: false,
-            isInCollection: false
+            isInCollection: false,
+            likes: Array.isArray(response.model.likes) ? response.model.likes : []
           };
           setModel(extendedModel);
-          setLikeCount(response.model.likes?.length || 0);
+          setLikeCount(Array.isArray(response.model.likes) ? response.model.likes.length : (response.model.likes || 0));
           
-          // Prepare carousel items - images first, then 3D models
+          // Prepare carousel items - images first, then 3D models, then documents
           const items: Array<{
             id: string;
-            type: 'image' | '3d';
+            type: 'image' | '3d' | 'pdf' | 'markdown';
             url?: string;
             fileData?: ArrayBuffer;
             fileName?: string;
             fileType?: string;
+            file?: File;
           }> = [];
 
           // Add thumbnail image first if available (using ExtendedModel property)
@@ -166,7 +172,7 @@ const ModelDetails: React.FC = () => {
           if (response.model?.files) {
             const modelFiles = response.model.files.filter(file => 
               file.mimeType?.startsWith('model/') || 
-              file.name?.toLowerCase().match(/\.(stl|obj|fbx|gltf|glb)$/)
+              file.name?.toLowerCase().match(/\.(stl|obj|fbx|gltf|glb|3mf|step|stp)$/)
             );
             
             for (const file of modelFiles) {
@@ -182,6 +188,36 @@ const ModelDetails: React.FC = () => {
                   });
                 } catch (error) {
                   console.error(`Failed to fetch 3D model file ${file.name}:`, error);
+                }
+              }
+            }
+          }
+
+          // Add document files (PDF, Markdown, etc.)
+          if (response.model?.files) {
+            const documentFiles = response.model.files.filter(file => 
+              file.name?.toLowerCase().match(/\.(pdf|md|markdown|txt)$/) ||
+              file.mimeType?.startsWith('text/') ||
+              file.mimeType === 'application/pdf'
+            );
+            
+            for (const file of documentFiles) {
+              if (file.name && file.id && response.model?.id) {
+                try {
+                  const fileData = await fetchModelFile(response.model.id, file.name);
+                  const fileType = file.name.split('.').pop()?.toLowerCase();
+                  const isMarkdown = isMarkdownFile(file.name);
+                  
+                  items.push({
+                    id: file.id,
+                    type: isMarkdown ? 'markdown' : 'pdf',
+                    fileData,
+                    fileName: file.name,
+                    fileType: fileType,
+                    file: new File([fileData], file.name, { type: file.mimeType || 'application/octet-stream' })
+                  });
+                } catch (error) {
+                  console.error(`Failed to fetch document file ${file.name}:`, error);
                 }
               }
             }
@@ -239,26 +275,97 @@ const ModelDetails: React.FC = () => {
   const handleDownload = async () => {
     if (model) {
       try {
+        console.log('Starting download for model:', model.id);
         const client = ApiClientFactory.getDownloadModelClient();
         const response = await client.downloadModel(model.id!);
         
         if (response && response.data) {
+          // Validate that we received a blob
+          if (!(response.data instanceof Blob)) {
+            console.error('Download failed: Response data is not a blob', response.data);
+            alert('Download failed: Invalid file format received');
+            return;
+          }
+          
+          // Validate blob size
+          if (response.data.size === 0) {
+            console.error('Download failed: Blob is empty');
+            alert('Download failed: File is empty');
+            return;
+          }
+          
+          // Validate blob type (should be application/zip)
+          if (response.data.type !== 'application/zip') {
+            console.warn('Download warning: Expected ZIP file but received:', response.data.type);
+          }
+          
+          console.log('Download successful:', {
+            fileName: response.fileName,
+            blobSize: response.data.size,
+            blobType: response.data.type
+          });
+          
+          // Test ZIP file integrity by reading the first few bytes
+          try {
+            const arrayBuffer = await response.data.slice(0, 4).arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const header = Array.from(uint8Array).map(b => b.toString(16).padStart(2, '0')).join(' ');
+            console.log('ZIP file header bytes:', header);
+            
+            // Check for ZIP file signature (PK\x03\x04)
+            if (uint8Array[0] === 0x50 && uint8Array[1] === 0x4B && uint8Array[2] === 0x03 && uint8Array[3] === 0x04) {
+              console.log('ZIP file signature verified successfully');
+            } else {
+              console.error('ZIP file signature verification failed. Expected PK\\x03\\x04, got:', header);
+              alert('Download failed: Invalid ZIP file format');
+              return;
+            }
+          } catch (error) {
+            console.error('Failed to verify ZIP file integrity:', error);
+            alert('Download failed: Could not verify file integrity');
+            return;
+          }
+          
+          // Test if we can open the ZIP file programmatically
+          try {
+            const testArrayBuffer = await response.data.slice(0, 100).arrayBuffer();
+            console.log('Successfully read first 100 bytes of ZIP file');
+          } catch (error) {
+            console.error('Failed to read ZIP file content:', error);
+            alert('Download failed: File content cannot be read');
+            return;
+          }
+          
           // Create a download link and trigger download
           const url = window.URL.createObjectURL(response.data);
           const link = document.createElement('a');
           link.href = url;
           link.download = response.fileName || `${model.name}.zip`;
+          
+          // Add event listener to detect if download actually started
+          link.addEventListener('click', () => {
+            console.log('Download link clicked, file should start downloading');
+          });
+          
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+          
+          // Keep the blob URL alive for a bit longer to ensure download completes
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            console.log('Blob URL revoked after download');
+          }, 5000);
           
           // Increment download count (demo)
           setModel(prev => prev ? { ...prev, downloadCount: (prev.downloadCount || 0) + 1 } as ExtendedModel : null);
+        } else {
+          console.error('Download failed: No response data');
+          alert('Download failed: No file data received');
         }
       } catch (error) {
         console.error('Download failed:', error);
-        // You might want to show an error message to the user
+        alert('Download failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
       }
     }
   };
@@ -323,6 +430,20 @@ const ModelDetails: React.FC = () => {
     return num.toString();
   };
 
+  const getFileType = (fileName: string) => {
+    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+    if (['.stl', '.obj', '.fbx', '.gltf', '.glb', '.3mf', '.step', '.stp'].includes(fileExtension)) return '3d';
+    if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'].includes(fileExtension)) return 'image';
+    if (fileName.toLowerCase().endsWith('.pdf')) return 'pdf';
+    if (['.md', '.markdown'].includes(fileExtension)) return 'markdown';
+    return 'unknown';
+  };
+
+  const isMarkdownFile = (fileName: string) => {
+    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+    return fileExtension === '.md' || fileExtension === '.markdown';
+  };
+
   // Check if current user is the model owner
   // For demo purposes, allow editing of all demo models (IDs 1-12) regardless of authentication
   const isDemoModel = model && ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].includes(model.id || '');
@@ -366,7 +487,7 @@ const ModelDetails: React.FC = () => {
         showHomeLink={true}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[95rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Breadcrumb */}
         <nav className="flex mb-6" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2">
@@ -386,30 +507,54 @@ const ModelDetails: React.FC = () => {
           </ol>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-6 lg:gap-8 xl:gap-12">
           {/* Left Column - Images and Gallery */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-4 xl:col-span-5 2xl:col-span-6">
             {/* Main Carousel Viewer */}
             <div className="lg-card overflow-hidden mb-4">
-              <div className="aspect-video bg-gray-800">
+              <div className="relative w-full bg-gray-800 rounded-lg" style={{ 
+                aspectRatio: '16/9', 
+                minHeight: '300px',
+                maxHeight: '70vh'
+              }}>
                 {carouselItems.length > 0 ? (
                   carouselItems[activeCarouselIndex].type === 'image' ? (
                     <img
                       src={carouselItems[activeCarouselIndex].url}
                       alt={`${model.name} - View ${activeCarouselIndex + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   ) : carouselItems[activeCarouselIndex].type === '3d' && carouselItems[activeCarouselIndex].fileData ? (
-                    <ModelViewer
-                      fileData={carouselItems[activeCarouselIndex].fileData}
-                      fileType={carouselItems[activeCarouselIndex].fileType}
-                      width={800}
-                      height={450}
-                      autoRotate={false}
-                      className="w-full h-full"
-                      accessToken={user?.accessToken}
-                      showControls={true}
-                    />
+                    <div className="w-full h-full">
+                      <ModelViewer
+                        fileData={carouselItems[activeCarouselIndex].fileData}
+                        fileType={carouselItems[activeCarouselIndex].fileType}
+                        width={800}
+                        height={450}
+                        autoRotate={false}
+                        className="w-full h-full"
+                        accessToken={user?.accessToken}
+                        showControls={true}
+                      />
+                    </div>
+                  ) : carouselItems[activeCarouselIndex].type === 'pdf' && carouselItems[activeCarouselIndex].file ? (
+                    <div className="w-full h-full">
+                      <PDFViewer
+                        file={carouselItems[activeCarouselIndex].file}
+                        width="100%"
+                        height="100%"
+                        className="w-full h-full"
+                      />
+                    </div>
+                  ) : carouselItems[activeCarouselIndex].type === 'markdown' && carouselItems[activeCarouselIndex].file ? (
+                    <div className="w-full h-full">
+                      <MarkdownViewer
+                        file={carouselItems[activeCarouselIndex].file}
+                        width="100%"
+                        height="100%"
+                        className="w-full h-full"
+                      />
+                    </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
                       Loading...
@@ -425,13 +570,13 @@ const ModelDetails: React.FC = () => {
 
             {/* Carousel Navigation */}
             {carouselItems.length > 1 && (
-              <div className="flex space-x-2 mb-8">
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
                 {carouselItems.map((item, index) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveCarouselIndex(index)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                      activeCarouselIndex === index ? 'border-blue-500' : 'border-gray-600'
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
+                      activeCarouselIndex === index ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-gray-600 hover:border-gray-500'
                     }`}
                   >
                     {item.type === 'image' ? (
@@ -440,9 +585,21 @@ const ModelDetails: React.FC = () => {
                         alt={`View ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
-                    ) : (
+                    ) : item.type === '3d' ? (
                       <div className="w-full h-full flex items-center justify-center bg-gray-700 text-gray-300 text-xs">
                         3D
+                      </div>
+                    ) : item.type === 'pdf' ? (
+                      <div className="w-full h-full flex items-center justify-center bg-red-700 text-red-200 text-xs">
+                        PDF
+                      </div>
+                    ) : item.type === 'markdown' ? (
+                      <div className="w-full h-full flex items-center justify-center bg-yellow-700 text-yellow-200 text-xs">
+                        MD
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-700 text-gray-300 text-xs">
+                        File
                       </div>
                     )}
                   </button>
@@ -497,26 +654,62 @@ const ModelDetails: React.FC = () => {
             <div className="lg-card p-6 mb-6">
               <h2 className="text-xl font-bold text-white mb-4">Files</h2>
               <div className="space-y-3">
-                {modelFiles.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg hover:bg-gray-700/50">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                        <span className="text-xs font-semibold text-white">{file.type}</span>
+                {modelFiles.map((file) => {
+                  const fileType = getFileType(file.name);
+                  const getFileIcon = (type: string) => {
+                    switch (type) {
+                      case '3d':
+                        return (
+                          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                            <span className="text-xs font-semibold text-white">3D</span>
+                          </div>
+                        );
+                      case 'image':
+                        return (
+                          <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
+                            <span className="text-xs font-semibold text-white">IMG</span>
+                          </div>
+                        );
+                      case 'pdf':
+                        return (
+                          <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center mr-3">
+                            <span className="text-xs font-semibold text-white">PDF</span>
+                          </div>
+                        );
+                      case 'markdown':
+                        return (
+                          <div className="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
+                            <span className="text-xs font-semibold text-white">MD</span>
+                          </div>
+                        );
+                      default:
+                        return (
+                          <div className="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center mr-3">
+                            <span className="text-xs font-semibold text-white">{file.type}</span>
+                          </div>
+                        );
+                    }
+                  };
+
+                  return (
+                    <div key={file.id} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg hover:bg-gray-700/50">
+                      <div className="flex items-center">
+                        {getFileIcon(fileType)}
+                        <div>
+                          <h3 className="font-medium text-white">{file.name}</h3>
+                          <p className="text-sm text-gray-400">{file.size}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-medium text-white">{file.name}</h3>
-                        <p className="text-sm text-gray-400">{file.size}</p>
-                      </div>
+                      <button
+                        onClick={() => handleFileDownload(file)}
+                        disabled={downloadingFiles.has(file.id)}
+                        className="lg-button lg-button-primary text-sm"
+                      >
+                        {downloadingFiles.has(file.id) ? 'Downloading...' : 'Download'}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleFileDownload(file)}
-                      disabled={downloadingFiles.has(file.id)}
-                      className="lg-button lg-button-primary text-sm"
-                    >
-                      {downloadingFiles.has(file.id) ? 'Downloading...' : 'Download'}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -557,7 +750,7 @@ const ModelDetails: React.FC = () => {
           </div>
 
           {/* Right Column - Model Info and Actions */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2 xl:col-span-2 2xl:col-span-2">
             <div className="sticky top-6">
               {/* Model Header */}
               <div className="lg-card p-6 mb-6">
@@ -566,6 +759,7 @@ const ModelDetails: React.FC = () => {
                 {/* Author Info */}
                 <div className="flex items-center mb-4">
                   <UserAvatar 
+                    userId={model.authorId || model.userId || 'unknown'}
                     username={model.author?.username || 'Unknown'} 
                     size="md"
                   />
@@ -690,6 +884,11 @@ const ModelDetails: React.FC = () => {
                     <p className="text-sm text-gray-400">Free for personal and commercial use</p>
                   </div>
                 </div>
+              </div>
+
+              {/* ZIP Download Test Component */}
+              <div className="lg-card p-6 mt-6">
+                <ZipDownloadTest />
               </div>
             </div>
           </div>

@@ -333,12 +333,7 @@ namespace PolyBucket.Api.Features.ACL.Http
         public DateTime CreatedAt { get; set; }
     }
 
-    public class PermissionDto
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-    }
+
 
     public class ModerationCheckDto
     {

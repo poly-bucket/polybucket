@@ -120,6 +120,7 @@ namespace PolyBucket.Api.Features.Models.Http
                 // Use Microsoft documentation pattern: Create ZIP in memory, return as byte array
                 using (var memoryStream = new MemoryStream())
                 {
+                    // Create the ZIP archive
                     using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                     {
                         var totalFilesAdded = 0;
@@ -256,7 +257,10 @@ namespace PolyBucket.Api.Features.Models.Http
                         
                         _logger.LogInformation("ZIP archive creation completed for model {ModelId}: {TotalFiles} files added, {FailedFiles} failures", 
                             model.Id, totalFilesAdded, failedFiles.Count);
-                    }
+                    } // ZipArchive is disposed here, ensuring proper finalization
+                    
+                    // Reset position to beginning of stream after archive disposal
+                    memoryStream.Position = 0;
                     
                     // Verify the ZIP was created successfully
                     if (memoryStream.Length == 0)
@@ -281,7 +285,47 @@ namespace PolyBucket.Api.Features.Models.Http
                         model.Id, zipFileName, memoryStream.Length);
                     
                     // CRITICAL: Use ToArray() to create a proper byte array - this is the Microsoft recommended pattern
-                    return File(memoryStream.ToArray(), "application/zip", zipFileName);
+                    // The ZipArchive has been disposed, so the stream is now finalized and safe to read
+                    var zipBytes = memoryStream.ToArray();
+                    
+                    // Additional validation: Check if the ZIP file has valid header
+                    if (zipBytes.Length < 4 || zipBytes[0] != 0x50 || zipBytes[1] != 0x4B || zipBytes[2] != 0x03 || zipBytes[3] != 0x04)
+                    {
+                        _logger.LogError("ZIP file validation failed for model {ModelId}: Invalid ZIP header", model.Id);
+                        return StatusCode(500, "Failed to create valid ZIP archive");
+                    }
+                    
+                    _logger.LogInformation("ZIP file validation passed for model {ModelId}: Header bytes: {HeaderBytes}", 
+                        model.Id, BitConverter.ToString(zipBytes.Take(4).ToArray()));
+                    
+                    // Additional validation: Check ZIP file structure
+                    try
+                    {
+                        using var validationStream = new MemoryStream(zipBytes);
+                        using var validationArchive = new ZipArchive(validationStream, ZipArchiveMode.Read);
+                        var entryCount = validationArchive.Entries.Count;
+                        _logger.LogInformation("ZIP file structure validation passed for model {ModelId}: {EntryCount} entries found", 
+                            model.Id, entryCount);
+                        
+                        // Log entry details for debugging
+                        foreach (var entry in validationArchive.Entries)
+                        {
+                            _logger.LogDebug("ZIP entry: {EntryName}, Size: {EntrySize}, Compressed: {CompressedSize}", 
+                                entry.Name, entry.Length, entry.CompressedLength);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "ZIP file structure validation failed for model {ModelId}: {ErrorMessage}", 
+                            model.Id, ex.Message);
+                        return StatusCode(500, "Failed to create valid ZIP archive structure");
+                    }
+                    
+                    // Set proper headers for ZIP download
+                    Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{zipFileName}\"");
+                    Response.Headers.Add("Content-Type", "application/zip");
+                    
+                    return File(zipBytes, "application/zip", zipFileName);
                 }
             }
             catch (Exception ex)
@@ -360,8 +404,9 @@ namespace PolyBucket.Api.Features.Models.Http
                 if (bucketIndex >= 0 && bucketIndex + 1 < pathSegments.Length)
                 {
                     var objectKey = string.Join("/", pathSegments.Skip(bucketIndex + 1));
-                    // URL decode the object key to handle spaces and other encoded characters
-                    return Uri.UnescapeDataString(objectKey);
+                    // No need to URL decode here - the object key should be used as-is
+                    // The storage service expects the raw object key
+                    return objectKey;
                 }
                 
                 _logger.LogWarning("Could not find bucket name '{BucketName}' in URL path: {FilePath}", _storageSettings.BucketName, filePath);

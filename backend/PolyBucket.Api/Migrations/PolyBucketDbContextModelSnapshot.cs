@@ -46,6 +46,9 @@ namespace Api.Migrations
                     b.Property<Guid?>("BannedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Bio")
+                        .HasColumnType("text");
+
                     b.Property<string>("Country")
                         .HasColumnType("text");
 
@@ -71,14 +74,26 @@ namespace Api.Migrations
                     b.Property<bool>("HasCompletedFirstTimeSetup")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("InstagramUrl")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsBanned")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsProfilePublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastName")
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProfilePictureUrl")
                         .HasColumnType("text");
 
                     b.Property<bool>("RequiresPasswordChange")
@@ -91,6 +106,18 @@ namespace Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("ShowEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowLastLogin")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowStatistics")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TwitterUrl")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -99,6 +126,12 @@ namespace Api.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("YouTubeUrl")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -180,6 +213,10 @@ namespace Api.Migrations
 
                     b.Property<bool>("CanBeDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1444,7 +1481,7 @@ namespace Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Like");
+                    b.ToTable("Likes");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Model", b =>
@@ -1900,6 +1937,116 @@ namespace Api.Migrations
                     b.ToTable("Reports");
                 });
 
+            modelBuilder.Entity("PolyBucket.Api.Features.SystemSettings.Domain.FileTypeSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsCompressible")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("MaxFileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("MaxPerUpload")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MimeType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequiresPreview")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FileTypeSettings");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.SystemSettings.Domain.FontAwesomeSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("FallbackToFree")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLicenseValid")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsProEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLicenseCheck")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LicenseErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProKitUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProLicenseKey")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("UseProIcons")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FontAwesomeSettings");
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Features.SystemSettings.Domain.SystemSetting", b =>
                 {
                     b.Property<string>("Key")
@@ -2115,11 +2262,130 @@ namespace Api.Migrations
                     b.ToTable("SystemSetups");
                 });
 
+            modelBuilder.Entity("PolyBucket.Api.Features.ThemeManagement.Domain.Theme", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Themes");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.ThemeManagement.Domain.ThemeColors", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Accent")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("AccentDark")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("AccentLight")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("BackgroundPrimary")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("BackgroundSecondary")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("BackgroundTertiary")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("Primary")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("PrimaryDark")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("PrimaryLight")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("Secondary")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("SecondaryDark")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("SecondaryLight")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<int>("ThemeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ThemeId")
+                        .IsUnique();
+
+                    b.ToTable("ThemeColors");
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Features.Users.Domain.UserSettings", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowDirectMessages")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("AutoRotateModels")
                         .HasColumnType("boolean");
@@ -2137,6 +2403,24 @@ namespace Api.Migrations
                     b.Property<string>("MeasurementSystem")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("NotifyOnComments")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnFollows")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnLikes")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnMentions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowActivityStatus")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowProfileInSearch")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Theme")
                         .IsRequired()
@@ -2492,6 +2776,17 @@ namespace Api.Migrations
                         .HasForeignKey("ModelId");
                 });
 
+            modelBuilder.Entity("PolyBucket.Api.Features.ThemeManagement.Domain.ThemeColors", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Features.ThemeManagement.Domain.Theme", "Theme")
+                        .WithOne("Colors")
+                        .HasForeignKey("PolyBucket.Api.Features.ThemeManagement.Domain.ThemeColors", "ThemeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Theme");
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Features.Users.Domain.UserSettings", b =>
                 {
                     b.HasOne("PolyBucket.Api.Common.Models.User", "User")
@@ -2568,6 +2863,12 @@ namespace Api.Migrations
             modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelVersion", b =>
                 {
                     b.Navigation("Files");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.ThemeManagement.Domain.Theme", b =>
+                {
+                    b.Navigation("Colors")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

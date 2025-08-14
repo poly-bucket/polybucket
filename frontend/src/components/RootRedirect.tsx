@@ -12,19 +12,23 @@ const RootRedirect: React.FC = () => {
   useEffect(() => {
     const checkSetupStatus = async () => {
       if (user && user.accessToken && user.roles?.includes('Admin')) {
+        console.log('RootRedirect: Checking setup status for admin user');
         setIsCheckingSetup(true);
         try {
           const response = await api.get('/SystemSetup/status');
 
           if (response.status === 200) {
             const status = response.data;
+            console.log('RootRedirect: Setup status received:', status);
             setSetupStatus(status);
           }
         } catch (error) {
-          console.error('Error checking setup status:', error);
+          console.error('RootRedirect: Error checking setup status:', error);
         } finally {
           setIsCheckingSetup(false);
         }
+      } else {
+        console.log('RootRedirect: Not checking setup status - user:', user?.username, 'roles:', user?.roles);
       }
     };
 
@@ -52,24 +56,32 @@ const RootRedirect: React.FC = () => {
   if (user && user.accessToken && user.accessToken.length > 0) {
     // Check if user requires password change
     if (user.requiresPasswordChange) {
-      console.log('User requires password change, redirecting to setup');
+      console.log('RootRedirect: User requires password change, redirecting to setup');
       return <Navigate to="/setup" replace />;
     }
 
     // Check if user requires first-time setup
     if (user.requiresFirstTimeSetup) {
-      console.log('User requires first-time setup, redirecting to setup');
+      console.log('RootRedirect: User requires first-time setup, redirecting to setup');
       return <Navigate to="/setup" replace />;
     }
 
-    // Check if admin user needs to complete system setup
-    if (user.roles?.includes('Admin') && setupStatus?.isFirstTimeSetup) {
-      console.log('Admin user needs to complete system setup, redirecting to setup');
+    // Check if admin user needs to complete system setup (only for root route)
+    if (location.pathname === '/' && user.roles?.includes('Admin') && setupStatus?.isFirstTimeSetup) {
+      console.log('RootRedirect: Admin user needs to complete system setup, redirecting to setup');
+      console.log('RootRedirect: Setup status:', setupStatus);
       return <Navigate to="/setup" replace />;
     }
 
-    console.log('User is authenticated, redirecting to dashboard');
-    return <Navigate to="/dashboard" replace />;
+    // Only redirect to dashboard if we're actually on the root route
+    if (location.pathname === '/') {
+      console.log('RootRedirect: User is authenticated, redirecting to dashboard');
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    // For any other route, don't redirect - let the normal routing handle it
+    console.log('RootRedirect: User authenticated, allowing access to:', location.pathname);
+    return null;
   }
 
   // If no user or no valid token, go to login

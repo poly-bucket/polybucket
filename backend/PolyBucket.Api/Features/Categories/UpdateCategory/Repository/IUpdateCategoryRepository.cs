@@ -1,0 +1,13 @@
+using PolyBucket.Api.Features.Models.Domain;
+using System;
+using System.Threading.Tasks;
+
+namespace PolyBucket.Api.Features.Categories.UpdateCategory.Repository
+{
+    public interface IUpdateCategoryRepository
+    {
+        Task<Category?> GetCategoryByIdAsync(Guid id);
+        Task<Category?> GetCategoryByNameAsync(string name);
+        Task<Category> UpdateCategoryAsync(Guid id, string name, Guid updatedById);
+    }
+}

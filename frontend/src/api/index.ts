@@ -13,6 +13,7 @@ export type {
   GetUserSettingsResponse,
   GetModelByIdResponse,
   GetModelsResponse,
+  GetAdminModelStatisticsResponse,
   LoginCommand,
   AddCommentRequest,
   CreateFilamentCommand,

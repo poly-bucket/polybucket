@@ -84,6 +84,11 @@ const ThumbnailModel = ({
           const size = box.getSize(new THREE.Vector3());
           const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
           loadedGeometry = geometry;
+        } else if (fileExtension === '.step' || fileExtension === '.stp') {
+          // For STEP files, create a placeholder geometry since we don't have a STEP loader
+          // In a real implementation, you'd want to use a STEP parser library
+          const geometry = new THREE.BoxGeometry(1, 1, 1);
+          loadedGeometry = geometry;
         }
 
         if (loadedGeometry) {

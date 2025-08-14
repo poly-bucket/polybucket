@@ -25,24 +25,16 @@ namespace PolyBucket.Api.Features.Models.GetModels.Domain
                 // Generate fresh presigned URLs for all models
                 foreach (var model in models)
                 {
-                    // Generate fresh presigned URL for FileUrl
+                    // Generate fresh presigned URL for FileUrl (stored as object key)
                     if (!string.IsNullOrEmpty(model.FileUrl))
                     {
-                        // Check if it's already a presigned URL (contains query parameters)
-                        if (!model.FileUrl.Contains("?"))
-                        {
-                            model.FileUrl = await _storageService.GetPresignedUrlAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
-                        }
+                        model.FileUrl = await _storageService.GetPresignedUrlAsync(model.FileUrl, TimeSpan.FromHours(1), cancellationToken);
                     }
 
-                    // Generate fresh presigned URL for ThumbnailUrl
+                    // Generate fresh presigned URL for ThumbnailUrl (stored as object key)
                     if (!string.IsNullOrEmpty(model.ThumbnailUrl))
                     {
-                        // Check if it's already a presigned URL (contains query parameters)
-                        if (!model.ThumbnailUrl.Contains("?"))
-                        {
-                            model.ThumbnailUrl = await _storageService.GetPresignedUrlAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
-                        }
+                        model.ThumbnailUrl = await _storageService.GetPresignedUrlAsync(model.ThumbnailUrl, TimeSpan.FromHours(1), cancellationToken);
                     }
                 }
 

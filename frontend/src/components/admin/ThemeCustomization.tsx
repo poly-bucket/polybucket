@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { useAppSelector } from '../../utils/hooks';
+import themeService from '../../services/themeService';
+import { ThemeDto } from '../../services/api.client';
 
 interface ColorPickerProps {
   label: string;
@@ -14,25 +16,67 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ label, color, onChange, descr
     <div className="flex items-center justify-between mb-2">
       <label className="text-sm font-medium text-white">{label}</label>
       <div className="flex items-center gap-2">
-        <div 
-          className="w-6 h-6 rounded border border-gray-600"
-          style={{ backgroundColor: color }}
-        />
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-6 h-6 border border-gray-600 rounded cursor-pointer"
-        />
       </div>
     </div>
-    <input
-      type="text"
-      value={color}
-      onChange={(e) => onChange(e.target.value)}
-      className="lg-input text-xs"
-      placeholder="#000000"
-    />
+    <div className="flex items-center gap-2">
+      <div 
+        className="w-8 h-8 rounded border border-gray-600 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+        style={{ backgroundColor: color }}
+        title="Click to pick a color"
+        onClick={() => {
+          const colorInput = document.createElement('input');
+          colorInput.type = 'color';
+          colorInput.value = color;
+          colorInput.onchange = (e) => onChange((e.target as HTMLInputElement).value);
+          colorInput.click();
+        }}
+      >
+        <svg 
+          className="w-4 h-4 text-white drop-shadow-lg" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" 
+          />
+        </svg>
+      </div>
+      <div className="flex-1 relative">
+        <input
+          type="text"
+          value={color}
+          onChange={(e) => onChange(e.target.value)}
+          className="lg-input text-xs pr-10"
+          placeholder="#000000"
+        />
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(color);
+            // Optional: Show a brief success message
+            const button = document.activeElement as HTMLButtonElement;
+            if (button) {
+              const originalText = button.innerHTML;
+              button.innerHTML = '✓';
+              button.className = 'absolute right-2 top-1/2 transform -translate-y-1/2 text-green-400 hover:text-green-300 transition-colors';
+              setTimeout(() => {
+                button.innerHTML = originalText;
+                button.className = 'absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors';
+              }, 1000);
+            }
+          }}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+          title="Copy hex code to clipboard"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        </button>
+      </div>
+    </div>
     {description && (
       <p className="text-xs text-gray-400 mt-1">{description}</p>
     )}
@@ -47,6 +91,14 @@ const ThemeCustomization: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [themes, setThemes] = useState<ThemeDto[]>([]);
+  const [activeTheme, setActiveTheme] = useState<ThemeDto | null>(null);
+  
+  // Theme creation modal state
+  const [showThemeModal, setShowThemeModal] = useState(false);
+  const [themeName, setThemeName] = useState('');
+  const [themeDescription, setThemeDescription] = useState('');
+  const [modalColors, setModalColors] = useState<ThemeColors>(colors);
 
   // Load theme settings from backend on mount
   useEffect(() => {
@@ -57,204 +109,39 @@ const ThemeCustomization: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Get current theme configuration from the extensible theme system
-      const configResponse = await fetch('http://localhost:11666/api/system-settings/extensible-theme/configuration', {
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (configResponse.ok) {
-        const configData = await configResponse.json();
-        const backendColors: ThemeColors = {
-          primary: configData.primaryColor || '#6366f1',
-          primaryLight: configData.primaryLightColor || '#818cf8',
-          primaryDark: configData.primaryDarkColor || '#4f46e5',
-          secondary: configData.secondaryColor || '#8b5cf6',
-          secondaryLight: configData.secondaryLightColor || '#a78bfa',
-          secondaryDark: configData.secondaryDarkColor || '#7c3aed',
-          accent: configData.accentColor || '#06b6d4',
-          accentLight: configData.accentLightColor || '#22d3ee',
-          accentDark: configData.accentDarkColor || '#0891b2',
-          bgPrimary: configData.backgroundPrimaryColor || '#0f0f23',
-          bgSecondary: configData.backgroundSecondaryColor || '#1a1a2e',
-          bgTertiary: configData.backgroundTertiaryColor || '#16213e',
-        };
-        
-        setLocalColors(backendColors);
-        updateColors(backendColors);
+      // Load themes from backend using theme service
+      const themesResponse = await themeService.getThemes();
+      setThemes(themesResponse.themes || []);
+      setActiveTheme(themesResponse.activeTheme || null);
+      
+      // If there's an active theme, use its colors
+      if (themesResponse.activeTheme?.colors) {
+        const frontendColors = themeService.convertToFrontendFormat(themesResponse.activeTheme.colors);
+        setLocalColors(frontendColors);
+        updateColors(frontendColors);
       } else {
-        console.warn('Failed to load theme settings from backend, using defaults');
+        // Use default colors if no active theme
+        const defaultColors: ThemeColors = {
+          primary: '#6366f1',
+          primaryLight: '#818cf8',
+          primaryDark: '#4f46e5',
+          secondary: '#8b5cf6',
+          secondaryLight: '#a78bfa',
+          secondaryDark: '#7c3aed',
+          accent: '#06b6d4',
+          accentLight: '#22d3ee',
+          accentDark: '#0891b2',
+          bgPrimary: '#0f0f23',
+          bgSecondary: '#1a1a2e',
+          bgTertiary: '#16213e',
+        };
+        setLocalColors(defaultColors);
+        updateColors(defaultColors);
       }
     } catch (error) {
       console.error('Error loading theme settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleColorChange = (key: keyof ThemeColors, value: string) => {
-    setLocalColors(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError('');
-    setSuccess('');
-    
-    try {
-      const response = await fetch('http://localhost:11666/api/system-settings/extensible-theme/configuration', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          primaryColor: localColors.primary,
-          primaryLightColor: localColors.primaryLight,
-          primaryDarkColor: localColors.primaryDark,
-          secondaryColor: localColors.secondary,
-          secondaryLightColor: localColors.secondaryLight,
-          secondaryDarkColor: localColors.secondaryDark,
-          accentColor: localColors.accent,
-          accentLightColor: localColors.accentLight,
-          accentDarkColor: localColors.accentDark,
-          backgroundPrimaryColor: localColors.bgPrimary,
-          backgroundSecondaryColor: localColors.bgSecondary,
-          backgroundTertiaryColor: localColors.bgTertiary,
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          updateColors(localColors);
-          setSuccess('Theme settings saved successfully!');
-          setTimeout(() => setSuccess(''), 3000);
-        } else {
-          setError(data.message || 'Failed to save theme settings');
-        }
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to save theme settings');
-      }
-    } catch (error) {
-      console.error('Failed to save theme:', error);
-      setError('An error occurred while saving theme settings');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleReset = async () => {
-    try {
-      setIsSaving(true);
-      setError('');
-      setSuccess('');
-      
-      const response = await fetch('http://localhost:11666/api/system-settings/extensible-theme/reset', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setLocalColors(colors);
-          resetToDefaults();
-          setSuccess('Theme reset to defaults successfully!');
-          setTimeout(() => setSuccess(''), 3000);
-        } else {
-          setError(data.message || 'Failed to reset theme');
-        }
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to reset theme');
-      }
-    } catch (error) {
-      console.error('Failed to reset theme:', error);
-      setError('An error occurred while resetting theme');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const presetThemes = [
-    {
-      name: 'Ocean Blue',
-      colors: {
-        primary: '#0ea5e9',
-        primaryLight: '#38bdf8',
-        primaryDark: '#0284c7',
-        secondary: '#6366f1',
-        secondaryLight: '#818cf8',
-        secondaryDark: '#4f46e5',
-        accent: '#06b6d4',
-        accentLight: '#22d3ee',
-        accentDark: '#0891b2',
-        bgPrimary: '#0f172a',
-        bgSecondary: '#1e293b',
-        bgTertiary: '#334155',
-      }
-    },
-    {
-      name: 'Purple Dream',
-      colors: {
-        primary: '#8b5cf6',
-        primaryLight: '#a78bfa',
-        primaryDark: '#7c3aed',
-        secondary: '#ec4899',
-        secondaryLight: '#f472b6',
-        secondaryDark: '#db2777',
-        accent: '#f59e0b',
-        accentLight: '#fbbf24',
-        accentDark: '#d97706',
-        bgPrimary: '#1e1b4b',
-        bgSecondary: '#312e81',
-        bgTertiary: '#4338ca',
-      }
-    },
-    {
-      name: 'Emerald Forest',
-      colors: {
-        primary: '#10b981',
-        primaryLight: '#34d399',
-        primaryDark: '#059669',
-        secondary: '#059669',
-        secondaryLight: '#10b981',
-        secondaryDark: '#047857',
-        accent: '#f59e0b',
-        accentLight: '#fbbf24',
-        accentDark: '#d97706',
-        bgPrimary: '#064e3b',
-        bgSecondary: '#065f46',
-        bgTertiary: '#047857',
-      }
-    },
-    {
-      name: 'Sunset Orange',
-      colors: {
-        primary: '#f97316',
-        primaryLight: '#fb923c',
-        primaryDark: '#ea580c',
-        secondary: '#ef4444',
-        secondaryLight: '#f87171',
-        secondaryDark: '#dc2626',
-        accent: '#f59e0b',
-        accentLight: '#fbbf24',
-        accentDark: '#d97706',
-        bgPrimary: '#451a03',
-        bgSecondary: '#7c2d12',
-        bgTertiary: '#92400e',
-      }
-    },
-    {
-      name: 'Midnight Purple',
-      colors: {
+      // Fallback to default colors on error
+      const defaultColors: ThemeColors = {
         primary: '#6366f1',
         primaryLight: '#818cf8',
         primaryDark: '#4f46e5',
@@ -267,12 +154,179 @@ const ThemeCustomization: React.FC = () => {
         bgPrimary: '#0f0f23',
         bgSecondary: '#1a1a2e',
         bgTertiary: '#16213e',
-      }
+      };
+      setLocalColors(defaultColors);
+      updateColors(defaultColors);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
-  const applyPreset = (preset: typeof presetThemes[0]) => {
-    setLocalColors(preset.colors);
+  const handleColorChange = (key: keyof ThemeColors, value: string) => {
+    setLocalColors(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleReset = async () => {
+    try {
+      setIsSaving(true);
+      setError('');
+      setSuccess('');
+      
+      // Find the default theme
+      const defaultTheme = themes.find(theme => theme.isDefault);
+      
+      if (defaultTheme && defaultTheme.id !== undefined) {
+        // Set the default theme as active
+        const success = await themeService.setActiveTheme(defaultTheme.id);
+        if (success) {
+          // Convert backend format to frontend format using theme service
+          if (defaultTheme.colors) {
+            const frontendColors = themeService.convertToFrontendFormat(defaultTheme.colors);
+            setLocalColors(frontendColors);
+            updateColors(frontendColors);
+          }
+          
+          // Reload themes to get updated active state
+          await loadThemeSettings();
+          
+          setSuccess('Theme reset to defaults successfully!');
+          setTimeout(() => setSuccess(''), 3000);
+        } else {
+          setError('Failed to reset theme to defaults');
+        }
+      } else {
+        // No default theme found, use hardcoded defaults
+        const defaultColors: ThemeColors = {
+          primary: '#6366f1',
+          primaryLight: '#818cf8',
+          primaryDark: '#4f46e5',
+          secondary: '#8b5cf6',
+          secondaryLight: '#a78bfa',
+          secondaryDark: '#7c3aed',
+          accent: '#06b6d4',
+          accentLight: '#22d3ee',
+          accentDark: '#0891b2',
+          bgPrimary: '#0f0f23',
+          bgSecondary: '#1a1a2e',
+          bgTertiary: '#16213e',
+        };
+        setLocalColors(defaultColors);
+        updateColors(defaultColors);
+        setSuccess('Theme reset to defaults successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to reset theme:', error);
+      setError('An error occurred while resetting theme');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const applyPreset = async (theme: ThemeDto) => {
+    try {
+      // Set the theme as active using theme service
+      if (theme.id === undefined) {
+        setError('Theme ID is missing');
+        return;
+      }
+      
+      const success = await themeService.setActiveTheme(theme.id);
+      if (success) {
+        // Convert backend format to frontend format using theme service
+        if (theme.colors) {
+          const frontendColors = themeService.convertToFrontendFormat(theme.colors);
+          setLocalColors(frontendColors);
+          updateColors(frontendColors);
+        }
+        
+        // Reload themes to get updated active state
+        await loadThemeSettings();
+        
+        setSuccess(`Theme "${theme.name || 'Unknown'}" activated successfully!`);
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError('Failed to activate theme');
+      }
+    } catch (error) {
+      console.error('Failed to apply theme:', error);
+      setError('An error occurred while applying theme');
+    }
+  };
+
+  const createCustomTheme = async () => {
+    // Open the modal instead of using prompt
+    setModalColors(localColors);
+    setThemeName('');
+    setThemeDescription('Custom theme created by user');
+    setShowThemeModal(true);
+  };
+
+  const handleCreateTheme = async () => {
+    if (!themeName.trim()) {
+      setError('Theme name is required');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError('');
+      setSuccess('');
+      
+      // Import the required classes
+      const { CreateThemeRequest, ThemeColorsDto } = await import('../../services/api.client');
+      
+      // Create a proper ThemeColorsDto instance
+      const themeColorsDto = new ThemeColorsDto();
+      themeColorsDto.primary = modalColors.primary;
+      themeColorsDto.primaryLight = modalColors.primaryLight;
+      themeColorsDto.primaryDark = modalColors.primaryDark;
+      themeColorsDto.secondary = modalColors.secondary;
+      themeColorsDto.secondaryLight = modalColors.secondaryLight;
+      themeColorsDto.secondaryDark = modalColors.secondaryDark;
+      themeColorsDto.accent = modalColors.accent;
+      themeColorsDto.accentLight = modalColors.accentLight;
+      themeColorsDto.accentDark = modalColors.accentDark;
+      themeColorsDto.backgroundPrimary = modalColors.bgPrimary;
+      themeColorsDto.backgroundSecondary = modalColors.bgSecondary;
+      themeColorsDto.backgroundTertiary = modalColors.bgTertiary;
+      
+      // Create a new CreateThemeRequest instance
+      const createRequest = new CreateThemeRequest();
+      createRequest.name = themeName.trim();
+      createRequest.description = themeDescription.trim() || 'Custom theme created by user';
+      createRequest.isDefault = false;
+      createRequest.colors = themeColorsDto;
+      
+      // Create theme using theme service
+      const response = await themeService.createTheme(createRequest);
+      
+      if (response.success) {
+        setSuccess('Custom theme created successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+        
+        // Close the modal
+        setShowThemeModal(false);
+        
+        // Reload themes to include the new one
+        await loadThemeSettings();
+      } else {
+        setError(response.message || 'Failed to create custom theme');
+      }
+    } catch (error) {
+      console.error('Failed to create custom theme:', error);
+      setError('An error occurred while creating custom theme');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSave = async () => {
+    // Open the modal for saving as custom theme
+    setModalColors(localColors);
+    setThemeName('');
+    setThemeDescription('Custom theme created by user');
+    setShowThemeModal(true);
   };
 
   if (isLoading) {
@@ -299,6 +353,13 @@ const ThemeCustomization: React.FC = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={createCustomTheme}
+              className="lg-button lg-button-secondary"
+              disabled={isSaving}
+            >
+              Save as Custom Theme
+            </button>
             <button
               onClick={handleReset}
               className="lg-button lg-button-secondary"
@@ -331,37 +392,50 @@ const ThemeCustomization: React.FC = () => {
 
         {/* Preset Themes */}
         <div className="mb-8">
-          <h3 className="text-lg font-medium text-white mb-4">Preset Themes</h3>
+          <h3 className="text-lg font-medium text-white mb-4">Available Themes</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {presetThemes.map((preset) => (
+            {themes.map((theme) => (
               <button
-                key={preset.name}
-                onClick={() => applyPreset(preset)}
-                className="lg-card p-4 text-left hover:scale-105 transition-transform"
+                key={theme.id}
+                onClick={() => applyPreset(theme)}
+                className={`lg-card p-4 text-left hover:scale-105 transition-transform ${
+                  theme.isActive ? 'ring-2 ring-blue-500' : ''
+                }`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="flex gap-1">
                     <div 
                       className="w-4 h-4 rounded"
-                      style={{ backgroundColor: preset.colors.primary }}
+                      style={{ backgroundColor: theme.colors?.primary || '#ccc' }}
                     />
                     <div 
                       className="w-4 h-4 rounded"
-                      style={{ backgroundColor: preset.colors.secondary }}
+                      style={{ backgroundColor: theme.colors?.secondary || '#ccc' }}
                     />
                     <div 
                       className="w-4 h-4 rounded"
-                      style={{ backgroundColor: preset.colors.accent }}
+                      style={{ backgroundColor: theme.colors?.accent || '#ccc' }}
                     />
                   </div>
-                  <span className="font-medium text-white">{preset.name}</span>
+                  <span className="font-medium text-white">{theme.name || 'Unnamed Theme'}</span>
+                  {theme.isActive && (
+                    <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">Active</span>
+                  )}
+                  {theme.isDefault && (
+                    <span className="text-xs bg-gray-500 text-white px-2 py-1 rounded">Default</span>
+                  )}
                 </div>
-                <div 
-                  className="w-full h-8 rounded"
-                  style={{
-                    background: `linear-gradient(135deg, ${preset.colors.bgPrimary} 0%, ${preset.colors.bgSecondary} 50%, ${preset.colors.bgTertiary} 100%)`
-                  }}
-                />
+                {theme.colors && (
+                  <div 
+                    className="w-full h-8 rounded"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.colors.backgroundPrimary || '#ccc'} 0%, ${theme.colors.backgroundSecondary || '#ccc'} 50%, ${theme.colors.backgroundTertiary || '#ccc'} 100%)`
+                    }}
+                  />
+                )}
+                {theme.description && (
+                  <p className="text-xs text-gray-400 mt-2">{theme.description}</p>
+                )}
               </button>
             ))}
           </div>
@@ -513,6 +587,202 @@ const ThemeCustomization: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Theme Creation Modal */}
+      {showThemeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="lg-card p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-white mb-4">Create New Theme</h3>
+            
+            <div className="mb-4">
+              <label className="text-sm font-medium text-white mb-2 block">Theme Name *</label>
+              <input
+                type="text"
+                value={themeName}
+                onChange={(e) => setThemeName(e.target.value)}
+                className="lg-input text-white bg-gray-700 w-full"
+                placeholder="e.g., Dark Mode, Light Mode"
+              />
+            </div>
+            
+            <div className="mb-4">
+              <label className="text-sm font-medium text-white mb-2 block">Description (Optional)</label>
+              <textarea
+                value={themeDescription}
+                onChange={(e) => setThemeDescription(e.target.value)}
+                className="lg-input text-white bg-gray-700 w-full h-20 resize-none"
+                placeholder="e.g., A dark theme for better readability"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Theme Details and Preview */}
+              <div>
+                <div className="mb-6">
+                  <h4 className="text-md font-medium text-white mb-3">Preview</h4>
+                  <div 
+                    className="lg-card p-4"
+                    style={{
+                      background: `linear-gradient(135deg, ${modalColors.bgPrimary} 0%, ${modalColors.bgSecondary} 50%, ${modalColors.bgTertiary} 100%)`
+                    }}
+                  >
+                    <div className="flex flex-wrap gap-3">
+                      <button 
+                        className="lg-button lg-button-primary"
+                        style={{
+                          background: `linear-gradient(135deg, ${modalColors.primary} 0%, ${modalColors.primaryDark} 100%)`,
+                          borderColor: modalColors.primary
+                        }}
+                      >
+                        Primary
+                      </button>
+                      <button 
+                        className="lg-button lg-button-secondary"
+                        style={{
+                          background: `linear-gradient(135deg, ${modalColors.secondary} 0%, ${modalColors.secondaryDark} 100%)`,
+                          borderColor: modalColors.secondary
+                        }}
+                      >
+                        Secondary
+                      </button>
+                      <button 
+                        className="lg-button lg-button-accent"
+                        style={{
+                          background: `linear-gradient(135deg, ${modalColors.accent} 0%, ${modalColors.accentDark} 100%)`,
+                          borderColor: modalColors.accent
+                        }}
+                      >
+                        Accent
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Customization */}
+              <div>
+                <h4 className="text-md font-medium text-white mb-3">Customize Colors</h4>
+                
+                {/* Primary Colors */}
+                <div className="mb-4">
+                  <h5 className="text-sm font-medium text-white mb-2">Primary Colors</h5>
+                  <div className="space-y-2">
+                    <ColorPicker
+                      label="Primary"
+                      color={modalColors.primary}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, primary: color }))}
+                      description="Main brand color"
+                    />
+                    <ColorPicker
+                      label="Primary Light"
+                      color={modalColors.primaryLight}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, primaryLight: color }))}
+                      description="Lighter variant for hover states"
+                    />
+                    <ColorPicker
+                      label="Primary Dark"
+                      color={modalColors.primaryDark}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, primaryDark: color }))}
+                      description="Darker variant for active states"
+                    />
+                  </div>
+                </div>
+
+                {/* Secondary Colors */}
+                <div className="mb-4">
+                  <h5 className="text-sm font-medium text-white mb-2">Secondary Colors</h5>
+                  <div className="space-y-2">
+                    <ColorPicker
+                      label="Secondary"
+                      color={modalColors.secondary}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, secondary: color }))}
+                      description="Secondary brand color"
+                    />
+                    <ColorPicker
+                      label="Secondary Light"
+                      color={modalColors.secondaryLight}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, secondaryLight: color }))}
+                      description="Lighter variant for hover states"
+                    />
+                    <ColorPicker
+                      label="Secondary Dark"
+                      color={modalColors.secondaryDark}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, secondaryDark: color }))}
+                      description="Darker variant for active states"
+                    />
+                  </div>
+                </div>
+
+                {/* Accent Colors */}
+                <div className="mb-4">
+                  <h5 className="text-sm font-medium text-white mb-2">Accent Colors</h5>
+                  <div className="space-y-2">
+                    <ColorPicker
+                      label="Accent"
+                      color={modalColors.accent}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, accent: color }))}
+                      description="Accent color for highlights"
+                    />
+                    <ColorPicker
+                      label="Accent Light"
+                      color={modalColors.accentLight}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, accentLight: color }))}
+                      description="Lighter variant for hover states"
+                    />
+                    <ColorPicker
+                      label="Accent Dark"
+                      color={modalColors.accentDark}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, accentDark: color }))}
+                      description="Darker variant for active states"
+                    />
+                  </div>
+                </div>
+
+                {/* Background Colors */}
+                <div className="mb-4">
+                  <h5 className="text-sm font-medium text-white mb-2">Background Colors</h5>
+                  <div className="space-y-2">
+                    <ColorPicker
+                      label="Background Primary"
+                      color={modalColors.bgPrimary}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, bgPrimary: color }))}
+                      description="Main background color"
+                    />
+                    <ColorPicker
+                      label="Background Secondary"
+                      color={modalColors.bgSecondary}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, bgSecondary: color }))}
+                      description="Secondary background color"
+                    />
+                    <ColorPicker
+                      label="Background Tertiary"
+                      color={modalColors.bgTertiary}
+                      onChange={(color) => setModalColors(prev => ({ ...prev, bgTertiary: color }))}
+                      description="Tertiary background color"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-600">
+              <button
+                onClick={() => setShowThemeModal(false)}
+                className="lg-button lg-button-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateTheme}
+                className="lg-button lg-button-primary"
+                disabled={isSaving || !themeName.trim()}
+              >
+                {isSaving ? 'Creating...' : 'Create Theme'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

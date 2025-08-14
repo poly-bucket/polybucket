@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Model, LicenseTypes, PrivacySettings, ModelCategories, Tag } from '../../services/api.client';
+import { Model, LicenseTypes, PrivacySettings, Tag, Category } from '../../services/api.client';
 import { ExtendedModel } from '../../services/modelsService';
 
 interface ModelEditFormProps {
@@ -14,7 +14,7 @@ interface EditFormData {
   description: string;
   privacy: PrivacySettings;
   license: LicenseTypes;
-  categories: ModelCategories[];
+  categories: string[];
   tags: string[];
   aiGenerated: boolean;
   wip: boolean;
@@ -35,7 +35,7 @@ const ModelEditForm: React.FC<ModelEditFormProps> = ({
     description: model.description || '',
     privacy: model.privacy || PrivacySettings.Public,
     license: model.license || LicenseTypes.MIT,
-    categories: model.categories || [],
+    categories: model.categories?.map(cat => typeof cat === 'string' ? cat : cat.name || '') || [],
     tags: model.tags?.map(tag => tag.name || '') || [],
     aiGenerated: model.aiGenerated || false,
     wip: model.wip || false,
@@ -68,29 +68,29 @@ const ModelEditForm: React.FC<ModelEditFormProps> = ({
   ];
 
   const categoryOptions = [
-    { value: ModelCategories.Art, label: 'Art' },
-    { value: ModelCategories.Technology, label: 'Technology' },
-    { value: ModelCategories.Toys, label: 'Toys' },
-    { value: ModelCategories.Tools, label: 'Tools' },
-    { value: ModelCategories.Games, label: 'Games' },
-    { value: ModelCategories.Fashion, label: 'Fashion' },
-    { value: ModelCategories.Gadget, label: 'Gadget' },
-    { value: ModelCategories.Home, label: 'Home' },
-    { value: ModelCategories.Kitchen, label: 'Kitchen' },
-    { value: ModelCategories.Electronics, label: 'Electronics' },
-    { value: ModelCategories.Automotive, label: 'Automotive' },
-    { value: ModelCategories.Sports, label: 'Sports' },
-    { value: ModelCategories.Music, label: 'Music' },
-    { value: ModelCategories.Medical, label: 'Medical' },
-    { value: ModelCategories.Science, label: 'Science' },
-    { value: ModelCategories.Other, label: 'Other' },
+    { value: 'Art', label: 'Art' },
+    { value: 'Technology', label: 'Technology' },
+    { value: 'Toys', label: 'Toys' },
+    { value: 'Tools', label: 'Tools' },
+    { value: 'Games', label: 'Games' },
+    { value: 'Fashion', label: 'Fashion' },
+    { value: 'Gadget', label: 'Gadget' },
+    { value: 'Home', label: 'Home' },
+    { value: 'Kitchen', label: 'Kitchen' },
+    { value: 'Electronics', label: 'Electronics' },
+    { value: 'Automotive', label: 'Automotive' },
+    { value: 'Sports', label: 'Sports' },
+    { value: 'Music', label: 'Music' },
+    { value: 'Medical', label: 'Medical' },
+    { value: 'Science', label: 'Science' },
+    { value: 'Other', label: 'Other' },
   ];
 
   const handleInputChange = (field: keyof EditFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCategoryToggle = (category: ModelCategories) => {
+  const handleCategoryToggle = (category: string) => {
     setFormData(prev => ({
       ...prev,
       categories: prev.categories.includes(category)
@@ -138,7 +138,7 @@ const ModelEditForm: React.FC<ModelEditFormProps> = ({
       description: formData.description,
       privacy: formData.privacy,
       license: formData.license,
-      categories: formData.categories,
+      categories: formData.categories.map(catName => ({ name: catName } as Category)),
       tags: formData.tags.map(tagName => ({ name: tagName } as Tag)),
       aiGenerated: formData.aiGenerated,
       wip: formData.wip,

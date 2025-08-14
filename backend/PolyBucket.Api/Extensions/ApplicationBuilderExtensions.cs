@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Data.Seeders;
 using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Api.Seeders;
+using PolyBucket.Api.Features.ThemeManagement.Domain;
+using PolyBucket.Api.Data.SeedData;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -33,12 +36,23 @@ public static class ApplicationBuilderExtensions
                 db.Database.Migrate();
             }
             
-            // Initialize default roles first
+            // Initialize default permissions and roles first
             var permissionService = services.GetRequiredService<IPermissionService>();
+            await permissionService.InitializeDefaultPermissionsAsync();
             await permissionService.InitializeDefaultRolesAsync();
             
             var adminSeeder = services.GetRequiredService<AdminSeeder>();
             await adminSeeder.SeedAsync();
+            
+            // Seed categories
+            var categorySeeder = services.GetRequiredService<CategorySeeder>();
+            await categorySeeder.SeedAsync();
+            
+            // Seed themes
+            await ThemeSeeder.SeedThemesAsync(db);
+            
+            // Seed file type settings
+            await FileTypeSettingsSeed.SeedFileTypeSettingsAsync(db);
         }
         catch (Exception ex)
         {

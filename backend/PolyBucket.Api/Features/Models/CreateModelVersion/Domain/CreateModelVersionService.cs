@@ -23,9 +23,10 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
         private readonly IPermissionService _permissionService;
         private readonly ILogger<CreateModelVersionService> _logger;
 
-        private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb" };
+        private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".3mf", ".step", ".stp" };
         private static readonly string[] SupportedImageFormats = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
-        private static readonly string[] AllSupportedFormats = Supported3DFormats.Concat(SupportedImageFormats).ToArray();
+        private static readonly string[] SupportedDocumentFormats = { ".pdf", ".md", ".markdown", ".txt" };
+        private static readonly string[] AllSupportedFormats = Supported3DFormats.Concat(SupportedImageFormats).Concat(SupportedDocumentFormats).ToArray();
 
         private const long MaxFileSize = 100 * 1024 * 1024; // 100MB
         private const long Max3DModelSize = 500 * 1024 * 1024; // 500MB for 3D models
@@ -68,7 +69,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
 
             var versionId = Guid.NewGuid();
             var versionFiles = new List<ModelFile>();
-            string? thumbnailUrl = null;
+            string? thumbnailObjectKey = null;
 
             try
             {
@@ -92,39 +93,39 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
 
                     versionFiles.Add(modelFile);
 
-                    // Check if this file should be the thumbnail
+                    // Check if this file should be the thumbnail - store object key, not presigned URL
                     if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId))
                     {
-                        thumbnailUrl = await _storage.GetPresignedUrlAsync(objectKey, TimeSpan.FromHours(1), cancellationToken);
+                        thumbnailObjectKey = objectKey;
                     }
                 }
 
                 // If no thumbnail was specified, prefer image files, then fallback to first 3D model
-                if (thumbnailUrl == null)
+                if (thumbnailObjectKey == null)
                 {
                     var imageFile = versionFiles.FirstOrDefault(f => IsImageFile(f.Name));
                     if (imageFile != null)
                     {
-                        thumbnailUrl = await _storage.GetPresignedUrlAsync(imageFile.Path, TimeSpan.FromHours(1), cancellationToken);
+                        thumbnailObjectKey = imageFile.Path;
                     }
                     else
                     {
                         var first3DModel = versionFiles.FirstOrDefault(f => Is3DModelFile(f.Name));
-                        thumbnailUrl = first3DModel?.Path != null ? await _storage.GetPresignedUrlAsync(first3DModel.Path, TimeSpan.FromHours(1), cancellationToken) : null;
+                        thumbnailObjectKey = first3DModel?.Path;
                     }
                 }
 
                 // Get next version number
                 var nextVersionNumber = await _repository.GetNextVersionNumberAsync(modelId, cancellationToken);
 
-                // Create version entity
+                // Create version entity - store object keys, not presigned URLs
                 var version = new ModelVersion
                 {
                     Id = versionId,
                     Name = request.Name,
                     Notes = request.Notes ?? string.Empty,
                     FileUrl = versionFiles.First().Path,
-                    ThumbnailUrl = thumbnailUrl,
+                    ThumbnailUrl = thumbnailObjectKey,
                     VersionNumber = nextVersionNumber,
                     ModelId = model.Id,
                     Model = model,
@@ -218,7 +219,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
 
             if (!has3DModel)
             {
-                return "At least one 3D model file is required (.stl, .obj, .fbx, .gltf, .glb)";
+                return "At least one 3D model file is required (.stl, .obj, .fbx, .gltf, .glb, .3mf, .step, .stp)";
             }
 
             if (totalSize > 1024 * 1024 * 1024)

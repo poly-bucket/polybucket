@@ -2,6 +2,9 @@ import React from 'react';
 import { ExtendedModel } from '../services/modelsService';
 import { useAuth } from '../context/AuthContext';
 import { useUserSettings } from '../context/UserSettingsContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTools, faExclamationTriangle, faMagicWandSparkles } from '@fortawesome/free-solid-svg-icons';
+import ClickableUsername from './common/ClickableUsername';
 
 interface ModelCardProps {
   model: ExtendedModel;
@@ -28,6 +31,57 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
     console.log('Like model:', model.id);
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.stopPropagation();
+    
+    // Set drag data
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'model',
+      modelId: model.id,
+      modelName: model.name,
+      thumbnailUrl: model.thumbnailUrl
+    }));
+    
+    // Set drag image (optional - shows a preview while dragging)
+    if (e.currentTarget instanceof HTMLElement) {
+      const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+      dragImage.style.opacity = '0.7';
+      dragImage.style.transform = 'scale(0.8) rotate(5deg)';
+      dragImage.style.pointerEvents = 'none';
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-1000px';
+      dragImage.style.zIndex = '9999';
+      dragImage.style.width = '200px';
+      dragImage.style.height = '200px';
+      dragImage.style.overflow = 'hidden';
+      
+      document.body.appendChild(dragImage);
+      
+      e.dataTransfer.setDragImage(dragImage, 0, 0);
+      
+      // Clean up the drag image after a short delay
+      setTimeout(() => {
+        if (document.body.contains(dragImage)) {
+          document.body.removeChild(dragImage);
+        }
+      }, 100);
+    }
+    
+    // Add visual feedback using CSS classes
+    e.currentTarget.classList.add('drag-start');
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Remove visual feedback and add end animation
+    e.currentTarget.classList.remove('drag-start');
+    e.currentTarget.classList.add('drag-end');
+    
+    // Remove the end animation class after animation completes
+    setTimeout(() => {
+      e.currentTarget.classList.remove('drag-end');
+    }, 200);
+  };
+
   const formatNumber = (num: number | undefined): string => {
     if (!num) return '0';
     if (num >= 1000000) {
@@ -51,9 +105,13 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
 
   return (
     <div 
-      className={`lg-card cursor-pointer overflow-hidden group w-full h-72 sm:h-80 flex flex-col ${className}`}
+      className={`lg-card cursor-pointer overflow-hidden group w-full h-72 sm:h-80 flex flex-col transition-all duration-200 ${className}`}
       onClick={handleClick}
+      draggable={true}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       data-testid="model-card"
+      title={`Drag to add to collection • ${model.name}`}
     >
       {/* Thumbnail Container - Fixed height */}
       <div className="relative h-40 sm:h-48 bg-white/10 overflow-hidden flex-shrink-0">
@@ -94,20 +152,31 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
         {/* Status Badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1">
           {model.wip && (
-            <span className="lg-badge lg-badge-warning text-xs">
-              WIP
+            <span className="lg-status-badge lg-badge-wip">
+              <FontAwesomeIcon icon={faTools} />
             </span>
           )}
           {model.aiGenerated && (
-            <span className="lg-badge lg-badge-info text-xs">
-              AI
+            <span className="lg-badge-ai">
+              <span className="lg-badge-ai-content">
+                <FontAwesomeIcon icon={faMagicWandSparkles} />
+              </span>
             </span>
           )}
           {model.nsfw && (
-            <span className="lg-badge lg-badge-error text-xs">
-              NSFW
+            <span className="lg-status-badge lg-badge-nsfw">
+              <FontAwesomeIcon icon={faExclamationTriangle} />
             </span>
           )}
+        </div>
+
+        {/* Drag Handle - Subtle indicator */}
+        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-full">
+            <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+            </svg>
+          </div>
         </div>
 
         {/* Like Button Overlay */}
@@ -132,9 +201,16 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
         </h3>
 
         {/* Author - Fixed height */}
-        <p className="text-xs text-white/60 mb-2 sm:mb-3 flex-shrink-0">
-          by {authorName}
-        </p>
+        <div className="text-xs text-white/60 mb-2 sm:mb-3 flex-shrink-0">
+          by{' '}
+          <ClickableUsername
+            userId={model.author?.id || ''}
+            username={authorName}
+            avatar={model.author?.avatar}
+            profilePictureUrl={model.author?.profilePictureUrl}
+            className="text-white/80 hover:text-blue-400"
+          />
+        </div>
 
         {/* Stats Row - Fixed height */}
         <div className="flex items-center justify-between text-xs text-white/60 flex-shrink-0">

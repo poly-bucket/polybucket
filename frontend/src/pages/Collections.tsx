@@ -67,12 +67,12 @@ const Collections: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="lg-container min-h-screen">
         {/* Navigation Bar */}
         <NavigationBar
           title="My Collections"
-          showSearch={false}
-          showUploadButton={false}
+          showSearch={true}
+          showUploadButton={true}
           showHomeLink={true}
         />
 
@@ -85,14 +85,14 @@ const Collections: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-              {/* Navigation Bar */}
-        <NavigationBar
-          title="My Collections"
-          showSearch={false}
-          showUploadButton={false}
-          showHomeLink={true}
-        />
+    <div className="lg-container min-h-screen">
+    {/* Navigation Bar */}
+    <NavigationBar
+      title="My Collections"
+      showSearch={true}
+      showUploadButton={true}
+      showHomeLink={true}
+    />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -125,20 +125,6 @@ const Collections: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Welcome back, {user?.username}!
-                  </h2>
-                  <p className="mt-1 text-gray-600">
-                    You have {collections.length} collection{collections.length === 1 ? '' : 's'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Collections Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {collections.map((collection) => (

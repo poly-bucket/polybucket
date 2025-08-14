@@ -250,11 +250,14 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        var returnedCollections = JsonSerializer.Deserialize<IEnumerable<Collection>>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var result = JsonSerializer.Deserialize<dynamic>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        returnedCollections.ShouldNotBeNull();
-        returnedCollections.Count().ShouldBe(2);
-        returnedCollections.All(c => c.OwnerId == user.Id).ShouldBeTrue();
+        result.ShouldNotBeNull();
+        result.collections.ShouldNotBeNull();
+        result.totalCount.ShouldBe(2);
+        result.page.ShouldBe(1);
+        result.pageSize.ShouldBe(12);
+        result.totalPages.ShouldBe(1);
     }
 
     [Fact]

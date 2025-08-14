@@ -1,13 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.ACL.Authorization;
-using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Common.Storage;
+using PolyBucket.Api.Common.Entities;
+using PolyBucket.Api.Common.Enums;
 using PolyBucket.Api.Features.Models.Domain;
 using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Http;
+using PolyBucket.Api.Features.Models.Repository;
+using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Services;
-using PolyBucket.Api.Common.Storage;
+using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Data;
+using PolyBucket.Api.Settings;
+using Microsoft.Extensions.Options;
 using System;
 using System.IO;
 using System.Linq;
@@ -23,15 +29,18 @@ namespace PolyBucket.Api.Features.Files.Http
         private readonly PolyBucketDbContext _context;
         private readonly IPermissionService _permissionService;
         private readonly IStorageService _storageService;
+        private readonly StorageSettings _storageSettings;
 
         public StreamFileController(
             PolyBucketDbContext context,
             IPermissionService permissionService,
-            IStorageService storageService)
+            IStorageService storageService,
+            IOptions<StorageSettings> storageOptions)
         {
             _context = context;
             _permissionService = permissionService;
             _storageService = storageService;
+            _storageSettings = storageOptions.Value;
         }
 
         [HttpGet("stream/{fileId}")]
@@ -84,7 +93,7 @@ namespace PolyBucket.Api.Features.Files.Http
         {
             try
             {
-                // URL decode the filename
+                // URL decode the filename - this is the only place we need to decode
                 var decodedFileName = Uri.UnescapeDataString(fileName);
                 
                 // Get the model with its files
@@ -123,12 +132,12 @@ namespace PolyBucket.Api.Features.Files.Http
                     var uri = new Uri(file.Path);
                     var pathSegments = uri.AbsolutePath.Split('/');
                     // Find the bucket name and extract everything after it
-                    var bucketIndex = Array.IndexOf(pathSegments, "polybucket-uploads");
+                    var bucketIndex = Array.IndexOf(pathSegments, _storageSettings.BucketName);
                     if (bucketIndex >= 0 && bucketIndex + 1 < pathSegments.Length)
                     {
                         objectKey = string.Join("/", pathSegments.Skip(bucketIndex + 1));
-                        // URL decode the object key to handle spaces and other encoded characters
-                        objectKey = Uri.UnescapeDataString(objectKey);
+                        // No need to URL decode here - the object key should be used as-is
+                        // The storage service expects the raw object key
                     }
                     else
                     {

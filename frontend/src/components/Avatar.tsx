@@ -34,7 +34,7 @@ const Avatar: React.FC<AvatarProps> = ({
     
     return (
       <div 
-        className={`${sizeClass} rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ${className}`}
+        className={`${sizeClass} rounded-full overflow-hidden bg-white flex items-center justify-center ${className}`}
         title={title}
       >
         <img
@@ -53,7 +53,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
   return (
     <div 
-      className={`${sizeClass} rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ${className}`}
+      className={`${sizeClass} rounded-full overflow-hidden bg-white flex items-center justify-center ${className}`}
       title={title}
     >
       <img

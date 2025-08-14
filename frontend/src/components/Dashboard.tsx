@@ -90,7 +90,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
       {/* Collections Sidebar */}
       <CollectionsBar 
         isCollapsed={isCollectionsSidebarCollapsed}
@@ -98,7 +98,7 @@ const Dashboard: React.FC = () => {
       />
       
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${isCollectionsSidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+      <div className="flex-1 transition-all duration-300">
         {/* Navigation Bar */}
         <NavigationBar
           onSearch={handleSearch}

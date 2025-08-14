@@ -27,9 +27,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
 
   // Check for required role if specified
   if (requiredRole) {
+    console.log('ProtectedRoute: Checking required role:', requiredRole);
+    console.log('ProtectedRoute: User roles:', user.roles);
+    console.log('ProtectedRoute: User object:', user);
+    
     const hasRequiredRole = user.roles?.some((role: string) => 
       role.toLowerCase() === requiredRole.toLowerCase()
     );
+    
+    console.log('ProtectedRoute: Has required role?', hasRequiredRole);
     
     if (!hasRequiredRole) {
       console.warn(`Access denied: User roles [${user.roles?.join(', ')}] do not include '${requiredRole}', required for this route.`);

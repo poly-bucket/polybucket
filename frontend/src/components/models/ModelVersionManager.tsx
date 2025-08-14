@@ -40,9 +40,10 @@ const ModelVersionManager: React.FC<ModelVersionManagerProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Supported file formats
-  const supported3DFormats = ['.stl', '.obj', '.fbx', '.gltf', '.glb'];
+  const supported3DFormats = ['.stl', '.obj', '.fbx', '.gltf', '.glb', '.3mf', '.step', '.stp'];
   const supportedImageFormats = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-  const allSupportedFormats = [...supported3DFormats, ...supportedImageFormats];
+  const supportedDocumentFormats = ['.pdf', '.md', '.markdown', '.txt'];
+  const allSupportedFormats = [...supported3DFormats, ...supportedImageFormats, ...supportedDocumentFormats];
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -219,7 +220,7 @@ const ModelVersionManager: React.FC<ModelVersionManagerProps> = ({
                   Supported formats: {allSupportedFormats.join(', ')}
                 </p>
                 <p className="text-sm text-gray-500">
-                  At least one 3D model file (.stl, .obj, .fbx, .gltf, .glb) is required
+                  At least one 3D model file (.stl, .obj, .fbx, .gltf, .glb, .3mf, .step, .stp) is required
                 </p>
               </div>
             </div>
@@ -299,7 +300,7 @@ const ModelVersionManager: React.FC<ModelVersionManagerProps> = ({
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
               <p className="text-yellow-800 text-sm">
-                At least one 3D model file (.stl, .obj, .fbx, .gltf, .glb) is required for a new version.
+                At least one 3D model file (.stl, .obj, .fbx, .gltf, .glb, .3mf, .step, .stp) is required for a new version.
               </p>
             </div>
           </div>

@@ -13,6 +13,7 @@ namespace PolyBucket.Api.Common.Models
         public string Username { get; set; } = null!;
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
+        public string? Bio { get; set; }
         public string Salt { get; set; } = null!;
         public string PasswordHash { get; set; } = null!;
         public Guid? RoleId { get; set; }
@@ -27,6 +28,21 @@ namespace PolyBucket.Api.Common.Models
         public bool HasCompletedFirstTimeSetup { get; set; } = false;
         public bool RequiresPasswordChange { get; set; } = false;
         public string? Avatar { get; set; }
+        public string? ProfilePictureUrl { get; set; }
+        public DateTime? LastLoginAt { get; set; }
+        
+        // Social media links
+        public string? WebsiteUrl { get; set; }
+        public string? TwitterUrl { get; set; }
+        public string? InstagramUrl { get; set; }
+        public string? YouTubeUrl { get; set; }
+        
+        // Privacy settings
+        public bool IsProfilePublic { get; set; } = true;
+        public bool ShowEmail { get; set; } = false;
+        public bool ShowLastLogin { get; set; } = false;
+        public bool ShowStatistics { get; set; } = true;
+        
         public virtual ICollection<UserLogin> Logins { get; set; } = new List<UserLogin>();
         public virtual UserSettings Settings { get; set; } = null!;
         public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();

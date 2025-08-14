@@ -50,6 +50,7 @@ export interface IApiClient {
     getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined): Promise<FileResponse>;
     getUnresolvedReports_GetUnresolvedReports(): Promise<FileResponse>;
     resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest): Promise<FileResponse>;
+    getAdminModelStatistics_GetAdminModelStatistics(): Promise<GetAdminModelStatisticsResponse>;
     getPrinters_GetPrinters(): Promise<FileResponse>;
     getPluginDetails_GetPluginDetails(pluginId: string): Promise<PluginDetailsResponse>;
     getPluginDetails_GetPluginsOverview(): Promise<PluginOverviewResponse>;
@@ -2583,6 +2584,58 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
+    getAdminModelStatistics_GetAdminModelStatistics(cancelToken?: CancelToken): Promise<GetAdminModelStatisticsResponse> {
+        let url_ = this.baseUrl + "/api/admin/models/statistics";
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetAdminModelStatistics_GetAdminModelStatistics(_response);
+        });
+    }
+
+    protected processGetAdminModelStatistics_GetAdminModelStatistics(response: AxiosResponse): Promise<GetAdminModelStatisticsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetAdminModelStatisticsResponse.fromJS(resultData200);
+            return Promise.resolve<GetAdminModelStatisticsResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetAdminModelStatisticsResponse>(null as any);
+    }
+
     getPrinters_GetPrinters( cancelToken?: CancelToken): Promise<FileResponse> {
         let url_ = this.baseUrl + "/api/printers";
         url_ = url_.replace(/[?&]$/, "");
@@ -3783,7 +3836,24 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+            
+            // When responseType is "blob", response.data is already a Blob
+            // Just ensure it has the correct type from headers
+            let blob: Blob;
+            if (response.data instanceof Blob) {
+                // If it's already a blob, use it directly but update the type if needed
+                const contentType = response.headers["content-type"] || "application/octet-stream";
+                if (response.data.type !== contentType) {
+                    blob = new Blob([response.data], { type: contentType });
+                } else {
+                    blob = response.data;
+                }
+            } else {
+                // Fallback: create blob from data
+                blob = new Blob([response.data], { type: response.headers["content-type"] || "application/octet-stream" });
+            }
+            
+            return Promise.resolve({ fileName: fileName, status: status, data: blob, headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -15312,6 +15382,7 @@ export class CreateCollectionCommand implements ICreateCollectionCommand {
     description?: string | undefined;
     visibility?: CollectionVisibility;
     password?: string | undefined;
+    avatar?: string | undefined;
 
     constructor(data?: ICreateCollectionCommand) {
         if (data) {
@@ -15328,6 +15399,7 @@ export class CreateCollectionCommand implements ICreateCollectionCommand {
             this.description = _data["description"];
             this.visibility = _data["visibility"];
             this.password = _data["password"];
+            this.avatar = _data["avatar"];
         }
     }
 
@@ -15344,6 +15416,7 @@ export class CreateCollectionCommand implements ICreateCollectionCommand {
         data["description"] = this.description;
         data["visibility"] = this.visibility;
         data["password"] = this.password;
+        data["avatar"] = this.avatar;
         return data;
     }
 }
@@ -15353,6 +15426,7 @@ export interface ICreateCollectionCommand {
     description?: string | undefined;
     visibility?: CollectionVisibility;
     password?: string | undefined;
+    avatar?: string | undefined;
 }
 
 export class AccessCollectionCommand implements IAccessCollectionCommand {
@@ -16307,6 +16381,44 @@ export interface IModerationAuditResponse {
     totalPages?: number;
 }
 
+export interface IGetAdminModelStatisticsResponse {
+    totalModels?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+    totalFiles?: number;
+    publicModels?: number;
+    privateModels?: number;
+    unlistedModels?: number;
+    pendingReviewModels?: number;
+    flaggedModels?: number;
+    aIGeneratedModels?: number;
+    workInProgressModels?: number;
+    nSFWModels?: number;
+    remixModels?: number;
+    lastModelUploaded?: Date;
+    lastModelUpdated?: Date;
+    averageFileSizeMB?: number;
+    averageFilesPerModel?: number;
+    topUploaders?: TopUploaderDto[];
+    fileTypeDistribution?: FileTypeStatsDto[];
+}
+
+export interface ITopUploaderDto {
+    userId?: string;
+    username?: string;
+    modelCount?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+}
+
+export interface IFileTypeStatsDto {
+    fileExtension?: string;
+    count?: number;
+    totalSizeBytes?: number;
+    totalSizeFormatted?: string;
+    percentage?: number;
+}
+
 export class ModerationAuditDto implements IModerationAuditDto {
     id?: string;
     modelId?: string;
@@ -16381,6 +16493,180 @@ export interface IModerationAuditDto {
     performedAt?: Date;
     ipAddress?: string | undefined;
     userAgent?: string | undefined;
+}
+
+export class GetAdminModelStatisticsResponse implements IGetAdminModelStatisticsResponse {
+    totalModels?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+    totalFiles?: number;
+    publicModels?: number;
+    privateModels?: number;
+    unlistedModels?: number;
+    pendingReviewModels?: number;
+    flaggedModels?: number;
+    aIGeneratedModels?: number;
+    workInProgressModels?: number;
+    nSFWModels?: number;
+    remixModels?: number;
+    lastModelUploaded?: Date;
+    lastModelUpdated?: Date;
+    averageFileSizeMB?: number;
+    averageFilesPerModel?: number;
+    topUploaders?: TopUploaderDto[];
+    fileTypeDistribution?: FileTypeStatsDto[];
+
+    constructor(data?: IGetAdminModelStatisticsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.totalModels = _data["totalModels"];
+            this.totalFileSizeBytes = _data["totalFileSizeBytes"];
+            this.totalFileSizeFormatted = _data["totalFileSizeFormatted"];
+            this.totalFiles = _data["totalFiles"];
+            this.publicModels = _data["publicModels"];
+            this.privateModels = _data["privateModels"];
+            this.unlistedModels = _data["unlistedModels"];
+            this.pendingReviewModels = _data["pendingReviewModels"];
+            this.flaggedModels = _data["flaggedModels"];
+            this.aIGeneratedModels = _data["aIGeneratedModels"];
+            this.workInProgressModels = _data["workInProgressModels"];
+            this.nSFWModels = _data["nSFWModels"];
+            this.remixModels = _data["remixModels"];
+            this.lastModelUploaded = _data["lastModelUploaded"] ? new Date(_data["lastModelUploaded"].toString()) : <any>undefined;
+            this.lastModelUpdated = _data["lastModelUpdated"] ? new Date(_data["lastModelUpdated"].toString()) : <any>undefined;
+            this.averageFileSizeMB = _data["averageFileSizeMB"];
+            this.averageFilesPerModel = _data["averageFileSizeMB"];
+            this.topUploaders = _data["topUploaders"] ? _data["topUploaders"].map((i: any) => TopUploaderDto.fromJS(i)) : <any>undefined;
+            this.fileTypeDistribution = _data["fileTypeDistribution"] ? _data["fileTypeDistribution"].map((i: any) => FileTypeStatsDto.fromJS(i)) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetAdminModelStatisticsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetAdminModelStatisticsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["totalModels"] = this.totalModels;
+        data["totalFileSizeBytes"] = this.totalFileSizeBytes;
+        data["totalFileSizeFormatted"] = this.totalFileSizeFormatted;
+        data["totalFiles"] = this.totalFiles;
+        data["publicModels"] = this.publicModels;
+        data["privateModels"] = this.privateModels;
+        data["unlistedModels"] = this.unlistedModels;
+        data["pendingReviewModels"] = this.pendingReviewModels;
+        data["flaggedModels"] = this.flaggedModels;
+        data["aIGeneratedModels"] = this.aIGeneratedModels;
+        data["workInProgressModels"] = this.workInProgressModels;
+        data["nSFWModels"] = this.nSFWModels;
+        data["remixModels"] = this.remixModels;
+        data["lastModelUploaded"] = this.lastModelUploaded ? this.lastModelUploaded.toISOString() : <any>undefined;
+        data["lastModelUpdated"] = this.lastModelUpdated ? this.lastModelUpdated.toISOString() : <any>undefined;
+        data["averageFileSizeMB"] = this.averageFileSizeMB;
+        data["averageFilesPerModel"] = this.averageFilesPerModel;
+        data["topUploaders"] = this.topUploaders ? this.topUploaders.map((i: any) => i.toJSON()) : <any>undefined;
+        data["fileTypeDistribution"] = this.fileTypeDistribution ? this.fileTypeDistribution.map((i: any) => i.toJSON()) : <any>undefined;
+        return data;
+    }
+}
+
+export class TopUploaderDto implements ITopUploaderDto {
+    userId?: string;
+    username?: string;
+    modelCount?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+
+    constructor(data?: ITopUploaderDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.username = _data["username"];
+            this.modelCount = _data["modelCount"];
+            this.totalFileSizeBytes = _data["totalFileSizeBytes"];
+            this.totalFileSizeFormatted = _data["totalFileSizeFormatted"];
+        }
+    }
+
+    static fromJS(data: any): TopUploaderDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new TopUploaderDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["username"] = this.username;
+        data["modelCount"] = this.modelCount;
+        data["totalFileSizeBytes"] = this.totalFileSizeBytes;
+        data["totalFileSizeFormatted"] = this.totalFileSizeFormatted;
+        return data;
+    }
+}
+
+export class FileTypeStatsDto implements IFileTypeStatsDto {
+    fileExtension?: string;
+    count?: number;
+    totalSizeBytes?: number;
+    totalSizeFormatted?: string;
+    percentage?: number;
+
+    constructor(data?: IFileTypeStatsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.fileExtension = _data["fileExtension"];
+            this.count = _data["count"];
+            this.totalSizeBytes = _data["totalSizeBytes"];
+            this.totalSizeFormatted = _data["totalSizeFormatted"];
+            this.percentage = _data["percentage"];
+        }
+    }
+
+    static fromJS(data: any): FileTypeStatsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileTypeStatsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["fileExtension"] = this.fileExtension;
+        data["count"] = this.count;
+        data["totalSizeBytes"] = this.totalSizeBytes;
+        data["totalSizeFormatted"] = this.totalSizeFormatted;
+        data["percentage"] = this.percentage;
+        return data;
+    }
 }
 
 export class UserInfoDto implements IUserInfoDto {
@@ -16511,6 +16797,7 @@ export class CreateRoleRequest implements ICreateRoleRequest {
     isDefault?: boolean;
     parentRoleId?: string | undefined;
     initialPermissions?: string[];
+    color?: string;
 
     constructor(data?: ICreateRoleRequest) {
         if (data) {
@@ -16534,6 +16821,7 @@ export class CreateRoleRequest implements ICreateRoleRequest {
                 for (let item of _data["initialPermissions"])
                     this.initialPermissions!.push(item);
             }
+            this.color = _data["color"];
         }
     }
 
@@ -16557,6 +16845,7 @@ export class CreateRoleRequest implements ICreateRoleRequest {
             for (let item of this.initialPermissions)
                 data["initialPermissions"].push(item);
         }
+        data["color"] = this.color;
         return data;
     }
 }
@@ -16569,6 +16858,7 @@ export interface ICreateRoleRequest {
     isDefault?: boolean;
     parentRoleId?: string | undefined;
     initialPermissions?: string[];
+    color?: string;
 }
 
 export class UpdateRoleRequest implements IUpdateRoleRequest {
@@ -16578,6 +16868,7 @@ export class UpdateRoleRequest implements IUpdateRoleRequest {
     isDefault?: boolean | undefined;
     isActive?: boolean | undefined;
     parentRoleId?: string | undefined;
+    color?: string | undefined;
 
     constructor(data?: IUpdateRoleRequest) {
         if (data) {
@@ -16596,6 +16887,7 @@ export class UpdateRoleRequest implements IUpdateRoleRequest {
             this.isDefault = _data["isDefault"];
             this.isActive = _data["isActive"];
             this.parentRoleId = _data["parentRoleId"];
+            this.color = _data["color"];
         }
     }
 
@@ -16614,6 +16906,7 @@ export class UpdateRoleRequest implements IUpdateRoleRequest {
         data["isDefault"] = this.isDefault;
         data["isActive"] = this.isActive;
         data["parentRoleId"] = this.parentRoleId;
+        data["color"] = this.color;
         return data;
     }
 }
@@ -16625,6 +16918,7 @@ export interface IUpdateRoleRequest {
     isDefault?: boolean | undefined;
     isActive?: boolean | undefined;
     parentRoleId?: string | undefined;
+    color?: string | undefined;
 }
 
 export class AssignPermissionsRequest implements IAssignPermissionsRequest {

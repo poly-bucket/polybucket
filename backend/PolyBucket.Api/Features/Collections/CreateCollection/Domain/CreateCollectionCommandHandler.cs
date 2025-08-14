@@ -33,6 +33,7 @@ namespace PolyBucket.Api.Features.Collections.CreateCollection.Domain
                 Name = request.Name,
                 Description = request.Description,
                 Visibility = request.Visibility,
+                Avatar = request.Avatar,
                 OwnerId = Guid.Parse(userId),
                 CreatedAt = DateTime.UtcNow,
                 CreatedById = Guid.Parse(userId),

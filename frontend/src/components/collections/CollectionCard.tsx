@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon, LinkIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '../UserAvatar';
 import CollectionAvatar from '../CollectionAvatar';
+import ClickableUsername from '../common/ClickableUsername';
 import { Collection } from '../../services/collectionsService';
 
 interface CollectionCardProps {
@@ -27,7 +28,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
           <img 
             src={firstModel.thumbnailUrl} 
             alt={collection.name}
-            className="w-full h-48 object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         );
       }
@@ -35,14 +36,16 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
     
     // Fallback to a generated avatar-style background
     return (
-      <div className="w-full h-48 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-        <CollectionAvatar 
-          collectionId={collection.id}
-          collectionName={collection.name}
-          avatar={collection.avatar}
-          size="lg"
-          className="w-16 h-16"
-        />
+      <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+        <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 shadow-lg">
+          <CollectionAvatar 
+            collectionId={collection.id}
+            collectionName={collection.name}
+            avatar={collection.avatar}
+            size="2xl"
+            className="w-20 h-20"
+          />
+        </div>
       </div>
     );
   };
@@ -50,112 +53,140 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
   const getVisibilityIcon = () => {
     switch (collection.visibility) {
       case 'Public':
-        return <EyeIcon className="w-4 h-4 text-green-600" title="Public" />;
+        return <EyeIcon className="w-4 h-4 text-green-400" title="Public" />;
       case 'Unlisted':
         return (
           <div className="flex items-center">
-            <LinkIcon className="w-4 h-4 text-yellow-600" title="Unlisted" />
+            <LinkIcon className="w-4 h-4 text-yellow-400" title="Unlisted" />
             {collection.passwordHash && (
-              <LockClosedIcon className="w-3 h-3 text-yellow-600 ml-1" title="Password Protected" />
+              <LockClosedIcon className="w-3 h-3 text-yellow-400 ml-1" title="Password Protected" />
             )}
           </div>
         );
       case 'Private':
       default:
-        return <EyeSlashIcon className="w-4 h-4 text-gray-600" title="Private" />;
+        return <EyeSlashIcon className="w-4 h-4 text-gray-400" title="Private" />;
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      {/* Thumbnail */}
-      <Link to={`/my-collections/${collection.id}`} className="block">
-        {getCollectionThumbnail()}
-      </Link>
-      
-      {/* Content */}
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-2">
-          <Link 
-            to={`/my-collections/${collection.id}`} 
-            className="block flex-1 min-w-0"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 truncate hover:text-indigo-600">
-              {collection.name}
-            </h3>
-          </Link>
-          
-          <div className="flex items-center space-x-1 ml-2">
-            {getVisibilityIcon()}
-            
-            {/* Action Menu */}
-            {(onEdit || onDelete) && (
-              <div className="relative group">
-                <button className="p-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
-                
-                {/* Dropdown Menu */}
-                <div className="absolute right-0 top-6 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {onEdit && (
-                    <button
-                      onClick={() => onEdit(collection)}
-                      className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(collection)}
-                      className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="lg-card cursor-pointer overflow-hidden group w-full h-72 sm:h-80 flex flex-col" data-testid="collection-card">
+      {/* Thumbnail Container - Fixed height */}
+      <div className="relative h-40 sm:h-48 bg-gradient-to-br from-gray-700 to-gray-900 overflow-hidden flex-shrink-0">
+        <Link to={`/my-collections/${collection.id}`} className="block w-full h-full">
+          {getCollectionThumbnail()}
+        </Link>
         
-        {/* Description */}
+        {/* Status Badges */}
+        <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+          {collection.visibility === 'Private' && (
+            <span className="lg-badge lg-badge-error text-xs">
+              Private
+            </span>
+          )}
+          {collection.visibility === 'Unlisted' && (
+            <span className="lg-badge lg-badge-warning text-xs">
+              Unlisted
+            </span>
+          )}
+          {collection.visibility === 'Public' && (
+            <span className="lg-badge lg-badge-success text-xs">
+              Public
+            </span>
+          )}
+        </div>
+
+        {/* Action Menu Overlay */}
+        {(onEdit || onDelete) && (
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="relative">
+              <button className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 top-8 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                {onEdit && (
+                  <button
+                    onClick={() => onEdit(collection)}
+                    className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Edit
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => onDelete(collection)}
+                    className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Content - Fixed height with flex layout */}
+      <div className="p-3 sm:p-4 flex flex-col flex-1 min-h-0">
+        {/* Collection Title - Fixed height with ellipsis */}
+        <Link 
+          to={`/my-collections/${collection.id}`} 
+          className="block flex-1 min-w-0"
+        >
+          <h3 className="font-semibold text-white text-sm mb-1 leading-tight line-clamp-2 min-h-[2.5rem]">
+            {collection.name}
+          </h3>
+        </Link>
+        
+        {/* Description - Fixed height */}
         {collection.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+          <p className="text-xs text-white/60 mb-2 sm:mb-3 line-clamp-2 flex-shrink-0">
             {collection.description}
           </p>
         )}
         
-        {/* Meta Info */}
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>
-            {collection.collectionModels?.length || 0} models
-          </span>
+        {/* Meta Info - Fixed height */}
+        <div className="flex items-center justify-between text-xs text-white/60 flex-shrink-0">
+          {/* Model Count */}
+          <div className="flex items-center space-x-1">
+            <svg className="w-3 h-3 fill-current text-blue-400" viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+            </svg>
+            <span>{collection.collectionModels?.length || 0} models</span>
+          </div>
           
+          {/* Owner Info */}
           {showOwner && collection.owner && (
             <div className="flex items-center">
-              <UserAvatar 
+              <ClickableUsername
                 userId={collection.owner.id}
                 username={collection.owner.username}
                 avatar={collection.owner.avatar}
                 profilePictureUrl={collection.owner.profilePictureUrl}
                 size="xs"
-                className="w-4 h-4 mr-1"
+                showAvatar={true}
+                className="text-white/60 hover:text-blue-400"
               />
-              <span>{collection.owner.username}</span>
             </div>
           )}
-          
-          <span className={`px-2 py-1 rounded-full text-xs ${
-            collection.visibility === 'Public' ? 'bg-green-100 text-green-800' :
-            collection.visibility === 'Unlisted' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {collection.visibility}
-          </span>
+        </div>
+
+        {/* Visibility Bar - Fixed height at bottom */}
+        <div className="mt-auto pt-2 sm:pt-3">
+          <div className="bg-white/20 rounded-full h-1">
+            <div 
+              className={`h-1 rounded-full transition-all duration-300 ${
+                collection.visibility === 'Public' ? 'bg-green-400' :
+                collection.visibility === 'Unlisted' ? 'bg-yellow-400' :
+                'bg-gray-400'
+              }`}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
       </div>
     </div>

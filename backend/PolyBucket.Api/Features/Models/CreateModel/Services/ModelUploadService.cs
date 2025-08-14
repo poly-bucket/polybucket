@@ -107,7 +107,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Services
             var extension = GetFileExtension(fileName).ToLowerInvariant();
             return extension switch
             {
-                ".stl" or ".obj" or ".fbx" or ".gltf" or ".glb" or ".ply" => true,
+                ".stl" or ".obj" or ".fbx" or ".gltf" or ".glb" or ".ply" or ".3mf" or ".step" or ".stp" => true,
                 _ => false
             };
         }

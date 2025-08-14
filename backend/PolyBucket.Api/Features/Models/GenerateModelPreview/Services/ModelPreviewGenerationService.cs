@@ -17,7 +17,7 @@ namespace PolyBucket.Api.Features.Models.GenerateModelPreview.Services
     {
         private readonly IStorageService _storageService;
         private readonly ILogger<ModelPreviewGenerationService> _logger;
-        private readonly string[] _supportedFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".ply" };
+        private readonly string[] _supportedFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".ply", ".3mf", ".step", ".stp" };
 
         public ModelPreviewGenerationService(
             IStorageService storageService,

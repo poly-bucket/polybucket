@@ -15,11 +15,13 @@ export interface RoleDto {
 export interface CreateRoleRequest {
   name: string;
   description: string;
+  color?: string;
 }
 
 export interface UpdateRoleRequest {
   name: string;
   description: string;
+  color?: string;
 }
 
 const getAuthHeaders = () => {
