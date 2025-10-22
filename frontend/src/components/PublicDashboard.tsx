@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import ModelGrid from './ModelGrid';
 import NavigationBar from './common/NavigationBar';
 import CollectionsBar from './collections/CollectionsBar';
+import LayoutControls from './common/LayoutControls';
+import SearchResults from './SearchResults';
 import { ApiClientFactory } from '../api/clientFactory';
 import { ExtendedModel } from '../services/modelsService';
+import SearchService, { SearchResult } from '../services/searchService';
+import { SearchType } from './common/SearchBar';
 
 const PublicDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -15,7 +19,11 @@ const PublicDashboard: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'featured' | 'popular' | 'recent'>('popular');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchTags, setSearchTags] = useState<string[]>([]);
+  const [selectedSearchTypes, setSelectedSearchTypes] = useState<SearchType[]>(['models']);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   
   // Collections sidebar state
   const [isCollectionsSidebarCollapsed, setIsCollectionsSidebarCollapsed] = useState(
@@ -80,10 +88,8 @@ const PublicDashboard: React.FC = () => {
   }, [activeTab]);
 
   // Handle search
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, searchTypes: SearchType[] = ['models']) => {
     if (!query.trim()) {
-      // If search is empty, reload current tab's content
-      setSearchQuery('');
       return;
     }
 
@@ -91,27 +97,77 @@ const PublicDashboard: React.FC = () => {
       setIsSearching(true);
       setError('');
       
-      // Use the search client with correct parameters
-      const client = ApiClientFactory.getSearchModelsClient();
-      const searchResults = await client.searchModels(query, 1, 50);
-      
-      // The search results should contain models
-      if (searchResults && (searchResults as any).models) {
-        setModels((searchResults as any).models || []);
-      } else {
-        setModels([]);
+      // Add query as a search tag if it's not already in the list
+      if (!searchTags.includes(query)) {
+        setSearchTags(prev => [...prev, query]);
       }
+      
+      // Use search service with the selected types
+      // If all types are selected or no specific types, search everything
+      const searchType = searchTypes.length === 3 || searchTypes.includes('all') ? undefined : searchTypes[0] as any;
+      
+      const results = await SearchService.search({
+        query: query,
+        page: 1,
+        pageSize: 50,
+        type: searchType
+      });
+      
+      setSearchResults(results.results);
+      setShowSearchResults(true);
       setSearchQuery(query);
     } catch (err) {
-      console.error('Error searching models:', err);
+      console.error('Error searching:', err);
       setError('Search failed. Please try again.');
     } finally {
       setIsSearching(false);
     }
   };
 
+  // Handle clear search
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchTags([]);
+    setShowSearchResults(false);
+    setSearchResults([]);
+  };
+
+  // Handle search tag removal
+  const handleSearchTagRemove = (tag: string) => {
+    setSearchTags(prev => prev.filter(t => t !== tag));
+    
+    // If this was the last tag, clear search results
+    if (searchTags.length === 1) {
+      setShowSearchResults(false);
+      setSearchResults([]);
+    }
+  };
+
+  // Handle search tag addition
+  const handleSearchTagAdd = (tag: string) => {
+    if (!searchTags.includes(tag)) {
+      setSearchTags(prev => [...prev, tag]);
+      // Trigger search with the new tag
+      handleSearch(tag, selectedSearchTypes);
+    }
+  };
+
+  // Handle search type change
+  const handleSearchTypeChange = (searchTypes: SearchType[]) => {
+    setSelectedSearchTypes(searchTypes);
+    // If there's an active search, re-run it with the new types
+    if (searchQuery) {
+      handleSearch(searchQuery, searchTypes);
+    }
+  };
+
   const handleModelClick = (model: ExtendedModel) => {
     navigate(`/models/${model.id}`);
+  };
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    // Clear search when clicking a result
+    handleClearSearch();
   };
 
   const toggleCollectionsSidebar = () => {
@@ -133,43 +189,65 @@ const PublicDashboard: React.FC = () => {
         {/* Navigation Bar */}
         <NavigationBar
           onSearch={handleSearch}
+          onClearSearch={handleClearSearch}
           searchQuery={searchQuery}
+          searchTags={searchTags}
+          onSearchTagRemove={handleSearchTagRemove}
+          onSearchTagAdd={handleSearchTagAdd}
           isSearching={isSearching}
+          selectedSearchTypes={selectedSearchTypes}
+          onSearchTypeChange={handleSearchTypeChange}
         />
 
         {/* Main Content Area */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Tab Navigation */}
+          {/* Tab Navigation and Layout Controls */}
           <div className="mb-6">
-            <div className="border-b border-white/10">
-              <nav className="-mb-px flex space-x-8">
-                {(['featured', 'popular', 'recent'] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => {
-                      setActiveTab(tab);
-                      setSearchQuery(''); // Clear search when switching tabs
-                    }}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200 ${
-                      activeTab === tab
-                        ? 'border-indigo-500 text-indigo-400'
-                        : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/20'
-                    }`}
-                  >
-                    {tab} Models
-                  </button>
-                ))}
-              </nav>
+            <div className="flex items-center justify-between mb-4">
+              <div className="border-b border-white/10 flex-1">
+                <nav className="-mb-px flex space-x-8">
+                  {(['featured', 'popular', 'recent'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => {
+                        setActiveTab(tab);
+                        handleClearSearch(); // Clear search when switching tabs
+                      }}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200 ${
+                        activeTab === tab
+                          ? 'border-indigo-500 text-indigo-400'
+                          : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/20'
+                      }`}
+                    >
+                      {tab} Models
+                    </button>
+                  ))}
+                </nav>
+              </div>
+              
+              {/* Layout Controls */}
+              <div className="ml-6">
+                <LayoutControls compact={true} />
+              </div>
             </div>
           </div>
 
-          {/* Models Grid */}
-          <ModelGrid 
-            models={models} 
-            loading={loading}
-            error={error}
-            onModelClick={handleModelClick}
-          />
+          {/* Search Results or Models Grid */}
+          {showSearchResults ? (
+            <SearchResults
+              results={searchResults}
+              loading={isSearching}
+              error={error}
+              onResultClick={handleSearchResultClick}
+            />
+          ) : (
+            <ModelGrid 
+              models={models} 
+              loading={loading}
+              error={error}
+              onModelClick={handleModelClick}
+            />
+          )}
         </main>
       </div>
     </div>

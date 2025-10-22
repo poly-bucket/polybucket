@@ -6,6 +6,7 @@ import collectionsService, { Collection } from '../services/collectionsService';
 import { useAppSelector } from '../utils/hooks';
 import PasswordPrompt from '../components/collections/PasswordPrompt';
 import ModelGrid from '../components/ModelGrid';
+import LayoutControls from '../components/common/LayoutControls';
 import CollectionsBar from '../components/collections/CollectionsBar';
 import { ExtendedModel } from '../services/modelsService';
 
@@ -286,6 +287,11 @@ const CollectionDetails: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Layout Controls */}
+          <div className="flex justify-end mb-4">
+            <LayoutControls compact={true} />
           </div>
 
           {/* Models Grid */}

@@ -10,6 +10,7 @@ import MarkdownViewer from '../components/common/MarkdownViewer';
 import { parseModelMarkdown, isMarkdownFile, generateMarkdownTemplate } from '../utils/markdownParser';
 import { extractZipFile, isValidZipFile, convertToFiles } from '../utils/zipExtractor';
 import fileTypeSettingsService, { FileTypeSettingsData } from '../services/fileTypeSettingsService';
+import modelConfigurationSettingsService, { ModelConfigurationSettings } from '../services/modelConfigurationSettingsService';
 
 interface UploadedFile {
   id: string;
@@ -57,6 +58,8 @@ const ModelUpload: React.FC = () => {
   const [isExtractingZip, setIsExtractingZip] = useState(false);
   const [fileTypeSettings, setFileTypeSettings] = useState<FileTypeSettingsData[]>([]);
   const [fileTypeSettingsLoading, setFileTypeSettingsLoading] = useState(true);
+  const [modelConfigurationSettings, setModelConfigurationSettings] = useState<ModelConfigurationSettings | null>(null);
+  const [modelConfigurationSettingsLoading, setModelConfigurationSettingsLoading] = useState(true);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -94,6 +97,35 @@ const ModelUpload: React.FC = () => {
 
     fetchFileTypeSettings();
   }, []);
+
+  // Fetch model configuration settings on component mount
+  useEffect(() => {
+    const fetchModelConfigurationSettings = async () => {
+      try {
+        setModelConfigurationSettingsLoading(true);
+        const response = await modelConfigurationSettingsService.getSettings();
+        if (response.success && response.settings) {
+          setModelConfigurationSettings(response.settings);
+        }
+      } catch (error) {
+        console.error('Error fetching model configuration settings:', error);
+      } finally {
+        setModelConfigurationSettingsLoading(false);
+      }
+    };
+
+    fetchModelConfigurationSettings();
+  }, []);
+
+  // Update model data when configuration settings are loaded
+  useEffect(() => {
+    if (modelConfigurationSettings) {
+      setModelData(prev => ({
+        ...prev,
+        privacy: modelConfigurationSettings.defaultPrivacySetting as PrivacySettings
+      }));
+    }
+  }, [modelConfigurationSettings]);
 
   // Process markdown file and populate model data
   const processMarkdownFile = async (file: File) => {
@@ -508,11 +540,11 @@ const ModelUpload: React.FC = () => {
           <div className="flex-1">
             
             {/* Show drag and drop prominently when no files uploaded */}
-            {fileTypeSettingsLoading ? (
+            {fileTypeSettingsLoading || modelConfigurationSettingsLoading ? (
               <div className="mb-6">
                 <div className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-12 text-center">
                   <div className="lg-spinner w-8 h-8 mx-auto mb-4"></div>
-                  <p className="text-gray-400">Loading file type settings...</p>
+                  <p className="text-gray-400">Loading file type and model settings...</p>
                 </div>
               </div>
             ) : uploadedFiles.length === 0 ? (

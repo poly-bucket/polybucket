@@ -10,6 +10,10 @@ interface UserSettingsData {
   measurementSystem: string;
   timeZone: string;
   autoRotateModels: boolean;
+  dashboardViewType: string;
+  cardSize: string;
+  cardSpacing: string;
+  gridColumns: number;
   customSettings?: { [key: string]: string };
 }
 
@@ -18,7 +22,6 @@ interface UserSettingsContextType {
   loading: boolean;
   updateSettings: (newSettings: Partial<UserSettingsData>) => Promise<boolean>;
   updateAutoRotate: (autoRotate: boolean) => Promise<boolean>;
-  refreshSettings: () => Promise<void>;
 }
 
 const UserSettingsContext = createContext<UserSettingsContextType | undefined>(undefined);
@@ -50,6 +53,10 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
           measurementSystem: userSettings.measurementSystem || 'metric',
           timeZone: userSettings.timeZone || 'UTC',
           autoRotateModels: userSettings.autoRotateModels ?? true,
+          dashboardViewType: userSettings.dashboardViewType || 'grid',
+          cardSize: userSettings.cardSize || 'medium',
+          cardSpacing: userSettings.cardSpacing || 'normal',
+          gridColumns: userSettings.gridColumns || 4,
           customSettings: userSettings.customSettings
         });
       } else {
@@ -111,24 +118,17 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
     }
   };
 
-  const refreshSettings = async () => {
-    await loadSettings();
-  };
-
   useEffect(() => {
     loadSettings();
-  }, [user?.accessToken, user?.id]);
-
-  const value: UserSettingsContextType = {
-    settings,
-    loading,
-    updateSettings,
-    updateAutoRotate,
-    refreshSettings
-  };
+  }, [user?.accessToken]);
 
   return (
-    <UserSettingsContext.Provider value={value}>
+    <UserSettingsContext.Provider value={{
+      settings,
+      loading,
+      updateSettings,
+      updateAutoRotate
+    }}>
       {children}
     </UserSettingsContext.Provider>
   );

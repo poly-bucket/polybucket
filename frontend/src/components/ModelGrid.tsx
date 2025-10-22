@@ -1,6 +1,7 @@
 import React from 'react';
 import ModelCard from './ModelCard';
 import { ExtendedModel } from '../services/modelsService';
+import { useUserSettings } from '../context/UserSettingsContext';
 
 interface ModelGridProps {
   models: ExtendedModel[];
@@ -23,6 +24,51 @@ const ModelGrid: React.FC<ModelGridProps> = ({
   loadingMore = false,
   className = ''
 }) => {
+  const { settings } = useUserSettings();
+  
+  // Get layout settings from user settings
+  const viewType = settings?.dashboardViewType || 'grid';
+  const gridColumns = settings?.gridColumns || 4;
+  const cardSpacing = settings?.cardSpacing || 'normal';
+  
+  // Calculate grid classes and styles based on settings
+  const getGridClasses = () => {
+    const spacingClass = cardSpacing === 'compact' ? 'gap-2 sm:gap-3' : 
+                        cardSpacing === 'spacious' ? 'gap-6 sm:gap-8' : 
+                        'gap-4 sm:gap-6';
+    
+    if (viewType === 'list') {
+      return { className: `grid grid-cols-1 ${spacingClass}` };
+    }
+    
+    // Grid view with dynamic columns
+    let columnClass = 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+    
+    // Add responsive column classes based on user preference
+    if (gridColumns >= 5) {
+      columnClass += ' xl:grid-cols-5';
+    }
+    if (gridColumns >= 6) {
+      columnClass += ' 2xl:grid-cols-6';
+    }
+    
+
+    
+    // Use inline styles as fallback for custom column counts
+    const gridStyle: React.CSSProperties = {};
+    if (gridColumns > 4) {
+      // Apply custom grid columns for larger screens
+      gridStyle['--grid-columns-lg'] = Math.min(gridColumns, 4).toString();
+      gridStyle['--grid-columns-xl'] = Math.min(gridColumns, 5).toString();
+      gridStyle['--grid-columns-2xl'] = gridColumns.toString();
+    }
+    
+    return { 
+      className: `grid ${columnClass} ${spacingClass}`,
+      style: gridStyle
+    };
+  };
+  
   // Loading skeleton component
   const LoadingSkeleton = () => (
     <div className="lg-card overflow-hidden animate-pulse w-full h-72 sm:h-80 flex flex-col">
@@ -42,6 +88,100 @@ const ModelGrid: React.FC<ModelGridProps> = ({
     </div>
   );
 
+  // List view skeleton component
+  const ListLoadingSkeleton = () => (
+    <div className="lg-card overflow-hidden animate-pulse w-full h-24 flex items-center">
+      <div className="h-16 w-16 bg-white/10 rounded mr-4 flex-shrink-0" />
+      <div className="flex-1">
+        <div className="h-4 bg-white/10 rounded mb-2 w-1/3" />
+        <div className="h-3 bg-white/10 rounded w-1/4 mb-2" />
+        <div className="flex space-x-4">
+          <div className="h-3 bg-white/10 rounded w-12" />
+          <div className="h-3 bg-white/10 rounded w-12" />
+          <div className="h-3 bg-white/10 rounded w-12" />
+        </div>
+      </div>
+    </div>
+  );
+
+  // List view model card component
+  const ModelListItem: React.FC<{ model: ExtendedModel }> = ({ model }) => {
+    const handleClick = () => {
+      if (onModelClick) {
+        onModelClick(model);
+      }
+    };
+
+    const formatNumber = (num: number | undefined): string => {
+      if (!num) return '0';
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+      }
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+      }
+      return num.toString();
+    };
+
+    const totalLikes = (model.likes?.length || 0);
+    const authorName = model.author?.username || 'Unknown';
+
+    return (
+      <div 
+        className="lg-card cursor-pointer overflow-hidden group w-full h-24 flex items-center transition-all duration-200 hover:bg-white/5"
+        onClick={handleClick}
+        data-testid="model-list-item"
+      >
+        {/* Thumbnail */}
+        <div className="h-16 w-16 bg-white/10 rounded mr-4 flex-shrink-0 overflow-hidden">
+          {model.thumbnailUrl ? (
+            <img
+              src={model.thumbnailUrl}
+              alt={model.name || 'Model thumbnail'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-white text-sm mb-1 truncate">
+            {model.name || 'Untitled Model'}
+          </h3>
+          <p className="text-xs text-white/60 mb-2">
+            by {authorName}
+          </p>
+          <div className="flex items-center space-x-4 text-xs text-white/60">
+            <span className="flex items-center space-x-1">
+              <svg className="w-3 h-3 fill-current text-red-400" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              <span>{formatNumber(totalLikes)}</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <svg className="w-3 h-3 fill-current text-green-400" viewBox="0 0 24 24">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+              <span>{formatNumber((model as any).downloads || 0)}</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <svg className="w-3 h-3 fill-current text-blue-400" viewBox="0 0 24 24">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+              </svg>
+              <span>{formatNumber(model.comments?.length || 0)}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Error state
   if (error) {
     return (
@@ -59,10 +199,11 @@ const ModelGrid: React.FC<ModelGridProps> = ({
 
   // Loading state
   if (loading) {
+    const gridProps = getGridClasses();
     return (
-      <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 ${className}`}>
-        {Array.from({ length: 10 }).map((_, index) => (
-          <LoadingSkeleton key={index} />
+      <div className={`${gridProps.className} ${className}`} style={gridProps.style}>
+        {Array.from({ length: viewType === 'list' ? 10 : 10 }).map((_, index) => (
+          viewType === 'list' ? <ListLoadingSkeleton key={index} /> : <LoadingSkeleton key={index} />
         ))}
       </div>
     );
@@ -91,21 +232,30 @@ const ModelGrid: React.FC<ModelGridProps> = ({
 
   return (
     <div className={className}>
-      {/* Model Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-        {models.map((model) => (
-          <ModelCard
-            key={model.id}
-            model={model}
-            onClick={onModelClick}
-          />
-        ))}
-        
-        {/* Loading more skeletons */}
-        {loadingMore && Array.from({ length: 5 }).map((_, index) => (
-          <LoadingSkeleton key={`loading-${index}`} />
-        ))}
-      </div>
+      {/* Model Grid/List */}
+      {(() => {
+        const gridProps = getGridClasses();
+        return (
+          <div className={gridProps.className} style={gridProps.style}>
+            {models.map((model) => (
+              viewType === 'list' ? (
+                <ModelListItem key={model.id} model={model} />
+              ) : (
+                <ModelCard
+                  key={model.id}
+                  model={model}
+                  onClick={onModelClick}
+                />
+              )
+            ))}
+            
+            {/* Loading more skeletons */}
+            {loadingMore && Array.from({ length: viewType === 'list' ? 5 : 5 }).map((_, index) => (
+              viewType === 'list' ? <ListLoadingSkeleton key={`loading-${index}`} /> : <LoadingSkeleton key={`loading-${index}`} />
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Load More Button */}
       {hasMore && !loadingMore && onLoadMore && (

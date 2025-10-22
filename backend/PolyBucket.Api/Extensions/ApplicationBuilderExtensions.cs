@@ -5,7 +5,6 @@ using PolyBucket.Api.Data.Seeders;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Seeders;
 using PolyBucket.Api.Features.ThemeManagement.Domain;
-using PolyBucket.Api.Data.SeedData;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -52,7 +51,12 @@ public static class ApplicationBuilderExtensions
             await ThemeSeeder.SeedThemesAsync(db);
             
             // Seed file type settings
-            await FileTypeSettingsSeed.SeedFileTypeSettingsAsync(db);
+            var fileTypeSettingsSeeder = services.GetRequiredService<FileTypeSettingsSeeder>();
+            await fileTypeSettingsSeeder.SeedAsync();
+            
+            // Seed model settings
+            var modelSettingsSeeder = services.GetRequiredService<ModelSettingsSeeder>();
+            await modelSettingsSeeder.SeedAsync();
         }
         catch (Exception ex)
         {

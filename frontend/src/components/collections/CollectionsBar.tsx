@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, FolderIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, FolderIcon, CheckIcon, StarIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import UserAvatar from '../UserAvatar';
 import CollectionAvatar from '../CollectionAvatar';
 import collectionsService, { Collection } from '../../services/collectionsService';
@@ -37,11 +38,11 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
   const loadCollections = async () => {
     try {
       setLoading(true);
-      const userCollections = await collectionsService.getUserCollections();
-      setCollections(userCollections);
+      const favoriteCollections = await collectionsService.getFavoriteCollections();
+      setCollections(favoriteCollections);
     } catch (err) {
-      setError('Failed to load collections');
-      console.error('Error loading collections:', err);
+      setError('Failed to load favorite collections');
+      console.error('Error loading favorite collections:', err);
     } finally {
       setLoading(false);
     }
@@ -170,6 +171,17 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
     navigate('/my-collections');
   };
 
+  const handleToggleFavorite = async (collectionId: string, currentFavorite: boolean) => {
+    try {
+      await collectionsService.toggleFavorite(collectionId, !currentFavorite);
+      // Reload collections to reflect the change
+      await loadCollections();
+    } catch (err) {
+      console.error('Error toggling favorite:', err);
+      // You could add a toast notification here
+    }
+  };
+
   const baseClasses = "lg-sidebar absolute left-0 top-0 h-full z-40 flex flex-col transition-all duration-300 ease-out";
   const mountAnimation = isMounted ? "translate-x-0" : "-translate-x-full";
   const slideAnimation = isCollapsed ? "-translate-x-2" : "translate-x-0";
@@ -218,6 +230,13 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
                 </div>
               </Link>
               
+              {/* Favorite Star Indicator */}
+              {collection.favorite && (
+                <div className="absolute top-1 right-1">
+                  <StarIconSolid className="w-3 h-3 text-yellow-400" />
+                </div>
+              )}
+              
               {/* Drop Success Indicator */}
               {dropSuccess === collection.id && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-lg animate-pulse">
@@ -260,9 +279,9 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         <div className="flex-1">
-          <h2 className="text-lg font-semibold text-white">Collections</h2>
+          <h2 className="text-lg font-semibold text-white">Favorite Collections</h2>
           <p className="text-xs text-white/60 mt-1">
-            Drag models here to add them to collections
+            Your pinned collections - drag models here to add them
           </p>
         </div>
         <button
@@ -293,12 +312,15 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
         ) : collections.length === 0 ? (
           <div className="text-center py-8 text-white/60">
             <FolderIcon className="w-12 h-12 mx-auto mb-4 text-white/30" />
-            <p className="text-sm">No collections yet</p>
+            <p className="text-sm">No favorite collections yet</p>
+            <p className="text-xs text-white/40 mt-1 mb-3">
+              Pin collections to see them here
+            </p>
             <button
-              onClick={handleCreateCollection}
+              onClick={handleViewAllCollections}
               className="mt-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
             >
-              Create your first collection
+              View all collections
             </button>
           </div>
         ) : (
@@ -340,12 +362,28 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
                       {collection.collectionModels?.length || 0} models
                     </p>
                   </div>
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 flex items-center space-x-2">
                     <span className={`inline-block w-2 h-2 rounded-full transition-all duration-200 ${
                       collection.visibility === 'Public' ? 'bg-green-400' :
                       collection.visibility === 'Unlisted' ? 'bg-yellow-400' :
                       'bg-white/40'
                     }`} title={collection.visibility} />
+                    
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleToggleFavorite(collection.id, collection.favorite || false);
+                      }}
+                      className="p-1 hover:bg-white/10 rounded transition-colors duration-200 group"
+                      title={collection.favorite ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      {collection.favorite ? (
+                        <StarIconSolid className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300" />
+                      ) : (
+                        <StarIcon className="w-4 h-4 text-white/40 group-hover:text-white/60" />
+                      )}
+                    </button>
                   </div>
                 </Link>
                 

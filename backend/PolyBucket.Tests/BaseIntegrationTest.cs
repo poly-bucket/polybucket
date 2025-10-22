@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Features.Authentication.Login.Domain;
 using PolyBucket.Tests.Factories;
 using System;
 using System.Net.Http;
@@ -97,7 +98,7 @@ namespace PolyBucket.Tests
         {
             var loginCommand = new
             {
-                Email = email,
+                EmailOrUsername = email,
                 Password = password
             };
 
@@ -110,8 +111,8 @@ namespace PolyBucket.Tests
             
             if (loginResponse.IsSuccessStatusCode)
             {
-                var loginResult = await loginResponse.Content.ReadFromJsonAsync<dynamic>();
-                return loginResult?.GetProperty("token").GetString() ?? "test-token";
+                var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginCommandResponse>();
+                return loginResult?.Token ?? "test-token";
             }
 
             return "test-token";

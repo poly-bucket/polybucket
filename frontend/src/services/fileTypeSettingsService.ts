@@ -1,4 +1,4 @@
-import { apiClient } from './api.client';
+import api from '../utils/axiosConfig';
 
 export interface FileTypeSettingsData {
   id: string;
@@ -46,7 +46,7 @@ export interface UpdateFileSettingsResponse {
 class FileTypeSettingsService {
   async getFileSettings(): Promise<GetFileSettingsResponse> {
     try {
-      const response = await apiClient.get('/api/system-settings/file-settings');
+      const response = await api.get('/api/system-settings/file-settings');
       return response.data;
     } catch (error) {
       console.error('Error fetching file type settings:', error);
@@ -56,7 +56,7 @@ class FileTypeSettingsService {
 
   async updateFileSettings(request: UpdateFileSettingsRequest): Promise<UpdateFileSettingsResponse> {
     try {
-      const response = await apiClient.put('/api/system-settings/file-settings', request);
+      const response = await api.put('/api/system-settings/file-settings', request);
       return response.data;
     } catch (error) {
       console.error('Error updating file type settings:', error);

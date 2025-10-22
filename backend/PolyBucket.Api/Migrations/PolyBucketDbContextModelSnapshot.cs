@@ -601,6 +601,16 @@ namespace Api.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("Favorite")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -622,7 +632,8 @@ namespace Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("OwnerId", "Favorite", "DisplayOrder")
+                        .HasDatabaseName("IX_Collections_OwnerId_Favorite_DisplayOrder");
 
                     b.ToTable("Collections");
                 });
@@ -2047,6 +2058,231 @@ namespace Api.Migrations
                     b.ToTable("FontAwesomeSettings");
                 });
 
+            modelBuilder.Entity("PolyBucket.Api.Features.SystemSettings.Domain.ModelSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowAIGeneratedContent")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowAnonDownloads")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowAnonUploads")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowCustomLicenses")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowModelRemixing")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowNSFWContent")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AutoApproveVerifiedUsers")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AutoGenerateModelPreviews")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DefaultPrivacySetting")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("EnableAutoModeration")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelAnalytics")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelAppeals")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelArchiving")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelBackup")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelBlacklisting")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelBlocking")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelCollections")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelComments")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelDeletion")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelDownloads")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelEmbedding")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelExport")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelFlagging")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelImport")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelLikes")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelLocking")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelRejection")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelReporting")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelRestoration")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelSharing")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelUnlocking")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelVersioning")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EnableModelWhitelisting")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LimitTotalModels")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxCategoriesPerModel")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxDescriptionLength")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxModelsPerUser")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxTagsPerModel")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinDescriptionLength")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ModelArchiveThresholdDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ModelBackupRetentionDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequireAppealDetails")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireBlockReason")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireCategorySelection")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireContentRating")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireDeletionApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireDeletionReason")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireFlagReason")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireLicenseSelection")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireLockReason")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireModelApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireModelDescription")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireModelPreview")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireModelTags")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireModelValidation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireModeratorApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireRejectionReason")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireRemixAttribution")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireReportDetails")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireRestorationApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireThumbnail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireUnlockApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireUploadModeration")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireUserAgreement")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserAgreementText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ModelSettings");
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Features.SystemSettings.Domain.SystemSetting", b =>
                 {
                     b.Property<string>("Key")
@@ -2390,11 +2626,26 @@ namespace Api.Migrations
                     b.Property<bool>("AutoRotateModels")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("CardSize")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CardSpacing")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DashboardViewType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("DefaultPrinterId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("EmailNotifications")
                         .HasColumnType("boolean");
+
+                    b.Property<int>("GridColumns")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Language")
                         .IsRequired()

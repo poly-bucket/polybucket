@@ -29,7 +29,7 @@ import {
   GetModelByUserIdClient,
   LikeModelClient,
   RemoveTagFromModelClient,
-  SearchModelsClient,
+  SearchClient,
   ApproveModelClient,
   GetModelsAwaitingModerationClient,
   GetModerationSettingsClient,
@@ -123,6 +123,9 @@ export class ApiClientFactory {
 
   // Authentication-related clients
   static getLoginClient = () => new LoginClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Search-related clients
+  static getSearchClient = () => new SearchClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // System settings clients
   static getSystemSettingsClient = () => new GetEmailSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);

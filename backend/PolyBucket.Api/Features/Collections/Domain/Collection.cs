@@ -4,6 +4,7 @@ using PolyBucket.Api.Features.Collections.Domain.Enums;
 using PolyBucket.Api.Features.Models.Domain;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PolyBucket.Api.Features.Collections.Domain
 {
@@ -14,6 +15,10 @@ namespace PolyBucket.Api.Features.Collections.Domain
         public CollectionVisibility Visibility { get; set; } = CollectionVisibility.Private;
         public string? PasswordHash { get; set; }
         public string? Avatar { get; set; }
+        public bool Favorite { get; set; } = false;
+        
+        [Range(0, 999, ErrorMessage = "Display order must be between 0 and 999")]
+        public int DisplayOrder { get; set; } = 0;
 
         public Guid OwnerId { get; set; }
         public virtual User Owner { get; set; } = null!;

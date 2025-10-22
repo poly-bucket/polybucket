@@ -8,7 +8,8 @@ import {
   Upload,
   Settings,
   Visibility,
-  VisibilityOff
+  VisibilityOff,
+  GridView
 } from '@mui/icons-material';
 import UserAvatar from '../UserAvatar';
 import NavigationBar from '../common/NavigationBar';
@@ -20,7 +21,8 @@ import TwoFactorAuth from '../auth/TwoFactorAuth';
 import {
   AccountPreferencesTab,
   CollectionSettingsTab,
-  ModelUploadSettingsTab
+  ModelUploadSettingsTab,
+  DashboardLayoutSettingsTab
 } from './tabs';
 
 interface UserSettings {
@@ -182,6 +184,12 @@ const UserControlPanel: React.FC = () => {
       label: 'Model Upload Settings',
       icon: Upload,
       component: <ModelUploadSettingsTab />
+    },
+    {
+      id: 'dashboard-layout',
+      label: 'Dashboard Layout',
+      icon: GridView,
+      component: <DashboardLayoutSettingsTab />
     }
   ];
 

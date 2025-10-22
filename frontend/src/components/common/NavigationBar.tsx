@@ -3,18 +3,25 @@ import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../utils/hooks';
 import UserAvatar from '../UserAvatar';
 import UserMenu from '../UserMenu';
+import SearchBar, { SearchType } from './SearchBar';
 
 interface NavigationBarProps {
   title?: string;
   icon?: React.ReactNode;
   description?: string;
   showSearch?: boolean;
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string, searchTypes?: SearchType[]) => void;
+  onClearSearch?: () => void;
   searchPlaceholder?: string;
   showUploadButton?: boolean;
   searchQuery?: string;
+  searchTags?: string[];
+  onSearchTagRemove?: (tag: string) => void;
+  onSearchTagAdd?: (tag: string) => void;
   isSearching?: boolean;
   showHomeLink?: boolean;
+  selectedSearchTypes?: SearchType[];
+  onSearchTypeChange?: (searchTypes: SearchType[]) => void;
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -23,11 +30,17 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   description,
   showSearch = true,
   onSearch,
-  searchPlaceholder = "Search models...",
+  onClearSearch,
+  searchPlaceholder = "Search for models...",
   showUploadButton = true,
   searchQuery = "",
+  searchTags = [],
+  onSearchTagRemove,
+  onSearchTagAdd,
   isSearching = false,
-  showHomeLink = false
+  showHomeLink = false,
+  selectedSearchTypes = ['models'],
+  onSearchTypeChange
 }) => {
   const { user } = useAppSelector((state) => state.auth);
   
@@ -43,12 +56,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   const handleUserMenuClose = () => {
     setIsUserMenuOpen(false);
     setUserMenuAnchorEl(null);
-  };
-
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && onSearch) {
-      onSearch((e.target as HTMLInputElement).value);
-    }
   };
 
   return (
@@ -89,32 +96,22 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   {description}
                 </span>
               )}
-              
-              {searchQuery && (
-                <span className="ml-2 px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full text-xs border border-indigo-500/30">
-                  Search: "{searchQuery}"
-                </span>
-              )}
             </div>
             
             {/* Search Bar */}
             {showSearch && (
-              <div className="flex-1 max-w-lg mx-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder={searchPlaceholder}
-                    className="lg-input w-full px-3 py-1 text-sm"
-                    onKeyPress={handleSearch}
-                    disabled={isSearching}
-                  />
-                  {isSearching && (
-                    <div className="absolute right-2 top-1">
-                      <div className="lg-spinner h-3.5 w-3.5"></div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SearchBar
+                onSearch={onSearch}
+                onClearSearch={onClearSearch}
+                searchPlaceholder={searchPlaceholder}
+                searchQuery={searchQuery}
+                searchTags={searchTags}
+                onSearchTagRemove={onSearchTagRemove}
+                onSearchTagAdd={onSearchTagAdd}
+                isSearching={isSearching}
+                selectedSearchTypes={selectedSearchTypes}
+                onSearchTypeChange={onSearchTypeChange}
+              />
             )}
 
             {/* User Menu */}

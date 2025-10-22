@@ -11,13 +11,39 @@
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
 
+export interface FileParameter {
+    data: any;
+    fileName: string;
+}
+
 export interface IApiClient {
-    getUserById_GetUserById(id: string): Promise<GetUserByIdResponse>;
+    updateUserSettings_UpdateUserSettings(request: UpdateUserSettingsRequest): Promise<void>;
     getUserSettings_GetUserSettings(): Promise<GetUserSettingsResponse>;
+    updateUserProfile_UpdateUserProfile(request: UpdateUserProfileRequest): Promise<void>;
+    regenerateAvatar_RegenerateAvatar(request: RegenerateAvatarRequest): Promise<RegenerateAvatarResponse>;
+    getUserById_GetUserById(id: string): Promise<GetUserByIdResponse>;
+    getUsers_GetUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUsersResponse>;
     createUser_CreateUser(command: CreateUserCommand): Promise<CreateUserCommandResponse>;
+    getUserProfile_GetUserProfileById(id: string): Promise<PrivateProfileResponse>;
+    getUserProfile_GetUserProfileByUsername(username: string): Promise<PrivateProfileResponse>;
+    getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserPrintersResponse>;
+    getUserPrinters_GetUserPrintersByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserPrintersResponse>;
+    getUserModels_GetUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined): Promise<GetUserModelsResponse>;
+    getUserLikedModels_GetUserLikedModels(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserLikedModelsResponse>;
+    getUserLikedModels_GetUserLikedModelsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserLikedModelsResponse>;
+    getUserComments_GetUserComments(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserCommentsResponse>;
+    getUserComments_GetUserCommentsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserCommentsResponse>;
+    getPublicUserCollections_GetPublicUserCollections(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetPublicUserCollectionsResponse>;
+    getPublicUserCollections_GetPublicUserCollectionsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetPublicUserCollectionsResponse>;
     banUser_BanUser(userId: string, request: BanUserRequest): Promise<void>;
     banUser_UnbanUser(userId: string): Promise<void>;
     banUser_GetBannedUsers(page: number | undefined, pageSize: number | undefined): Promise<BannedUsersResponse>;
+    setActiveTheme_SetActiveTheme(themeId: number): Promise<SetActiveThemeResponse>;
+    getThemes_GetThemes(): Promise<ThemeListResponse>;
+    createTheme_CreateTheme(request: CreateThemeRequest): Promise<ThemeResponse>;
+    getActiveTheme_GetActiveTheme(): Promise<ThemeDto>;
+    authenticationSettings_GetAuthenticationSettings(): Promise<AuthenticationSettings>;
+    authenticationSettings_UpdateAuthenticationSettings(settings: AuthenticationSettings): Promise<any>;
     extensibleTheme_GetAvailableThemes(): Promise<ThemeDefinition[]>;
     extensibleTheme_GetActiveTheme(): Promise<ThemeDefinition>;
     extensibleTheme_SetActiveTheme(themeId: string): Promise<void>;
@@ -28,8 +54,18 @@ export interface IApiClient {
     extensibleTheme_ValidateConfiguration(themeId: string, configuration: { [key: string]: any; }): Promise<ThemeValidationResult>;
     extensibleTheme_ResetToDefault(): Promise<ThemeApplicationResult>;
     extensibleTheme_GetThemePlugins(): Promise<IThemePlugin[]>;
+    fontAwesomeSettings_GetSettings(): Promise<FontAwesomeSettings>;
+    fontAwesomeSettings_UpdateSettings(settings: FontAwesomeSettings): Promise<FontAwesomeSettings>;
+    fontAwesomeSettings_TestLicense(request: TestLicenseRequest): Promise<TestLicenseResponse>;
+    fontAwesomeSettings_IsProEnabled(): Promise<boolean>;
     getEmailSettings_GetEmailSettings(): Promise<EmailSettingsResponse>;
     updateEmailSettings_UpdateEmailSettings(command: UpdateEmailSettingsCommand): Promise<UpdateEmailSettingsResponse>;
+    getFileSettings_GetFileSettings(): Promise<GetFileSettingsResponse>;
+    updateFileSettings_UpdateFileSettings(command: UpdateFileSettingsCommand): Promise<UpdateFileSettingsResponse>;
+    getModelConfigurationSettings_GetModelConfigurationSettings(): Promise<GetModelConfigurationSettingsResponse>;
+    updateModelConfigurationSettings_UpdateModelConfigurationSettings(command: UpdateModelConfigurationSettingsCommand): Promise<UpdateModelConfigurationSettingsResponse>;
+    getSiteModelSettings_GetSiteModelSettings(): Promise<GetSiteModelSettingsResponse>;
+    updateSiteModelSettings_UpdateSiteModelSettings(command: UpdateSiteModelSettingsCommand): Promise<UpdateSiteModelSettingsResponse>;
     systemSetup_GetSetupStatus(): Promise<CheckFirstTimeSetupResponse>;
     systemSetup_UpdateSiteSettings(command: UpdateSiteSettingsCommand): Promise<UpdateSiteSettingsResponse>;
     systemSetup_CompleteSetup(): Promise<CompleteFirstTimeSetupResponse>;
@@ -50,7 +86,6 @@ export interface IApiClient {
     getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined): Promise<FileResponse>;
     getUnresolvedReports_GetUnresolvedReports(): Promise<FileResponse>;
     resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest): Promise<FileResponse>;
-    getAdminModelStatistics_GetAdminModelStatistics(): Promise<GetAdminModelStatisticsResponse>;
     getPrinters_GetPrinters(): Promise<FileResponse>;
     getPluginDetails_GetPluginDetails(pluginId: string): Promise<PluginDetailsResponse>;
     getPluginDetails_GetPluginsOverview(): Promise<PluginOverviewResponse>;
@@ -76,12 +111,14 @@ export interface IApiClient {
     likeModel_LikeModel(id: string): Promise<FileResponse>;
     removeTagFromModel_RemoveTagFromModel(id: string, tagId: string): Promise<FileResponse>;
     searchModels_SearchModels(query: string | undefined, page: number | undefined, pageSize: number | undefined): Promise<FileResponse>;
-    uploadModel_UploadModel(files: FileParameter[] | undefined, name: string | null | undefined, description: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, categories: string | null | undefined, aIGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined, thumbnailFileId: string | null | undefined): Promise<Model>;
     getModels_GetModels(page: number | undefined, take: number | undefined): Promise<GetModelsResponse>;
+    createModel_CreateModel(files: FileParameter[] | undefined, name: string | undefined, description: string | null | undefined, thumbnailFileId: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, aIGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined): Promise<CreateModelResponse>;
     getModelPreview_GetModelPreview(modelId: string, size: string): Promise<GetModelPreviewResponse>;
     getModelByUserId_GetModelsByUserId(userId: string, page: number | undefined, take: number | undefined, includeDeleted: boolean | undefined, includePrivate: boolean | undefined): Promise<GetModelByUserIdResponse>;
+    getModelByUserId_GetPublicModelsByUserId(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined): Promise<void>;
     generateModelPreview_GenerateModelPreview(modelId: string, size: string | undefined, forceRegenerate: boolean | undefined): Promise<GenerateModelPreviewResponse>;
     generateCustomThumbnail_GenerateCustomThumbnail(modelId: string, request: GenerateCustomThumbnailRequest): Promise<GenerateCustomThumbnailResponse>;
+    deleteAllModels_DeleteAllModels(request: DeleteAllModelsRequest): Promise<DeleteAllModelsResponse>;
     approveModel_ApproveModel(id: string): Promise<FileResponse>;
     getModelsAwaitingModeration_GetModelsAwaitingModeration(page: number | undefined, pageSize: number | undefined): Promise<FileResponse>;
     getModerationSettings_GetModerationSettings(): Promise<FileResponse>;
@@ -126,10 +163,24 @@ export interface IApiClient {
     deleteCollection_DeleteCollection(id: string): Promise<FileResponse>;
     removeModelFromCollection_RemoveModelFromCollection2(collectionId: string, modelId: string): Promise<FileResponse>;
     addModelToCollection_AddModelToCollection2(collectionId: string, modelId: string): Promise<FileResponse>;
-    getUserCollections_GetUserCollections(): Promise<FileResponse>;
+    getUserCollections_GetCurrentUserCollections(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined): Promise<FileResponse>;
+    getUserCollections_GetCollectionsByUserId(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined): Promise<FileResponse>;
+    getFavoriteCollections_GetFavoriteCollections(): Promise<FileResponse>;
+    favoriteCollection_ToggleFavorite(id: string, command: FavoriteCollectionCommand): Promise<FileResponse>;
     createCollection_CreateCollection(command: CreateCollectionCommand): Promise<FileResponse>;
     accessCollection_AccessCollection(id: string, command: AccessCollectionCommand): Promise<FileResponse>;
+    updateCategory_UpdateCategory(id: string, command: UpdateCategoryCommand): Promise<UpdateCategoryResponse>;
+    deleteCategory_DeleteCategory(id: string): Promise<DeleteCategoryResponse>;
+    createCategory_GetCategory(id: string): Promise<CreateCategoryResponse>;
+    getCategories_GetCategories(page: number | undefined, pageSize: number | undefined, searchTerm: string | null | undefined): Promise<GetCategoriesResponse>;
+    createCategory_CreateCategory(command: CreateCategoryCommand): Promise<CreateCategoryResponse>;
     verifyEmail_VerifyEmail(command: VerifyEmailCommand): Promise<void>;
+    regenerateBackupCodes_RegenerateBackupCodes(command: RegenerateBackupCodesCommand): Promise<RegenerateBackupCodesResponse>;
+    initializeTwoFactorAuth_Initialize(command: InitializeTwoFactorAuthCommand): Promise<InitializeTwoFactorAuthResponse>;
+    initializeTwoFactorAuth_DebugClaims(): Promise<void>;
+    getTwoFactorAuthStatus_GetStatus(): Promise<GetTwoFactorAuthStatusResponse>;
+    enableTwoFactorAuth_Enable(command: EnableTwoFactorAuthCommand): Promise<EnableTwoFactorAuthResponse>;
+    disableTwoFactorAuth_Disable(command: DisableTwoFactorAuthCommand): Promise<DisableTwoFactorAuthResponse>;
     resetPassword_ResetPassword(command: ResetPasswordCommand): Promise<void>;
     register_Register(command: RegisterCommand): Promise<RegisterCommandResponse>;
     refreshToken_RefreshToken(command: RefreshTokenCommand): Promise<RefreshTokenCommandResponse>;
@@ -137,16 +188,20 @@ export interface IApiClient {
     oAuth_OAuthCallback(provider: string, command: OAuthCallbackCommand): Promise<OAuthCallbackCommandResponse>;
     me_GetCurrentUser(): Promise<MeResponse>;
     login_Login(command: LoginCommand): Promise<LoginCommandResponse>;
+    forgotPassword_ForgotPassword(command: ForgotPasswordCommand): Promise<void>;
     changePassword_ChangePassword(command: ChangePasswordCommand): Promise<ChangePasswordResponse>;
     changePassword_SkipPasswordChange(): Promise<ChangePasswordResponse>;
-    forgotPassword_ForgotPassword(command: ForgotPasswordCommand): Promise<void>;
     getModerationAuditLogs_GetAuditLogs(page: number | undefined, pageSize: number | undefined, action: string | null | undefined, userId: string | null | undefined, modelId: string | null | undefined): Promise<ModerationAuditResponse>;
-    roleManagement_GetAllRoles(): Promise<RoleDto[]>;
+    getAdminModelStatistics_GetAdminModelStatistics(): Promise<GetAdminModelStatisticsResponse>;
+    roleManagement_GetAllRoles(page: number | undefined, pageSize: number | undefined, searchTerm: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<PaginatedRolesResponse>;
     roleManagement_CreateRole(request: CreateRoleRequest): Promise<RoleDto>;
+    roleManagement_GetAllRolesUnpaginated(): Promise<RoleDto[]>;
     roleManagement_GetRole(id: string): Promise<RoleDto>;
     roleManagement_UpdateRole(id: string, request: UpdateRoleRequest): Promise<RoleDto>;
     roleManagement_DeleteRole(id: string): Promise<void>;
     roleManagement_AssignPermissionsToRole(id: string, request: AssignPermissionsRequest): Promise<void>;
+    roleManagement_RemovePermissionsFromRole(id: string, request: RemovePermissionsRequest): Promise<void>;
+    roleManagement_GetAllPermissions(): Promise<PermissionDto[]>;
     userPermissionManagement_GetCurrentUserPermissions(): Promise<UserPermissionsDto>;
     userPermissionManagement_GetUserPermissions(userId: string): Promise<UserPermissionsDto>;
     userPermissionManagement_AssignUserRole(userId: string, request: AssignRoleRequest): Promise<void>;
@@ -167,6 +222,256 @@ export class ApiClient implements IApiClient {
 
         this.baseUrl = baseUrl ?? "http://localhost:11666";
 
+    }
+
+    updateUserSettings_UpdateUserSettings(request: UpdateUserSettingsRequest, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/users/settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "PUT",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUpdateUserSettings_UpdateUserSettings(_response);
+        });
+    }
+
+    protected processUpdateUserSettings_UpdateUserSettings(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getUserSettings_GetUserSettings( cancelToken?: CancelToken): Promise<GetUserSettingsResponse> {
+        let url_ = this.baseUrl + "/api/users/settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserSettings_GetUserSettings(_response);
+        });
+    }
+
+    protected processGetUserSettings_GetUserSettings(response: AxiosResponse): Promise<GetUserSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserSettingsResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserSettingsResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserSettingsResponse>(null as any);
+    }
+
+    updateUserProfile_UpdateUserProfile(request: UpdateUserProfileRequest, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/users/profile/update";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "PUT",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUpdateUserProfile_UpdateUserProfile(_response);
+        });
+    }
+
+    protected processUpdateUserProfile_UpdateUserProfile(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    regenerateAvatar_RegenerateAvatar(request: RegenerateAvatarRequest, cancelToken?: CancelToken): Promise<RegenerateAvatarResponse> {
+        let url_ = this.baseUrl + "/api/users/avatar/regenerate";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRegenerateAvatar_RegenerateAvatar(_response);
+        });
+    }
+
+    protected processRegenerateAvatar_RegenerateAvatar(response: AxiosResponse): Promise<RegenerateAvatarResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = RegenerateAvatarResponse.fromJS(resultData200);
+            return Promise.resolve<RegenerateAvatarResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<RegenerateAvatarResponse>(null as any);
     }
 
     getUserById_GetUserById(id: string, cancelToken?: CancelToken): Promise<GetUserByIdResponse> {
@@ -231,8 +536,28 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<GetUserByIdResponse>(null as any);
     }
 
-    getUserSettings_GetUserSettings( cancelToken?: CancelToken): Promise<GetUserSettingsResponse> {
-        let url_ = this.baseUrl + "/api/users/settings";
+    getUsers_GetUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUsersResponse> {
+        let url_ = this.baseUrl + "/api/admin/users?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (roleFilter !== undefined && roleFilter !== null)
+            url_ += "roleFilter=" + encodeURIComponent("" + roleFilter) + "&";
+        if (statusFilter !== undefined && statusFilter !== null)
+            url_ += "statusFilter=" + encodeURIComponent("" + statusFilter) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -251,11 +576,11 @@ export class ApiClient implements IApiClient {
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processGetUserSettings_GetUserSettings(_response);
+            return this.processGetUsers_GetUsers(_response);
         });
     }
 
-    protected processGetUserSettings_GetUserSettings(response: AxiosResponse): Promise<GetUserSettingsResponse> {
+    protected processGetUsers_GetUsers(response: AxiosResponse): Promise<GetUsersResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -269,14 +594,32 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserSettingsResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserSettingsResponse>(result200);
+            result200 = GetUsersResponse.fromJS(resultData200);
+            return Promise.resolve<GetUsersResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserSettingsResponse>(null as any);
+        return Promise.resolve<GetUsersResponse>(null as any);
     }
 
     createUser_CreateUser(command: CreateUserCommand, cancelToken?: CancelToken): Promise<CreateUserCommandResponse> {
@@ -350,6 +693,824 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<CreateUserCommandResponse>(null as any);
+    }
+
+    getUserProfile_GetUserProfileById(id: string, cancelToken?: CancelToken): Promise<PrivateProfileResponse> {
+        let url_ = this.baseUrl + "/api/users/profile/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserProfile_GetUserProfileById(_response);
+        });
+    }
+
+    protected processGetUserProfile_GetUserProfileById(response: AxiosResponse): Promise<PrivateProfileResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = PrivateProfileResponse.fromJS(resultData200);
+            return Promise.resolve<PrivateProfileResponse>(result200);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<PrivateProfileResponse>(null as any);
+    }
+
+    getUserProfile_GetUserProfileByUsername(username: string, cancelToken?: CancelToken): Promise<PrivateProfileResponse> {
+        let url_ = this.baseUrl + "/api/users/profile/by-username/{username}";
+        if (username === undefined || username === null)
+            throw new Error("The parameter 'username' must be defined.");
+        url_ = url_.replace("{username}", encodeURIComponent("" + username));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserProfile_GetUserProfileByUsername(_response);
+        });
+    }
+
+    protected processGetUserProfile_GetUserProfileByUsername(response: AxiosResponse): Promise<PrivateProfileResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = PrivateProfileResponse.fromJS(resultData200);
+            return Promise.resolve<PrivateProfileResponse>(result200);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<PrivateProfileResponse>(null as any);
+    }
+
+    getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserPrintersResponse> {
+        let url_ = this.baseUrl + "/api/users/{userId}/printers?";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserPrinters_GetUserPrinters(_response);
+        });
+    }
+
+    protected processGetUserPrinters_GetUserPrinters(response: AxiosResponse): Promise<GetUserPrintersResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserPrintersResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserPrintersResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserPrintersResponse>(null as any);
+    }
+
+    getUserPrinters_GetUserPrintersByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserPrintersResponse> {
+        let url_ = this.baseUrl + "/api/users/profile/{username}/printers?";
+        if (username === undefined || username === null)
+            throw new Error("The parameter 'username' must be defined.");
+        url_ = url_.replace("{username}", encodeURIComponent("" + username));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserPrinters_GetUserPrintersByUsername(_response);
+        });
+    }
+
+    protected processGetUserPrinters_GetUserPrintersByUsername(response: AxiosResponse): Promise<GetUserPrintersResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserPrintersResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserPrintersResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserPrintersResponse>(null as any);
+    }
+
+    getUserModels_GetUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined, cancelToken?: CancelToken): Promise<GetUserModelsResponse> {
+        let url_ = this.baseUrl + "/api/users/models/{username}/models/public?";
+        if (username === undefined || username === null)
+            throw new Error("The parameter 'username' must be defined.");
+        url_ = url_.replace("{username}", encodeURIComponent("" + username));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserModels_GetUserPublicModels(_response);
+        });
+    }
+
+    protected processGetUserModels_GetUserPublicModels(response: AxiosResponse): Promise<GetUserModelsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserModelsResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserModelsResponse>(result200);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserModelsResponse>(null as any);
+    }
+
+    getUserLikedModels_GetUserLikedModels(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserLikedModelsResponse> {
+        let url_ = this.baseUrl + "/api/users/{userId}/liked-models?";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserLikedModels_GetUserLikedModels(_response);
+        });
+    }
+
+    protected processGetUserLikedModels_GetUserLikedModels(response: AxiosResponse): Promise<GetUserLikedModelsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserLikedModelsResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserLikedModelsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserLikedModelsResponse>(null as any);
+    }
+
+    getUserLikedModels_GetUserLikedModelsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserLikedModelsResponse> {
+        let url_ = this.baseUrl + "/api/users/profile/{username}/liked-models?";
+        if (username === undefined || username === null)
+            throw new Error("The parameter 'username' must be defined.");
+        url_ = url_.replace("{username}", encodeURIComponent("" + username));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserLikedModels_GetUserLikedModelsByUsername(_response);
+        });
+    }
+
+    protected processGetUserLikedModels_GetUserLikedModelsByUsername(response: AxiosResponse): Promise<GetUserLikedModelsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserLikedModelsResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserLikedModelsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserLikedModelsResponse>(null as any);
+    }
+
+    getUserComments_GetUserComments(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserCommentsResponse> {
+        let url_ = this.baseUrl + "/api/users/{userId}/comments?";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserComments_GetUserComments(_response);
+        });
+    }
+
+    protected processGetUserComments_GetUserComments(response: AxiosResponse): Promise<GetUserCommentsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserCommentsResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserCommentsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserCommentsResponse>(null as any);
+    }
+
+    getUserComments_GetUserCommentsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserCommentsResponse> {
+        let url_ = this.baseUrl + "/api/users/profile/{username}/comments?";
+        if (username === undefined || username === null)
+            throw new Error("The parameter 'username' must be defined.");
+        url_ = url_.replace("{username}", encodeURIComponent("" + username));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserComments_GetUserCommentsByUsername(_response);
+        });
+    }
+
+    protected processGetUserComments_GetUserCommentsByUsername(response: AxiosResponse): Promise<GetUserCommentsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserCommentsResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserCommentsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserCommentsResponse>(null as any);
+    }
+
+    getPublicUserCollections_GetPublicUserCollections(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResponse> {
+        let url_ = this.baseUrl + "/api/users/{userId}/collections/public?";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetPublicUserCollections_GetPublicUserCollections(_response);
+        });
+    }
+
+    protected processGetPublicUserCollections_GetPublicUserCollections(response: AxiosResponse): Promise<GetPublicUserCollectionsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetPublicUserCollectionsResponse.fromJS(resultData200);
+            return Promise.resolve<GetPublicUserCollectionsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetPublicUserCollectionsResponse>(null as any);
+    }
+
+    getPublicUserCollections_GetPublicUserCollectionsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResponse> {
+        let url_ = this.baseUrl + "/api/users/profile/{username}/collections/public?";
+        if (username === undefined || username === null)
+            throw new Error("The parameter 'username' must be defined.");
+        url_ = url_.replace("{username}", encodeURIComponent("" + username));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetPublicUserCollections_GetPublicUserCollectionsByUsername(_response);
+        });
+    }
+
+    protected processGetPublicUserCollections_GetPublicUserCollectionsByUsername(response: AxiosResponse): Promise<GetPublicUserCollectionsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetPublicUserCollectionsResponse.fromJS(resultData200);
+            return Promise.resolve<GetPublicUserCollectionsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetPublicUserCollectionsResponse>(null as any);
     }
 
     banUser_BanUser(userId: string, request: BanUserRequest, cancelToken?: CancelToken): Promise<void> {
@@ -546,6 +1707,390 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<BannedUsersResponse>(null as any);
+    }
+
+    setActiveTheme_SetActiveTheme(themeId: number, cancelToken?: CancelToken): Promise<SetActiveThemeResponse> {
+        let url_ = this.baseUrl + "/api/theme-management/themes/{themeId}/activate";
+        if (themeId === undefined || themeId === null)
+            throw new Error("The parameter 'themeId' must be defined.");
+        url_ = url_.replace("{themeId}", encodeURIComponent("" + themeId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processSetActiveTheme_SetActiveTheme(_response);
+        });
+    }
+
+    protected processSetActiveTheme_SetActiveTheme(response: AxiosResponse): Promise<SetActiveThemeResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = SetActiveThemeResponse.fromJS(resultData200);
+            return Promise.resolve<SetActiveThemeResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<SetActiveThemeResponse>(null as any);
+    }
+
+    getThemes_GetThemes( cancelToken?: CancelToken): Promise<ThemeListResponse> {
+        let url_ = this.baseUrl + "/api/theme-management/themes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetThemes_GetThemes(_response);
+        });
+    }
+
+    protected processGetThemes_GetThemes(response: AxiosResponse): Promise<ThemeListResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = ThemeListResponse.fromJS(resultData200);
+            return Promise.resolve<ThemeListResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<ThemeListResponse>(null as any);
+    }
+
+    createTheme_CreateTheme(request: CreateThemeRequest, cancelToken?: CancelToken): Promise<ThemeResponse> {
+        let url_ = this.baseUrl + "/api/theme-management/themes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCreateTheme_CreateTheme(_response);
+        });
+    }
+
+    protected processCreateTheme_CreateTheme(response: AxiosResponse): Promise<ThemeResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = ThemeResponse.fromJS(resultData200);
+            return Promise.resolve<ThemeResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<ThemeResponse>(null as any);
+    }
+
+    getActiveTheme_GetActiveTheme( cancelToken?: CancelToken): Promise<ThemeDto> {
+        let url_ = this.baseUrl + "/api/theme-management/active-theme";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetActiveTheme_GetActiveTheme(_response);
+        });
+    }
+
+    protected processGetActiveTheme_GetActiveTheme(response: AxiosResponse): Promise<ThemeDto> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = ThemeDto.fromJS(resultData200);
+            return Promise.resolve<ThemeDto>(result200);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<ThemeDto>(null as any);
+    }
+
+    authenticationSettings_GetAuthenticationSettings( cancelToken?: CancelToken): Promise<AuthenticationSettings> {
+        let url_ = this.baseUrl + "/api/system-settings/auth";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processAuthenticationSettings_GetAuthenticationSettings(_response);
+        });
+    }
+
+    protected processAuthenticationSettings_GetAuthenticationSettings(response: AxiosResponse): Promise<AuthenticationSettings> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = AuthenticationSettings.fromJS(resultData200);
+            return Promise.resolve<AuthenticationSettings>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<AuthenticationSettings>(null as any);
+    }
+
+    authenticationSettings_UpdateAuthenticationSettings(settings: AuthenticationSettings, cancelToken?: CancelToken): Promise<any> {
+        let url_ = this.baseUrl + "/api/system-settings/auth";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(settings);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "PUT",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processAuthenticationSettings_UpdateAuthenticationSettings(_response);
+        });
+    }
+
+    protected processAuthenticationSettings_UpdateAuthenticationSettings(response: AxiosResponse): Promise<any> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return Promise.resolve<any>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<any>(null as any);
     }
 
     extensibleTheme_GetAvailableThemes( cancelToken?: CancelToken): Promise<ThemeDefinition[]> {
@@ -1169,6 +2714,286 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<IThemePlugin[]>(null as any);
     }
 
+    fontAwesomeSettings_GetSettings( cancelToken?: CancelToken): Promise<FontAwesomeSettings> {
+        let url_ = this.baseUrl + "/api/admin/fontawesome-settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processFontAwesomeSettings_GetSettings(_response);
+        });
+    }
+
+    protected processFontAwesomeSettings_GetSettings(response: AxiosResponse): Promise<FontAwesomeSettings> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = FontAwesomeSettings.fromJS(resultData200);
+            return Promise.resolve<FontAwesomeSettings>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FontAwesomeSettings>(null as any);
+    }
+
+    fontAwesomeSettings_UpdateSettings(settings: FontAwesomeSettings, cancelToken?: CancelToken): Promise<FontAwesomeSettings> {
+        let url_ = this.baseUrl + "/api/admin/fontawesome-settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(settings);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processFontAwesomeSettings_UpdateSettings(_response);
+        });
+    }
+
+    protected processFontAwesomeSettings_UpdateSettings(response: AxiosResponse): Promise<FontAwesomeSettings> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = FontAwesomeSettings.fromJS(resultData200);
+            return Promise.resolve<FontAwesomeSettings>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FontAwesomeSettings>(null as any);
+    }
+
+    fontAwesomeSettings_TestLicense(request: TestLicenseRequest, cancelToken?: CancelToken): Promise<TestLicenseResponse> {
+        let url_ = this.baseUrl + "/api/admin/fontawesome-settings/test-license";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processFontAwesomeSettings_TestLicense(_response);
+        });
+    }
+
+    protected processFontAwesomeSettings_TestLicense(response: AxiosResponse): Promise<TestLicenseResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = TestLicenseResponse.fromJS(resultData200);
+            return Promise.resolve<TestLicenseResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<TestLicenseResponse>(null as any);
+    }
+
+    fontAwesomeSettings_IsProEnabled( cancelToken?: CancelToken): Promise<boolean> {
+        let url_ = this.baseUrl + "/api/admin/fontawesome-settings/pro-enabled";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processFontAwesomeSettings_IsProEnabled(_response);
+        });
+    }
+
+    protected processFontAwesomeSettings_IsProEnabled(response: AxiosResponse): Promise<boolean> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return Promise.resolve<boolean>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<boolean>(null as any);
+    }
+
     getEmailSettings_GetEmailSettings( cancelToken?: CancelToken): Promise<EmailSettingsResponse> {
         let url_ = this.baseUrl + "/api/system-settings/email";
         url_ = url_.replace(/[?&]$/, "");
@@ -1302,6 +3127,390 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<UpdateEmailSettingsResponse>(null as any);
+    }
+
+    getFileSettings_GetFileSettings( cancelToken?: CancelToken): Promise<GetFileSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/file-settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetFileSettings_GetFileSettings(_response);
+        });
+    }
+
+    protected processGetFileSettings_GetFileSettings(response: AxiosResponse): Promise<GetFileSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetFileSettingsResponse.fromJS(resultData200);
+            return Promise.resolve<GetFileSettingsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetFileSettingsResponse>(null as any);
+    }
+
+    updateFileSettings_UpdateFileSettings(command: UpdateFileSettingsCommand, cancelToken?: CancelToken): Promise<UpdateFileSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/file-settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "PUT",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUpdateFileSettings_UpdateFileSettings(_response);
+        });
+    }
+
+    protected processUpdateFileSettings_UpdateFileSettings(response: AxiosResponse): Promise<UpdateFileSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = UpdateFileSettingsResponse.fromJS(resultData200);
+            return Promise.resolve<UpdateFileSettingsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpdateFileSettingsResponse>(null as any);
+    }
+
+    getModelConfigurationSettings_GetModelConfigurationSettings( cancelToken?: CancelToken): Promise<GetModelConfigurationSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/model-configuration";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetModelConfigurationSettings_GetModelConfigurationSettings(_response);
+        });
+    }
+
+    protected processGetModelConfigurationSettings_GetModelConfigurationSettings(response: AxiosResponse): Promise<GetModelConfigurationSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetModelConfigurationSettingsResponse.fromJS(resultData200);
+            return Promise.resolve<GetModelConfigurationSettingsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetModelConfigurationSettingsResponse>(null as any);
+    }
+
+    updateModelConfigurationSettings_UpdateModelConfigurationSettings(command: UpdateModelConfigurationSettingsCommand, cancelToken?: CancelToken): Promise<UpdateModelConfigurationSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/model-configuration";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "PUT",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUpdateModelConfigurationSettings_UpdateModelConfigurationSettings(_response);
+        });
+    }
+
+    protected processUpdateModelConfigurationSettings_UpdateModelConfigurationSettings(response: AxiosResponse): Promise<UpdateModelConfigurationSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = UpdateModelConfigurationSettingsResponse.fromJS(resultData200);
+            return Promise.resolve<UpdateModelConfigurationSettingsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpdateModelConfigurationSettingsResponse>(null as any);
+    }
+
+    getSiteModelSettings_GetSiteModelSettings( cancelToken?: CancelToken): Promise<GetSiteModelSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/model-settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetSiteModelSettings_GetSiteModelSettings(_response);
+        });
+    }
+
+    protected processGetSiteModelSettings_GetSiteModelSettings(response: AxiosResponse): Promise<GetSiteModelSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetSiteModelSettingsResponse.fromJS(resultData200);
+            return Promise.resolve<GetSiteModelSettingsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetSiteModelSettingsResponse>(null as any);
+    }
+
+    updateSiteModelSettings_UpdateSiteModelSettings(command: UpdateSiteModelSettingsCommand, cancelToken?: CancelToken): Promise<UpdateSiteModelSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/model-settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "PUT",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUpdateSiteModelSettings_UpdateSiteModelSettings(_response);
+        });
+    }
+
+    protected processUpdateSiteModelSettings_UpdateSiteModelSettings(response: AxiosResponse): Promise<UpdateSiteModelSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = UpdateSiteModelSettingsResponse.fromJS(resultData200);
+            return Promise.resolve<UpdateSiteModelSettingsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpdateSiteModelSettingsResponse>(null as any);
     }
 
     systemSetup_GetSetupStatus( cancelToken?: CancelToken): Promise<CheckFirstTimeSetupResponse> {
@@ -2584,58 +4793,6 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    getAdminModelStatistics_GetAdminModelStatistics(cancelToken?: CancelToken): Promise<GetAdminModelStatisticsResponse> {
-        let url_ = this.baseUrl + "/api/admin/models/statistics";
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetAdminModelStatistics_GetAdminModelStatistics(_response);
-        });
-    }
-
-    protected processGetAdminModelStatistics_GetAdminModelStatistics(response: AxiosResponse): Promise<GetAdminModelStatisticsResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            result200 = GetAdminModelStatisticsResponse.fromJS(resultData200);
-            return Promise.resolve<GetAdminModelStatisticsResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<GetAdminModelStatisticsResponse>(null as any);
-    }
-
     getPrinters_GetPrinters( cancelToken?: CancelToken): Promise<FileResponse> {
         let url_ = this.baseUrl + "/api/printers";
         url_ = url_.replace(/[?&]$/, "");
@@ -3836,24 +5993,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            
-            // When responseType is "blob", response.data is already a Blob
-            // Just ensure it has the correct type from headers
-            let blob: Blob;
-            if (response.data instanceof Blob) {
-                // If it's already a blob, use it directly but update the type if needed
-                const contentType = response.headers["content-type"] || "application/octet-stream";
-                if (response.data.type !== contentType) {
-                    blob = new Blob([response.data], { type: contentType });
-                } else {
-                    blob = response.data;
-                }
-            } else {
-                // Fallback: create blob from data
-                blob = new Blob([response.data], { type: response.headers["content-type"] || "application/octet-stream" });
-            }
-            
-            return Promise.resolve({ fileName: fileName, status: status, data: blob, headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4182,103 +6322,6 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    uploadModel_UploadModel(files: FileParameter[] | undefined, name: string | null | undefined, description: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, categories: string | null | undefined, aIGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined, thumbnailFileId: string | null | undefined, cancelToken?: CancelToken): Promise<Model> {
-        let url_ = this.baseUrl + "/api/models?";
-        if (files === null)
-            throw new Error("The parameter 'files' cannot be null.");
-        else if (files !== undefined)
-            files && files.forEach(item => { url_ += "Files=" + encodeURIComponent("" + item) + "&"; });
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = new FormData();
-        if (name !== null && name !== undefined)
-            content_.append("Name", name.toString());
-        if (description !== null && description !== undefined)
-            content_.append("Description", description.toString());
-        if (privacy !== null && privacy !== undefined)
-            content_.append("Privacy", privacy.toString());
-        if (license !== null && license !== undefined)
-            content_.append("License", license.toString());
-        if (categories !== null && categories !== undefined)
-            content_.append("Categories", categories.toString());
-        if (aIGenerated === null || aIGenerated === undefined)
-            throw new Error("The parameter 'aIGenerated' cannot be null.");
-        else
-            content_.append("AIGenerated", aIGenerated.toString());
-        if (workInProgress === null || workInProgress === undefined)
-            throw new Error("The parameter 'workInProgress' cannot be null.");
-        else
-            content_.append("WorkInProgress", workInProgress.toString());
-        if (nSFW === null || nSFW === undefined)
-            throw new Error("The parameter 'nSFW' cannot be null.");
-        else
-            content_.append("NSFW", nSFW.toString());
-        if (remix === null || remix === undefined)
-            throw new Error("The parameter 'remix' cannot be null.");
-        else
-            content_.append("Remix", remix.toString());
-        if (thumbnailFileId !== null && thumbnailFileId !== undefined)
-            content_.append("ThumbnailFileId", thumbnailFileId.toString());
-
-        let options_: AxiosRequestConfig = {
-            data: content_,
-            method: "POST",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processUploadModel_UploadModel(_response);
-        });
-    }
-
-    protected processUploadModel_UploadModel(response: AxiosResponse): Promise<Model> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 201) {
-            const _responseText = response.data;
-            let result201: any = null;
-            let resultData201  = _responseText;
-            result201 = Model.fromJS(resultData201);
-            return Promise.resolve<Model>(result201);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 401) {
-            const _responseText = response.data;
-            let result401: any = null;
-            let resultData401  = _responseText;
-            result401 = ProblemDetails.fromJS(resultData401);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<Model>(null as any);
-    }
-
     getModels_GetModels(page: number | undefined, take: number | undefined, cancelToken?: CancelToken): Promise<GetModelsResponse> {
         let url_ = this.baseUrl + "/api/models?";
         if (page === null)
@@ -4333,6 +6376,103 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetModelsResponse>(null as any);
+    }
+
+    createModel_CreateModel(files: FileParameter[] | undefined, name: string | undefined, description: string | null | undefined, thumbnailFileId: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, aIGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined, cancelToken?: CancelToken): Promise<CreateModelResponse> {
+        let url_ = this.baseUrl + "/api/models?";
+        if (files === null)
+            throw new Error("The parameter 'files' cannot be null.");
+        else if (files !== undefined)
+            files && files.forEach(item => { url_ += "Files=" + encodeURIComponent("" + item) + "&"; });
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = new FormData();
+        if (name === null || name === undefined)
+            throw new Error("The parameter 'name' cannot be null.");
+        else
+            content_.append("Name", name.toString());
+        if (description !== null && description !== undefined)
+            content_.append("Description", description.toString());
+        if (thumbnailFileId !== null && thumbnailFileId !== undefined)
+            content_.append("ThumbnailFileId", thumbnailFileId.toString());
+        if (privacy !== null && privacy !== undefined)
+            content_.append("Privacy", privacy.toString());
+        if (license !== null && license !== undefined)
+            content_.append("License", license.toString());
+        if (aIGenerated === null || aIGenerated === undefined)
+            throw new Error("The parameter 'aIGenerated' cannot be null.");
+        else
+            content_.append("AIGenerated", aIGenerated.toString());
+        if (workInProgress === null || workInProgress === undefined)
+            throw new Error("The parameter 'workInProgress' cannot be null.");
+        else
+            content_.append("WorkInProgress", workInProgress.toString());
+        if (nSFW === null || nSFW === undefined)
+            throw new Error("The parameter 'nSFW' cannot be null.");
+        else
+            content_.append("NSFW", nSFW.toString());
+        if (remix === null || remix === undefined)
+            throw new Error("The parameter 'remix' cannot be null.");
+        else
+            content_.append("Remix", remix.toString());
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCreateModel_CreateModel(_response);
+        });
+    }
+
+    protected processCreateModel_CreateModel(response: AxiosResponse): Promise<CreateModelResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 201) {
+            const _responseText = response.data;
+            let result201: any = null;
+            let resultData201  = _responseText;
+            result201 = CreateModelResponse.fromJS(resultData201);
+            return Promise.resolve<CreateModelResponse>(result201);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CreateModelResponse>(null as any);
     }
 
     getModelPreview_GetModelPreview(modelId: string, size: string, cancelToken?: CancelToken): Promise<GetModelPreviewResponse> {
@@ -4477,6 +6617,67 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<GetModelByUserIdResponse>(null as any);
     }
 
+    getModelByUserId_GetPublicModelsByUserId(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/models/user/{userId}/public?";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetModelByUserId_GetPublicModelsByUserId(_response);
+        });
+    }
+
+    protected processGetModelByUserId_GetPublicModelsByUserId(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
     generateModelPreview_GenerateModelPreview(modelId: string, size: string | undefined, forceRegenerate: boolean | undefined, cancelToken?: CancelToken): Promise<GenerateModelPreviewResponse> {
         let url_ = this.baseUrl + "/api/models/{modelId}/previews?";
         if (modelId === undefined || modelId === null)
@@ -4617,6 +6818,83 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GenerateCustomThumbnailResponse>(null as any);
+    }
+
+    deleteAllModels_DeleteAllModels(request: DeleteAllModelsRequest, cancelToken?: CancelToken): Promise<DeleteAllModelsResponse> {
+        let url_ = this.baseUrl + "/api/admin/models/delete-all";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "DELETE",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processDeleteAllModels_DeleteAllModels(_response);
+        });
+    }
+
+    protected processDeleteAllModels_DeleteAllModels(response: AxiosResponse): Promise<DeleteAllModelsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = DeleteAllModelsResponse.fromJS(resultData200);
+            return Promise.resolve<DeleteAllModelsResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<DeleteAllModelsResponse>(null as any);
     }
 
     approveModel_ApproveModel(id: string, cancelToken?: CancelToken): Promise<FileResponse> {
@@ -7190,8 +9468,18 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    getUserCollections_GetUserCollections( cancelToken?: CancelToken): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/collections/mine";
+    getUserCollections_GetCurrentUserCollections(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/collections/mine?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -7211,11 +9499,190 @@ export class ApiClient implements IApiClient {
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processGetUserCollections_GetUserCollections(_response);
+            return this.processGetUserCollections_GetCurrentUserCollections(_response);
         });
     }
 
-    protected processGetUserCollections_GetUserCollections(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetUserCollections_GetCurrentUserCollections(response: AxiosResponse): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+
+    getUserCollections_GetCollectionsByUserId(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/collections/user/{userId}?";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchQuery !== undefined && searchQuery !== null)
+            url_ += "searchQuery=" + encodeURIComponent("" + searchQuery) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            responseType: "blob",
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/octet-stream"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserCollections_GetCollectionsByUserId(_response);
+        });
+    }
+
+    protected processGetUserCollections_GetCollectionsByUserId(response: AxiosResponse): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+
+    getFavoriteCollections_GetFavoriteCollections( cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/collections/favorites";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            responseType: "blob",
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/octet-stream"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetFavoriteCollections_GetFavoriteCollections(_response);
+        });
+    }
+
+    protected processGetFavoriteCollections_GetFavoriteCollections(response: AxiosResponse): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+
+    favoriteCollection_ToggleFavorite(id: string, command: FavoriteCollectionCommand, cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/collections/{id}/favorite";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            responseType: "blob",
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/octet-stream"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processFavoriteCollection_ToggleFavorite(_response);
+        });
+    }
+
+    protected processFavoriteCollection_ToggleFavorite(response: AxiosResponse): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -7360,6 +9827,392 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
+    updateCategory_UpdateCategory(id: string, command: UpdateCategoryCommand, cancelToken?: CancelToken): Promise<UpdateCategoryResponse> {
+        let url_ = this.baseUrl + "/api/admin/categories/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "PUT",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUpdateCategory_UpdateCategory(_response);
+        });
+    }
+
+    protected processUpdateCategory_UpdateCategory(response: AxiosResponse): Promise<UpdateCategoryResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = UpdateCategoryResponse.fromJS(resultData200);
+            return Promise.resolve<UpdateCategoryResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = response.data;
+            let result409: any = null;
+            let resultData409  = _responseText;
+            result409 = ProblemDetails.fromJS(resultData409);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result409);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpdateCategoryResponse>(null as any);
+    }
+
+    deleteCategory_DeleteCategory(id: string, cancelToken?: CancelToken): Promise<DeleteCategoryResponse> {
+        let url_ = this.baseUrl + "/api/admin/categories/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "DELETE",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processDeleteCategory_DeleteCategory(_response);
+        });
+    }
+
+    protected processDeleteCategory_DeleteCategory(response: AxiosResponse): Promise<DeleteCategoryResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = DeleteCategoryResponse.fromJS(resultData200);
+            return Promise.resolve<DeleteCategoryResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = response.data;
+            let result409: any = null;
+            let resultData409  = _responseText;
+            result409 = ProblemDetails.fromJS(resultData409);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result409);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<DeleteCategoryResponse>(null as any);
+    }
+
+    createCategory_GetCategory(id: string, cancelToken?: CancelToken): Promise<CreateCategoryResponse> {
+        let url_ = this.baseUrl + "/api/admin/categories/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCreateCategory_GetCategory(_response);
+        });
+    }
+
+    protected processCreateCategory_GetCategory(response: AxiosResponse): Promise<CreateCategoryResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = CreateCategoryResponse.fromJS(resultData200);
+            return Promise.resolve<CreateCategoryResponse>(result200);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CreateCategoryResponse>(null as any);
+    }
+
+    getCategories_GetCategories(page: number | undefined, pageSize: number | undefined, searchTerm: string | null | undefined, cancelToken?: CancelToken): Promise<GetCategoriesResponse> {
+        let url_ = this.baseUrl + "/api/admin/categories?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchTerm !== undefined && searchTerm !== null)
+            url_ += "searchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetCategories_GetCategories(_response);
+        });
+    }
+
+    protected processGetCategories_GetCategories(response: AxiosResponse): Promise<GetCategoriesResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetCategoriesResponse.fromJS(resultData200);
+            return Promise.resolve<GetCategoriesResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetCategoriesResponse>(null as any);
+    }
+
+    createCategory_CreateCategory(command: CreateCategoryCommand, cancelToken?: CancelToken): Promise<CreateCategoryResponse> {
+        let url_ = this.baseUrl + "/api/admin/categories";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCreateCategory_CreateCategory(_response);
+        });
+    }
+
+    protected processCreateCategory_CreateCategory(response: AxiosResponse): Promise<CreateCategoryResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 201) {
+            const _responseText = response.data;
+            let result201: any = null;
+            let resultData201  = _responseText;
+            result201 = CreateCategoryResponse.fromJS(resultData201);
+            return Promise.resolve<CreateCategoryResponse>(result201);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = response.data;
+            let result409: any = null;
+            let resultData409  = _responseText;
+            result409 = ProblemDetails.fromJS(resultData409);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result409);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CreateCategoryResponse>(null as any);
+    }
+
     verifyEmail_VerifyEmail(command: VerifyEmailCommand, cancelToken?: CancelToken): Promise<void> {
         let url_ = this.baseUrl + "/api/auth/verify-email";
         url_ = url_.replace(/[?&]$/, "");
@@ -7413,6 +10266,389 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    regenerateBackupCodes_RegenerateBackupCodes(command: RegenerateBackupCodesCommand, cancelToken?: CancelToken): Promise<RegenerateBackupCodesResponse> {
+        let url_ = this.baseUrl + "/api/auth/2fa/regenerate-backup-codes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRegenerateBackupCodes_RegenerateBackupCodes(_response);
+        });
+    }
+
+    protected processRegenerateBackupCodes_RegenerateBackupCodes(response: AxiosResponse): Promise<RegenerateBackupCodesResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = RegenerateBackupCodesResponse.fromJS(resultData200);
+            return Promise.resolve<RegenerateBackupCodesResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<RegenerateBackupCodesResponse>(null as any);
+    }
+
+    initializeTwoFactorAuth_Initialize(command: InitializeTwoFactorAuthCommand, cancelToken?: CancelToken): Promise<InitializeTwoFactorAuthResponse> {
+        let url_ = this.baseUrl + "/api/auth/2fa/initialize";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processInitializeTwoFactorAuth_Initialize(_response);
+        });
+    }
+
+    protected processInitializeTwoFactorAuth_Initialize(response: AxiosResponse): Promise<InitializeTwoFactorAuthResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = InitializeTwoFactorAuthResponse.fromJS(resultData200);
+            return Promise.resolve<InitializeTwoFactorAuthResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<InitializeTwoFactorAuthResponse>(null as any);
+    }
+
+    initializeTwoFactorAuth_DebugClaims( cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/auth/2fa/debug-claims";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processInitializeTwoFactorAuth_DebugClaims(_response);
+        });
+    }
+
+    protected processInitializeTwoFactorAuth_DebugClaims(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getTwoFactorAuthStatus_GetStatus( cancelToken?: CancelToken): Promise<GetTwoFactorAuthStatusResponse> {
+        let url_ = this.baseUrl + "/api/auth/2fa/status";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetTwoFactorAuthStatus_GetStatus(_response);
+        });
+    }
+
+    protected processGetTwoFactorAuthStatus_GetStatus(response: AxiosResponse): Promise<GetTwoFactorAuthStatusResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetTwoFactorAuthStatusResponse.fromJS(resultData200);
+            return Promise.resolve<GetTwoFactorAuthStatusResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetTwoFactorAuthStatusResponse>(null as any);
+    }
+
+    enableTwoFactorAuth_Enable(command: EnableTwoFactorAuthCommand, cancelToken?: CancelToken): Promise<EnableTwoFactorAuthResponse> {
+        let url_ = this.baseUrl + "/api/auth/2fa/enable";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processEnableTwoFactorAuth_Enable(_response);
+        });
+    }
+
+    protected processEnableTwoFactorAuth_Enable(response: AxiosResponse): Promise<EnableTwoFactorAuthResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = EnableTwoFactorAuthResponse.fromJS(resultData200);
+            return Promise.resolve<EnableTwoFactorAuthResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<EnableTwoFactorAuthResponse>(null as any);
+    }
+
+    disableTwoFactorAuth_Disable(command: DisableTwoFactorAuthCommand, cancelToken?: CancelToken): Promise<DisableTwoFactorAuthResponse> {
+        let url_ = this.baseUrl + "/api/auth/2fa/disable";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processDisableTwoFactorAuth_Disable(_response);
+        });
+    }
+
+    protected processDisableTwoFactorAuth_Disable(response: AxiosResponse): Promise<DisableTwoFactorAuthResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = DisableTwoFactorAuthResponse.fromJS(resultData200);
+            return Promise.resolve<DisableTwoFactorAuthResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<DisableTwoFactorAuthResponse>(null as any);
     }
 
     resetPassword_ResetPassword(command: ResetPasswordCommand, cancelToken?: CancelToken): Promise<void> {
@@ -7857,6 +11093,61 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<LoginCommandResponse>(null as any);
     }
 
+    forgotPassword_ForgotPassword(command: ForgotPasswordCommand, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/auth/forgot-password";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processForgotPassword_ForgotPassword(_response);
+        });
+    }
+
+    protected processForgotPassword_ForgotPassword(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
     changePassword_ChangePassword(command: ChangePasswordCommand, cancelToken?: CancelToken): Promise<ChangePasswordResponse> {
         let url_ = this.baseUrl + "/api/ChangePassword/change";
         url_ = url_.replace(/[?&]$/, "");
@@ -7957,61 +11248,6 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<ChangePasswordResponse>(null as any);
     }
 
-    forgotPassword_ForgotPassword(command: ForgotPasswordCommand, cancelToken?: CancelToken): Promise<void> {
-        let url_ = this.baseUrl + "/api/auth/forgot-password";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(command);
-
-        let options_: AxiosRequestConfig = {
-            data: content_,
-            method: "POST",
-            url: url_,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processForgotPassword_ForgotPassword(_response);
-        });
-    }
-
-    protected processForgotPassword_ForgotPassword(response: AxiosResponse): Promise<void> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            return Promise.resolve<void>(null as any);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
     getModerationAuditLogs_GetAuditLogs(page: number | undefined, pageSize: number | undefined, action: string | null | undefined, userId: string | null | undefined, modelId: string | null | undefined, cancelToken?: CancelToken): Promise<ModerationAuditResponse> {
         let url_ = this.baseUrl + "/api/admin/moderation/audit-logs?";
         if (page === null)
@@ -8081,8 +11317,86 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<ModerationAuditResponse>(null as any);
     }
 
-    roleManagement_GetAllRoles( cancelToken?: CancelToken): Promise<RoleDto[]> {
-        let url_ = this.baseUrl + "/api/admin/roles";
+    getAdminModelStatistics_GetAdminModelStatistics( cancelToken?: CancelToken): Promise<GetAdminModelStatisticsResponse> {
+        let url_ = this.baseUrl + "/api/admin/models/statistics";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetAdminModelStatistics_GetAdminModelStatistics(_response);
+        });
+    }
+
+    protected processGetAdminModelStatistics_GetAdminModelStatistics(response: AxiosResponse): Promise<GetAdminModelStatisticsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetAdminModelStatisticsResponse.fromJS(resultData200);
+            return Promise.resolve<GetAdminModelStatisticsResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetAdminModelStatisticsResponse>(null as any);
+    }
+
+    roleManagement_GetAllRoles(page: number | undefined, pageSize: number | undefined, searchTerm: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<PaginatedRolesResponse> {
+        let url_ = this.baseUrl + "/api/admin/roles?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (searchTerm !== undefined && searchTerm !== null)
+            url_ += "searchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+        if (sortBy !== undefined && sortBy !== null)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -8105,7 +11419,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processRoleManagement_GetAllRoles(response: AxiosResponse): Promise<RoleDto[]> {
+    protected processRoleManagement_GetAllRoles(response: AxiosResponse): Promise<PaginatedRolesResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -8119,21 +11433,14 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(RoleDto.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return Promise.resolve<RoleDto[]>(result200);
+            result200 = PaginatedRolesResponse.fromJS(resultData200);
+            return Promise.resolve<PaginatedRolesResponse>(result200);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<RoleDto[]>(null as any);
+        return Promise.resolve<PaginatedRolesResponse>(null as any);
     }
 
     roleManagement_CreateRole(request: CreateRoleRequest, cancelToken?: CancelToken): Promise<RoleDto> {
@@ -8193,6 +11500,61 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<RoleDto>(null as any);
+    }
+
+    roleManagement_GetAllRolesUnpaginated( cancelToken?: CancelToken): Promise<RoleDto[]> {
+        let url_ = this.baseUrl + "/api/admin/roles/unpaginated";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRoleManagement_GetAllRolesUnpaginated(_response);
+        });
+    }
+
+    protected processRoleManagement_GetAllRolesUnpaginated(response: AxiosResponse): Promise<RoleDto[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(RoleDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return Promise.resolve<RoleDto[]>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<RoleDto[]>(null as any);
     }
 
     roleManagement_GetRole(id: string, cancelToken?: CancelToken): Promise<RoleDto> {
@@ -8446,6 +11808,126 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    roleManagement_RemovePermissionsFromRole(id: string, request: RemovePermissionsRequest, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/admin/roles/{id}/permissions";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "DELETE",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRoleManagement_RemovePermissionsFromRole(_response);
+        });
+    }
+
+    protected processRoleManagement_RemovePermissionsFromRole(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    roleManagement_GetAllPermissions( cancelToken?: CancelToken): Promise<PermissionDto[]> {
+        let url_ = this.baseUrl + "/api/admin/roles/permissions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRoleManagement_GetAllPermissions(_response);
+        });
+    }
+
+    protected processRoleManagement_GetAllPermissions(response: AxiosResponse): Promise<PermissionDto[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PermissionDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return Promise.resolve<PermissionDto[]>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<PermissionDto[]>(null as any);
     }
 
     userPermissionManagement_GetCurrentUserPermissions( cancelToken?: CancelToken): Promise<UserPermissionsDto> {
@@ -8858,54 +12340,6 @@ export class ApiClient implements IApiClient {
     }
 }
 
-export class GetUserByIdResponse implements IGetUserByIdResponse {
-    email?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    username?: string;
-
-    constructor(data?: IGetUserByIdResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.email = _data["email"];
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-            this.username = _data["username"];
-        }
-    }
-
-    static fromJS(data: any): GetUserByIdResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new GetUserByIdResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["email"] = this.email;
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        data["username"] = this.username;
-        return data;
-    }
-}
-
-export interface IGetUserByIdResponse {
-    email?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    username?: string;
-}
-
 export class ProblemDetails implements IProblemDetails {
     type?: string | undefined;
     title?: string | undefined;
@@ -8968,6 +12402,298 @@ export interface IProblemDetails {
     instance?: string | undefined;
 
     [key: string]: any;
+}
+
+export class UpdateUserSettingsRequest implements IUpdateUserSettingsRequest {
+    language?: string | undefined;
+    theme?: string | undefined;
+    emailNotifications?: boolean | undefined;
+    defaultPrinterId?: string | undefined;
+    measurementSystem?: string | undefined;
+    timeZone?: string | undefined;
+    autoRotateModels?: boolean | undefined;
+    dashboardViewType?: string | undefined;
+    cardSize?: string | undefined;
+    cardSpacing?: string | undefined;
+    gridColumns?: number | undefined;
+    customSettings?: { [key: string]: string; } | undefined;
+
+    constructor(data?: IUpdateUserSettingsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.language = _data["language"];
+            this.theme = _data["theme"];
+            this.emailNotifications = _data["emailNotifications"];
+            this.defaultPrinterId = _data["defaultPrinterId"];
+            this.measurementSystem = _data["measurementSystem"];
+            this.timeZone = _data["timeZone"];
+            this.autoRotateModels = _data["autoRotateModels"];
+            this.dashboardViewType = _data["dashboardViewType"];
+            this.cardSize = _data["cardSize"];
+            this.cardSpacing = _data["cardSpacing"];
+            this.gridColumns = _data["gridColumns"];
+            if (_data["customSettings"]) {
+                this.customSettings = {} as any;
+                for (let key in _data["customSettings"]) {
+                    if (_data["customSettings"].hasOwnProperty(key))
+                        (<any>this.customSettings)![key] = _data["customSettings"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): UpdateUserSettingsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateUserSettingsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["language"] = this.language;
+        data["theme"] = this.theme;
+        data["emailNotifications"] = this.emailNotifications;
+        data["defaultPrinterId"] = this.defaultPrinterId;
+        data["measurementSystem"] = this.measurementSystem;
+        data["timeZone"] = this.timeZone;
+        data["autoRotateModels"] = this.autoRotateModels;
+        data["dashboardViewType"] = this.dashboardViewType;
+        data["cardSize"] = this.cardSize;
+        data["cardSpacing"] = this.cardSpacing;
+        data["gridColumns"] = this.gridColumns;
+        if (this.customSettings) {
+            data["customSettings"] = {};
+            for (let key in this.customSettings) {
+                if (this.customSettings.hasOwnProperty(key))
+                    (<any>data["customSettings"])[key] = (<any>this.customSettings)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface IUpdateUserSettingsRequest {
+    language?: string | undefined;
+    theme?: string | undefined;
+    emailNotifications?: boolean | undefined;
+    defaultPrinterId?: string | undefined;
+    measurementSystem?: string | undefined;
+    timeZone?: string | undefined;
+    autoRotateModels?: boolean | undefined;
+    dashboardViewType?: string | undefined;
+    cardSize?: string | undefined;
+    cardSpacing?: string | undefined;
+    gridColumns?: number | undefined;
+    customSettings?: { [key: string]: string; } | undefined;
+}
+
+export class UpdateUserProfileRequest implements IUpdateUserProfileRequest {
+    bio?: string | undefined;
+    country?: string | undefined;
+    websiteUrl?: string | undefined;
+    twitterUrl?: string | undefined;
+    instagramUrl?: string | undefined;
+    youTubeUrl?: string | undefined;
+    isProfilePublic?: boolean;
+    showEmail?: boolean;
+    showLastLogin?: boolean;
+    showStatistics?: boolean;
+
+    constructor(data?: IUpdateUserProfileRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.bio = _data["bio"];
+            this.country = _data["country"];
+            this.websiteUrl = _data["websiteUrl"];
+            this.twitterUrl = _data["twitterUrl"];
+            this.instagramUrl = _data["instagramUrl"];
+            this.youTubeUrl = _data["youTubeUrl"];
+            this.isProfilePublic = _data["isProfilePublic"];
+            this.showEmail = _data["showEmail"];
+            this.showLastLogin = _data["showLastLogin"];
+            this.showStatistics = _data["showStatistics"];
+        }
+    }
+
+    static fromJS(data: any): UpdateUserProfileRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateUserProfileRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["bio"] = this.bio;
+        data["country"] = this.country;
+        data["websiteUrl"] = this.websiteUrl;
+        data["twitterUrl"] = this.twitterUrl;
+        data["instagramUrl"] = this.instagramUrl;
+        data["youTubeUrl"] = this.youTubeUrl;
+        data["isProfilePublic"] = this.isProfilePublic;
+        data["showEmail"] = this.showEmail;
+        data["showLastLogin"] = this.showLastLogin;
+        data["showStatistics"] = this.showStatistics;
+        return data;
+    }
+}
+
+export interface IUpdateUserProfileRequest {
+    bio?: string | undefined;
+    country?: string | undefined;
+    websiteUrl?: string | undefined;
+    twitterUrl?: string | undefined;
+    instagramUrl?: string | undefined;
+    youTubeUrl?: string | undefined;
+    isProfilePublic?: boolean;
+    showEmail?: boolean;
+    showLastLogin?: boolean;
+    showStatistics?: boolean;
+}
+
+export class RegenerateAvatarResponse implements IRegenerateAvatarResponse {
+    avatar?: string;
+    userId?: string;
+    salt?: string | undefined;
+
+    constructor(data?: IRegenerateAvatarResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.avatar = _data["avatar"];
+            this.userId = _data["userId"];
+            this.salt = _data["salt"];
+        }
+    }
+
+    static fromJS(data: any): RegenerateAvatarResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new RegenerateAvatarResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["avatar"] = this.avatar;
+        data["userId"] = this.userId;
+        data["salt"] = this.salt;
+        return data;
+    }
+}
+
+export interface IRegenerateAvatarResponse {
+    avatar?: string;
+    userId?: string;
+    salt?: string | undefined;
+}
+
+export class RegenerateAvatarRequest implements IRegenerateAvatarRequest {
+    salt?: string | undefined;
+
+    constructor(data?: IRegenerateAvatarRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.salt = _data["salt"];
+        }
+    }
+
+    static fromJS(data: any): RegenerateAvatarRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new RegenerateAvatarRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["salt"] = this.salt;
+        return data;
+    }
+}
+
+export interface IRegenerateAvatarRequest {
+    salt?: string | undefined;
+}
+
+export class GetUserByIdResponse implements IGetUserByIdResponse {
+    email?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    username?: string;
+
+    constructor(data?: IGetUserByIdResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.username = _data["username"];
+        }
+    }
+
+    static fromJS(data: any): GetUserByIdResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetUserByIdResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["username"] = this.username;
+        return data;
+    }
+}
+
+export interface IGetUserByIdResponse {
+    email?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    username?: string;
 }
 
 export class GetUserSettingsResponse implements IGetUserSettingsResponse {
@@ -9050,6 +12776,17 @@ export class UserSettings extends BaseEntity implements IUserSettings {
     measurementSystem?: string;
     timeZone?: string;
     autoRotateModels?: boolean;
+    dashboardViewType?: string;
+    cardSize?: string;
+    cardSpacing?: string;
+    gridColumns?: number;
+    showProfileInSearch?: boolean;
+    allowDirectMessages?: boolean;
+    showActivityStatus?: boolean;
+    notifyOnMentions?: boolean;
+    notifyOnFollows?: boolean;
+    notifyOnLikes?: boolean;
+    notifyOnComments?: boolean;
     customSettings?: { [key: string]: string; };
 
     constructor(data?: IUserSettings) {
@@ -9068,6 +12805,17 @@ export class UserSettings extends BaseEntity implements IUserSettings {
             this.measurementSystem = _data["measurementSystem"];
             this.timeZone = _data["timeZone"];
             this.autoRotateModels = _data["autoRotateModels"];
+            this.dashboardViewType = _data["dashboardViewType"];
+            this.cardSize = _data["cardSize"];
+            this.cardSpacing = _data["cardSpacing"];
+            this.gridColumns = _data["gridColumns"];
+            this.showProfileInSearch = _data["showProfileInSearch"];
+            this.allowDirectMessages = _data["allowDirectMessages"];
+            this.showActivityStatus = _data["showActivityStatus"];
+            this.notifyOnMentions = _data["notifyOnMentions"];
+            this.notifyOnFollows = _data["notifyOnFollows"];
+            this.notifyOnLikes = _data["notifyOnLikes"];
+            this.notifyOnComments = _data["notifyOnComments"];
             if (_data["customSettings"]) {
                 this.customSettings = {} as any;
                 for (let key in _data["customSettings"]) {
@@ -9096,6 +12844,17 @@ export class UserSettings extends BaseEntity implements IUserSettings {
         data["measurementSystem"] = this.measurementSystem;
         data["timeZone"] = this.timeZone;
         data["autoRotateModels"] = this.autoRotateModels;
+        data["dashboardViewType"] = this.dashboardViewType;
+        data["cardSize"] = this.cardSize;
+        data["cardSpacing"] = this.cardSpacing;
+        data["gridColumns"] = this.gridColumns;
+        data["showProfileInSearch"] = this.showProfileInSearch;
+        data["allowDirectMessages"] = this.allowDirectMessages;
+        data["showActivityStatus"] = this.showActivityStatus;
+        data["notifyOnMentions"] = this.notifyOnMentions;
+        data["notifyOnFollows"] = this.notifyOnFollows;
+        data["notifyOnLikes"] = this.notifyOnLikes;
+        data["notifyOnComments"] = this.notifyOnComments;
         if (this.customSettings) {
             data["customSettings"] = {};
             for (let key in this.customSettings) {
@@ -9118,6 +12877,17 @@ export interface IUserSettings extends IBaseEntity {
     measurementSystem?: string;
     timeZone?: string;
     autoRotateModels?: boolean;
+    dashboardViewType?: string;
+    cardSize?: string;
+    cardSpacing?: string;
+    gridColumns?: number;
+    showProfileInSearch?: boolean;
+    allowDirectMessages?: boolean;
+    showActivityStatus?: boolean;
+    notifyOnMentions?: boolean;
+    notifyOnFollows?: boolean;
+    notifyOnLikes?: boolean;
+    notifyOnComments?: boolean;
     customSettings?: { [key: string]: string; };
 }
 
@@ -9181,6 +12951,7 @@ export class User extends Auditable implements IUser {
     username?: string;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    bio?: string | undefined;
     salt?: string;
     passwordHash?: string;
     roleId?: string | undefined;
@@ -9194,9 +12965,21 @@ export class User extends Auditable implements IUser {
     banExpiresAt?: Date | undefined;
     hasCompletedFirstTimeSetup?: boolean;
     requiresPasswordChange?: boolean;
+    avatar?: string | undefined;
+    profilePictureUrl?: string | undefined;
+    lastLoginAt?: Date | undefined;
+    websiteUrl?: string | undefined;
+    twitterUrl?: string | undefined;
+    instagramUrl?: string | undefined;
+    youTubeUrl?: string | undefined;
+    isProfilePublic?: boolean;
+    showEmail?: boolean;
+    showLastLogin?: boolean;
+    showStatistics?: boolean;
     logins?: UserLogin[];
     settings?: UserSettings;
     userPermissions?: UserPermission[];
+    twoFactorAuth?: TwoFactorAuth | undefined;
 
     constructor(data?: IUser) {
         super(data);
@@ -9209,6 +12992,7 @@ export class User extends Auditable implements IUser {
             this.username = _data["username"];
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
+            this.bio = _data["bio"];
             this.salt = _data["salt"];
             this.passwordHash = _data["passwordHash"];
             this.roleId = _data["roleId"];
@@ -9222,6 +13006,17 @@ export class User extends Auditable implements IUser {
             this.banExpiresAt = _data["banExpiresAt"] ? new Date(_data["banExpiresAt"].toString()) : <any>undefined;
             this.hasCompletedFirstTimeSetup = _data["hasCompletedFirstTimeSetup"];
             this.requiresPasswordChange = _data["requiresPasswordChange"];
+            this.avatar = _data["avatar"];
+            this.profilePictureUrl = _data["profilePictureUrl"];
+            this.lastLoginAt = _data["lastLoginAt"] ? new Date(_data["lastLoginAt"].toString()) : <any>undefined;
+            this.websiteUrl = _data["websiteUrl"];
+            this.twitterUrl = _data["twitterUrl"];
+            this.instagramUrl = _data["instagramUrl"];
+            this.youTubeUrl = _data["youTubeUrl"];
+            this.isProfilePublic = _data["isProfilePublic"];
+            this.showEmail = _data["showEmail"];
+            this.showLastLogin = _data["showLastLogin"];
+            this.showStatistics = _data["showStatistics"];
             if (Array.isArray(_data["logins"])) {
                 this.logins = [] as any;
                 for (let item of _data["logins"])
@@ -9233,6 +13028,7 @@ export class User extends Auditable implements IUser {
                 for (let item of _data["userPermissions"])
                     this.userPermissions!.push(UserPermission.fromJS(item));
             }
+            this.twoFactorAuth = _data["twoFactorAuth"] ? TwoFactorAuth.fromJS(_data["twoFactorAuth"]) : <any>undefined;
         }
     }
 
@@ -9249,6 +13045,7 @@ export class User extends Auditable implements IUser {
         data["username"] = this.username;
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
+        data["bio"] = this.bio;
         data["salt"] = this.salt;
         data["passwordHash"] = this.passwordHash;
         data["roleId"] = this.roleId;
@@ -9262,6 +13059,17 @@ export class User extends Auditable implements IUser {
         data["banExpiresAt"] = this.banExpiresAt ? this.banExpiresAt.toISOString() : <any>undefined;
         data["hasCompletedFirstTimeSetup"] = this.hasCompletedFirstTimeSetup;
         data["requiresPasswordChange"] = this.requiresPasswordChange;
+        data["avatar"] = this.avatar;
+        data["profilePictureUrl"] = this.profilePictureUrl;
+        data["lastLoginAt"] = this.lastLoginAt ? this.lastLoginAt.toISOString() : <any>undefined;
+        data["websiteUrl"] = this.websiteUrl;
+        data["twitterUrl"] = this.twitterUrl;
+        data["instagramUrl"] = this.instagramUrl;
+        data["youTubeUrl"] = this.youTubeUrl;
+        data["isProfilePublic"] = this.isProfilePublic;
+        data["showEmail"] = this.showEmail;
+        data["showLastLogin"] = this.showLastLogin;
+        data["showStatistics"] = this.showStatistics;
         if (Array.isArray(this.logins)) {
             data["logins"] = [];
             for (let item of this.logins)
@@ -9273,6 +13081,7 @@ export class User extends Auditable implements IUser {
             for (let item of this.userPermissions)
                 data["userPermissions"].push(item ? item.toJSON() : <any>undefined);
         }
+        data["twoFactorAuth"] = this.twoFactorAuth ? this.twoFactorAuth.toJSON() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -9283,6 +13092,7 @@ export interface IUser extends IAuditable {
     username?: string;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    bio?: string | undefined;
     salt?: string;
     passwordHash?: string;
     roleId?: string | undefined;
@@ -9296,9 +13106,21 @@ export interface IUser extends IAuditable {
     banExpiresAt?: Date | undefined;
     hasCompletedFirstTimeSetup?: boolean;
     requiresPasswordChange?: boolean;
+    avatar?: string | undefined;
+    profilePictureUrl?: string | undefined;
+    lastLoginAt?: Date | undefined;
+    websiteUrl?: string | undefined;
+    twitterUrl?: string | undefined;
+    instagramUrl?: string | undefined;
+    youTubeUrl?: string | undefined;
+    isProfilePublic?: boolean;
+    showEmail?: boolean;
+    showLastLogin?: boolean;
+    showStatistics?: boolean;
     logins?: UserLogin[];
     settings?: UserSettings;
     userPermissions?: UserPermission[];
+    twoFactorAuth?: TwoFactorAuth | undefined;
 }
 
 export class Role extends BaseEntity implements IRole {
@@ -9309,6 +13131,7 @@ export class Role extends BaseEntity implements IRole {
     isDefault?: boolean;
     canBeDeleted?: boolean;
     isActive?: boolean;
+    color?: string;
     parentRoleId?: string | undefined;
     parentRole?: Role | undefined;
     childRoles?: Role[];
@@ -9329,6 +13152,7 @@ export class Role extends BaseEntity implements IRole {
             this.isDefault = _data["isDefault"];
             this.canBeDeleted = _data["canBeDeleted"];
             this.isActive = _data["isActive"];
+            this.color = _data["color"];
             this.parentRoleId = _data["parentRoleId"];
             this.parentRole = _data["parentRole"] ? Role.fromJS(_data["parentRole"]) : <any>undefined;
             if (Array.isArray(_data["childRoles"])) {
@@ -9365,6 +13189,7 @@ export class Role extends BaseEntity implements IRole {
         data["isDefault"] = this.isDefault;
         data["canBeDeleted"] = this.canBeDeleted;
         data["isActive"] = this.isActive;
+        data["color"] = this.color;
         data["parentRoleId"] = this.parentRoleId;
         data["parentRole"] = this.parentRole ? this.parentRole.toJSON() : <any>undefined;
         if (Array.isArray(this.childRoles)) {
@@ -9395,6 +13220,7 @@ export interface IRole extends IBaseEntity {
     isDefault?: boolean;
     canBeDeleted?: boolean;
     isActive?: boolean;
+    color?: string;
     parentRoleId?: string | undefined;
     parentRole?: Role | undefined;
     childRoles?: Role[];
@@ -9607,8 +13433,8 @@ export class UserLogin extends BaseEntity implements IUserLogin {
     ipAddress?: string | undefined;
     userAgent?: string;
     createdAt?: Date;
-    userId?: string;
-    user?: User;
+    userId?: string | undefined;
+    user?: User | undefined;
 
     constructor(data?: IUserLogin) {
         super(data);
@@ -9654,8 +13480,1248 @@ export interface IUserLogin extends IBaseEntity {
     ipAddress?: string | undefined;
     userAgent?: string;
     createdAt?: Date;
+    userId?: string | undefined;
+    user?: User | undefined;
+}
+
+export class TwoFactorAuth extends Auditable implements ITwoFactorAuth {
     userId?: string;
     user?: User;
+    secretKey?: string;
+    isEnabled?: boolean;
+    enabledAt?: Date | undefined;
+    lastUsedAt?: Date | undefined;
+    recoveryEmail?: string | undefined;
+    backupCodes?: BackupCode[];
+    version?: number;
+
+    constructor(data?: ITwoFactorAuth) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.userId = _data["userId"];
+            this.user = _data["user"] ? User.fromJS(_data["user"]) : <any>undefined;
+            this.secretKey = _data["secretKey"];
+            this.isEnabled = _data["isEnabled"];
+            this.enabledAt = _data["enabledAt"] ? new Date(_data["enabledAt"].toString()) : <any>undefined;
+            this.lastUsedAt = _data["lastUsedAt"] ? new Date(_data["lastUsedAt"].toString()) : <any>undefined;
+            this.recoveryEmail = _data["recoveryEmail"];
+            if (Array.isArray(_data["backupCodes"])) {
+                this.backupCodes = [] as any;
+                for (let item of _data["backupCodes"])
+                    this.backupCodes!.push(BackupCode.fromJS(item));
+            }
+            this.version = _data["version"];
+        }
+    }
+
+    static override fromJS(data: any): TwoFactorAuth {
+        data = typeof data === 'object' ? data : {};
+        let result = new TwoFactorAuth();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["user"] = this.user ? this.user.toJSON() : <any>undefined;
+        data["secretKey"] = this.secretKey;
+        data["isEnabled"] = this.isEnabled;
+        data["enabledAt"] = this.enabledAt ? this.enabledAt.toISOString() : <any>undefined;
+        data["lastUsedAt"] = this.lastUsedAt ? this.lastUsedAt.toISOString() : <any>undefined;
+        data["recoveryEmail"] = this.recoveryEmail;
+        if (Array.isArray(this.backupCodes)) {
+            data["backupCodes"] = [];
+            for (let item of this.backupCodes)
+                data["backupCodes"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["version"] = this.version;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ITwoFactorAuth extends IAuditable {
+    userId?: string;
+    user?: User;
+    secretKey?: string;
+    isEnabled?: boolean;
+    enabledAt?: Date | undefined;
+    lastUsedAt?: Date | undefined;
+    recoveryEmail?: string | undefined;
+    backupCodes?: BackupCode[];
+    version?: number;
+}
+
+export class BackupCode extends Auditable implements IBackupCode {
+    twoFactorAuthId?: string;
+    twoFactorAuth?: TwoFactorAuth;
+    code?: string;
+    isUsed?: boolean;
+    usedAt?: Date | undefined;
+    version?: number;
+
+    constructor(data?: IBackupCode) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.twoFactorAuthId = _data["twoFactorAuthId"];
+            this.twoFactorAuth = _data["twoFactorAuth"] ? TwoFactorAuth.fromJS(_data["twoFactorAuth"]) : <any>undefined;
+            this.code = _data["code"];
+            this.isUsed = _data["isUsed"];
+            this.usedAt = _data["usedAt"] ? new Date(_data["usedAt"].toString()) : <any>undefined;
+            this.version = _data["version"];
+        }
+    }
+
+    static override fromJS(data: any): BackupCode {
+        data = typeof data === 'object' ? data : {};
+        let result = new BackupCode();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["twoFactorAuthId"] = this.twoFactorAuthId;
+        data["twoFactorAuth"] = this.twoFactorAuth ? this.twoFactorAuth.toJSON() : <any>undefined;
+        data["code"] = this.code;
+        data["isUsed"] = this.isUsed;
+        data["usedAt"] = this.usedAt ? this.usedAt.toISOString() : <any>undefined;
+        data["version"] = this.version;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IBackupCode extends IAuditable {
+    twoFactorAuthId?: string;
+    twoFactorAuth?: TwoFactorAuth;
+    code?: string;
+    isUsed?: boolean;
+    usedAt?: Date | undefined;
+    version?: number;
+}
+
+export class GetUsersResponse implements IGetUsersResponse {
+    users?: UserDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IGetUsersResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["users"])) {
+                this.users = [] as any;
+                for (let item of _data["users"])
+                    this.users!.push(UserDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): GetUsersResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetUsersResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.users)) {
+            data["users"] = [];
+            for (let item of this.users)
+                data["users"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IGetUsersResponse {
+    users?: UserDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class UserDto implements IUserDto {
+    id?: string;
+    username?: string;
+    email?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    country?: string | undefined;
+    roleName?: string;
+    roleId?: string | undefined;
+    isBanned?: boolean;
+    bannedAt?: Date | undefined;
+    banReason?: string | undefined;
+    banExpiresAt?: Date | undefined;
+    hasCompletedFirstTimeSetup?: boolean;
+    requiresPasswordChange?: boolean;
+    avatar?: string | undefined;
+    lastLoginAt?: Date | undefined;
+    createdAt?: Date;
+    updatedAt?: Date;
+
+    constructor(data?: IUserDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.username = _data["username"];
+            this.email = _data["email"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.country = _data["country"];
+            this.roleName = _data["roleName"];
+            this.roleId = _data["roleId"];
+            this.isBanned = _data["isBanned"];
+            this.bannedAt = _data["bannedAt"] ? new Date(_data["bannedAt"].toString()) : <any>undefined;
+            this.banReason = _data["banReason"];
+            this.banExpiresAt = _data["banExpiresAt"] ? new Date(_data["banExpiresAt"].toString()) : <any>undefined;
+            this.hasCompletedFirstTimeSetup = _data["hasCompletedFirstTimeSetup"];
+            this.requiresPasswordChange = _data["requiresPasswordChange"];
+            this.avatar = _data["avatar"];
+            this.lastLoginAt = _data["lastLoginAt"] ? new Date(_data["lastLoginAt"].toString()) : <any>undefined;
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UserDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["username"] = this.username;
+        data["email"] = this.email;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["country"] = this.country;
+        data["roleName"] = this.roleName;
+        data["roleId"] = this.roleId;
+        data["isBanned"] = this.isBanned;
+        data["bannedAt"] = this.bannedAt ? this.bannedAt.toISOString() : <any>undefined;
+        data["banReason"] = this.banReason;
+        data["banExpiresAt"] = this.banExpiresAt ? this.banExpiresAt.toISOString() : <any>undefined;
+        data["hasCompletedFirstTimeSetup"] = this.hasCompletedFirstTimeSetup;
+        data["requiresPasswordChange"] = this.requiresPasswordChange;
+        data["avatar"] = this.avatar;
+        data["lastLoginAt"] = this.lastLoginAt ? this.lastLoginAt.toISOString() : <any>undefined;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IUserDto {
+    id?: string;
+    username?: string;
+    email?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    country?: string | undefined;
+    roleName?: string;
+    roleId?: string | undefined;
+    isBanned?: boolean;
+    bannedAt?: Date | undefined;
+    banReason?: string | undefined;
+    banExpiresAt?: Date | undefined;
+    hasCompletedFirstTimeSetup?: boolean;
+    requiresPasswordChange?: boolean;
+    avatar?: string | undefined;
+    lastLoginAt?: Date | undefined;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export class PrivateProfileResponse implements IPrivateProfileResponse {
+    id?: string;
+    username?: string;
+    isProfilePublic?: boolean;
+    message?: string;
+
+    constructor(data?: IPrivateProfileResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.username = _data["username"];
+            this.isProfilePublic = _data["isProfilePublic"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): PrivateProfileResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new PrivateProfileResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["username"] = this.username;
+        data["isProfilePublic"] = this.isProfilePublic;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IPrivateProfileResponse {
+    id?: string;
+    username?: string;
+    isProfilePublic?: boolean;
+    message?: string;
+}
+
+export class GetUserPrintersResponse implements IGetUserPrintersResponse {
+    printers?: UserPrinterDto[];
+    filaments?: UserFilamentDto[];
+    totalPrinterCount?: number;
+    totalFilamentCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IGetUserPrintersResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["printers"])) {
+                this.printers = [] as any;
+                for (let item of _data["printers"])
+                    this.printers!.push(UserPrinterDto.fromJS(item));
+            }
+            if (Array.isArray(_data["filaments"])) {
+                this.filaments = [] as any;
+                for (let item of _data["filaments"])
+                    this.filaments!.push(UserFilamentDto.fromJS(item));
+            }
+            this.totalPrinterCount = _data["totalPrinterCount"];
+            this.totalFilamentCount = _data["totalFilamentCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): GetUserPrintersResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetUserPrintersResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.printers)) {
+            data["printers"] = [];
+            for (let item of this.printers)
+                data["printers"].push(item ? item.toJSON() : <any>undefined);
+        }
+        if (Array.isArray(this.filaments)) {
+            data["filaments"] = [];
+            for (let item of this.filaments)
+                data["filaments"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalPrinterCount"] = this.totalPrinterCount;
+        data["totalFilamentCount"] = this.totalFilamentCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IGetUserPrintersResponse {
+    printers?: UserPrinterDto[];
+    filaments?: UserFilamentDto[];
+    totalPrinterCount?: number;
+    totalFilamentCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class UserPrinterDto implements IUserPrinterDto {
+    id?: string;
+    name?: string;
+    manufacturer?: string;
+    model?: string;
+    type?: string;
+    description?: string | undefined;
+    createdAt?: Date;
+    updatedAt?: Date;
+    isDefault?: boolean;
+    isActive?: boolean;
+
+    constructor(data?: IUserPrinterDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.manufacturer = _data["manufacturer"];
+            this.model = _data["model"];
+            this.type = _data["type"];
+            this.description = _data["description"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.isDefault = _data["isDefault"];
+            this.isActive = _data["isActive"];
+        }
+    }
+
+    static fromJS(data: any): UserPrinterDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserPrinterDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["manufacturer"] = this.manufacturer;
+        data["model"] = this.model;
+        data["type"] = this.type;
+        data["description"] = this.description;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["isDefault"] = this.isDefault;
+        data["isActive"] = this.isActive;
+        return data;
+    }
+}
+
+export interface IUserPrinterDto {
+    id?: string;
+    name?: string;
+    manufacturer?: string;
+    model?: string;
+    type?: string;
+    description?: string | undefined;
+    createdAt?: Date;
+    updatedAt?: Date;
+    isDefault?: boolean;
+    isActive?: boolean;
+}
+
+export class UserFilamentDto implements IUserFilamentDto {
+    id?: string;
+    name?: string;
+    manufacturer?: string;
+    type?: string;
+    color?: string;
+    diameter?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    isActive?: boolean;
+
+    constructor(data?: IUserFilamentDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.manufacturer = _data["manufacturer"];
+            this.type = _data["type"];
+            this.color = _data["color"];
+            this.diameter = _data["diameter"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.isActive = _data["isActive"];
+        }
+    }
+
+    static fromJS(data: any): UserFilamentDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserFilamentDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["manufacturer"] = this.manufacturer;
+        data["type"] = this.type;
+        data["color"] = this.color;
+        data["diameter"] = this.diameter;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["isActive"] = this.isActive;
+        return data;
+    }
+}
+
+export interface IUserFilamentDto {
+    id?: string;
+    name?: string;
+    manufacturer?: string;
+    type?: string;
+    color?: string;
+    diameter?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    isActive?: boolean;
+}
+
+export class GetUserModelsResponse implements IGetUserModelsResponse {
+    models?: UserModelDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IGetUserModelsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["models"])) {
+                this.models = [] as any;
+                for (let item of _data["models"])
+                    this.models!.push(UserModelDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): GetUserModelsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetUserModelsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.models)) {
+            data["models"] = [];
+            for (let item of this.models)
+                data["models"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IGetUserModelsResponse {
+    models?: UserModelDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class UserModelDto implements IUserModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    downloads?: number;
+    likes?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+    license?: string | undefined;
+    aiGenerated?: boolean;
+    wip?: boolean;
+    nsfw?: boolean;
+    isRemix?: boolean;
+    privacy?: PrivacySettings;
+
+    constructor(data?: IUserModelDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
+            this.downloads = _data["downloads"];
+            this.likes = _data["likes"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.license = _data["license"];
+            this.aiGenerated = _data["aiGenerated"];
+            this.wip = _data["wip"];
+            this.nsfw = _data["nsfw"];
+            this.isRemix = _data["isRemix"];
+            this.privacy = _data["privacy"];
+        }
+    }
+
+    static fromJS(data: any): UserModelDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserModelDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["thumbnailUrl"] = this.thumbnailUrl;
+        data["downloads"] = this.downloads;
+        data["likes"] = this.likes;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["license"] = this.license;
+        data["aiGenerated"] = this.aiGenerated;
+        data["wip"] = this.wip;
+        data["nsfw"] = this.nsfw;
+        data["isRemix"] = this.isRemix;
+        data["privacy"] = this.privacy;
+        return data;
+    }
+}
+
+export interface IUserModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    downloads?: number;
+    likes?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+    license?: string | undefined;
+    aiGenerated?: boolean;
+    wip?: boolean;
+    nsfw?: boolean;
+    isRemix?: boolean;
+    privacy?: PrivacySettings;
+}
+
+export enum PrivacySettings {
+    Public = "Public",
+    Private = "Private",
+    Unlisted = "Unlisted",
+}
+
+export class GetUserLikedModelsResponse implements IGetUserLikedModelsResponse {
+    models?: UserLikedModelDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IGetUserLikedModelsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["models"])) {
+                this.models = [] as any;
+                for (let item of _data["models"])
+                    this.models!.push(UserLikedModelDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): GetUserLikedModelsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetUserLikedModelsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.models)) {
+            data["models"] = [];
+            for (let item of this.models)
+                data["models"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IGetUserLikedModelsResponse {
+    models?: UserLikedModelDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class UserLikedModelDto implements IUserLikedModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    downloads?: number;
+    likes?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+    likedAt?: Date;
+    license?: string | undefined;
+    aiGenerated?: boolean;
+    wip?: boolean;
+    nsfw?: boolean;
+    author?: UserDto2;
+
+    constructor(data?: IUserLikedModelDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
+            this.downloads = _data["downloads"];
+            this.likes = _data["likes"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.likedAt = _data["likedAt"] ? new Date(_data["likedAt"].toString()) : <any>undefined;
+            this.license = _data["license"];
+            this.aiGenerated = _data["aiGenerated"];
+            this.wip = _data["wip"];
+            this.nsfw = _data["nsfw"];
+            this.author = _data["author"] ? UserDto2.fromJS(_data["author"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UserLikedModelDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserLikedModelDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["thumbnailUrl"] = this.thumbnailUrl;
+        data["downloads"] = this.downloads;
+        data["likes"] = this.likes;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["likedAt"] = this.likedAt ? this.likedAt.toISOString() : <any>undefined;
+        data["license"] = this.license;
+        data["aiGenerated"] = this.aiGenerated;
+        data["wip"] = this.wip;
+        data["nsfw"] = this.nsfw;
+        data["author"] = this.author ? this.author.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IUserLikedModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    downloads?: number;
+    likes?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+    likedAt?: Date;
+    license?: string | undefined;
+    aiGenerated?: boolean;
+    wip?: boolean;
+    nsfw?: boolean;
+    author?: UserDto2;
+}
+
+export class UserDto2 implements IUserDto2 {
+    id?: string;
+    username?: string;
+    avatar?: string | undefined;
+
+    constructor(data?: IUserDto2) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.username = _data["username"];
+            this.avatar = _data["avatar"];
+        }
+    }
+
+    static fromJS(data: any): UserDto2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserDto2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["username"] = this.username;
+        data["avatar"] = this.avatar;
+        return data;
+    }
+}
+
+export interface IUserDto2 {
+    id?: string;
+    username?: string;
+    avatar?: string | undefined;
+}
+
+export class GetUserCommentsResponse implements IGetUserCommentsResponse {
+    comments?: UserCommentDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IGetUserCommentsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["comments"])) {
+                this.comments = [] as any;
+                for (let item of _data["comments"])
+                    this.comments!.push(UserCommentDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): GetUserCommentsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetUserCommentsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.comments)) {
+            data["comments"] = [];
+            for (let item of this.comments)
+                data["comments"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IGetUserCommentsResponse {
+    comments?: UserCommentDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class UserCommentDto implements IUserCommentDto {
+    id?: string;
+    content?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    isEdited?: boolean;
+    isDeleted?: boolean;
+    model?: ModelDto;
+    user?: UserDto3;
+
+    constructor(data?: IUserCommentDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.content = _data["content"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.isEdited = _data["isEdited"];
+            this.isDeleted = _data["isDeleted"];
+            this.model = _data["model"] ? ModelDto.fromJS(_data["model"]) : <any>undefined;
+            this.user = _data["user"] ? UserDto3.fromJS(_data["user"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UserCommentDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserCommentDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["content"] = this.content;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["isEdited"] = this.isEdited;
+        data["isDeleted"] = this.isDeleted;
+        data["model"] = this.model ? this.model.toJSON() : <any>undefined;
+        data["user"] = this.user ? this.user.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IUserCommentDto {
+    id?: string;
+    content?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    isEdited?: boolean;
+    isDeleted?: boolean;
+    model?: ModelDto;
+    user?: UserDto3;
+}
+
+export class ModelDto implements IModelDto {
+    id?: string;
+    name?: string;
+    thumbnailUrl?: string | undefined;
+
+    constructor(data?: IModelDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
+        }
+    }
+
+    static fromJS(data: any): ModelDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ModelDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["thumbnailUrl"] = this.thumbnailUrl;
+        return data;
+    }
+}
+
+export interface IModelDto {
+    id?: string;
+    name?: string;
+    thumbnailUrl?: string | undefined;
+}
+
+export class UserDto3 implements IUserDto3 {
+    id?: string;
+    username?: string;
+    avatar?: string | undefined;
+
+    constructor(data?: IUserDto3) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.username = _data["username"];
+            this.avatar = _data["avatar"];
+        }
+    }
+
+    static fromJS(data: any): UserDto3 {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserDto3();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["username"] = this.username;
+        data["avatar"] = this.avatar;
+        return data;
+    }
+}
+
+export interface IUserDto3 {
+    id?: string;
+    username?: string;
+    avatar?: string | undefined;
+}
+
+export class GetPublicUserCollectionsResponse implements IGetPublicUserCollectionsResponse {
+    collections?: PublicUserCollectionDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IGetPublicUserCollectionsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["collections"])) {
+                this.collections = [] as any;
+                for (let item of _data["collections"])
+                    this.collections!.push(PublicUserCollectionDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): GetPublicUserCollectionsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetPublicUserCollectionsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.collections)) {
+            data["collections"] = [];
+            for (let item of this.collections)
+                data["collections"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IGetPublicUserCollectionsResponse {
+    collections?: PublicUserCollectionDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class PublicUserCollectionDto implements IPublicUserCollectionDto {
+    id?: string;
+    name?: string;
+    description?: string | undefined;
+    avatar?: string | undefined;
+    visibility?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    modelCount?: number;
+    isPasswordProtected?: boolean;
+
+    constructor(data?: IPublicUserCollectionDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.avatar = _data["avatar"];
+            this.visibility = _data["visibility"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.modelCount = _data["modelCount"];
+            this.isPasswordProtected = _data["isPasswordProtected"];
+        }
+    }
+
+    static fromJS(data: any): PublicUserCollectionDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PublicUserCollectionDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["avatar"] = this.avatar;
+        data["visibility"] = this.visibility;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["modelCount"] = this.modelCount;
+        data["isPasswordProtected"] = this.isPasswordProtected;
+        return data;
+    }
+}
+
+export interface IPublicUserCollectionDto {
+    id?: string;
+    name?: string;
+    description?: string | undefined;
+    avatar?: string | undefined;
+    visibility?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    modelCount?: number;
+    isPasswordProtected?: boolean;
 }
 
 export class CreateUserCommandResponse implements ICreateUserCommandResponse {
@@ -9960,6 +15026,400 @@ export interface IBannedUserDto {
     banReason?: string | undefined;
     banExpiresAt?: Date | undefined;
     roleName?: string;
+}
+
+export class SetActiveThemeResponse implements ISetActiveThemeResponse {
+    success?: boolean;
+    message?: string;
+
+    constructor(data?: ISetActiveThemeResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): SetActiveThemeResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetActiveThemeResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface ISetActiveThemeResponse {
+    success?: boolean;
+    message?: string;
+}
+
+export class ThemeListResponse implements IThemeListResponse {
+    themes?: ThemeDto[];
+    activeTheme?: ThemeDto | undefined;
+
+    constructor(data?: IThemeListResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["themes"])) {
+                this.themes = [] as any;
+                for (let item of _data["themes"])
+                    this.themes!.push(ThemeDto.fromJS(item));
+            }
+            this.activeTheme = _data["activeTheme"] ? ThemeDto.fromJS(_data["activeTheme"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ThemeListResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ThemeListResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.themes)) {
+            data["themes"] = [];
+            for (let item of this.themes)
+                data["themes"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["activeTheme"] = this.activeTheme ? this.activeTheme.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IThemeListResponse {
+    themes?: ThemeDto[];
+    activeTheme?: ThemeDto | undefined;
+}
+
+export class ThemeDto implements IThemeDto {
+    id?: number;
+    name?: string;
+    description?: string | undefined;
+    isDefault?: boolean;
+    isActive?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+    colors?: ThemeColorsDto;
+
+    constructor(data?: IThemeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.isDefault = _data["isDefault"];
+            this.isActive = _data["isActive"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.colors = _data["colors"] ? ThemeColorsDto.fromJS(_data["colors"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ThemeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ThemeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["isDefault"] = this.isDefault;
+        data["isActive"] = this.isActive;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["colors"] = this.colors ? this.colors.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IThemeDto {
+    id?: number;
+    name?: string;
+    description?: string | undefined;
+    isDefault?: boolean;
+    isActive?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+    colors?: ThemeColorsDto;
+}
+
+export class ThemeColorsDto implements IThemeColorsDto {
+    primary?: string;
+    primaryLight?: string;
+    primaryDark?: string;
+    secondary?: string;
+    secondaryLight?: string;
+    secondaryDark?: string;
+    accent?: string;
+    accentLight?: string;
+    accentDark?: string;
+    backgroundPrimary?: string;
+    backgroundSecondary?: string;
+    backgroundTertiary?: string;
+
+    constructor(data?: IThemeColorsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.primary = _data["primary"];
+            this.primaryLight = _data["primaryLight"];
+            this.primaryDark = _data["primaryDark"];
+            this.secondary = _data["secondary"];
+            this.secondaryLight = _data["secondaryLight"];
+            this.secondaryDark = _data["secondaryDark"];
+            this.accent = _data["accent"];
+            this.accentLight = _data["accentLight"];
+            this.accentDark = _data["accentDark"];
+            this.backgroundPrimary = _data["backgroundPrimary"];
+            this.backgroundSecondary = _data["backgroundSecondary"];
+            this.backgroundTertiary = _data["backgroundTertiary"];
+        }
+    }
+
+    static fromJS(data: any): ThemeColorsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ThemeColorsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["primary"] = this.primary;
+        data["primaryLight"] = this.primaryLight;
+        data["primaryDark"] = this.primaryDark;
+        data["secondary"] = this.secondary;
+        data["secondaryLight"] = this.secondaryLight;
+        data["secondaryDark"] = this.secondaryDark;
+        data["accent"] = this.accent;
+        data["accentLight"] = this.accentLight;
+        data["accentDark"] = this.accentDark;
+        data["backgroundPrimary"] = this.backgroundPrimary;
+        data["backgroundSecondary"] = this.backgroundSecondary;
+        data["backgroundTertiary"] = this.backgroundTertiary;
+        return data;
+    }
+}
+
+export interface IThemeColorsDto {
+    primary?: string;
+    primaryLight?: string;
+    primaryDark?: string;
+    secondary?: string;
+    secondaryLight?: string;
+    secondaryDark?: string;
+    accent?: string;
+    accentLight?: string;
+    accentDark?: string;
+    backgroundPrimary?: string;
+    backgroundSecondary?: string;
+    backgroundTertiary?: string;
+}
+
+export class ThemeResponse implements IThemeResponse {
+    success?: boolean;
+    message?: string;
+    theme?: ThemeDto | undefined;
+
+    constructor(data?: IThemeResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.theme = _data["theme"] ? ThemeDto.fromJS(_data["theme"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ThemeResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ThemeResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["theme"] = this.theme ? this.theme.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IThemeResponse {
+    success?: boolean;
+    message?: string;
+    theme?: ThemeDto | undefined;
+}
+
+export class CreateThemeRequest implements ICreateThemeRequest {
+    name?: string;
+    description?: string | undefined;
+    isDefault?: boolean;
+    colors?: ThemeColorsDto;
+
+    constructor(data?: ICreateThemeRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.isDefault = _data["isDefault"];
+            this.colors = _data["colors"] ? ThemeColorsDto.fromJS(_data["colors"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreateThemeRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateThemeRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["isDefault"] = this.isDefault;
+        data["colors"] = this.colors ? this.colors.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface ICreateThemeRequest {
+    name?: string;
+    description?: string | undefined;
+    isDefault?: boolean;
+    colors?: ThemeColorsDto;
+}
+
+export class AuthenticationSettings implements IAuthenticationSettings {
+    loginMethod?: LoginMethod;
+    allowEmailLogin?: boolean;
+    allowUsernameLogin?: boolean;
+    requireEmailVerification?: boolean;
+    maxFailedLoginAttempts?: number;
+    lockoutDurationMinutes?: number;
+    requireStrongPasswords?: boolean;
+    passwordMinLength?: number;
+
+    constructor(data?: IAuthenticationSettings) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.loginMethod = _data["loginMethod"];
+            this.allowEmailLogin = _data["allowEmailLogin"];
+            this.allowUsernameLogin = _data["allowUsernameLogin"];
+            this.requireEmailVerification = _data["requireEmailVerification"];
+            this.maxFailedLoginAttempts = _data["maxFailedLoginAttempts"];
+            this.lockoutDurationMinutes = _data["lockoutDurationMinutes"];
+            this.requireStrongPasswords = _data["requireStrongPasswords"];
+            this.passwordMinLength = _data["passwordMinLength"];
+        }
+    }
+
+    static fromJS(data: any): AuthenticationSettings {
+        data = typeof data === 'object' ? data : {};
+        let result = new AuthenticationSettings();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["loginMethod"] = this.loginMethod;
+        data["allowEmailLogin"] = this.allowEmailLogin;
+        data["allowUsernameLogin"] = this.allowUsernameLogin;
+        data["requireEmailVerification"] = this.requireEmailVerification;
+        data["maxFailedLoginAttempts"] = this.maxFailedLoginAttempts;
+        data["lockoutDurationMinutes"] = this.lockoutDurationMinutes;
+        data["requireStrongPasswords"] = this.requireStrongPasswords;
+        data["passwordMinLength"] = this.passwordMinLength;
+        return data;
+    }
+}
+
+export interface IAuthenticationSettings {
+    loginMethod?: LoginMethod;
+    allowEmailLogin?: boolean;
+    allowUsernameLogin?: boolean;
+    requireEmailVerification?: boolean;
+    maxFailedLoginAttempts?: number;
+    lockoutDurationMinutes?: number;
+    requireStrongPasswords?: boolean;
+    passwordMinLength?: number;
+}
+
+export enum LoginMethod {
+    Email = "Email",
+    Username = "Username",
+    Both = "Both",
 }
 
 export class ThemeDefinition implements IThemeDefinition {
@@ -10475,6 +15935,143 @@ export abstract class IThemePlugin implements IIThemePlugin {
 export interface IIThemePlugin {
 }
 
+export class FontAwesomeSettings extends BaseEntity implements IFontAwesomeSettings {
+    isProEnabled?: boolean;
+    proLicenseKey?: string | undefined;
+    proKitUrl?: string | undefined;
+    useProIcons?: boolean;
+    fallbackToFree?: boolean;
+    lastLicenseCheck?: Date | undefined;
+    isLicenseValid?: boolean;
+    licenseErrorMessage?: string | undefined;
+
+    constructor(data?: IFontAwesomeSettings) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.isProEnabled = _data["isProEnabled"];
+            this.proLicenseKey = _data["proLicenseKey"];
+            this.proKitUrl = _data["proKitUrl"];
+            this.useProIcons = _data["useProIcons"];
+            this.fallbackToFree = _data["fallbackToFree"];
+            this.lastLicenseCheck = _data["lastLicenseCheck"] ? new Date(_data["lastLicenseCheck"].toString()) : <any>undefined;
+            this.isLicenseValid = _data["isLicenseValid"];
+            this.licenseErrorMessage = _data["licenseErrorMessage"];
+        }
+    }
+
+    static override fromJS(data: any): FontAwesomeSettings {
+        data = typeof data === 'object' ? data : {};
+        let result = new FontAwesomeSettings();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isProEnabled"] = this.isProEnabled;
+        data["proLicenseKey"] = this.proLicenseKey;
+        data["proKitUrl"] = this.proKitUrl;
+        data["useProIcons"] = this.useProIcons;
+        data["fallbackToFree"] = this.fallbackToFree;
+        data["lastLicenseCheck"] = this.lastLicenseCheck ? this.lastLicenseCheck.toISOString() : <any>undefined;
+        data["isLicenseValid"] = this.isLicenseValid;
+        data["licenseErrorMessage"] = this.licenseErrorMessage;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IFontAwesomeSettings extends IBaseEntity {
+    isProEnabled?: boolean;
+    proLicenseKey?: string | undefined;
+    proKitUrl?: string | undefined;
+    useProIcons?: boolean;
+    fallbackToFree?: boolean;
+    lastLicenseCheck?: Date | undefined;
+    isLicenseValid?: boolean;
+    licenseErrorMessage?: string | undefined;
+}
+
+export class TestLicenseResponse implements ITestLicenseResponse {
+    isValid?: boolean;
+    message?: string;
+
+    constructor(data?: ITestLicenseResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.isValid = _data["isValid"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): TestLicenseResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new TestLicenseResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isValid"] = this.isValid;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface ITestLicenseResponse {
+    isValid?: boolean;
+    message?: string;
+}
+
+export class TestLicenseRequest implements ITestLicenseRequest {
+    licenseKey?: string;
+
+    constructor(data?: ITestLicenseRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.licenseKey = _data["licenseKey"];
+        }
+    }
+
+    static fromJS(data: any): TestLicenseRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new TestLicenseRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["licenseKey"] = this.licenseKey;
+        return data;
+    }
+}
+
+export interface ITestLicenseRequest {
+    licenseKey?: string;
+}
+
 export class EmailSettingsResponse implements IEmailSettingsResponse {
     enabled?: boolean;
     smtpServer?: string;
@@ -10545,6 +16142,594 @@ export interface IEmailSettingsResponse {
     fromName?: string;
     requireEmailVerification?: boolean;
     isConfigured?: boolean;
+}
+
+export class GetFileSettingsResponse implements IGetFileSettingsResponse {
+    success?: boolean;
+    message?: string;
+    fileTypes?: FileTypeSettingsData[] | undefined;
+
+    constructor(data?: IGetFileSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            if (Array.isArray(_data["fileTypes"])) {
+                this.fileTypes = [] as any;
+                for (let item of _data["fileTypes"])
+                    this.fileTypes!.push(FileTypeSettingsData.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): GetFileSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetFileSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        if (Array.isArray(this.fileTypes)) {
+            data["fileTypes"] = [];
+            for (let item of this.fileTypes)
+                data["fileTypes"].push(item ? item.toJSON() : <any>undefined);
+        }
+        return data;
+    }
+}
+
+export interface IGetFileSettingsResponse {
+    success?: boolean;
+    message?: string;
+    fileTypes?: FileTypeSettingsData[] | undefined;
+}
+
+export class FileTypeSettingsData implements IFileTypeSettingsData {
+    id?: string;
+    fileExtension?: string;
+    enabled?: boolean;
+    maxFileSizeBytes?: number;
+    maxPerUpload?: number;
+    displayName?: string;
+    description?: string;
+    mimeType?: string;
+    requiresPreview?: boolean;
+    isCompressible?: boolean;
+    category?: string;
+    priority?: number;
+    isDefault?: boolean;
+
+    constructor(data?: IFileTypeSettingsData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.fileExtension = _data["fileExtension"];
+            this.enabled = _data["enabled"];
+            this.maxFileSizeBytes = _data["maxFileSizeBytes"];
+            this.maxPerUpload = _data["maxPerUpload"];
+            this.displayName = _data["displayName"];
+            this.description = _data["description"];
+            this.mimeType = _data["mimeType"];
+            this.requiresPreview = _data["requiresPreview"];
+            this.isCompressible = _data["isCompressible"];
+            this.category = _data["category"];
+            this.priority = _data["priority"];
+            this.isDefault = _data["isDefault"];
+        }
+    }
+
+    static fromJS(data: any): FileTypeSettingsData {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileTypeSettingsData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["fileExtension"] = this.fileExtension;
+        data["enabled"] = this.enabled;
+        data["maxFileSizeBytes"] = this.maxFileSizeBytes;
+        data["maxPerUpload"] = this.maxPerUpload;
+        data["displayName"] = this.displayName;
+        data["description"] = this.description;
+        data["mimeType"] = this.mimeType;
+        data["requiresPreview"] = this.requiresPreview;
+        data["isCompressible"] = this.isCompressible;
+        data["category"] = this.category;
+        data["priority"] = this.priority;
+        data["isDefault"] = this.isDefault;
+        return data;
+    }
+}
+
+export interface IFileTypeSettingsData {
+    id?: string;
+    fileExtension?: string;
+    enabled?: boolean;
+    maxFileSizeBytes?: number;
+    maxPerUpload?: number;
+    displayName?: string;
+    description?: string;
+    mimeType?: string;
+    requiresPreview?: boolean;
+    isCompressible?: boolean;
+    category?: string;
+    priority?: number;
+    isDefault?: boolean;
+}
+
+export class GetModelConfigurationSettingsResponse implements IGetModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+    settings?: ModelConfigurationSettingsData | undefined;
+
+    constructor(data?: IGetModelConfigurationSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.settings = _data["settings"] ? ModelConfigurationSettingsData.fromJS(_data["settings"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetModelConfigurationSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetModelConfigurationSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["settings"] = this.settings ? this.settings.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+    settings?: ModelConfigurationSettingsData | undefined;
+}
+
+export class ModelConfigurationSettingsData implements IModelConfigurationSettingsData {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting?: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+
+    constructor(data?: IModelConfigurationSettingsData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.allowAnonUploads = _data["allowAnonUploads"];
+            this.requireUploadModeration = _data["requireUploadModeration"];
+            this.defaultPrivacySetting = _data["defaultPrivacySetting"];
+            this.allowAnonDownloads = _data["allowAnonDownloads"];
+            this.enableModelVersioning = _data["enableModelVersioning"];
+            this.limitTotalModels = _data["limitTotalModels"];
+            this.allowNSFWContent = _data["allowNSFWContent"];
+            this.allowAIGeneratedContent = _data["allowAIGeneratedContent"];
+            this.requireModelDescription = _data["requireModelDescription"];
+            this.requireModelTags = _data["requireModelTags"];
+            this.minDescriptionLength = _data["minDescriptionLength"];
+            this.maxDescriptionLength = _data["maxDescriptionLength"];
+            this.maxTagsPerModel = _data["maxTagsPerModel"];
+            this.autoApproveVerifiedUsers = _data["autoApproveVerifiedUsers"];
+            this.requireThumbnail = _data["requireThumbnail"];
+            this.allowModelRemixing = _data["allowModelRemixing"];
+            this.requireRemixAttribution = _data["requireRemixAttribution"];
+            this.maxModelsPerUser = _data["maxModelsPerUser"];
+            this.enableModelComments = _data["enableModelComments"];
+            this.enableModelLikes = _data["enableModelLikes"];
+            this.enableModelDownloads = _data["enableModelDownloads"];
+            this.requireLicenseSelection = _data["requireLicenseSelection"];
+            this.allowCustomLicenses = _data["allowCustomLicenses"];
+            this.enableModelCollections = _data["enableModelCollections"];
+            this.requireCategorySelection = _data["requireCategorySelection"];
+            this.maxCategoriesPerModel = _data["maxCategoriesPerModel"];
+            this.enableModelSharing = _data["enableModelSharing"];
+            this.enableModelEmbedding = _data["enableModelEmbedding"];
+            this.requireModelPreview = _data["requireModelPreview"];
+            this.autoGenerateModelPreviews = _data["autoGenerateModelPreviews"];
+            this.enableModelAnalytics = _data["enableModelAnalytics"];
+            this.requireUserAgreement = _data["requireUserAgreement"];
+            this.userAgreementText = _data["userAgreementText"];
+            this.enableModelExport = _data["enableModelExport"];
+            this.enableModelImport = _data["enableModelImport"];
+            this.requireModelValidation = _data["requireModelValidation"];
+            this.enableModelBackup = _data["enableModelBackup"];
+            this.modelBackupRetentionDays = _data["modelBackupRetentionDays"];
+            this.enableModelArchiving = _data["enableModelArchiving"];
+            this.modelArchiveThresholdDays = _data["modelArchiveThresholdDays"];
+            this.requireModeratorApproval = _data["requireModeratorApproval"];
+            this.enableAutoModeration = _data["enableAutoModeration"];
+            this.requireContentRating = _data["requireContentRating"];
+            this.enableModelFlagging = _data["enableModelFlagging"];
+            this.requireFlagReason = _data["requireFlagReason"];
+            this.enableModelReporting = _data["enableModelReporting"];
+            this.requireReportDetails = _data["requireReportDetails"];
+            this.enableModelBlocking = _data["enableModelBlocking"];
+            this.requireBlockReason = _data["requireBlockReason"];
+            this.enableModelWhitelisting = _data["enableModelWhitelisting"];
+            this.enableModelBlacklisting = _data["enableModelBlacklisting"];
+            this.requireModelApproval = _data["requireModelApproval"];
+            this.enableModelRejection = _data["enableModelRejection"];
+            this.requireRejectionReason = _data["requireRejectionReason"];
+            this.enableModelAppeals = _data["enableModelAppeals"];
+            this.requireAppealDetails = _data["requireAppealDetails"];
+            this.enableModelLocking = _data["enableModelLocking"];
+            this.requireLockReason = _data["requireLockReason"];
+            this.enableModelUnlocking = _data["enableModelUnlocking"];
+            this.requireUnlockApproval = _data["requireUnlockApproval"];
+            this.enableModelDeletion = _data["enableModelDeletion"];
+            this.requireDeletionApproval = _data["requireDeletionApproval"];
+            this.requireDeletionReason = _data["requireDeletionReason"];
+            this.enableModelRestoration = _data["enableModelRestoration"];
+            this.requireRestorationApproval = _data["requireRestorationApproval"];
+        }
+    }
+
+    static fromJS(data: any): ModelConfigurationSettingsData {
+        data = typeof data === 'object' ? data : {};
+        let result = new ModelConfigurationSettingsData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["allowAnonUploads"] = this.allowAnonUploads;
+        data["requireUploadModeration"] = this.requireUploadModeration;
+        data["defaultPrivacySetting"] = this.defaultPrivacySetting;
+        data["allowAnonDownloads"] = this.allowAnonDownloads;
+        data["enableModelVersioning"] = this.enableModelVersioning;
+        data["limitTotalModels"] = this.limitTotalModels;
+        data["allowNSFWContent"] = this.allowNSFWContent;
+        data["allowAIGeneratedContent"] = this.allowAIGeneratedContent;
+        data["requireModelDescription"] = this.requireModelDescription;
+        data["requireModelTags"] = this.requireModelTags;
+        data["minDescriptionLength"] = this.minDescriptionLength;
+        data["maxDescriptionLength"] = this.maxDescriptionLength;
+        data["maxTagsPerModel"] = this.maxTagsPerModel;
+        data["autoApproveVerifiedUsers"] = this.autoApproveVerifiedUsers;
+        data["requireThumbnail"] = this.requireThumbnail;
+        data["allowModelRemixing"] = this.allowModelRemixing;
+        data["requireRemixAttribution"] = this.requireRemixAttribution;
+        data["maxModelsPerUser"] = this.maxModelsPerUser;
+        data["enableModelComments"] = this.enableModelComments;
+        data["enableModelLikes"] = this.enableModelLikes;
+        data["enableModelDownloads"] = this.enableModelDownloads;
+        data["requireLicenseSelection"] = this.requireLicenseSelection;
+        data["allowCustomLicenses"] = this.allowCustomLicenses;
+        data["enableModelCollections"] = this.enableModelCollections;
+        data["requireCategorySelection"] = this.requireCategorySelection;
+        data["maxCategoriesPerModel"] = this.maxCategoriesPerModel;
+        data["enableModelSharing"] = this.enableModelSharing;
+        data["enableModelEmbedding"] = this.enableModelEmbedding;
+        data["requireModelPreview"] = this.requireModelPreview;
+        data["autoGenerateModelPreviews"] = this.autoGenerateModelPreviews;
+        data["enableModelAnalytics"] = this.enableModelAnalytics;
+        data["requireUserAgreement"] = this.requireUserAgreement;
+        data["userAgreementText"] = this.userAgreementText;
+        data["enableModelExport"] = this.enableModelExport;
+        data["enableModelImport"] = this.enableModelImport;
+        data["requireModelValidation"] = this.requireModelValidation;
+        data["enableModelBackup"] = this.enableModelBackup;
+        data["modelBackupRetentionDays"] = this.modelBackupRetentionDays;
+        data["enableModelArchiving"] = this.enableModelArchiving;
+        data["modelArchiveThresholdDays"] = this.modelArchiveThresholdDays;
+        data["requireModeratorApproval"] = this.requireModeratorApproval;
+        data["enableAutoModeration"] = this.enableAutoModeration;
+        data["requireContentRating"] = this.requireContentRating;
+        data["enableModelFlagging"] = this.enableModelFlagging;
+        data["requireFlagReason"] = this.requireFlagReason;
+        data["enableModelReporting"] = this.enableModelReporting;
+        data["requireReportDetails"] = this.requireReportDetails;
+        data["enableModelBlocking"] = this.enableModelBlocking;
+        data["requireBlockReason"] = this.requireBlockReason;
+        data["enableModelWhitelisting"] = this.enableModelWhitelisting;
+        data["enableModelBlacklisting"] = this.enableModelBlacklisting;
+        data["requireModelApproval"] = this.requireModelApproval;
+        data["enableModelRejection"] = this.enableModelRejection;
+        data["requireRejectionReason"] = this.requireRejectionReason;
+        data["enableModelAppeals"] = this.enableModelAppeals;
+        data["requireAppealDetails"] = this.requireAppealDetails;
+        data["enableModelLocking"] = this.enableModelLocking;
+        data["requireLockReason"] = this.requireLockReason;
+        data["enableModelUnlocking"] = this.enableModelUnlocking;
+        data["requireUnlockApproval"] = this.requireUnlockApproval;
+        data["enableModelDeletion"] = this.enableModelDeletion;
+        data["requireDeletionApproval"] = this.requireDeletionApproval;
+        data["requireDeletionReason"] = this.requireDeletionReason;
+        data["enableModelRestoration"] = this.enableModelRestoration;
+        data["requireRestorationApproval"] = this.requireRestorationApproval;
+        return data;
+    }
+}
+
+export interface IModelConfigurationSettingsData {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting?: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+}
+
+export class GetSiteModelSettingsResponse implements IGetSiteModelSettingsResponse {
+    success?: boolean;
+    message?: string;
+    settings?: SiteModelSettingsData | undefined;
+
+    constructor(data?: IGetSiteModelSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.settings = _data["settings"] ? SiteModelSettingsData.fromJS(_data["settings"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetSiteModelSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetSiteModelSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["settings"] = this.settings ? this.settings.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetSiteModelSettingsResponse {
+    success?: boolean;
+    message?: string;
+    settings?: SiteModelSettingsData | undefined;
+}
+
+export class SiteModelSettingsData implements ISiteModelSettingsData {
+    maxFileSizeBytes?: number;
+    allowedFileTypes?: string;
+    maxFilesPerUpload?: number;
+    enableFileCompression?: boolean;
+    autoGeneratePreviews?: boolean;
+    defaultModelPrivacy?: string;
+    autoApproveModels?: boolean;
+    requireModeration?: boolean;
+    requireLoginForUpload?: boolean;
+    allowPublicBrowsing?: boolean;
+
+    constructor(data?: ISiteModelSettingsData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.maxFileSizeBytes = _data["maxFileSizeBytes"];
+            this.allowedFileTypes = _data["allowedFileTypes"];
+            this.maxFilesPerUpload = _data["maxFilesPerUpload"];
+            this.enableFileCompression = _data["enableFileCompression"];
+            this.autoGeneratePreviews = _data["autoGeneratePreviews"];
+            this.defaultModelPrivacy = _data["defaultModelPrivacy"];
+            this.autoApproveModels = _data["autoApproveModels"];
+            this.requireModeration = _data["requireModeration"];
+            this.requireLoginForUpload = _data["requireLoginForUpload"];
+            this.allowPublicBrowsing = _data["allowPublicBrowsing"];
+        }
+    }
+
+    static fromJS(data: any): SiteModelSettingsData {
+        data = typeof data === 'object' ? data : {};
+        let result = new SiteModelSettingsData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["maxFileSizeBytes"] = this.maxFileSizeBytes;
+        data["allowedFileTypes"] = this.allowedFileTypes;
+        data["maxFilesPerUpload"] = this.maxFilesPerUpload;
+        data["enableFileCompression"] = this.enableFileCompression;
+        data["autoGeneratePreviews"] = this.autoGeneratePreviews;
+        data["defaultModelPrivacy"] = this.defaultModelPrivacy;
+        data["autoApproveModels"] = this.autoApproveModels;
+        data["requireModeration"] = this.requireModeration;
+        data["requireLoginForUpload"] = this.requireLoginForUpload;
+        data["allowPublicBrowsing"] = this.allowPublicBrowsing;
+        return data;
+    }
+}
+
+export interface ISiteModelSettingsData {
+    maxFileSizeBytes?: number;
+    allowedFileTypes?: string;
+    maxFilesPerUpload?: number;
+    enableFileCompression?: boolean;
+    autoGeneratePreviews?: boolean;
+    defaultModelPrivacy?: string;
+    autoApproveModels?: boolean;
+    requireModeration?: boolean;
+    requireLoginForUpload?: boolean;
+    allowPublicBrowsing?: boolean;
 }
 
 export class CheckFirstTimeSetupResponse implements ICheckFirstTimeSetupResponse {
@@ -10797,12 +16982,6 @@ export interface IUpdateSiteSettingsCommand {
     instanceName?: string;
     instanceDescription?: string;
     adminContact?: string | undefined;
-}
-
-export enum PrivacySettings {
-    Public = "Public",
-    Private = "Private",
-    Unlisted = "Unlisted",
 }
 
 export class CompleteFirstTimeSetupResponse implements ICompleteFirstTimeSetupResponse {
@@ -11399,6 +17578,574 @@ export interface IUpdateEmailSettingsCommand {
     fromAddress: string;
     fromName: string;
     requireEmailVerification?: boolean;
+}
+
+export class UpdateFileSettingsResponse implements IUpdateFileSettingsResponse {
+    success?: boolean;
+    message?: string;
+
+    constructor(data?: IUpdateFileSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): UpdateFileSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateFileSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IUpdateFileSettingsResponse {
+    success?: boolean;
+    message?: string;
+}
+
+export class UpdateFileSettingsCommand implements IUpdateFileSettingsCommand {
+    id!: string;
+    fileExtension!: string;
+    enabled?: boolean;
+    maxFileSizeBytes?: number;
+    maxPerUpload?: number;
+    displayName?: string;
+    description?: string;
+    mimeType?: string;
+    requiresPreview?: boolean;
+    isCompressible?: boolean;
+    category?: string;
+    priority?: number;
+    isDefault?: boolean;
+
+    constructor(data?: IUpdateFileSettingsCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.fileExtension = _data["fileExtension"];
+            this.enabled = _data["enabled"];
+            this.maxFileSizeBytes = _data["maxFileSizeBytes"];
+            this.maxPerUpload = _data["maxPerUpload"];
+            this.displayName = _data["displayName"];
+            this.description = _data["description"];
+            this.mimeType = _data["mimeType"];
+            this.requiresPreview = _data["requiresPreview"];
+            this.isCompressible = _data["isCompressible"];
+            this.category = _data["category"];
+            this.priority = _data["priority"];
+            this.isDefault = _data["isDefault"];
+        }
+    }
+
+    static fromJS(data: any): UpdateFileSettingsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateFileSettingsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["fileExtension"] = this.fileExtension;
+        data["enabled"] = this.enabled;
+        data["maxFileSizeBytes"] = this.maxFileSizeBytes;
+        data["maxPerUpload"] = this.maxPerUpload;
+        data["displayName"] = this.displayName;
+        data["description"] = this.description;
+        data["mimeType"] = this.mimeType;
+        data["requiresPreview"] = this.requiresPreview;
+        data["isCompressible"] = this.isCompressible;
+        data["category"] = this.category;
+        data["priority"] = this.priority;
+        data["isDefault"] = this.isDefault;
+        return data;
+    }
+}
+
+export interface IUpdateFileSettingsCommand {
+    id: string;
+    fileExtension: string;
+    enabled?: boolean;
+    maxFileSizeBytes?: number;
+    maxPerUpload?: number;
+    displayName?: string;
+    description?: string;
+    mimeType?: string;
+    requiresPreview?: boolean;
+    isCompressible?: boolean;
+    category?: string;
+    priority?: number;
+    isDefault?: boolean;
+}
+
+export class UpdateModelConfigurationSettingsResponse implements IUpdateModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+
+    constructor(data?: IUpdateModelConfigurationSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): UpdateModelConfigurationSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateModelConfigurationSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IUpdateModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+}
+
+export class UpdateModelConfigurationSettingsCommand implements IUpdateModelConfigurationSettingsCommand {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting!: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+
+    constructor(data?: IUpdateModelConfigurationSettingsCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.allowAnonUploads = _data["allowAnonUploads"];
+            this.requireUploadModeration = _data["requireUploadModeration"];
+            this.defaultPrivacySetting = _data["defaultPrivacySetting"];
+            this.allowAnonDownloads = _data["allowAnonDownloads"];
+            this.enableModelVersioning = _data["enableModelVersioning"];
+            this.limitTotalModels = _data["limitTotalModels"];
+            this.allowNSFWContent = _data["allowNSFWContent"];
+            this.allowAIGeneratedContent = _data["allowAIGeneratedContent"];
+            this.requireModelDescription = _data["requireModelDescription"];
+            this.requireModelTags = _data["requireModelTags"];
+            this.minDescriptionLength = _data["minDescriptionLength"];
+            this.maxDescriptionLength = _data["maxDescriptionLength"];
+            this.maxTagsPerModel = _data["maxTagsPerModel"];
+            this.autoApproveVerifiedUsers = _data["autoApproveVerifiedUsers"];
+            this.requireThumbnail = _data["requireThumbnail"];
+            this.allowModelRemixing = _data["allowModelRemixing"];
+            this.requireRemixAttribution = _data["requireRemixAttribution"];
+            this.maxModelsPerUser = _data["maxModelsPerUser"];
+            this.enableModelComments = _data["enableModelComments"];
+            this.enableModelLikes = _data["enableModelLikes"];
+            this.enableModelDownloads = _data["enableModelDownloads"];
+            this.requireLicenseSelection = _data["requireLicenseSelection"];
+            this.allowCustomLicenses = _data["allowCustomLicenses"];
+            this.enableModelCollections = _data["enableModelCollections"];
+            this.requireCategorySelection = _data["requireCategorySelection"];
+            this.maxCategoriesPerModel = _data["maxCategoriesPerModel"];
+            this.enableModelSharing = _data["enableModelSharing"];
+            this.enableModelEmbedding = _data["enableModelEmbedding"];
+            this.requireModelPreview = _data["requireModelPreview"];
+            this.autoGenerateModelPreviews = _data["autoGenerateModelPreviews"];
+            this.enableModelAnalytics = _data["enableModelAnalytics"];
+            this.requireUserAgreement = _data["requireUserAgreement"];
+            this.userAgreementText = _data["userAgreementText"];
+            this.enableModelExport = _data["enableModelExport"];
+            this.enableModelImport = _data["enableModelImport"];
+            this.requireModelValidation = _data["requireModelValidation"];
+            this.enableModelBackup = _data["enableModelBackup"];
+            this.modelBackupRetentionDays = _data["modelBackupRetentionDays"];
+            this.enableModelArchiving = _data["enableModelArchiving"];
+            this.modelArchiveThresholdDays = _data["modelArchiveThresholdDays"];
+            this.requireModeratorApproval = _data["requireModeratorApproval"];
+            this.enableAutoModeration = _data["enableAutoModeration"];
+            this.requireContentRating = _data["requireContentRating"];
+            this.enableModelFlagging = _data["enableModelFlagging"];
+            this.requireFlagReason = _data["requireFlagReason"];
+            this.enableModelReporting = _data["enableModelReporting"];
+            this.requireReportDetails = _data["requireReportDetails"];
+            this.enableModelBlocking = _data["enableModelBlocking"];
+            this.requireBlockReason = _data["requireBlockReason"];
+            this.enableModelWhitelisting = _data["enableModelWhitelisting"];
+            this.enableModelBlacklisting = _data["enableModelBlacklisting"];
+            this.requireModelApproval = _data["requireModelApproval"];
+            this.enableModelRejection = _data["enableModelRejection"];
+            this.requireRejectionReason = _data["requireRejectionReason"];
+            this.enableModelAppeals = _data["enableModelAppeals"];
+            this.requireAppealDetails = _data["requireAppealDetails"];
+            this.enableModelLocking = _data["enableModelLocking"];
+            this.requireLockReason = _data["requireLockReason"];
+            this.enableModelUnlocking = _data["enableModelUnlocking"];
+            this.requireUnlockApproval = _data["requireUnlockApproval"];
+            this.enableModelDeletion = _data["enableModelDeletion"];
+            this.requireDeletionApproval = _data["requireDeletionApproval"];
+            this.requireDeletionReason = _data["requireDeletionReason"];
+            this.enableModelRestoration = _data["enableModelRestoration"];
+            this.requireRestorationApproval = _data["requireRestorationApproval"];
+        }
+    }
+
+    static fromJS(data: any): UpdateModelConfigurationSettingsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateModelConfigurationSettingsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["allowAnonUploads"] = this.allowAnonUploads;
+        data["requireUploadModeration"] = this.requireUploadModeration;
+        data["defaultPrivacySetting"] = this.defaultPrivacySetting;
+        data["allowAnonDownloads"] = this.allowAnonDownloads;
+        data["enableModelVersioning"] = this.enableModelVersioning;
+        data["limitTotalModels"] = this.limitTotalModels;
+        data["allowNSFWContent"] = this.allowNSFWContent;
+        data["allowAIGeneratedContent"] = this.allowAIGeneratedContent;
+        data["requireModelDescription"] = this.requireModelDescription;
+        data["requireModelTags"] = this.requireModelTags;
+        data["minDescriptionLength"] = this.minDescriptionLength;
+        data["maxDescriptionLength"] = this.maxDescriptionLength;
+        data["maxTagsPerModel"] = this.maxTagsPerModel;
+        data["autoApproveVerifiedUsers"] = this.autoApproveVerifiedUsers;
+        data["requireThumbnail"] = this.requireThumbnail;
+        data["allowModelRemixing"] = this.allowModelRemixing;
+        data["requireRemixAttribution"] = this.requireRemixAttribution;
+        data["maxModelsPerUser"] = this.maxModelsPerUser;
+        data["enableModelComments"] = this.enableModelComments;
+        data["enableModelLikes"] = this.enableModelLikes;
+        data["enableModelDownloads"] = this.enableModelDownloads;
+        data["requireLicenseSelection"] = this.requireLicenseSelection;
+        data["allowCustomLicenses"] = this.allowCustomLicenses;
+        data["enableModelCollections"] = this.enableModelCollections;
+        data["requireCategorySelection"] = this.requireCategorySelection;
+        data["maxCategoriesPerModel"] = this.maxCategoriesPerModel;
+        data["enableModelSharing"] = this.enableModelSharing;
+        data["enableModelEmbedding"] = this.enableModelEmbedding;
+        data["requireModelPreview"] = this.requireModelPreview;
+        data["autoGenerateModelPreviews"] = this.autoGenerateModelPreviews;
+        data["enableModelAnalytics"] = this.enableModelAnalytics;
+        data["requireUserAgreement"] = this.requireUserAgreement;
+        data["userAgreementText"] = this.userAgreementText;
+        data["enableModelExport"] = this.enableModelExport;
+        data["enableModelImport"] = this.enableModelImport;
+        data["requireModelValidation"] = this.requireModelValidation;
+        data["enableModelBackup"] = this.enableModelBackup;
+        data["modelBackupRetentionDays"] = this.modelBackupRetentionDays;
+        data["enableModelArchiving"] = this.enableModelArchiving;
+        data["modelArchiveThresholdDays"] = this.modelArchiveThresholdDays;
+        data["requireModeratorApproval"] = this.requireModeratorApproval;
+        data["enableAutoModeration"] = this.enableAutoModeration;
+        data["requireContentRating"] = this.requireContentRating;
+        data["enableModelFlagging"] = this.enableModelFlagging;
+        data["requireFlagReason"] = this.requireFlagReason;
+        data["enableModelReporting"] = this.enableModelReporting;
+        data["requireReportDetails"] = this.requireReportDetails;
+        data["enableModelBlocking"] = this.enableModelBlocking;
+        data["requireBlockReason"] = this.requireBlockReason;
+        data["enableModelWhitelisting"] = this.enableModelWhitelisting;
+        data["enableModelBlacklisting"] = this.enableModelBlacklisting;
+        data["requireModelApproval"] = this.requireModelApproval;
+        data["enableModelRejection"] = this.enableModelRejection;
+        data["requireRejectionReason"] = this.requireRejectionReason;
+        data["enableModelAppeals"] = this.enableModelAppeals;
+        data["requireAppealDetails"] = this.requireAppealDetails;
+        data["enableModelLocking"] = this.enableModelLocking;
+        data["requireLockReason"] = this.requireLockReason;
+        data["enableModelUnlocking"] = this.enableModelUnlocking;
+        data["requireUnlockApproval"] = this.requireUnlockApproval;
+        data["enableModelDeletion"] = this.enableModelDeletion;
+        data["requireDeletionApproval"] = this.requireDeletionApproval;
+        data["requireDeletionReason"] = this.requireDeletionReason;
+        data["enableModelRestoration"] = this.enableModelRestoration;
+        data["requireRestorationApproval"] = this.requireRestorationApproval;
+        return data;
+    }
+}
+
+export interface IUpdateModelConfigurationSettingsCommand {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+}
+
+export class UpdateSiteModelSettingsResponse implements IUpdateSiteModelSettingsResponse {
+    success?: boolean;
+    message?: string;
+
+    constructor(data?: IUpdateSiteModelSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): UpdateSiteModelSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateSiteModelSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IUpdateSiteModelSettingsResponse {
+    success?: boolean;
+    message?: string;
+}
+
+export class UpdateSiteModelSettingsCommand implements IUpdateSiteModelSettingsCommand {
+    maxFileSizeBytes?: number;
+    allowedFileTypes!: string;
+    maxFilesPerUpload?: number;
+    enableFileCompression?: boolean;
+    autoGeneratePreviews?: boolean;
+    defaultModelPrivacy!: string;
+    autoApproveModels?: boolean;
+    requireModeration?: boolean;
+    requireLoginForUpload?: boolean;
+    allowPublicBrowsing?: boolean;
+
+    constructor(data?: IUpdateSiteModelSettingsCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.maxFileSizeBytes = _data["maxFileSizeBytes"];
+            this.allowedFileTypes = _data["allowedFileTypes"];
+            this.maxFilesPerUpload = _data["maxFilesPerUpload"];
+            this.enableFileCompression = _data["enableFileCompression"];
+            this.autoGeneratePreviews = _data["autoGeneratePreviews"];
+            this.defaultModelPrivacy = _data["defaultModelPrivacy"];
+            this.autoApproveModels = _data["autoApproveModels"];
+            this.requireModeration = _data["requireModeration"];
+            this.requireLoginForUpload = _data["requireLoginForUpload"];
+            this.allowPublicBrowsing = _data["allowPublicBrowsing"];
+        }
+    }
+
+    static fromJS(data: any): UpdateSiteModelSettingsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateSiteModelSettingsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["maxFileSizeBytes"] = this.maxFileSizeBytes;
+        data["allowedFileTypes"] = this.allowedFileTypes;
+        data["maxFilesPerUpload"] = this.maxFilesPerUpload;
+        data["enableFileCompression"] = this.enableFileCompression;
+        data["autoGeneratePreviews"] = this.autoGeneratePreviews;
+        data["defaultModelPrivacy"] = this.defaultModelPrivacy;
+        data["autoApproveModels"] = this.autoApproveModels;
+        data["requireModeration"] = this.requireModeration;
+        data["requireLoginForUpload"] = this.requireLoginForUpload;
+        data["allowPublicBrowsing"] = this.allowPublicBrowsing;
+        return data;
+    }
+}
+
+export interface IUpdateSiteModelSettingsCommand {
+    maxFileSizeBytes?: number;
+    allowedFileTypes: string;
+    maxFilesPerUpload?: number;
+    enableFileCompression?: boolean;
+    autoGeneratePreviews?: boolean;
+    defaultModelPrivacy: string;
+    autoApproveModels?: boolean;
+    requireModeration?: boolean;
+    requireLoginForUpload?: boolean;
+    allowPublicBrowsing?: boolean;
 }
 
 export class ReportsResponse implements IReportsResponse {
@@ -14363,6 +21110,90 @@ export interface IPreviewGenerationSettings {
     lightColor?: string;
 }
 
+export class DeleteAllModelsResponse implements IDeleteAllModelsResponse {
+    success?: boolean;
+    message?: string;
+    deletedCount?: number;
+    deletedAt?: Date;
+
+    constructor(data?: IDeleteAllModelsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.deletedCount = _data["deletedCount"];
+            this.deletedAt = _data["deletedAt"] ? new Date(_data["deletedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): DeleteAllModelsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteAllModelsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["deletedCount"] = this.deletedCount;
+        data["deletedAt"] = this.deletedAt ? this.deletedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IDeleteAllModelsResponse {
+    success?: boolean;
+    message?: string;
+    deletedCount?: number;
+    deletedAt?: Date;
+}
+
+export class DeleteAllModelsRequest implements IDeleteAllModelsRequest {
+    adminPassword!: string;
+
+    constructor(data?: IDeleteAllModelsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.adminPassword = _data["adminPassword"];
+        }
+    }
+
+    static fromJS(data: any): DeleteAllModelsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteAllModelsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["adminPassword"] = this.adminPassword;
+        return data;
+    }
+}
+
+export interface IDeleteAllModelsRequest {
+    adminPassword: string;
+}
+
 export class CreateModelVersionResponse implements ICreateModelVersionResponse {
     modelVersion?: ModelVersion;
 
@@ -14397,6 +21228,42 @@ export class CreateModelVersionResponse implements ICreateModelVersionResponse {
 
 export interface ICreateModelVersionResponse {
     modelVersion?: ModelVersion;
+}
+
+export class CreateModelResponse implements ICreateModelResponse {
+    model?: Model;
+
+    constructor(data?: ICreateModelResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.model = _data["model"] ? Model.fromJS(_data["model"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreateModelResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateModelResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["model"] = this.model ? this.model.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface ICreateModelResponse {
+    model?: Model;
 }
 
 export class ModeratorEditRequest implements IModeratorEditRequest {
@@ -15377,6 +22244,46 @@ export enum CollectionVisibility {
     Unlisted = "Unlisted",
 }
 
+export class FavoriteCollectionCommand implements IFavoriteCollectionCommand {
+    collectionId!: string;
+    isFavorite!: boolean;
+
+    constructor(data?: IFavoriteCollectionCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.collectionId = _data["collectionId"];
+            this.isFavorite = _data["isFavorite"];
+        }
+    }
+
+    static fromJS(data: any): FavoriteCollectionCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new FavoriteCollectionCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["collectionId"] = this.collectionId;
+        data["isFavorite"] = this.isFavorite;
+        return data;
+    }
+}
+
+export interface IFavoriteCollectionCommand {
+    collectionId: string;
+    isFavorite: boolean;
+}
+
 export class CreateCollectionCommand implements ICreateCollectionCommand {
     name!: string;
     description?: string | undefined;
@@ -15469,6 +22376,358 @@ export interface IAccessCollectionCommand {
     password?: string | undefined;
 }
 
+export class UpdateCategoryResponse implements IUpdateCategoryResponse {
+    id?: string;
+    name?: string;
+    updatedAt?: Date;
+    updatedById?: string;
+
+    constructor(data?: IUpdateCategoryResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.updatedById = _data["updatedById"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCategoryResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCategoryResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["updatedById"] = this.updatedById;
+        return data;
+    }
+}
+
+export interface IUpdateCategoryResponse {
+    id?: string;
+    name?: string;
+    updatedAt?: Date;
+    updatedById?: string;
+}
+
+export class UpdateCategoryCommand implements IUpdateCategoryCommand {
+    id?: string;
+    name!: string;
+
+    constructor(data?: IUpdateCategoryCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCategoryCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCategoryCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface IUpdateCategoryCommand {
+    id?: string;
+    name: string;
+}
+
+export class GetCategoriesResponse implements IGetCategoriesResponse {
+    categories?: CategoryDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+
+    constructor(data?: IGetCategoriesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["categories"])) {
+                this.categories = [] as any;
+                for (let item of _data["categories"])
+                    this.categories!.push(CategoryDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+            this.hasNextPage = _data["hasNextPage"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+        }
+    }
+
+    static fromJS(data: any): GetCategoriesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetCategoriesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.categories)) {
+            data["categories"] = [];
+            for (let item of this.categories)
+                data["categories"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        data["hasNextPage"] = this.hasNextPage;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        return data;
+    }
+}
+
+export interface IGetCategoriesResponse {
+    categories?: CategoryDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+}
+
+export class CategoryDto implements ICategoryDto {
+    id?: string;
+    name?: string;
+    createdAt?: string;
+    createdBy?: string;
+    updatedAt?: string;
+    updatedBy?: string;
+
+    constructor(data?: ICategoryDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.createdAt = _data["createdAt"];
+            this.createdBy = _data["createdBy"];
+            this.updatedAt = _data["updatedAt"];
+            this.updatedBy = _data["updatedBy"];
+        }
+    }
+
+    static fromJS(data: any): CategoryDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CategoryDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["createdAt"] = this.createdAt;
+        data["createdBy"] = this.createdBy;
+        data["updatedAt"] = this.updatedAt;
+        data["updatedBy"] = this.updatedBy;
+        return data;
+    }
+}
+
+export interface ICategoryDto {
+    id?: string;
+    name?: string;
+    createdAt?: string;
+    createdBy?: string;
+    updatedAt?: string;
+    updatedBy?: string;
+}
+
+export class DeleteCategoryResponse implements IDeleteCategoryResponse {
+    id?: string;
+    name?: string;
+    success?: boolean;
+    message?: string;
+    deletedAt?: Date;
+    deletedById?: string;
+
+    constructor(data?: IDeleteCategoryResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.deletedAt = _data["deletedAt"] ? new Date(_data["deletedAt"].toString()) : <any>undefined;
+            this.deletedById = _data["deletedById"];
+        }
+    }
+
+    static fromJS(data: any): DeleteCategoryResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteCategoryResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["deletedAt"] = this.deletedAt ? this.deletedAt.toISOString() : <any>undefined;
+        data["deletedById"] = this.deletedById;
+        return data;
+    }
+}
+
+export interface IDeleteCategoryResponse {
+    id?: string;
+    name?: string;
+    success?: boolean;
+    message?: string;
+    deletedAt?: Date;
+    deletedById?: string;
+}
+
+export class CreateCategoryResponse implements ICreateCategoryResponse {
+    id?: string;
+    name?: string;
+    createdAt?: Date;
+    createdById?: string;
+
+    constructor(data?: ICreateCategoryResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.createdById = _data["createdById"];
+        }
+    }
+
+    static fromJS(data: any): CreateCategoryResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateCategoryResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["createdById"] = this.createdById;
+        return data;
+    }
+}
+
+export interface ICreateCategoryResponse {
+    id?: string;
+    name?: string;
+    createdAt?: Date;
+    createdById?: string;
+}
+
+export class CreateCategoryCommand implements ICreateCategoryCommand {
+    name!: string;
+
+    constructor(data?: ICreateCategoryCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): CreateCategoryCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateCategoryCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface ICreateCategoryCommand {
+    name: string;
+}
+
 export class VerifyEmailCommand implements IVerifyEmailCommand {
     token!: string;
     email!: string;
@@ -15507,6 +22766,390 @@ export class VerifyEmailCommand implements IVerifyEmailCommand {
 export interface IVerifyEmailCommand {
     token: string;
     email: string;
+}
+
+export class RegenerateBackupCodesResponse implements IRegenerateBackupCodesResponse {
+    success?: boolean;
+    message?: string;
+    backupCodes?: string[] | undefined;
+
+    constructor(data?: IRegenerateBackupCodesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            if (Array.isArray(_data["backupCodes"])) {
+                this.backupCodes = [] as any;
+                for (let item of _data["backupCodes"])
+                    this.backupCodes!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): RegenerateBackupCodesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new RegenerateBackupCodesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        if (Array.isArray(this.backupCodes)) {
+            data["backupCodes"] = [];
+            for (let item of this.backupCodes)
+                data["backupCodes"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IRegenerateBackupCodesResponse {
+    success?: boolean;
+    message?: string;
+    backupCodes?: string[] | undefined;
+}
+
+export class RegenerateBackupCodesCommand implements IRegenerateBackupCodesCommand {
+    userId?: string;
+
+    constructor(data?: IRegenerateBackupCodesCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): RegenerateBackupCodesCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new RegenerateBackupCodesCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface IRegenerateBackupCodesCommand {
+    userId?: string;
+}
+
+export class InitializeTwoFactorAuthResponse implements IInitializeTwoFactorAuthResponse {
+    qrCodeUrl?: string;
+    secretKey?: string;
+
+    constructor(data?: IInitializeTwoFactorAuthResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.qrCodeUrl = _data["qrCodeUrl"];
+            this.secretKey = _data["secretKey"];
+        }
+    }
+
+    static fromJS(data: any): InitializeTwoFactorAuthResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new InitializeTwoFactorAuthResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["qrCodeUrl"] = this.qrCodeUrl;
+        data["secretKey"] = this.secretKey;
+        return data;
+    }
+}
+
+export interface IInitializeTwoFactorAuthResponse {
+    qrCodeUrl?: string;
+    secretKey?: string;
+}
+
+export class InitializeTwoFactorAuthCommand implements IInitializeTwoFactorAuthCommand {
+    userId?: string;
+
+    constructor(data?: IInitializeTwoFactorAuthCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): InitializeTwoFactorAuthCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new InitializeTwoFactorAuthCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface IInitializeTwoFactorAuthCommand {
+    userId?: string;
+}
+
+export class GetTwoFactorAuthStatusResponse implements IGetTwoFactorAuthStatusResponse {
+    isEnabled?: boolean;
+    isInitialized?: boolean;
+    enabledAt?: Date | undefined;
+    lastUsedAt?: Date | undefined;
+    remainingBackupCodes?: number;
+
+    constructor(data?: IGetTwoFactorAuthStatusResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.isEnabled = _data["isEnabled"];
+            this.isInitialized = _data["isInitialized"];
+            this.enabledAt = _data["enabledAt"] ? new Date(_data["enabledAt"].toString()) : <any>undefined;
+            this.lastUsedAt = _data["lastUsedAt"] ? new Date(_data["lastUsedAt"].toString()) : <any>undefined;
+            this.remainingBackupCodes = _data["remainingBackupCodes"];
+        }
+    }
+
+    static fromJS(data: any): GetTwoFactorAuthStatusResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetTwoFactorAuthStatusResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isEnabled"] = this.isEnabled;
+        data["isInitialized"] = this.isInitialized;
+        data["enabledAt"] = this.enabledAt ? this.enabledAt.toISOString() : <any>undefined;
+        data["lastUsedAt"] = this.lastUsedAt ? this.lastUsedAt.toISOString() : <any>undefined;
+        data["remainingBackupCodes"] = this.remainingBackupCodes;
+        return data;
+    }
+}
+
+export interface IGetTwoFactorAuthStatusResponse {
+    isEnabled?: boolean;
+    isInitialized?: boolean;
+    enabledAt?: Date | undefined;
+    lastUsedAt?: Date | undefined;
+    remainingBackupCodes?: number;
+}
+
+export class EnableTwoFactorAuthResponse implements IEnableTwoFactorAuthResponse {
+    success?: boolean;
+    message?: string;
+    backupCodes?: string[] | undefined;
+
+    constructor(data?: IEnableTwoFactorAuthResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            if (Array.isArray(_data["backupCodes"])) {
+                this.backupCodes = [] as any;
+                for (let item of _data["backupCodes"])
+                    this.backupCodes!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): EnableTwoFactorAuthResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new EnableTwoFactorAuthResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        if (Array.isArray(this.backupCodes)) {
+            data["backupCodes"] = [];
+            for (let item of this.backupCodes)
+                data["backupCodes"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IEnableTwoFactorAuthResponse {
+    success?: boolean;
+    message?: string;
+    backupCodes?: string[] | undefined;
+}
+
+export class EnableTwoFactorAuthCommand implements IEnableTwoFactorAuthCommand {
+    userId?: string;
+    token?: string;
+
+    constructor(data?: IEnableTwoFactorAuthCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.token = _data["token"];
+        }
+    }
+
+    static fromJS(data: any): EnableTwoFactorAuthCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new EnableTwoFactorAuthCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["token"] = this.token;
+        return data;
+    }
+}
+
+export interface IEnableTwoFactorAuthCommand {
+    userId?: string;
+    token?: string;
+}
+
+export class DisableTwoFactorAuthResponse implements IDisableTwoFactorAuthResponse {
+    success?: boolean;
+    message?: string;
+
+    constructor(data?: IDisableTwoFactorAuthResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): DisableTwoFactorAuthResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new DisableTwoFactorAuthResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IDisableTwoFactorAuthResponse {
+    success?: boolean;
+    message?: string;
+}
+
+export class DisableTwoFactorAuthCommand implements IDisableTwoFactorAuthCommand {
+    userId?: string;
+
+    constructor(data?: IDisableTwoFactorAuthCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): DisableTwoFactorAuthCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new DisableTwoFactorAuthCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface IDisableTwoFactorAuthCommand {
+    userId?: string;
 }
 
 export class ResetPasswordCommand implements IResetPasswordCommand {
@@ -15662,6 +23305,7 @@ export class UserInfo implements IUserInfo {
     role?: string;
     isEmailVerified?: boolean;
     createdAt?: Date;
+    avatar?: string | undefined;
 
     constructor(data?: IUserInfo) {
         if (data) {
@@ -15682,6 +23326,7 @@ export class UserInfo implements IUserInfo {
             this.role = _data["role"];
             this.isEmailVerified = _data["isEmailVerified"];
             this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.avatar = _data["avatar"];
         }
     }
 
@@ -15702,6 +23347,7 @@ export class UserInfo implements IUserInfo {
         data["role"] = this.role;
         data["isEmailVerified"] = this.isEmailVerified;
         data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["avatar"] = this.avatar;
         return data;
     }
 }
@@ -15715,6 +23361,7 @@ export interface IUserInfo {
     role?: string;
     isEmailVerified?: boolean;
     createdAt?: Date;
+    avatar?: string | undefined;
 }
 
 export class RegisterCommand implements IRegisterCommand {
@@ -15964,6 +23611,7 @@ export class MeResponse implements IMeResponse {
     createdAt?: Date;
     requiresPasswordChange?: boolean;
     hasCompletedFirstTimeSetup?: boolean;
+    avatar?: string | undefined;
     settings?: UserSettingsResponse | undefined;
 
     constructor(data?: IMeResponse) {
@@ -15987,6 +23635,7 @@ export class MeResponse implements IMeResponse {
             this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
             this.requiresPasswordChange = _data["requiresPasswordChange"];
             this.hasCompletedFirstTimeSetup = _data["hasCompletedFirstTimeSetup"];
+            this.avatar = _data["avatar"];
             this.settings = _data["settings"] ? UserSettingsResponse.fromJS(_data["settings"]) : <any>undefined;
         }
     }
@@ -16010,6 +23659,7 @@ export class MeResponse implements IMeResponse {
         data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
         data["requiresPasswordChange"] = this.requiresPasswordChange;
         data["hasCompletedFirstTimeSetup"] = this.hasCompletedFirstTimeSetup;
+        data["avatar"] = this.avatar;
         data["settings"] = this.settings ? this.settings.toJSON() : <any>undefined;
         return data;
     }
@@ -16026,6 +23676,7 @@ export interface IMeResponse {
     createdAt?: Date;
     requiresPasswordChange?: boolean;
     hasCompletedFirstTimeSetup?: boolean;
+    avatar?: string | undefined;
     settings?: UserSettingsResponse | undefined;
 }
 
@@ -16153,6 +23804,8 @@ export class LoginCommand implements ILoginCommand {
     emailOrUsername?: string;
     password?: string;
     userAgent?: string;
+    twoFactorToken?: string | undefined;
+    backupCode?: string | undefined;
     email?: string;
 
     constructor(data?: ILoginCommand) {
@@ -16169,6 +23822,8 @@ export class LoginCommand implements ILoginCommand {
             this.emailOrUsername = _data["emailOrUsername"];
             this.password = _data["password"];
             this.userAgent = _data["userAgent"];
+            this.twoFactorToken = _data["twoFactorToken"];
+            this.backupCode = _data["backupCode"];
             this.email = _data["email"];
         }
     }
@@ -16185,6 +23840,8 @@ export class LoginCommand implements ILoginCommand {
         data["emailOrUsername"] = this.emailOrUsername;
         data["password"] = this.password;
         data["userAgent"] = this.userAgent;
+        data["twoFactorToken"] = this.twoFactorToken;
+        data["backupCode"] = this.backupCode;
         data["email"] = this.email;
         return data;
     }
@@ -16194,7 +23851,45 @@ export interface ILoginCommand {
     emailOrUsername?: string;
     password?: string;
     userAgent?: string;
+    twoFactorToken?: string | undefined;
+    backupCode?: string | undefined;
     email?: string;
+}
+
+export class ForgotPasswordCommand implements IForgotPasswordCommand {
+    email!: string;
+
+    constructor(data?: IForgotPasswordCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+        }
+    }
+
+    static fromJS(data: any): ForgotPasswordCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new ForgotPasswordCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        return data;
+    }
+}
+
+export interface IForgotPasswordCommand {
+    email: string;
 }
 
 export class ChangePasswordResponse implements IChangePasswordResponse {
@@ -16285,42 +23980,6 @@ export interface IChangePasswordCommand {
     confirmPassword: string;
 }
 
-export class ForgotPasswordCommand implements IForgotPasswordCommand {
-    email!: string;
-
-    constructor(data?: IForgotPasswordCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.email = _data["email"];
-        }
-    }
-
-    static fromJS(data: any): ForgotPasswordCommand {
-        data = typeof data === 'object' ? data : {};
-        let result = new ForgotPasswordCommand();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["email"] = this.email;
-        return data;
-    }
-}
-
-export interface IForgotPasswordCommand {
-    email: string;
-}
-
 export class ModerationAuditResponse implements IModerationAuditResponse {
     logs?: ModerationAuditDto[];
     totalCount?: number;
@@ -16379,44 +24038,6 @@ export interface IModerationAuditResponse {
     page?: number;
     pageSize?: number;
     totalPages?: number;
-}
-
-export interface IGetAdminModelStatisticsResponse {
-    totalModels?: number;
-    totalFileSizeBytes?: number;
-    totalFileSizeFormatted?: string;
-    totalFiles?: number;
-    publicModels?: number;
-    privateModels?: number;
-    unlistedModels?: number;
-    pendingReviewModels?: number;
-    flaggedModels?: number;
-    aIGeneratedModels?: number;
-    workInProgressModels?: number;
-    nSFWModels?: number;
-    remixModels?: number;
-    lastModelUploaded?: Date;
-    lastModelUpdated?: Date;
-    averageFileSizeMB?: number;
-    averageFilesPerModel?: number;
-    topUploaders?: TopUploaderDto[];
-    fileTypeDistribution?: FileTypeStatsDto[];
-}
-
-export interface ITopUploaderDto {
-    userId?: string;
-    username?: string;
-    modelCount?: number;
-    totalFileSizeBytes?: number;
-    totalFileSizeFormatted?: string;
-}
-
-export interface IFileTypeStatsDto {
-    fileExtension?: string;
-    count?: number;
-    totalSizeBytes?: number;
-    totalSizeFormatted?: string;
-    percentage?: number;
 }
 
 export class ModerationAuditDto implements IModerationAuditDto {
@@ -16495,180 +24116,6 @@ export interface IModerationAuditDto {
     userAgent?: string | undefined;
 }
 
-export class GetAdminModelStatisticsResponse implements IGetAdminModelStatisticsResponse {
-    totalModels?: number;
-    totalFileSizeBytes?: number;
-    totalFileSizeFormatted?: string;
-    totalFiles?: number;
-    publicModels?: number;
-    privateModels?: number;
-    unlistedModels?: number;
-    pendingReviewModels?: number;
-    flaggedModels?: number;
-    aIGeneratedModels?: number;
-    workInProgressModels?: number;
-    nSFWModels?: number;
-    remixModels?: number;
-    lastModelUploaded?: Date;
-    lastModelUpdated?: Date;
-    averageFileSizeMB?: number;
-    averageFilesPerModel?: number;
-    topUploaders?: TopUploaderDto[];
-    fileTypeDistribution?: FileTypeStatsDto[];
-
-    constructor(data?: IGetAdminModelStatisticsResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.totalModels = _data["totalModels"];
-            this.totalFileSizeBytes = _data["totalFileSizeBytes"];
-            this.totalFileSizeFormatted = _data["totalFileSizeFormatted"];
-            this.totalFiles = _data["totalFiles"];
-            this.publicModels = _data["publicModels"];
-            this.privateModels = _data["privateModels"];
-            this.unlistedModels = _data["unlistedModels"];
-            this.pendingReviewModels = _data["pendingReviewModels"];
-            this.flaggedModels = _data["flaggedModels"];
-            this.aIGeneratedModels = _data["aIGeneratedModels"];
-            this.workInProgressModels = _data["workInProgressModels"];
-            this.nSFWModels = _data["nSFWModels"];
-            this.remixModels = _data["remixModels"];
-            this.lastModelUploaded = _data["lastModelUploaded"] ? new Date(_data["lastModelUploaded"].toString()) : <any>undefined;
-            this.lastModelUpdated = _data["lastModelUpdated"] ? new Date(_data["lastModelUpdated"].toString()) : <any>undefined;
-            this.averageFileSizeMB = _data["averageFileSizeMB"];
-            this.averageFilesPerModel = _data["averageFileSizeMB"];
-            this.topUploaders = _data["topUploaders"] ? _data["topUploaders"].map((i: any) => TopUploaderDto.fromJS(i)) : <any>undefined;
-            this.fileTypeDistribution = _data["fileTypeDistribution"] ? _data["fileTypeDistribution"].map((i: any) => FileTypeStatsDto.fromJS(i)) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): GetAdminModelStatisticsResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new GetAdminModelStatisticsResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["totalModels"] = this.totalModels;
-        data["totalFileSizeBytes"] = this.totalFileSizeBytes;
-        data["totalFileSizeFormatted"] = this.totalFileSizeFormatted;
-        data["totalFiles"] = this.totalFiles;
-        data["publicModels"] = this.publicModels;
-        data["privateModels"] = this.privateModels;
-        data["unlistedModels"] = this.unlistedModels;
-        data["pendingReviewModels"] = this.pendingReviewModels;
-        data["flaggedModels"] = this.flaggedModels;
-        data["aIGeneratedModels"] = this.aIGeneratedModels;
-        data["workInProgressModels"] = this.workInProgressModels;
-        data["nSFWModels"] = this.nSFWModels;
-        data["remixModels"] = this.remixModels;
-        data["lastModelUploaded"] = this.lastModelUploaded ? this.lastModelUploaded.toISOString() : <any>undefined;
-        data["lastModelUpdated"] = this.lastModelUpdated ? this.lastModelUpdated.toISOString() : <any>undefined;
-        data["averageFileSizeMB"] = this.averageFileSizeMB;
-        data["averageFilesPerModel"] = this.averageFilesPerModel;
-        data["topUploaders"] = this.topUploaders ? this.topUploaders.map((i: any) => i.toJSON()) : <any>undefined;
-        data["fileTypeDistribution"] = this.fileTypeDistribution ? this.fileTypeDistribution.map((i: any) => i.toJSON()) : <any>undefined;
-        return data;
-    }
-}
-
-export class TopUploaderDto implements ITopUploaderDto {
-    userId?: string;
-    username?: string;
-    modelCount?: number;
-    totalFileSizeBytes?: number;
-    totalFileSizeFormatted?: string;
-
-    constructor(data?: ITopUploaderDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.username = _data["username"];
-            this.modelCount = _data["modelCount"];
-            this.totalFileSizeBytes = _data["totalFileSizeBytes"];
-            this.totalFileSizeFormatted = _data["totalFileSizeFormatted"];
-        }
-    }
-
-    static fromJS(data: any): TopUploaderDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new TopUploaderDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["username"] = this.username;
-        data["modelCount"] = this.modelCount;
-        data["totalFileSizeBytes"] = this.totalFileSizeBytes;
-        data["totalFileSizeFormatted"] = this.totalFileSizeFormatted;
-        return data;
-    }
-}
-
-export class FileTypeStatsDto implements IFileTypeStatsDto {
-    fileExtension?: string;
-    count?: number;
-    totalSizeBytes?: number;
-    totalSizeFormatted?: string;
-    percentage?: number;
-
-    constructor(data?: IFileTypeStatsDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.fileExtension = _data["fileExtension"];
-            this.count = _data["count"];
-            this.totalSizeBytes = _data["totalSizeBytes"];
-            this.totalSizeFormatted = _data["totalSizeFormatted"];
-            this.percentage = _data["percentage"];
-        }
-    }
-
-    static fromJS(data: any): FileTypeStatsDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new FileTypeStatsDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["fileExtension"] = this.fileExtension;
-        data["count"] = this.count;
-        data["totalSizeBytes"] = this.totalSizeBytes;
-        data["totalSizeFormatted"] = this.totalSizeFormatted;
-        data["percentage"] = this.percentage;
-        return data;
-    }
-}
-
 export class UserInfoDto implements IUserInfoDto {
     username?: string;
     email?: string;
@@ -16709,6 +24156,282 @@ export interface IUserInfoDto {
     email?: string;
 }
 
+export class GetAdminModelStatisticsResponse implements IGetAdminModelStatisticsResponse {
+    totalModels?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+    totalFiles?: number;
+    publicModels?: number;
+    privateModels?: number;
+    unlistedModels?: number;
+    pendingReviewModels?: number;
+    flaggedModels?: number;
+    aiGeneratedModels?: number;
+    workInProgressModels?: number;
+    nsfwModels?: number;
+    remixModels?: number;
+    lastModelUploaded?: Date | undefined;
+    lastModelUpdated?: Date | undefined;
+    averageFileSizeMB?: number;
+    averageFilesPerModel?: number;
+    topUploaders?: TopUploader[];
+    fileTypeDistribution?: FileTypeStats[];
+
+    constructor(data?: IGetAdminModelStatisticsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.totalModels = _data["totalModels"];
+            this.totalFileSizeBytes = _data["totalFileSizeBytes"];
+            this.totalFileSizeFormatted = _data["totalFileSizeFormatted"];
+            this.totalFiles = _data["totalFiles"];
+            this.publicModels = _data["publicModels"];
+            this.privateModels = _data["privateModels"];
+            this.unlistedModels = _data["unlistedModels"];
+            this.pendingReviewModels = _data["pendingReviewModels"];
+            this.flaggedModels = _data["flaggedModels"];
+            this.aiGeneratedModels = _data["aiGeneratedModels"];
+            this.workInProgressModels = _data["workInProgressModels"];
+            this.nsfwModels = _data["nsfwModels"];
+            this.remixModels = _data["remixModels"];
+            this.lastModelUploaded = _data["lastModelUploaded"] ? new Date(_data["lastModelUploaded"].toString()) : <any>undefined;
+            this.lastModelUpdated = _data["lastModelUpdated"] ? new Date(_data["lastModelUpdated"].toString()) : <any>undefined;
+            this.averageFileSizeMB = _data["averageFileSizeMB"];
+            this.averageFilesPerModel = _data["averageFilesPerModel"];
+            if (Array.isArray(_data["topUploaders"])) {
+                this.topUploaders = [] as any;
+                for (let item of _data["topUploaders"])
+                    this.topUploaders!.push(TopUploader.fromJS(item));
+            }
+            if (Array.isArray(_data["fileTypeDistribution"])) {
+                this.fileTypeDistribution = [] as any;
+                for (let item of _data["fileTypeDistribution"])
+                    this.fileTypeDistribution!.push(FileTypeStats.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): GetAdminModelStatisticsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetAdminModelStatisticsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["totalModels"] = this.totalModels;
+        data["totalFileSizeBytes"] = this.totalFileSizeBytes;
+        data["totalFileSizeFormatted"] = this.totalFileSizeFormatted;
+        data["totalFiles"] = this.totalFiles;
+        data["publicModels"] = this.publicModels;
+        data["privateModels"] = this.privateModels;
+        data["unlistedModels"] = this.unlistedModels;
+        data["pendingReviewModels"] = this.pendingReviewModels;
+        data["flaggedModels"] = this.flaggedModels;
+        data["aiGeneratedModels"] = this.aiGeneratedModels;
+        data["workInProgressModels"] = this.workInProgressModels;
+        data["nsfwModels"] = this.nsfwModels;
+        data["remixModels"] = this.remixModels;
+        data["lastModelUploaded"] = this.lastModelUploaded ? this.lastModelUploaded.toISOString() : <any>undefined;
+        data["lastModelUpdated"] = this.lastModelUpdated ? this.lastModelUpdated.toISOString() : <any>undefined;
+        data["averageFileSizeMB"] = this.averageFileSizeMB;
+        data["averageFilesPerModel"] = this.averageFilesPerModel;
+        if (Array.isArray(this.topUploaders)) {
+            data["topUploaders"] = [];
+            for (let item of this.topUploaders)
+                data["topUploaders"].push(item ? item.toJSON() : <any>undefined);
+        }
+        if (Array.isArray(this.fileTypeDistribution)) {
+            data["fileTypeDistribution"] = [];
+            for (let item of this.fileTypeDistribution)
+                data["fileTypeDistribution"].push(item ? item.toJSON() : <any>undefined);
+        }
+        return data;
+    }
+}
+
+export interface IGetAdminModelStatisticsResponse {
+    totalModels?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+    totalFiles?: number;
+    publicModels?: number;
+    privateModels?: number;
+    unlistedModels?: number;
+    pendingReviewModels?: number;
+    flaggedModels?: number;
+    aiGeneratedModels?: number;
+    workInProgressModels?: number;
+    nsfwModels?: number;
+    remixModels?: number;
+    lastModelUploaded?: Date | undefined;
+    lastModelUpdated?: Date | undefined;
+    averageFileSizeMB?: number;
+    averageFilesPerModel?: number;
+    topUploaders?: TopUploader[];
+    fileTypeDistribution?: FileTypeStats[];
+}
+
+export class TopUploader implements ITopUploader {
+    userId?: string;
+    username?: string;
+    modelCount?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+
+    constructor(data?: ITopUploader) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.username = _data["username"];
+            this.modelCount = _data["modelCount"];
+            this.totalFileSizeBytes = _data["totalFileSizeBytes"];
+            this.totalFileSizeFormatted = _data["totalFileSizeFormatted"];
+        }
+    }
+
+    static fromJS(data: any): TopUploader {
+        data = typeof data === 'object' ? data : {};
+        let result = new TopUploader();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["username"] = this.username;
+        data["modelCount"] = this.modelCount;
+        data["totalFileSizeBytes"] = this.totalFileSizeBytes;
+        data["totalFileSizeFormatted"] = this.totalFileSizeFormatted;
+        return data;
+    }
+}
+
+export interface ITopUploader {
+    userId?: string;
+    username?: string;
+    modelCount?: number;
+    totalFileSizeBytes?: number;
+    totalFileSizeFormatted?: string;
+}
+
+export class FileTypeStats implements IFileTypeStats {
+    fileExtension?: string;
+    count?: number;
+    totalSizeBytes?: number;
+    totalSizeFormatted?: string;
+    percentage?: number;
+
+    constructor(data?: IFileTypeStats) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.fileExtension = _data["fileExtension"];
+            this.count = _data["count"];
+            this.totalSizeBytes = _data["totalSizeBytes"];
+            this.totalSizeFormatted = _data["totalSizeFormatted"];
+            this.percentage = _data["percentage"];
+        }
+    }
+
+    static fromJS(data: any): FileTypeStats {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileTypeStats();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["fileExtension"] = this.fileExtension;
+        data["count"] = this.count;
+        data["totalSizeBytes"] = this.totalSizeBytes;
+        data["totalSizeFormatted"] = this.totalSizeFormatted;
+        data["percentage"] = this.percentage;
+        return data;
+    }
+}
+
+export interface IFileTypeStats {
+    fileExtension?: string;
+    count?: number;
+    totalSizeBytes?: number;
+    totalSizeFormatted?: string;
+    percentage?: number;
+}
+
+export class PaginatedRolesResponse implements IPaginatedRolesResponse {
+    roles?: RoleDto[];
+    pagination?: PaginationInfo;
+
+    constructor(data?: IPaginatedRolesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["roles"])) {
+                this.roles = [] as any;
+                for (let item of _data["roles"])
+                    this.roles!.push(RoleDto.fromJS(item));
+            }
+            this.pagination = _data["pagination"] ? PaginationInfo.fromJS(_data["pagination"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): PaginatedRolesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedRolesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.roles)) {
+            data["roles"] = [];
+            for (let item of this.roles)
+                data["roles"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["pagination"] = this.pagination ? this.pagination.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IPaginatedRolesResponse {
+    roles?: RoleDto[];
+    pagination?: PaginationInfo;
+}
+
 export class RoleDto implements IRoleDto {
     id?: string;
     name?: string;
@@ -16720,6 +24443,8 @@ export class RoleDto implements IRoleDto {
     isActive?: boolean;
     parentRoleId?: string | undefined;
     permissions?: string[];
+    userCount?: number;
+    color?: string;
 
     constructor(data?: IRoleDto) {
         if (data) {
@@ -16746,6 +24471,8 @@ export class RoleDto implements IRoleDto {
                 for (let item of _data["permissions"])
                     this.permissions!.push(item);
             }
+            this.userCount = _data["userCount"];
+            this.color = _data["color"];
         }
     }
 
@@ -16772,6 +24499,8 @@ export class RoleDto implements IRoleDto {
             for (let item of this.permissions)
                 data["permissions"].push(item);
         }
+        data["userCount"] = this.userCount;
+        data["color"] = this.color;
         return data;
     }
 }
@@ -16787,6 +24516,64 @@ export interface IRoleDto {
     isActive?: boolean;
     parentRoleId?: string | undefined;
     permissions?: string[];
+    userCount?: number;
+    color?: string;
+}
+
+export class PaginationInfo implements IPaginationInfo {
+    page?: number;
+    pageSize?: number;
+    totalCount?: number;
+    totalPages?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+
+    constructor(data?: IPaginationInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalCount = _data["totalCount"];
+            this.totalPages = _data["totalPages"];
+            this.hasNextPage = _data["hasNextPage"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginationInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginationInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalCount"] = this.totalCount;
+        data["totalPages"] = this.totalPages;
+        data["hasNextPage"] = this.hasNextPage;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        return data;
+    }
+}
+
+export interface IPaginationInfo {
+    page?: number;
+    pageSize?: number;
+    totalCount?: number;
+    totalPages?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
 }
 
 export class CreateRoleRequest implements ICreateRoleRequest {
@@ -16966,6 +24753,97 @@ export class AssignPermissionsRequest implements IAssignPermissionsRequest {
 
 export interface IAssignPermissionsRequest {
     permissionNames: string[];
+}
+
+export class RemovePermissionsRequest implements IRemovePermissionsRequest {
+    permissionNames!: string[];
+
+    constructor(data?: IRemovePermissionsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.permissionNames = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["permissionNames"])) {
+                this.permissionNames = [] as any;
+                for (let item of _data["permissionNames"])
+                    this.permissionNames!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): RemovePermissionsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemovePermissionsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.permissionNames)) {
+            data["permissionNames"] = [];
+            for (let item of this.permissionNames)
+                data["permissionNames"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IRemovePermissionsRequest {
+    permissionNames: string[];
+}
+
+export class PermissionDto implements IPermissionDto {
+    name?: string;
+    category?: string;
+    description?: string;
+
+    constructor(data?: IPermissionDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.category = _data["category"];
+            this.description = _data["description"];
+        }
+    }
+
+    static fromJS(data: any): PermissionDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PermissionDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["category"] = this.category;
+        data["description"] = this.description;
+        return data;
+    }
+}
+
+export interface IPermissionDto {
+    name?: string;
+    category?: string;
+    description?: string;
 }
 
 export class UserPermissionsDto implements IUserPermissionsDto {
@@ -17262,50 +25140,6 @@ export interface IModerationCheckDto {
     moderatorRole?: string;
     targetRole?: string;
     reason?: string;
-}
-
-export class PermissionDto implements IPermissionDto {
-    name?: string;
-    category?: string;
-    description?: string;
-
-    constructor(data?: IPermissionDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.name = _data["name"];
-            this.category = _data["category"];
-            this.description = _data["description"];
-        }
-    }
-
-    static fromJS(data: any): PermissionDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new PermissionDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["name"] = this.name;
-        data["category"] = this.category;
-        data["description"] = this.description;
-        return data;
-    }
-}
-
-export interface IPermissionDto {
-    name?: string;
-    category?: string;
-    description?: string;
 }
 
 export interface FileResponse {

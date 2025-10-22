@@ -1,6 +1,7 @@
 import store from '../store';
 import { PrivacySettings } from './api.client';
 import { ApiClientFactory } from '../api/clientFactory';
+import SearchService from './searchService';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:11666';
 
@@ -344,28 +345,8 @@ export class ModelsService {
 
   static async searchModels(params: { searchQuery: string }): Promise<{ models: ExtendedModel[] }> {
     try {
-      // Use the generated API client instead of direct fetch
-      const client = ApiClientFactory.getModelsClient();
-      const response = await client.getModels(1, 100);
-      
-      const searchResults = (response.models || []).filter((model: any) => {
-        const query = params.searchQuery.toLowerCase();
-        return (
-          model.name?.toLowerCase().includes(query) ||
-          model.description?.toLowerCase().includes(query)
-        );
-      });
-      
-      return {
-        models: searchResults.map((model: any) => ({
-          ...model,
-          // The backend already provides thumbnailUrl correctly, don't override it
-          downloadCount: model.downloads || 0,
-          rating: 0, // TODO: Implement rating system
-          isLiked: false, // TODO: Check if current user liked this model
-          isInCollection: false // TODO: Check if model is in user's collections
-        }))
-      };
+      // Use the new comprehensive search service
+      return await SearchService.searchModels(params);
     } catch (error) {
       console.error('Error searching models:', error);
       throw new Error('Failed to search models');

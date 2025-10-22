@@ -2686,6 +2686,128 @@ export class UpdateFileSettingsClient {
     }
 }
 
+export class GetModelConfigurationSettingsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:11666";
+    }
+
+    getModelConfigurationSettings(): Promise<GetModelConfigurationSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/model-configuration";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetModelConfigurationSettings(_response);
+        });
+    }
+
+    protected processGetModelConfigurationSettings(response: Response): Promise<GetModelConfigurationSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetModelConfigurationSettingsResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<GetModelConfigurationSettingsResponse>(null as any);
+    }
+}
+
+export class UpdateModelConfigurationSettingsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:11666";
+    }
+
+    updateModelConfigurationSettings(command: UpdateModelConfigurationSettingsCommand): Promise<UpdateModelConfigurationSettingsResponse> {
+        let url_ = this.baseUrl + "/api/system-settings/model-configuration";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateModelConfigurationSettings(_response);
+        });
+    }
+
+    protected processUpdateModelConfigurationSettings(response: Response): Promise<UpdateModelConfigurationSettingsResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UpdateModelConfigurationSettingsResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UpdateModelConfigurationSettingsResponse>(null as any);
+    }
+}
+
 export class GetSiteModelSettingsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -3222,6 +3344,88 @@ export class TokenSettingsClient {
             });
         }
         return Promise.resolve<any>(null as any);
+    }
+}
+
+export class SearchClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:11666";
+    }
+
+    search(query: string | undefined, page: number | undefined, pageSize: number | undefined, type: SearchType | undefined, category: string | null | undefined, sortBy: string | undefined, sortDescending: boolean | undefined): Promise<SearchResponse> {
+        let url_ = this.baseUrl + "/api/search?";
+        if (query === null)
+            throw new Error("The parameter 'query' cannot be null.");
+        else if (query !== undefined)
+            url_ += "query=" + encodeURIComponent("" + query) + "&";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (type === null)
+            throw new Error("The parameter 'type' cannot be null.");
+        else if (type !== undefined)
+            url_ += "type=" + encodeURIComponent("" + type) + "&";
+        if (category !== undefined && category !== null)
+            url_ += "category=" + encodeURIComponent("" + category) + "&";
+        if (sortBy === null)
+            throw new Error("The parameter 'sortBy' cannot be null.");
+        else if (sortBy !== undefined)
+            url_ += "sortBy=" + encodeURIComponent("" + sortBy) + "&";
+        if (sortDescending === null)
+            throw new Error("The parameter 'sortDescending' cannot be null.");
+        else if (sortDescending !== undefined)
+            url_ += "sortDescending=" + encodeURIComponent("" + sortDescending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSearch(_response);
+        });
+    }
+
+    protected processSearch(response: Response): Promise<SearchResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = SearchResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SearchResponse>(null as any);
     }
 }
 
@@ -5349,67 +5553,6 @@ export class RemoveTagFromModelClient {
     }
 }
 
-export class SearchModelsClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    searchModels(query: string | undefined, page: number | undefined, pageSize: number | undefined): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/search?";
-        if (query === null)
-            throw new Error("The parameter 'query' cannot be null.");
-        else if (query !== undefined)
-            url_ += "query=" + encodeURIComponent("" + query) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "page=" + encodeURIComponent("" + page) + "&";
-        if (pageSize === null)
-            throw new Error("The parameter 'pageSize' cannot be null.");
-        else if (pageSize !== undefined)
-            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/octet-stream"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSearchModels(_response);
-        });
-    }
-
-    protected processSearchModels(response: Response): Promise<FileResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FileResponse>(null as any);
-    }
-}
-
 export class GetModelsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -5873,6 +6016,80 @@ export class GenerateCustomThumbnailClient {
             });
         }
         return Promise.resolve<GenerateCustomThumbnailResponse>(null as any);
+    }
+}
+
+export class DeleteAllModelsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:11666";
+    }
+
+    deleteAllModels(request: DeleteAllModelsRequest): Promise<DeleteAllModelsResponse> {
+        let url_ = this.baseUrl + "/api/admin/models/delete-all";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteAllModels(_response);
+        });
+    }
+
+    protected processDeleteAllModels(response: Response): Promise<DeleteAllModelsResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = DeleteAllModelsResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DeleteAllModelsResponse>(null as any);
     }
 }
 
@@ -8058,6 +8275,111 @@ export class GetUserCollectionsClient {
     }
 
     protected processGetCollectionsByUserId(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+}
+
+export class GetFavoriteCollectionsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:11666";
+    }
+
+    getFavoriteCollections(): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/collections/favorites";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFavoriteCollections(_response);
+        });
+    }
+
+    protected processGetFavoriteCollections(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+}
+
+export class FavoriteCollectionClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:11666";
+    }
+
+    toggleFavorite(id: string, command: FavoriteCollectionCommand): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/collections/{id}/favorite";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processToggleFavorite(_response);
+        });
+    }
+
+    protected processToggleFavorite(response: Response): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200 || status === 206) {
@@ -10455,6 +10777,10 @@ export class UpdateUserSettingsRequest implements IUpdateUserSettingsRequest {
     measurementSystem?: string | undefined;
     timeZone?: string | undefined;
     autoRotateModels?: boolean | undefined;
+    dashboardViewType?: string | undefined;
+    cardSize?: string | undefined;
+    cardSpacing?: string | undefined;
+    gridColumns?: number | undefined;
     customSettings?: { [key: string]: string; } | undefined;
 
     constructor(data?: IUpdateUserSettingsRequest) {
@@ -10475,6 +10801,10 @@ export class UpdateUserSettingsRequest implements IUpdateUserSettingsRequest {
             this.measurementSystem = _data["measurementSystem"];
             this.timeZone = _data["timeZone"];
             this.autoRotateModels = _data["autoRotateModels"];
+            this.dashboardViewType = _data["dashboardViewType"];
+            this.cardSize = _data["cardSize"];
+            this.cardSpacing = _data["cardSpacing"];
+            this.gridColumns = _data["gridColumns"];
             if (_data["customSettings"]) {
                 this.customSettings = {} as any;
                 for (let key in _data["customSettings"]) {
@@ -10501,6 +10831,10 @@ export class UpdateUserSettingsRequest implements IUpdateUserSettingsRequest {
         data["measurementSystem"] = this.measurementSystem;
         data["timeZone"] = this.timeZone;
         data["autoRotateModels"] = this.autoRotateModels;
+        data["dashboardViewType"] = this.dashboardViewType;
+        data["cardSize"] = this.cardSize;
+        data["cardSpacing"] = this.cardSpacing;
+        data["gridColumns"] = this.gridColumns;
         if (this.customSettings) {
             data["customSettings"] = {};
             for (let key in this.customSettings) {
@@ -10520,6 +10854,10 @@ export interface IUpdateUserSettingsRequest {
     measurementSystem?: string | undefined;
     timeZone?: string | undefined;
     autoRotateModels?: boolean | undefined;
+    dashboardViewType?: string | undefined;
+    cardSize?: string | undefined;
+    cardSpacing?: string | undefined;
+    gridColumns?: number | undefined;
     customSettings?: { [key: string]: string; } | undefined;
 }
 
@@ -10803,6 +11141,10 @@ export class UserSettings extends BaseEntity implements IUserSettings {
     measurementSystem?: string;
     timeZone?: string;
     autoRotateModels?: boolean;
+    dashboardViewType?: string;
+    cardSize?: string;
+    cardSpacing?: string;
+    gridColumns?: number;
     showProfileInSearch?: boolean;
     allowDirectMessages?: boolean;
     showActivityStatus?: boolean;
@@ -10828,6 +11170,10 @@ export class UserSettings extends BaseEntity implements IUserSettings {
             this.measurementSystem = _data["measurementSystem"];
             this.timeZone = _data["timeZone"];
             this.autoRotateModels = _data["autoRotateModels"];
+            this.dashboardViewType = _data["dashboardViewType"];
+            this.cardSize = _data["cardSize"];
+            this.cardSpacing = _data["cardSpacing"];
+            this.gridColumns = _data["gridColumns"];
             this.showProfileInSearch = _data["showProfileInSearch"];
             this.allowDirectMessages = _data["allowDirectMessages"];
             this.showActivityStatus = _data["showActivityStatus"];
@@ -10863,6 +11209,10 @@ export class UserSettings extends BaseEntity implements IUserSettings {
         data["measurementSystem"] = this.measurementSystem;
         data["timeZone"] = this.timeZone;
         data["autoRotateModels"] = this.autoRotateModels;
+        data["dashboardViewType"] = this.dashboardViewType;
+        data["cardSize"] = this.cardSize;
+        data["cardSpacing"] = this.cardSpacing;
+        data["gridColumns"] = this.gridColumns;
         data["showProfileInSearch"] = this.showProfileInSearch;
         data["allowDirectMessages"] = this.allowDirectMessages;
         data["showActivityStatus"] = this.showActivityStatus;
@@ -10892,6 +11242,10 @@ export interface IUserSettings extends IBaseEntity {
     measurementSystem?: string;
     timeZone?: string;
     autoRotateModels?: boolean;
+    dashboardViewType?: string;
+    cardSize?: string;
+    cardSpacing?: string;
+    gridColumns?: number;
     showProfileInSearch?: boolean;
     allowDirectMessages?: boolean;
     showActivityStatus?: boolean;
@@ -14291,6 +14645,342 @@ export interface IFileTypeSettingsData {
     isDefault?: boolean;
 }
 
+export class GetModelConfigurationSettingsResponse implements IGetModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+    settings?: ModelConfigurationSettingsData | undefined;
+
+    constructor(data?: IGetModelConfigurationSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.settings = _data["settings"] ? ModelConfigurationSettingsData.fromJS(_data["settings"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetModelConfigurationSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetModelConfigurationSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["settings"] = this.settings ? this.settings.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+    settings?: ModelConfigurationSettingsData | undefined;
+}
+
+export class ModelConfigurationSettingsData implements IModelConfigurationSettingsData {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting?: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+
+    constructor(data?: IModelConfigurationSettingsData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.allowAnonUploads = _data["allowAnonUploads"];
+            this.requireUploadModeration = _data["requireUploadModeration"];
+            this.defaultPrivacySetting = _data["defaultPrivacySetting"];
+            this.allowAnonDownloads = _data["allowAnonDownloads"];
+            this.enableModelVersioning = _data["enableModelVersioning"];
+            this.limitTotalModels = _data["limitTotalModels"];
+            this.allowNSFWContent = _data["allowNSFWContent"];
+            this.allowAIGeneratedContent = _data["allowAIGeneratedContent"];
+            this.requireModelDescription = _data["requireModelDescription"];
+            this.requireModelTags = _data["requireModelTags"];
+            this.minDescriptionLength = _data["minDescriptionLength"];
+            this.maxDescriptionLength = _data["maxDescriptionLength"];
+            this.maxTagsPerModel = _data["maxTagsPerModel"];
+            this.autoApproveVerifiedUsers = _data["autoApproveVerifiedUsers"];
+            this.requireThumbnail = _data["requireThumbnail"];
+            this.allowModelRemixing = _data["allowModelRemixing"];
+            this.requireRemixAttribution = _data["requireRemixAttribution"];
+            this.maxModelsPerUser = _data["maxModelsPerUser"];
+            this.enableModelComments = _data["enableModelComments"];
+            this.enableModelLikes = _data["enableModelLikes"];
+            this.enableModelDownloads = _data["enableModelDownloads"];
+            this.requireLicenseSelection = _data["requireLicenseSelection"];
+            this.allowCustomLicenses = _data["allowCustomLicenses"];
+            this.enableModelCollections = _data["enableModelCollections"];
+            this.requireCategorySelection = _data["requireCategorySelection"];
+            this.maxCategoriesPerModel = _data["maxCategoriesPerModel"];
+            this.enableModelSharing = _data["enableModelSharing"];
+            this.enableModelEmbedding = _data["enableModelEmbedding"];
+            this.requireModelPreview = _data["requireModelPreview"];
+            this.autoGenerateModelPreviews = _data["autoGenerateModelPreviews"];
+            this.enableModelAnalytics = _data["enableModelAnalytics"];
+            this.requireUserAgreement = _data["requireUserAgreement"];
+            this.userAgreementText = _data["userAgreementText"];
+            this.enableModelExport = _data["enableModelExport"];
+            this.enableModelImport = _data["enableModelImport"];
+            this.requireModelValidation = _data["requireModelValidation"];
+            this.enableModelBackup = _data["enableModelBackup"];
+            this.modelBackupRetentionDays = _data["modelBackupRetentionDays"];
+            this.enableModelArchiving = _data["enableModelArchiving"];
+            this.modelArchiveThresholdDays = _data["modelArchiveThresholdDays"];
+            this.requireModeratorApproval = _data["requireModeratorApproval"];
+            this.enableAutoModeration = _data["enableAutoModeration"];
+            this.requireContentRating = _data["requireContentRating"];
+            this.enableModelFlagging = _data["enableModelFlagging"];
+            this.requireFlagReason = _data["requireFlagReason"];
+            this.enableModelReporting = _data["enableModelReporting"];
+            this.requireReportDetails = _data["requireReportDetails"];
+            this.enableModelBlocking = _data["enableModelBlocking"];
+            this.requireBlockReason = _data["requireBlockReason"];
+            this.enableModelWhitelisting = _data["enableModelWhitelisting"];
+            this.enableModelBlacklisting = _data["enableModelBlacklisting"];
+            this.requireModelApproval = _data["requireModelApproval"];
+            this.enableModelRejection = _data["enableModelRejection"];
+            this.requireRejectionReason = _data["requireRejectionReason"];
+            this.enableModelAppeals = _data["enableModelAppeals"];
+            this.requireAppealDetails = _data["requireAppealDetails"];
+            this.enableModelLocking = _data["enableModelLocking"];
+            this.requireLockReason = _data["requireLockReason"];
+            this.enableModelUnlocking = _data["enableModelUnlocking"];
+            this.requireUnlockApproval = _data["requireUnlockApproval"];
+            this.enableModelDeletion = _data["enableModelDeletion"];
+            this.requireDeletionApproval = _data["requireDeletionApproval"];
+            this.requireDeletionReason = _data["requireDeletionReason"];
+            this.enableModelRestoration = _data["enableModelRestoration"];
+            this.requireRestorationApproval = _data["requireRestorationApproval"];
+        }
+    }
+
+    static fromJS(data: any): ModelConfigurationSettingsData {
+        data = typeof data === 'object' ? data : {};
+        let result = new ModelConfigurationSettingsData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["allowAnonUploads"] = this.allowAnonUploads;
+        data["requireUploadModeration"] = this.requireUploadModeration;
+        data["defaultPrivacySetting"] = this.defaultPrivacySetting;
+        data["allowAnonDownloads"] = this.allowAnonDownloads;
+        data["enableModelVersioning"] = this.enableModelVersioning;
+        data["limitTotalModels"] = this.limitTotalModels;
+        data["allowNSFWContent"] = this.allowNSFWContent;
+        data["allowAIGeneratedContent"] = this.allowAIGeneratedContent;
+        data["requireModelDescription"] = this.requireModelDescription;
+        data["requireModelTags"] = this.requireModelTags;
+        data["minDescriptionLength"] = this.minDescriptionLength;
+        data["maxDescriptionLength"] = this.maxDescriptionLength;
+        data["maxTagsPerModel"] = this.maxTagsPerModel;
+        data["autoApproveVerifiedUsers"] = this.autoApproveVerifiedUsers;
+        data["requireThumbnail"] = this.requireThumbnail;
+        data["allowModelRemixing"] = this.allowModelRemixing;
+        data["requireRemixAttribution"] = this.requireRemixAttribution;
+        data["maxModelsPerUser"] = this.maxModelsPerUser;
+        data["enableModelComments"] = this.enableModelComments;
+        data["enableModelLikes"] = this.enableModelLikes;
+        data["enableModelDownloads"] = this.enableModelDownloads;
+        data["requireLicenseSelection"] = this.requireLicenseSelection;
+        data["allowCustomLicenses"] = this.allowCustomLicenses;
+        data["enableModelCollections"] = this.enableModelCollections;
+        data["requireCategorySelection"] = this.requireCategorySelection;
+        data["maxCategoriesPerModel"] = this.maxCategoriesPerModel;
+        data["enableModelSharing"] = this.enableModelSharing;
+        data["enableModelEmbedding"] = this.enableModelEmbedding;
+        data["requireModelPreview"] = this.requireModelPreview;
+        data["autoGenerateModelPreviews"] = this.autoGenerateModelPreviews;
+        data["enableModelAnalytics"] = this.enableModelAnalytics;
+        data["requireUserAgreement"] = this.requireUserAgreement;
+        data["userAgreementText"] = this.userAgreementText;
+        data["enableModelExport"] = this.enableModelExport;
+        data["enableModelImport"] = this.enableModelImport;
+        data["requireModelValidation"] = this.requireModelValidation;
+        data["enableModelBackup"] = this.enableModelBackup;
+        data["modelBackupRetentionDays"] = this.modelBackupRetentionDays;
+        data["enableModelArchiving"] = this.enableModelArchiving;
+        data["modelArchiveThresholdDays"] = this.modelArchiveThresholdDays;
+        data["requireModeratorApproval"] = this.requireModeratorApproval;
+        data["enableAutoModeration"] = this.enableAutoModeration;
+        data["requireContentRating"] = this.requireContentRating;
+        data["enableModelFlagging"] = this.enableModelFlagging;
+        data["requireFlagReason"] = this.requireFlagReason;
+        data["enableModelReporting"] = this.enableModelReporting;
+        data["requireReportDetails"] = this.requireReportDetails;
+        data["enableModelBlocking"] = this.enableModelBlocking;
+        data["requireBlockReason"] = this.requireBlockReason;
+        data["enableModelWhitelisting"] = this.enableModelWhitelisting;
+        data["enableModelBlacklisting"] = this.enableModelBlacklisting;
+        data["requireModelApproval"] = this.requireModelApproval;
+        data["enableModelRejection"] = this.enableModelRejection;
+        data["requireRejectionReason"] = this.requireRejectionReason;
+        data["enableModelAppeals"] = this.enableModelAppeals;
+        data["requireAppealDetails"] = this.requireAppealDetails;
+        data["enableModelLocking"] = this.enableModelLocking;
+        data["requireLockReason"] = this.requireLockReason;
+        data["enableModelUnlocking"] = this.enableModelUnlocking;
+        data["requireUnlockApproval"] = this.requireUnlockApproval;
+        data["enableModelDeletion"] = this.enableModelDeletion;
+        data["requireDeletionApproval"] = this.requireDeletionApproval;
+        data["requireDeletionReason"] = this.requireDeletionReason;
+        data["enableModelRestoration"] = this.enableModelRestoration;
+        data["requireRestorationApproval"] = this.requireRestorationApproval;
+        return data;
+    }
+}
+
+export interface IModelConfigurationSettingsData {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting?: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+}
+
 export class GetSiteModelSettingsResponse implements IGetSiteModelSettingsResponse {
     success?: boolean;
     message?: string;
@@ -15379,6 +16069,338 @@ export interface IUpdateFileSettingsCommand {
     isDefault?: boolean;
 }
 
+export class UpdateModelConfigurationSettingsResponse implements IUpdateModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+
+    constructor(data?: IUpdateModelConfigurationSettingsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): UpdateModelConfigurationSettingsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateModelConfigurationSettingsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IUpdateModelConfigurationSettingsResponse {
+    success?: boolean;
+    message?: string;
+}
+
+export class UpdateModelConfigurationSettingsCommand implements IUpdateModelConfigurationSettingsCommand {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting!: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+
+    constructor(data?: IUpdateModelConfigurationSettingsCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.allowAnonUploads = _data["allowAnonUploads"];
+            this.requireUploadModeration = _data["requireUploadModeration"];
+            this.defaultPrivacySetting = _data["defaultPrivacySetting"];
+            this.allowAnonDownloads = _data["allowAnonDownloads"];
+            this.enableModelVersioning = _data["enableModelVersioning"];
+            this.limitTotalModels = _data["limitTotalModels"];
+            this.allowNSFWContent = _data["allowNSFWContent"];
+            this.allowAIGeneratedContent = _data["allowAIGeneratedContent"];
+            this.requireModelDescription = _data["requireModelDescription"];
+            this.requireModelTags = _data["requireModelTags"];
+            this.minDescriptionLength = _data["minDescriptionLength"];
+            this.maxDescriptionLength = _data["maxDescriptionLength"];
+            this.maxTagsPerModel = _data["maxTagsPerModel"];
+            this.autoApproveVerifiedUsers = _data["autoApproveVerifiedUsers"];
+            this.requireThumbnail = _data["requireThumbnail"];
+            this.allowModelRemixing = _data["allowModelRemixing"];
+            this.requireRemixAttribution = _data["requireRemixAttribution"];
+            this.maxModelsPerUser = _data["maxModelsPerUser"];
+            this.enableModelComments = _data["enableModelComments"];
+            this.enableModelLikes = _data["enableModelLikes"];
+            this.enableModelDownloads = _data["enableModelDownloads"];
+            this.requireLicenseSelection = _data["requireLicenseSelection"];
+            this.allowCustomLicenses = _data["allowCustomLicenses"];
+            this.enableModelCollections = _data["enableModelCollections"];
+            this.requireCategorySelection = _data["requireCategorySelection"];
+            this.maxCategoriesPerModel = _data["maxCategoriesPerModel"];
+            this.enableModelSharing = _data["enableModelSharing"];
+            this.enableModelEmbedding = _data["enableModelEmbedding"];
+            this.requireModelPreview = _data["requireModelPreview"];
+            this.autoGenerateModelPreviews = _data["autoGenerateModelPreviews"];
+            this.enableModelAnalytics = _data["enableModelAnalytics"];
+            this.requireUserAgreement = _data["requireUserAgreement"];
+            this.userAgreementText = _data["userAgreementText"];
+            this.enableModelExport = _data["enableModelExport"];
+            this.enableModelImport = _data["enableModelImport"];
+            this.requireModelValidation = _data["requireModelValidation"];
+            this.enableModelBackup = _data["enableModelBackup"];
+            this.modelBackupRetentionDays = _data["modelBackupRetentionDays"];
+            this.enableModelArchiving = _data["enableModelArchiving"];
+            this.modelArchiveThresholdDays = _data["modelArchiveThresholdDays"];
+            this.requireModeratorApproval = _data["requireModeratorApproval"];
+            this.enableAutoModeration = _data["enableAutoModeration"];
+            this.requireContentRating = _data["requireContentRating"];
+            this.enableModelFlagging = _data["enableModelFlagging"];
+            this.requireFlagReason = _data["requireFlagReason"];
+            this.enableModelReporting = _data["enableModelReporting"];
+            this.requireReportDetails = _data["requireReportDetails"];
+            this.enableModelBlocking = _data["enableModelBlocking"];
+            this.requireBlockReason = _data["requireBlockReason"];
+            this.enableModelWhitelisting = _data["enableModelWhitelisting"];
+            this.enableModelBlacklisting = _data["enableModelBlacklisting"];
+            this.requireModelApproval = _data["requireModelApproval"];
+            this.enableModelRejection = _data["enableModelRejection"];
+            this.requireRejectionReason = _data["requireRejectionReason"];
+            this.enableModelAppeals = _data["enableModelAppeals"];
+            this.requireAppealDetails = _data["requireAppealDetails"];
+            this.enableModelLocking = _data["enableModelLocking"];
+            this.requireLockReason = _data["requireLockReason"];
+            this.enableModelUnlocking = _data["enableModelUnlocking"];
+            this.requireUnlockApproval = _data["requireUnlockApproval"];
+            this.enableModelDeletion = _data["enableModelDeletion"];
+            this.requireDeletionApproval = _data["requireDeletionApproval"];
+            this.requireDeletionReason = _data["requireDeletionReason"];
+            this.enableModelRestoration = _data["enableModelRestoration"];
+            this.requireRestorationApproval = _data["requireRestorationApproval"];
+        }
+    }
+
+    static fromJS(data: any): UpdateModelConfigurationSettingsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateModelConfigurationSettingsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["allowAnonUploads"] = this.allowAnonUploads;
+        data["requireUploadModeration"] = this.requireUploadModeration;
+        data["defaultPrivacySetting"] = this.defaultPrivacySetting;
+        data["allowAnonDownloads"] = this.allowAnonDownloads;
+        data["enableModelVersioning"] = this.enableModelVersioning;
+        data["limitTotalModels"] = this.limitTotalModels;
+        data["allowNSFWContent"] = this.allowNSFWContent;
+        data["allowAIGeneratedContent"] = this.allowAIGeneratedContent;
+        data["requireModelDescription"] = this.requireModelDescription;
+        data["requireModelTags"] = this.requireModelTags;
+        data["minDescriptionLength"] = this.minDescriptionLength;
+        data["maxDescriptionLength"] = this.maxDescriptionLength;
+        data["maxTagsPerModel"] = this.maxTagsPerModel;
+        data["autoApproveVerifiedUsers"] = this.autoApproveVerifiedUsers;
+        data["requireThumbnail"] = this.requireThumbnail;
+        data["allowModelRemixing"] = this.allowModelRemixing;
+        data["requireRemixAttribution"] = this.requireRemixAttribution;
+        data["maxModelsPerUser"] = this.maxModelsPerUser;
+        data["enableModelComments"] = this.enableModelComments;
+        data["enableModelLikes"] = this.enableModelLikes;
+        data["enableModelDownloads"] = this.enableModelDownloads;
+        data["requireLicenseSelection"] = this.requireLicenseSelection;
+        data["allowCustomLicenses"] = this.allowCustomLicenses;
+        data["enableModelCollections"] = this.enableModelCollections;
+        data["requireCategorySelection"] = this.requireCategorySelection;
+        data["maxCategoriesPerModel"] = this.maxCategoriesPerModel;
+        data["enableModelSharing"] = this.enableModelSharing;
+        data["enableModelEmbedding"] = this.enableModelEmbedding;
+        data["requireModelPreview"] = this.requireModelPreview;
+        data["autoGenerateModelPreviews"] = this.autoGenerateModelPreviews;
+        data["enableModelAnalytics"] = this.enableModelAnalytics;
+        data["requireUserAgreement"] = this.requireUserAgreement;
+        data["userAgreementText"] = this.userAgreementText;
+        data["enableModelExport"] = this.enableModelExport;
+        data["enableModelImport"] = this.enableModelImport;
+        data["requireModelValidation"] = this.requireModelValidation;
+        data["enableModelBackup"] = this.enableModelBackup;
+        data["modelBackupRetentionDays"] = this.modelBackupRetentionDays;
+        data["enableModelArchiving"] = this.enableModelArchiving;
+        data["modelArchiveThresholdDays"] = this.modelArchiveThresholdDays;
+        data["requireModeratorApproval"] = this.requireModeratorApproval;
+        data["enableAutoModeration"] = this.enableAutoModeration;
+        data["requireContentRating"] = this.requireContentRating;
+        data["enableModelFlagging"] = this.enableModelFlagging;
+        data["requireFlagReason"] = this.requireFlagReason;
+        data["enableModelReporting"] = this.enableModelReporting;
+        data["requireReportDetails"] = this.requireReportDetails;
+        data["enableModelBlocking"] = this.enableModelBlocking;
+        data["requireBlockReason"] = this.requireBlockReason;
+        data["enableModelWhitelisting"] = this.enableModelWhitelisting;
+        data["enableModelBlacklisting"] = this.enableModelBlacklisting;
+        data["requireModelApproval"] = this.requireModelApproval;
+        data["enableModelRejection"] = this.enableModelRejection;
+        data["requireRejectionReason"] = this.requireRejectionReason;
+        data["enableModelAppeals"] = this.enableModelAppeals;
+        data["requireAppealDetails"] = this.requireAppealDetails;
+        data["enableModelLocking"] = this.enableModelLocking;
+        data["requireLockReason"] = this.requireLockReason;
+        data["enableModelUnlocking"] = this.enableModelUnlocking;
+        data["requireUnlockApproval"] = this.requireUnlockApproval;
+        data["enableModelDeletion"] = this.enableModelDeletion;
+        data["requireDeletionApproval"] = this.requireDeletionApproval;
+        data["requireDeletionReason"] = this.requireDeletionReason;
+        data["enableModelRestoration"] = this.enableModelRestoration;
+        data["requireRestorationApproval"] = this.requireRestorationApproval;
+        return data;
+    }
+}
+
+export interface IUpdateModelConfigurationSettingsCommand {
+    allowAnonUploads?: boolean;
+    requireUploadModeration?: boolean;
+    defaultPrivacySetting: string;
+    allowAnonDownloads?: boolean;
+    enableModelVersioning?: boolean;
+    limitTotalModels?: number;
+    allowNSFWContent?: boolean;
+    allowAIGeneratedContent?: boolean;
+    requireModelDescription?: boolean;
+    requireModelTags?: boolean;
+    minDescriptionLength?: number;
+    maxDescriptionLength?: number;
+    maxTagsPerModel?: number;
+    autoApproveVerifiedUsers?: boolean;
+    requireThumbnail?: boolean;
+    allowModelRemixing?: boolean;
+    requireRemixAttribution?: boolean;
+    maxModelsPerUser?: number;
+    enableModelComments?: boolean;
+    enableModelLikes?: boolean;
+    enableModelDownloads?: boolean;
+    requireLicenseSelection?: boolean;
+    allowCustomLicenses?: boolean;
+    enableModelCollections?: boolean;
+    requireCategorySelection?: boolean;
+    maxCategoriesPerModel?: number;
+    enableModelSharing?: boolean;
+    enableModelEmbedding?: boolean;
+    requireModelPreview?: boolean;
+    autoGenerateModelPreviews?: boolean;
+    enableModelAnalytics?: boolean;
+    requireUserAgreement?: boolean;
+    userAgreementText?: string;
+    enableModelExport?: boolean;
+    enableModelImport?: boolean;
+    requireModelValidation?: boolean;
+    enableModelBackup?: boolean;
+    modelBackupRetentionDays?: number;
+    enableModelArchiving?: boolean;
+    modelArchiveThresholdDays?: number;
+    requireModeratorApproval?: boolean;
+    enableAutoModeration?: boolean;
+    requireContentRating?: boolean;
+    enableModelFlagging?: boolean;
+    requireFlagReason?: boolean;
+    enableModelReporting?: boolean;
+    requireReportDetails?: boolean;
+    enableModelBlocking?: boolean;
+    requireBlockReason?: boolean;
+    enableModelWhitelisting?: boolean;
+    enableModelBlacklisting?: boolean;
+    requireModelApproval?: boolean;
+    enableModelRejection?: boolean;
+    requireRejectionReason?: boolean;
+    enableModelAppeals?: boolean;
+    requireAppealDetails?: boolean;
+    enableModelLocking?: boolean;
+    requireLockReason?: boolean;
+    enableModelUnlocking?: boolean;
+    requireUnlockApproval?: boolean;
+    enableModelDeletion?: boolean;
+    requireDeletionApproval?: boolean;
+    requireDeletionReason?: boolean;
+    enableModelRestoration?: boolean;
+    requireRestorationApproval?: boolean;
+}
+
 export class UpdateSiteModelSettingsResponse implements IUpdateSiteModelSettingsResponse {
     success?: boolean;
     message?: string;
@@ -15489,6 +16511,183 @@ export interface IUpdateSiteModelSettingsCommand {
     requireModeration?: boolean;
     requireLoginForUpload?: boolean;
     allowPublicBrowsing?: boolean;
+}
+
+export class SearchResponse implements ISearchResponse {
+    results?: SearchResultItem[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+    query?: string;
+    type?: SearchType;
+
+    constructor(data?: ISearchResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["results"])) {
+                this.results = [] as any;
+                for (let item of _data["results"])
+                    this.results!.push(SearchResultItem.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+            this.query = _data["query"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): SearchResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new SearchResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.results)) {
+            data["results"] = [];
+            for (let item of this.results)
+                data["results"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        data["query"] = this.query;
+        data["type"] = this.type;
+        return data;
+    }
+}
+
+export interface ISearchResponse {
+    results?: SearchResultItem[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+    query?: string;
+    type?: SearchType;
+}
+
+export class SearchResultItem implements ISearchResultItem {
+    id?: string;
+    title?: string;
+    description?: string | undefined;
+    thumbnailUrl?: string | undefined;
+    avatar?: string | undefined;
+    type?: SearchResultType;
+    author?: string | undefined;
+    authorId?: string | undefined;
+    createdAt?: Date;
+    updatedAt?: Date;
+    downloads?: number | undefined;
+    likes?: number | undefined;
+    modelCount?: number | undefined;
+    username?: string | undefined;
+    email?: string | undefined;
+    relevanceScore?: number;
+
+    constructor(data?: ISearchResultItem) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.description = _data["description"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
+            this.avatar = _data["avatar"];
+            this.type = _data["type"];
+            this.author = _data["author"];
+            this.authorId = _data["authorId"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.downloads = _data["downloads"];
+            this.likes = _data["likes"];
+            this.modelCount = _data["modelCount"];
+            this.username = _data["username"];
+            this.email = _data["email"];
+            this.relevanceScore = _data["relevanceScore"];
+        }
+    }
+
+    static fromJS(data: any): SearchResultItem {
+        data = typeof data === 'object' ? data : {};
+        let result = new SearchResultItem();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["description"] = this.description;
+        data["thumbnailUrl"] = this.thumbnailUrl;
+        data["avatar"] = this.avatar;
+        data["type"] = this.type;
+        data["author"] = this.author;
+        data["authorId"] = this.authorId;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["downloads"] = this.downloads;
+        data["likes"] = this.likes;
+        data["modelCount"] = this.modelCount;
+        data["username"] = this.username;
+        data["email"] = this.email;
+        data["relevanceScore"] = this.relevanceScore;
+        return data;
+    }
+}
+
+export interface ISearchResultItem {
+    id?: string;
+    title?: string;
+    description?: string | undefined;
+    thumbnailUrl?: string | undefined;
+    avatar?: string | undefined;
+    type?: SearchResultType;
+    author?: string | undefined;
+    authorId?: string | undefined;
+    createdAt?: Date;
+    updatedAt?: Date;
+    downloads?: number | undefined;
+    likes?: number | undefined;
+    modelCount?: number | undefined;
+    username?: string | undefined;
+    email?: string | undefined;
+    relevanceScore?: number;
+}
+
+export enum SearchResultType {
+    Model = "Model",
+    User = "User",
+    Collection = "Collection",
+}
+
+export enum SearchType {
+    All = "All",
+    Models = "Models",
+    Users = "Users",
+    Collections = "Collections",
 }
 
 export class ReportsResponse implements IReportsResponse {
@@ -18453,6 +19652,90 @@ export interface IPreviewGenerationSettings {
     lightColor?: string;
 }
 
+export class DeleteAllModelsResponse implements IDeleteAllModelsResponse {
+    success?: boolean;
+    message?: string;
+    deletedCount?: number;
+    deletedAt?: Date;
+
+    constructor(data?: IDeleteAllModelsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.deletedCount = _data["deletedCount"];
+            this.deletedAt = _data["deletedAt"] ? new Date(_data["deletedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): DeleteAllModelsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteAllModelsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["deletedCount"] = this.deletedCount;
+        data["deletedAt"] = this.deletedAt ? this.deletedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IDeleteAllModelsResponse {
+    success?: boolean;
+    message?: string;
+    deletedCount?: number;
+    deletedAt?: Date;
+}
+
+export class DeleteAllModelsRequest implements IDeleteAllModelsRequest {
+    adminPassword!: string;
+
+    constructor(data?: IDeleteAllModelsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.adminPassword = _data["adminPassword"];
+        }
+    }
+
+    static fromJS(data: any): DeleteAllModelsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteAllModelsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["adminPassword"] = this.adminPassword;
+        return data;
+    }
+}
+
+export interface IDeleteAllModelsRequest {
+    adminPassword: string;
+}
+
 export class CreateModelVersionResponse implements ICreateModelVersionResponse {
     modelVersion?: ModelVersion;
 
@@ -19501,6 +20784,46 @@ export enum CollectionVisibility {
     Public = "Public",
     Private = "Private",
     Unlisted = "Unlisted",
+}
+
+export class FavoriteCollectionCommand implements IFavoriteCollectionCommand {
+    collectionId!: string;
+    isFavorite!: boolean;
+
+    constructor(data?: IFavoriteCollectionCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.collectionId = _data["collectionId"];
+            this.isFavorite = _data["isFavorite"];
+        }
+    }
+
+    static fromJS(data: any): FavoriteCollectionCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new FavoriteCollectionCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["collectionId"] = this.collectionId;
+        data["isFavorite"] = this.isFavorite;
+        return data;
+    }
+}
+
+export interface IFavoriteCollectionCommand {
+    collectionId: string;
+    isFavorite: boolean;
 }
 
 export class CreateCollectionCommand implements ICreateCollectionCommand {

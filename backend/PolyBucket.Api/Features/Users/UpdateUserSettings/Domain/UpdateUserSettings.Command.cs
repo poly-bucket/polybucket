@@ -18,6 +18,10 @@ namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Domain
         public string? MeasurementSystem { get; set; }
         public string? TimeZone { get; set; }
         public bool? AutoRotateModels { get; set; }
+        public string? DashboardViewType { get; set; }
+        public string? CardSize { get; set; }
+        public string? CardSpacing { get; set; }
+        public int? GridColumns { get; set; }
         public Dictionary<string, string>? CustomSettings { get; set; }
     }
 } 

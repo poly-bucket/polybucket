@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import NavigationBar from '../components/common/NavigationBar';
 import UserAvatar from '../components/UserAvatar';
 import ModelGrid from '../components/ModelGrid';
+import LayoutControls from '../components/common/LayoutControls';
 import CollectionCard from '../components/collections/CollectionCard';
 import { 
   Person, 
@@ -697,6 +698,11 @@ const UserProfile: React.FC = () => {
                 </div>
               ) : models.length > 0 ? (
                 <>
+                  {/* Layout Controls */}
+                  <div className="flex justify-end mb-4">
+                    <LayoutControls compact={true} />
+                  </div>
+                  
                   <ModelGrid
                     models={models.map(model => ({
                       id: model.id,

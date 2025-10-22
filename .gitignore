@@ -361,3 +361,4 @@ backend/.editorconfig
 .idea
 .turbo
 package-lock.json
+/.vscode

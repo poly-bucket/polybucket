@@ -22,6 +22,9 @@ public static class FeatureServiceCollectionExtensions
         services.AddScoped<Features.Models.CreateModel.Domain.CreateModelService>();
         services.AddTransient<Features.Models.CreateModel.Repository.ICreateModelRepository, Features.Models.CreateModel.Repository.CreateModelRepository>();
         
+        // DeleteAllModels
+        services.AddTransient<Features.Models.DeleteAllModels.Domain.IDeleteAllModelsService, Features.Models.DeleteAllModels.Domain.DeleteAllModelsService>();
+        
         // CreateModelVersion
         services.AddTransient<Features.Models.CreateModelVersion.Domain.ICreateModelVersionService, Features.Models.CreateModelVersion.Domain.CreateModelVersionService>();
         services.AddTransient<Features.Models.CreateModelVersion.Repository.ICreateModelVersionRepository, Features.Models.CreateModelVersion.Repository.CreateModelVersionRepository>();
@@ -57,6 +60,8 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Collections.UpdateCollection.Repository.ICollectionRepository, Features.Collections.UpdateCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.DeleteCollection.Repository.ICollectionRepository, Features.Collections.DeleteCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.GetUserCollections.Repository.ICollectionRepository, Features.Collections.GetUserCollections.Repository.CollectionRepository>();
+        services.AddTransient<Features.Collections.GetFavoriteCollections.Repository.IGetFavoriteCollectionsRepository, Features.Collections.GetFavoriteCollections.Repository.GetFavoriteCollectionsRepository>();
+        services.AddTransient<Features.Collections.FavoriteCollection.Repository.ICollectionRepository, Features.Collections.FavoriteCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.AddModelToCollection.Repository.ICollectionRepository, Features.Collections.AddModelToCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.RemoveModelFromCollection.Repository.ICollectionRepository, Features.Collections.RemoveModelFromCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.AccessCollection.Repository.ICollectionRepository, Features.Collections.AccessCollection.Repository.CollectionRepository>();
@@ -178,6 +183,8 @@ public static class FeatureServiceCollectionExtensions
         // Seeders
         services.AddTransient<PolyBucket.Api.Data.Seeders.AdminSeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.CategorySeeder>();
+        services.AddTransient<PolyBucket.Api.Seeders.FileTypeSettingsSeeder>();
+        services.AddTransient<PolyBucket.Api.Seeders.ModelSettingsSeeder>();
         
         // Theme Management
         services.AddTransient<Features.ThemeManagement.Repository.IThemeRepository, Features.ThemeManagement.Repository.ThemeRepository>();
@@ -191,6 +198,9 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Categories.UpdateCategory.Repository.IUpdateCategoryRepository, Features.Categories.UpdateCategory.Repository.UpdateCategoryRepository>();
         services.AddScoped<Features.Categories.GetCategories.Domain.IGetCategoriesService, Features.Categories.GetCategories.Domain.GetCategoriesService>();
         services.AddTransient<Features.Categories.GetCategories.Repository.IGetCategoriesRepository, Features.Categories.GetCategories.Repository.GetCategoriesRepository>();
+
+        // Search
+        services.AddTransient<Features.Search.Repository.ISearchRepository, Features.Search.Repository.SearchRepository>();
 
         return services;
     }

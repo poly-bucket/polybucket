@@ -41,6 +41,10 @@ namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Http
                     MeasurementSystem = request.MeasurementSystem,
                     TimeZone = request.TimeZone,
                     AutoRotateModels = request.AutoRotateModels,
+                    DashboardViewType = request.DashboardViewType,
+                    CardSize = request.CardSize,
+                    CardSpacing = request.CardSpacing,
+                    GridColumns = request.GridColumns,
                     CustomSettings = request.CustomSettings
                 };
 
@@ -63,6 +67,10 @@ namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Http
         public string? MeasurementSystem { get; set; }
         public string? TimeZone { get; set; }
         public bool? AutoRotateModels { get; set; }
+        public string? DashboardViewType { get; set; }
+        public string? CardSize { get; set; }
+        public string? CardSpacing { get; set; }
+        public int? GridColumns { get; set; }
         public Dictionary<string, string>? CustomSettings { get; set; }
     }
 } 

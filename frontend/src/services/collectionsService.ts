@@ -15,6 +15,8 @@ export interface Collection {
     avatar?: string;
   };
   avatar?: string;
+  favorite?: boolean;
+  displayOrder?: number;
   collectionModels?: CollectionModel[];
   createdAt?: string;
   updatedAt?: string;
@@ -97,6 +99,21 @@ const collectionsService = {
   // Remove a model from a collection
   async removeModelFromCollection(collectionId: string, modelId: string): Promise<void> {
     await api.delete(`${API_URL}/${collectionId}/models/${modelId}`);
+  },
+
+  // Get favorite collections for the current user
+  async getFavoriteCollections(): Promise<Collection[]> {
+    const response = await api.get(`${API_URL}/favorites`);
+    return response.data.collections || response.data;
+  },
+
+  // Toggle favorite status of a collection
+  async toggleFavorite(collectionId: string, isFavorite: boolean): Promise<{ success: boolean; message: string; isFavorite: boolean }> {
+    const response = await api.post(`${API_URL}/${collectionId}/favorite`, {
+      collectionId,
+      isFavorite
+    });
+    return response.data;
   }
 };
 

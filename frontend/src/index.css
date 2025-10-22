@@ -98,6 +98,145 @@ body {
   }
 }
 
+/* Custom Slider Styles */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-track {
+  background: #4b5563;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #3b82f6;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #60a5fa;
+  transform: scale(1.1);
+}
+
+.slider::-moz-range-track {
+  background: #4b5563;
+  height: 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+.slider::-moz-range-thumb {
+  background: #3b82f6;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #60a5fa;
+  transform: scale(1.1);
+}
+
+.slider:focus {
+  outline: none;
+}
+
+.slider:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.slider:focus::-moz-range-thumb {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Animation utilities */
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slideInFromTop 0.2s ease-out;
+}
+
+.slide-in-from-top-2 {
+  animation: slideInFromTop 0.2s ease-out;
+}
+
+/* Custom grid classes for dynamic columns */
+.grid-cols-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.grid-cols-6 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+/* Responsive variants for custom grid columns */
+@media (min-width: 1280px) {
+  .xl\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  
+  .xl\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1536px) {
+  .2xl\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  
+  .2xl\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/* CSS Custom Properties for dynamic grid columns */
+.grid[style*="--grid-columns-lg"] {
+  --grid-columns-lg: 4;
+  --grid-columns-xl: 5;
+  --grid-columns-2xl: 6;
+}
+
+@media (min-width: 1024px) {
+  .grid[style*="--grid-columns-lg"] {
+    grid-template-columns: repeat(var(--grid-columns-lg), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid[style*="--grid-columns-xl"] {
+    grid-template-columns: repeat(var(--grid-columns-xl), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1536px) {
+  .grid[style*="--grid-columns-2xl"] {
+    grid-template-columns: repeat(var(--grid-columns-2xl), minmax(0, 1fr));
+  }
+}
+
 @keyframes dropSuccess {
   0% {
     transform: scale(1);

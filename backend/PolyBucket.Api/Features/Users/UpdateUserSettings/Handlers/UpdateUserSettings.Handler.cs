@@ -34,6 +34,10 @@ namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Handlers
             if (request.MeasurementSystem != null) settings.MeasurementSystem = request.MeasurementSystem;
             if (request.TimeZone != null) settings.TimeZone = request.TimeZone;
             if (request.AutoRotateModels.HasValue) settings.AutoRotateModels = request.AutoRotateModels.Value;
+            if (request.DashboardViewType != null) settings.DashboardViewType = request.DashboardViewType;
+            if (request.CardSize != null) settings.CardSize = request.CardSize;
+            if (request.CardSpacing != null) settings.CardSpacing = request.CardSpacing;
+            if (request.GridColumns.HasValue) settings.GridColumns = request.GridColumns.Value;
             if (request.CustomSettings != null) settings.CustomSettings = request.CustomSettings;
 
             await _context.SaveChangesAsync();

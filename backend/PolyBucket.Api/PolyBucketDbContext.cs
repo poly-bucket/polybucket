@@ -36,6 +36,7 @@ namespace PolyBucket.Api.Data
         public DbSet<SystemSetup> SystemSetups { get; set; } = null!;
         public DbSet<FontAwesomeSettings> FontAwesomeSettings { get; set; } = null!;
         public DbSet<FileTypeSettings> FileTypeSettings { get; set; } = null!;
+        public DbSet<ModelSettings> ModelSettings { get; set; } = null!;
         public DbSet<Collection> Collections { get; set; } = null!;
         public DbSet<CollectionModel> CollectionModels { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
@@ -75,6 +76,19 @@ namespace PolyBucket.Api.Data
                 .HasOne(cm => cm.Collection)
                 .WithMany(c => c.CollectionModels)
                 .HasForeignKey(cm => cm.CollectionId);
+
+            // Collection Configuration
+            modelBuilder.Entity<Collection>()
+                .Property(c => c.Favorite)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<Collection>()
+                .Property(c => c.DisplayOrder)
+                .HasDefaultValue(0);
+
+            modelBuilder.Entity<Collection>()
+                .HasIndex(c => new { c.OwnerId, c.Favorite, c.DisplayOrder })
+                .HasDatabaseName("IX_Collections_OwnerId_Favorite_DisplayOrder");
 
             modelBuilder.Entity<CollectionModel>()
                 .HasOne(cm => cm.Model)

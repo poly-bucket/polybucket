@@ -19,6 +19,34 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
   // Get auto-rotate setting from user settings, default to true
   const autoRotate = settings?.autoRotateModels ?? true;
   
+  // Get layout settings from user settings
+  const cardSize = settings?.cardSize || 'medium';
+  const cardSpacing = settings?.cardSpacing || 'normal';
+  
+  // Calculate card dimensions based on size setting
+  const getCardDimensions = () => {
+    switch (cardSize) {
+      case 'small':
+        return 'h-64 sm:h-72'; // Smaller height
+      case 'large':
+        return 'h-80 sm:h-96'; // Larger height
+      default: // medium
+        return 'h-72 sm:h-80'; // Default height
+    }
+  };
+  
+  // Calculate thumbnail dimensions based on size setting
+  const getThumbnailDimensions = () => {
+    switch (cardSize) {
+      case 'small':
+        return 'h-32 sm:h-36'; // Smaller thumbnail
+      case 'large':
+        return 'h-48 sm:h-56'; // Larger thumbnail
+      default: // medium
+        return 'h-40 sm:h-48'; // Default thumbnail
+    }
+  };
+  
   const handleClick = () => {
     if (onClick) {
       onClick(model);
@@ -105,7 +133,7 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
 
   return (
     <div 
-      className={`lg-card cursor-pointer overflow-hidden group w-full h-72 sm:h-80 flex flex-col transition-all duration-200 ${className}`}
+      className={`lg-card cursor-pointer overflow-hidden group w-full ${getCardDimensions()} flex flex-col transition-all duration-200 ${className}`}
       onClick={handleClick}
       draggable={true}
       onDragStart={handleDragStart}
@@ -113,8 +141,8 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
       data-testid="model-card"
       title={`Drag to add to collection • ${model.name}`}
     >
-      {/* Thumbnail Container - Fixed height */}
-      <div className="relative h-40 sm:h-48 bg-white/10 overflow-hidden flex-shrink-0">
+      {/* Thumbnail Container - Dynamic height based on card size */}
+      <div className={`relative ${getThumbnailDimensions()} bg-white/10 overflow-hidden flex-shrink-0`}>
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
@@ -193,15 +221,19 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
         </div>
       </div>
 
-      {/* Content - Fixed height with flex layout */}
-      <div className="p-3 sm:p-4 flex flex-col flex-1 min-h-0">
-        {/* Model Title - Fixed height with ellipsis */}
-        <h3 className="font-semibold text-white text-sm mb-1 leading-tight line-clamp-2 min-h-[2.5rem]">
+      {/* Content - Dynamic padding based on card size */}
+      <div className={`p-3 sm:p-4 flex flex-col flex-1 min-h-0 ${cardSize === 'small' ? 'p-2 sm:p-3' : cardSize === 'large' ? 'p-4 sm:p-5' : ''}`}>
+        {/* Model Title - Dynamic text size based on card size */}
+        <h3 className={`font-semibold text-white mb-1 leading-tight line-clamp-2 min-h-[2.5rem] ${
+          cardSize === 'small' ? 'text-xs' : cardSize === 'large' ? 'text-base' : 'text-sm'
+        }`}>
           {model.name || 'Untitled Model'}
         </h3>
 
-        {/* Author - Fixed height */}
-        <div className="text-xs text-white/60 mb-2 sm:mb-3 flex-shrink-0">
+        {/* Author - Dynamic text size based on card size */}
+        <div className={`text-white/60 mb-2 sm:mb-3 flex-shrink-0 ${
+          cardSize === 'small' ? 'text-xs' : cardSize === 'large' ? 'text-sm' : 'text-xs'
+        }`}>
           by{' '}
           <ClickableUsername
             userId={model.author?.id || ''}
@@ -212,8 +244,10 @@ const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, className = '' })
           />
         </div>
 
-        {/* Stats Row - Fixed height */}
-        <div className="flex items-center justify-between text-xs text-white/60 flex-shrink-0">
+        {/* Stats Row - Dynamic text size based on card size */}
+        <div className={`flex items-center justify-between text-white/60 flex-shrink-0 ${
+          cardSize === 'small' ? 'text-xs' : cardSize === 'large' ? 'text-sm' : 'text-xs'
+        }`}>
           {/* Likes */}
           <div className="flex items-center space-x-1">
             <svg className="w-3 h-3 fill-current text-red-400" viewBox="0 0 24 24">

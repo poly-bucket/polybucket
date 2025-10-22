@@ -27,6 +27,10 @@ class UserSettingsService {
         measurementSystem: settings.measurementSystem,
         timeZone: settings.timeZone,
         autoRotateModels: settings.autoRotateModels,
+        dashboardViewType: settings.dashboardViewType,
+        cardSize: settings.cardSize,
+        cardSpacing: settings.cardSpacing,
+        gridColumns: settings.gridColumns,
         customSettings: settings.customSettings
       };
 
@@ -61,6 +65,10 @@ class UserSettingsService {
       measurementSystem: 'metric',
       timeZone: 'UTC',
       autoRotateModels: true,
+      dashboardViewType: 'grid',
+      cardSize: 'medium',
+      cardSpacing: 'normal',
+      gridColumns: 4,
       customSettings: {}
     };
   }
