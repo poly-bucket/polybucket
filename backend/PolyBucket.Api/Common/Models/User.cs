@@ -47,5 +47,11 @@ namespace PolyBucket.Api.Common.Models
         public virtual UserSettings Settings { get; set; } = null!;
         public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
         public virtual TwoFactorAuth? TwoFactorAuth { get; set; }
+
+        public string? RemoteInstanceId { get; set; }
+        public string? RemoteUserId { get; set; }
+        public bool IsFederated { get; set; } = false;
+        public bool CanLogin { get; set; } = true;
+        public DateTime? LastFederationSync { get; set; }
     }
 } 

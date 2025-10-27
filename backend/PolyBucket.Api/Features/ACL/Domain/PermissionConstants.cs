@@ -12,6 +12,7 @@ namespace PolyBucket.Api.Features.ACL.Domain
         public const string ADMIN_DELETE_ANY_USER = "admin.delete.any_user";
         public const string ADMIN_BAN_USERS = "admin.ban.users";
         public const string ADMIN_VIEW_USER_DETAILS = "admin.view.user_details";
+        public const string ADMIN_VIEW_ANALYTICS = "admin.view.analytics";
 
         // User Management
         public const string USER_VIEW_PROFILE = "user.view.profile";
@@ -213,7 +214,8 @@ namespace PolyBucket.Api.Features.ACL.Domain
                     ADMIN_MANAGE_USERS,
                     ADMIN_DELETE_ANY_USER,
                     ADMIN_BAN_USERS,
-                    ADMIN_VIEW_USER_DETAILS
+                    ADMIN_VIEW_USER_DETAILS,
+                    ADMIN_VIEW_ANALYTICS
                 },
                 [Categories.MODEL_MANAGEMENT] = new[]
                 {

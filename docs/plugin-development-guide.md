@@ -4,9 +4,14 @@
 
 - [Overview](#overview)
 - [Plugin Architecture](#plugin-architecture)
+- [Plugin Installation & Discovery](#plugin-installation--discovery)
+- [Plugin Manifest System](#plugin-manifest-system)
+- [Specialized Plugin Types](#specialized-plugin-types)
 - [Backend Plugin Development](#backend-plugin-development)
 - [Frontend Plugin Development](#frontend-plugin-development)
-- [Comment Plugin Example](#comment-plugin-example)
+- [Plugin Examples](#plugin-examples)
+- [Plugin CLI & Development Tools](#plugin-cli--development-tools)
+- [Plugin Security & Sandboxing](#plugin-security--sandboxing)
 - [Plugin Lifecycle](#plugin-lifecycle)
 - [Best Practices](#best-practices)
 - [Deployment](#deployment)
@@ -24,6 +29,11 @@ PolyBucket features a comprehensive plugin system that allows developers to exte
 - **Permission Integration**: Plugins work with the existing ACL system
 - **Dynamic Loading**: Plugins can be loaded and unloaded without restarting the application
 - **Configuration Management**: Plugins can expose settings to administrators
+- **Plugin Installation**: Install plugins from GitHub repos, URLs, or marketplace
+- **Plugin Discovery**: Browse and install plugins from the PolyBucket marketplace
+- **Specialized Types**: Support for themes, OAuth, metadata extensions, and more
+- **Plugin Sandboxing**: Secure execution environment for plugin code
+- **Development Tools**: CLI tools for plugin development and publishing
 
 ## Plugin Architecture
 
@@ -42,6 +52,348 @@ The plugin system consists of several key components:
 2. **PluginHook**: React component that renders plugin components at specific extension points
 3. **Plugin API**: Provides access to application state, services, and functionality
 4. **Dynamic Component Loading**: Supports runtime loading of React components
+
+## Plugin Installation & Discovery
+
+### Plugin Installation System
+
+PolyBucket supports multiple ways to install plugins:
+
+#### 1. GitHub Repository Installation
+```bash
+# Install from GitHub repo
+POST /api/plugins/install
+{
+  "source": "github",
+  "url": "https://github.com/user/polybucket-theme-plugin",
+  "branch": "main"
+}
+```
+
+#### 2. Direct URL Installation
+```bash
+# Install from direct download URL
+POST /api/plugins/install
+{
+  "source": "url",
+  "url": "https://example.com/plugin.zip"
+}
+```
+
+#### 3. Marketplace Installation
+```bash
+# Install from marketplace
+POST /api/plugins/install
+{
+  "source": "marketplace",
+  "pluginId": "dark-theme-plugin",
+  "version": "1.2.0"
+}
+```
+
+### Plugin Installation Service
+
+```csharp
+public class PluginInstallationService
+{
+    public async Task<PluginInstallationResult> InstallFromUrlAsync(string url)
+    {
+        // Download and validate plugin
+        // Extract plugin files
+        // Validate manifest
+        // Install dependencies
+        // Register with plugin manager
+    }
+    
+    public async Task<PluginInstallationResult> InstallFromGitHubAsync(string repoUrl)
+    {
+        // Clone repository
+        // Build plugin if needed
+        // Extract plugin files
+        // Validate manifest
+        // Install dependencies
+        // Register with plugin manager
+    }
+    
+    public async Task<PluginInstallationResult> InstallFromMarketplaceAsync(string pluginId, string version)
+    {
+        // Fetch plugin from marketplace
+        // Download plugin package
+        // Validate signature
+        // Install plugin
+        // Register with plugin manager
+    }
+}
+```
+
+### Plugin Discovery
+
+```csharp
+[ApiController]
+[Route("api/plugins")]
+public class PluginManagementController : ControllerBase
+{
+    [HttpGet("marketplace")]
+    public async Task<ActionResult<List<MarketplacePlugin>>> GetMarketplacePlugins()
+    {
+        var plugins = await _pluginMarketplaceService.GetAvailablePluginsAsync();
+        return Ok(plugins);
+    }
+    
+    [HttpPost("install")]
+    public async Task<ActionResult<PluginInstallationResult>> InstallPlugin([FromBody] InstallPluginRequest request)
+    {
+        var result = await _pluginInstallationService.InstallFromUrlAsync(request.Url);
+        return Ok(result);
+    }
+    
+    [HttpPost("uninstall/{pluginId}")]
+    public async Task<ActionResult> UninstallPlugin(string pluginId)
+    {
+        await _pluginManager.UninstallPluginAsync(pluginId);
+        return Ok();
+    }
+    
+    [HttpGet("installed")]
+    public async Task<ActionResult<List<InstalledPlugin>>> GetInstalledPlugins()
+    {
+        var plugins = await _pluginManager.GetInstalledPluginsAsync();
+        return Ok(plugins);
+    }
+}
+```
+
+## Plugin Manifest System
+
+### Plugin Manifest Structure
+
+Every plugin must include a `polybucket-plugin.json` manifest file:
+
+```json
+{
+  "id": "dark-theme-plugin",
+  "name": "Dark Theme",
+  "version": "1.2.0",
+  "author": "PolyBucket Community",
+  "description": "Dark theme for PolyBucket with customizable accent colors",
+  "type": "theme",
+  "compatibility": {
+    "minVersion": "1.0.0",
+    "maxVersion": "2.0.0"
+  },
+  "dependencies": {
+    "backend": [],
+    "frontend": ["react", "styled-components"]
+  },
+  "permissions": [
+    "theme.modify",
+    "ui.customize"
+  ],
+  "hooks": [
+    {
+      "name": "theme-override",
+      "component": "DarkThemeProvider",
+      "priority": 100
+    }
+  ],
+  "settings": [
+    {
+      "key": "accentColor",
+      "type": "color",
+      "default": "#007bff",
+      "label": "Accent Color",
+      "description": "Primary accent color for the theme"
+    },
+    {
+      "key": "enableAnimations",
+      "type": "boolean",
+      "default": true,
+      "label": "Enable Animations"
+    }
+  ],
+  "assets": {
+    "css": ["styles/dark-theme.css"],
+    "js": ["scripts/theme-utils.js"],
+    "images": ["icons/theme-icon.png"]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/polybucket-theme-plugin"
+  },
+  "keywords": ["theme", "dark", "ui", "customization"],
+  "license": "MIT"
+}
+```
+
+### Manifest Validation
+
+```csharp
+public class PluginManifestValidator
+{
+    public async Task<ValidationResult> ValidateManifestAsync(string manifestPath)
+    {
+        var manifest = await JsonSerializer.DeserializeAsync<PluginManifest>(manifestPath);
+        
+        // Validate required fields
+        if (string.IsNullOrEmpty(manifest.Id))
+            return ValidationResult.Failed("Plugin ID is required");
+            
+        // Validate version format
+        if (!Version.TryParse(manifest.Version, out _))
+            return ValidationResult.Failed("Invalid version format");
+            
+        // Validate compatibility
+        if (!IsCompatible(manifest.Compatibility))
+            return ValidationResult.Failed("Plugin not compatible with current version");
+            
+        return ValidationResult.Success();
+    }
+}
+```
+
+## Specialized Plugin Types
+
+### Theme Plugins
+
+```csharp
+public interface IThemePlugin : IPlugin
+{
+    string ThemeName { get; }
+    Dictionary<string, string> CSSVariables { get; }
+    Dictionary<string, object> ComponentOverrides { get; }
+    Task ApplyThemeAsync();
+    Task RemoveThemeAsync();
+}
+
+public class DarkThemePlugin : IThemePlugin
+{
+    public string ThemeName => "Dark Theme";
+    
+    public Dictionary<string, string> CSSVariables => new()
+    {
+        ["--primary-color"] = "#007bff",
+        ["--background-color"] = "#1a1a1a",
+        ["--text-color"] = "#ffffff"
+    };
+    
+    public async Task ApplyThemeAsync()
+    {
+        // Apply theme variables
+        // Override component styles
+        // Update UI elements
+    }
+}
+```
+
+### OAuth Plugins
+
+```csharp
+public interface IOAuthPlugin : IPlugin
+{
+    string ProviderName { get; }
+    string ClientId { get; }
+    string ClientSecret { get; }
+    string AuthorizationUrl { get; }
+    string TokenUrl { get; }
+    string UserInfoUrl { get; }
+    
+    Task<OAuthResult> AuthenticateAsync(string code);
+    Task<UserInfo> GetUserInfoAsync(string accessToken);
+    Task<RefreshTokenResult> RefreshTokenAsync(string refreshToken);
+}
+
+public class DiscordOAuthPlugin : IOAuthPlugin
+{
+    public string ProviderName => "Discord";
+    public string ClientId => _configuration["Discord:ClientId"];
+    public string ClientSecret => _configuration["Discord:ClientSecret"];
+    public string AuthorizationUrl => "https://discord.com/api/oauth2/authorize";
+    public string TokenUrl => "https://discord.com/api/oauth2/token";
+    public string UserInfoUrl => "https://discord.com/api/users/@me";
+    
+    public async Task<OAuthResult> AuthenticateAsync(string code)
+    {
+        // Exchange code for access token
+        // Return OAuth result
+    }
+}
+```
+
+### Metadata Extension Plugins
+
+```csharp
+public interface IMetadataPlugin : IPlugin
+{
+    IEnumerable<MetadataField> GetModelFields();
+    IEnumerable<MetadataField> GetUserFields();
+    IEnumerable<MetadataField> GetCollectionFields();
+    
+    Task<object> ProcessMetadataAsync(string entityType, Guid entityId, object metadata);
+    Task<ValidationResult> ValidateMetadataAsync(string entityType, object metadata);
+}
+
+public class PrintingMetadataPlugin : IMetadataPlugin
+{
+    public IEnumerable<MetadataField> GetModelFields()
+    {
+        return new[]
+        {
+            new MetadataField
+            {
+                Name = "LayerHeight",
+                Type = "number",
+                Label = "Layer Height (mm)",
+                Description = "Recommended layer height for 3D printing"
+            },
+            new MetadataField
+            {
+                Name = "InfillPercentage",
+                Type = "number",
+                Label = "Infill Percentage",
+                Description = "Recommended infill percentage"
+            },
+            new MetadataField
+            {
+                Name = "Supports",
+                Type = "boolean",
+                Label = "Requires Supports",
+                Description = "Whether the model requires support structures"
+            }
+        };
+    }
+}
+```
+
+### Localization Plugins
+
+```csharp
+public interface ILocalizationPlugin : IPlugin
+{
+    string Language { get; }
+    string LanguageCode { get; }
+    Dictionary<string, string> Translations { get; }
+    string DateFormat { get; }
+    string NumberFormat { get; }
+    string Currency { get; }
+    
+    Task<string> TranslateAsync(string key, params object[] args);
+    Task<Dictionary<string, string>> GetTranslationsAsync();
+}
+
+public class SpanishLocalizationPlugin : ILocalizationPlugin
+{
+    public string Language => "Spanish";
+    public string LanguageCode => "es";
+    
+    public Dictionary<string, string> Translations => new()
+    {
+        ["models.title"] = "Modelos",
+        ["models.download"] = "Descargar",
+        ["models.like"] = "Me gusta",
+        ["collections.title"] = "Colecciones"
+    };
+}
+```
 
 ## Backend Plugin Development
 
@@ -421,6 +773,468 @@ const MyComponent: React.FC<PluginComponentProps> = ({ pluginId }) => {
 };
 ```
 
+## Plugin Examples
+
+### Theme Plugin Example
+
+#### Dark Theme Plugin
+
+```csharp
+// Backend: DarkThemePlugin.cs
+public class DarkThemePlugin : IThemePlugin
+{
+    public string Id => "dark-theme-plugin";
+    public string Name => "Dark Theme";
+    public string Version => "1.2.0";
+    public string Author => "PolyBucket Community";
+    public string Description => "Dark theme with customizable accent colors";
+    
+    public string ThemeName => "Dark Theme";
+    
+    public Dictionary<string, string> CSSVariables => new()
+    {
+        ["--primary-color"] = "#007bff",
+        ["--secondary-color"] = "#6c757d",
+        ["--background-color"] = "#1a1a1a",
+        ["--surface-color"] = "#2d2d2d",
+        ["--text-color"] = "#ffffff",
+        ["--text-muted"] = "#b0b0b0",
+        ["--border-color"] = "#404040",
+        ["--shadow-color"] = "rgba(0, 0, 0, 0.3)"
+    };
+    
+    public async Task ApplyThemeAsync()
+    {
+        // Apply CSS variables to document
+        // Override component styles
+        // Update theme context
+    }
+    
+    public async Task RemoveThemeAsync()
+    {
+        // Remove theme variables
+        // Restore default styles
+        // Clear theme context
+    }
+}
+```
+
+```typescript
+// Frontend: DarkThemeProvider.tsx
+import React, { createContext, useContext, useEffect } from 'react';
+
+interface DarkThemeContextType {
+  isDark: boolean;
+  toggleTheme: () => void;
+  accentColor: string;
+  setAccentColor: (color: string) => void;
+}
+
+const DarkThemeContext = createContext<DarkThemeContextType | undefined>(undefined);
+
+export const DarkThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isDark, setIsDark] = React.useState(false);
+  const [accentColor, setAccentColor] = React.useState('#007bff');
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.style.setProperty('--primary-color', accentColor);
+      document.documentElement.style.setProperty('--background-color', '#1a1a1a');
+      document.documentElement.style.setProperty('--text-color', '#ffffff');
+    } else {
+      document.documentElement.style.removeProperty('--primary-color');
+      document.documentElement.style.removeProperty('--background-color');
+      document.documentElement.style.removeProperty('--text-color');
+    }
+  }, [isDark, accentColor]);
+
+  const toggleTheme = () => setIsDark(!isDark);
+
+  return (
+    <DarkThemeContext.Provider value={{ isDark, toggleTheme, accentColor, setAccentColor }}>
+      {children}
+    </DarkThemeContext.Provider>
+  );
+};
+
+export const useDarkTheme = () => {
+  const context = useContext(DarkThemeContext);
+  if (!context) {
+    throw new Error('useDarkTheme must be used within DarkThemeProvider');
+  }
+  return context;
+};
+```
+
+### OAuth Plugin Example
+
+#### Discord OAuth Plugin
+
+```csharp
+// Backend: DiscordOAuthPlugin.cs
+public class DiscordOAuthPlugin : IOAuthPlugin
+{
+    public string Id => "discord-oauth-plugin";
+    public string Name => "Discord OAuth";
+    public string Version => "1.0.0";
+    public string Author => "PolyBucket Community";
+    public string Description => "Discord account integration and community features";
+    
+    public string ProviderName => "Discord";
+    public string ClientId => _configuration["Discord:ClientId"];
+    public string ClientSecret => _configuration["Discord:ClientSecret"];
+    public string AuthorizationUrl => "https://discord.com/api/oauth2/authorize";
+    public string TokenUrl => "https://discord.com/api/oauth2/token";
+    public string UserInfoUrl => "https://discord.com/api/users/@me";
+    
+    public async Task<OAuthResult> AuthenticateAsync(string code)
+    {
+        var tokenRequest = new
+        {
+            client_id = ClientId,
+            client_secret = ClientSecret,
+            grant_type = "authorization_code",
+            code = code,
+            redirect_uri = _configuration["Discord:RedirectUri"]
+        };
+        
+        var response = await _httpClient.PostAsJsonAsync(TokenUrl, tokenRequest);
+        var tokenData = await response.Content.ReadFromJsonAsync<DiscordTokenResponse>();
+        
+        return new OAuthResult
+        {
+            AccessToken = tokenData.AccessToken,
+            RefreshToken = tokenData.RefreshToken,
+            ExpiresIn = tokenData.ExpiresIn,
+            Scope = tokenData.Scope
+        };
+    }
+    
+    public async Task<UserInfo> GetUserInfoAsync(string accessToken)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = 
+            new AuthenticationHeaderValue("Bearer", accessToken);
+            
+        var response = await _httpClient.GetAsync(UserInfoUrl);
+        var userData = await response.Content.ReadFromJsonAsync<DiscordUserResponse>();
+        
+        return new UserInfo
+        {
+            Id = userData.Id,
+            Username = userData.Username,
+            DisplayName = userData.GlobalName ?? userData.Username,
+            Email = userData.Email,
+            AvatarUrl = userData.Avatar != null 
+                ? $"https://cdn.discordapp.com/avatars/{userData.Id}/{userData.Avatar}.png"
+                : null
+        };
+    }
+}
+```
+
+```typescript
+// Frontend: DiscordIntegration.tsx
+import React, { useState, useEffect } from 'react';
+import { usePlugin } from '../PluginAPI';
+
+const DiscordIntegration: React.FC = () => {
+  const plugin = usePlugin('discord-oauth-plugin');
+  const [isConnected, setIsConnected] = useState(false);
+  const [discordUser, setDiscordUser] = useState(null);
+
+  useEffect(() => {
+    checkConnectionStatus();
+  }, []);
+
+  const checkConnectionStatus = async () => {
+    try {
+      const response = await plugin.api.makeRequest('/api/oauth/discord/status');
+      if (response.ok) {
+        const data = await response.json();
+        setIsConnected(data.connected);
+        setDiscordUser(data.user);
+      }
+    } catch (error) {
+      console.error('Failed to check Discord connection:', error);
+    }
+  };
+
+  const connectDiscord = async () => {
+    try {
+      const response = await plugin.api.makeRequest('/api/oauth/discord/authorize');
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = data.authorizationUrl;
+      }
+    } catch (error) {
+      plugin.showNotification('Failed to connect Discord', 'error');
+    }
+  };
+
+  const disconnectDiscord = async () => {
+    try {
+      await plugin.api.makeRequest('/api/oauth/discord/disconnect', {
+        method: 'POST'
+      });
+      setIsConnected(false);
+      setDiscordUser(null);
+      plugin.showNotification('Discord disconnected', 'success');
+    } catch (error) {
+      plugin.showNotification('Failed to disconnect Discord', 'error');
+    }
+  };
+
+  return (
+    <div className="discord-integration p-4 border rounded-md">
+      <h3 className="text-lg font-semibold mb-4">Discord Integration</h3>
+      
+      {isConnected ? (
+        <div className="space-y-2">
+          <p className="text-green-600">Connected to Discord</p>
+          {discordUser && (
+            <div className="flex items-center space-x-2">
+              <img 
+                src={discordUser.avatarUrl} 
+                alt={discordUser.username}
+                className="w-8 h-8 rounded-full"
+              />
+              <span>{discordUser.displayName}</span>
+            </div>
+          )}
+          <button 
+            onClick={disconnectDiscord}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Disconnect
+          </button>
+        </div>
+      ) : (
+        <button 
+          onClick={connectDiscord}
+          className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+        >
+          Connect Discord
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default DiscordIntegration;
+```
+
+### Metadata Extension Plugin Example
+
+#### 3D Printing Metadata Plugin
+
+```csharp
+// Backend: PrintingMetadataPlugin.cs
+public class PrintingMetadataPlugin : IMetadataPlugin
+{
+    public string Id => "printing-metadata-plugin";
+    public string Name => "3D Printing Metadata";
+    public string Version => "1.0.0";
+    public string Author => "PolyBucket Community";
+    public string Description => "Adds 3D printing specific metadata to models";
+    
+    public IEnumerable<MetadataField> GetModelFields()
+    {
+        return new[]
+        {
+            new MetadataField
+            {
+                Name = "LayerHeight",
+                Type = "number",
+                Label = "Layer Height (mm)",
+                Description = "Recommended layer height for 3D printing",
+                MinValue = 0.1,
+                MaxValue = 0.5,
+                DefaultValue = 0.2
+            },
+            new MetadataField
+            {
+                Name = "InfillPercentage",
+                Type = "number",
+                Label = "Infill Percentage",
+                Description = "Recommended infill percentage",
+                MinValue = 0,
+                MaxValue = 100,
+                DefaultValue = 20
+            },
+            new MetadataField
+            {
+                Name = "Supports",
+                Type = "boolean",
+                Label = "Requires Supports",
+                Description = "Whether the model requires support structures",
+                DefaultValue = false
+            },
+            new MetadataField
+            {
+                Name = "PrintTime",
+                Type = "number",
+                Label = "Estimated Print Time (hours)",
+                Description = "Estimated printing time",
+                MinValue = 0,
+                DefaultValue = 1
+            },
+            new MetadataField
+            {
+                Name = "Material",
+                Type = "select",
+                Label = "Recommended Material",
+                Description = "Recommended printing material",
+                Options = new[] { "PLA", "ABS", "PETG", "TPU", "Wood", "Metal" },
+                DefaultValue = "PLA"
+            }
+        };
+    }
+    
+    public async Task<object> ProcessMetadataAsync(string entityType, Guid entityId, object metadata)
+    {
+        if (entityType != "model") return metadata;
+        
+        // Process and validate printing metadata
+        var printingData = JsonSerializer.Deserialize<PrintingMetadata>(metadata.ToString());
+        
+        // Calculate derived values
+        if (printingData.LayerHeight > 0 && printingData.InfillPercentage > 0)
+        {
+            printingData.EstimatedFilament = CalculateFilamentUsage(printingData);
+        }
+        
+        return printingData;
+    }
+}
+```
+
+```typescript
+// Frontend: PrintingMetadataForm.tsx
+import React, { useState, useEffect } from 'react';
+import { usePlugin } from '../PluginAPI';
+
+interface PrintingMetadata {
+  layerHeight: number;
+  infillPercentage: number;
+  supports: boolean;
+  printTime: number;
+  material: string;
+}
+
+const PrintingMetadataForm: React.FC<{ modelId: string }> = ({ modelId }) => {
+  const plugin = usePlugin('printing-metadata-plugin');
+  const [metadata, setMetadata] = useState<PrintingMetadata>({
+    layerHeight: 0.2,
+    infillPercentage: 20,
+    supports: false,
+    printTime: 1,
+    material: 'PLA'
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadMetadata();
+  }, [modelId]);
+
+  const loadMetadata = async () => {
+    try {
+      const response = await plugin.api.makeRequest(`/api/models/${modelId}/metadata/printing`);
+      if (response.ok) {
+        const data = await response.json();
+        setMetadata(data);
+      }
+    } catch (error) {
+      console.error('Failed to load printing metadata:', error);
+    }
+  };
+
+  const saveMetadata = async () => {
+    try {
+      setLoading(true);
+      await plugin.api.makeRequest(`/api/models/${modelId}/metadata/printing`, {
+        method: 'PUT',
+        body: JSON.stringify(metadata)
+      });
+      plugin.showNotification('Printing metadata saved', 'success');
+    } catch (error) {
+      plugin.showNotification('Failed to save printing metadata', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="printing-metadata p-4 border rounded-md">
+      <h3 className="text-lg font-semibold mb-4">3D Printing Settings</h3>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Layer Height (mm)</label>
+          <input
+            type="number"
+            step="0.1"
+            min="0.1"
+            max="0.5"
+            value={metadata.layerHeight}
+            onChange={(e) => setMetadata({...metadata, layerHeight: parseFloat(e.target.value)})}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Infill Percentage</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={metadata.infillPercentage}
+            onChange={(e) => setMetadata({...metadata, infillPercentage: parseInt(e.target.value)})}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Recommended Material</label>
+          <select
+            value={metadata.material}
+            onChange={(e) => setMetadata({...metadata, material: e.target.value})}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="PLA">PLA</option>
+            <option value="ABS">ABS</option>
+            <option value="PETG">PETG</option>
+            <option value="TPU">TPU</option>
+            <option value="Wood">Wood</option>
+            <option value="Metal">Metal</option>
+          </select>
+        </div>
+        
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="supports"
+            checked={metadata.supports}
+            onChange={(e) => setMetadata({...metadata, supports: e.target.checked})}
+            className="mr-2"
+          />
+          <label htmlFor="supports">Requires Supports</label>
+        </div>
+        
+        <button
+          onClick={saveMetadata}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+        >
+          {loading ? 'Saving...' : 'Save Settings'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default PrintingMetadataForm;
+```
+
 ## Comment Plugin Example
 
 The enhanced comment plugin serves as a comprehensive example of the plugin system. Here's how it's structured:
@@ -504,6 +1318,281 @@ Hooks = new List<PluginHook>
         ComponentId = "enhanced-comments-widget",
         Priority = 30,
         Config = new Dictionary<string, object> { { "targetType", "user" } }
+    }
+}
+```
+
+## Plugin CLI & Development Tools
+
+### Plugin CLI Tool
+
+The PolyBucket CLI provides tools for plugin development, building, and publishing:
+
+```bash
+# Install the PolyBucket CLI
+npm install -g @polybucket/cli
+
+# Create a new plugin
+polybucket-plugin create my-theme-plugin --type=theme
+
+# Initialize plugin in existing directory
+polybucket-plugin init
+
+# Build plugin for production
+polybucket-plugin build
+
+# Test plugin locally
+polybucket-plugin dev
+
+# Publish plugin to marketplace
+polybucket-plugin publish
+
+# Install plugin from source
+polybucket-plugin install https://github.com/user/plugin-repo
+
+# List installed plugins
+polybucket-plugin list
+
+# Update plugin
+polybucket-plugin update my-plugin
+
+# Remove plugin
+polybucket-plugin remove my-plugin
+```
+
+### Plugin Development Workflow
+
+```bash
+# 1. Create new plugin
+polybucket-plugin create my-plugin --type=theme
+
+# 2. Start development server
+polybucket-plugin dev
+
+# 3. Make changes to plugin code
+# - Backend changes require server restart
+# - Frontend changes hot-reload automatically
+
+# 4. Test plugin functionality
+# - Plugin runs in isolated environment
+# - Access to development APIs
+# - Debug logging enabled
+
+# 5. Build for production
+polybucket-plugin build
+
+# 6. Test production build
+polybucket-plugin test
+
+# 7. Publish to marketplace
+polybucket-plugin publish
+```
+
+### Plugin Development Kit
+
+The Plugin Development Kit (PDK) provides tools and utilities for plugin development:
+
+```typescript
+// Plugin Development Kit
+import { PluginSDK } from '@polybucket/plugin-sdk';
+
+const sdk = new PluginSDK({
+  pluginId: 'my-plugin',
+  version: '1.0.0',
+  environment: 'development'
+});
+
+// Access to development APIs
+const models = await sdk.api.models.getAll();
+const users = await sdk.api.users.getCurrent();
+
+// Plugin-specific storage
+await sdk.storage.set('myData', { value: 'example' });
+const data = await sdk.storage.get('myData');
+
+// Development utilities
+sdk.logger.info('Plugin initialized');
+sdk.notifications.show('Development mode active', 'info');
+```
+
+### Plugin Testing Framework
+
+```typescript
+// Plugin test setup
+import { PluginTestRunner } from '@polybucket/plugin-testing';
+
+describe('My Plugin', () => {
+  let testRunner: PluginTestRunner;
+  
+  beforeEach(async () => {
+    testRunner = new PluginTestRunner({
+      pluginId: 'my-plugin',
+      mockData: {
+        models: [...],
+        users: [...]
+      }
+    });
+    
+    await testRunner.initialize();
+  });
+  
+  afterEach(async () => {
+    await testRunner.cleanup();
+  });
+  
+  it('should apply theme correctly', async () => {
+    const theme = await testRunner.plugin.applyTheme();
+    expect(theme.isApplied).toBe(true);
+  });
+  
+  it('should handle user interactions', async () => {
+    const result = await testRunner.simulateUserAction('click', '.theme-toggle');
+    expect(result.success).toBe(true);
+  });
+});
+```
+
+## Plugin Security & Sandboxing
+
+### Plugin Sandboxing
+
+Plugins run in isolated environments to prevent security issues:
+
+```typescript
+// Frontend Plugin Sandbox
+const PluginSandbox: React.FC<PluginSandboxProps> = ({ 
+  plugin, 
+  children 
+}) => {
+  return (
+    <ErrorBoundary fallback={<PluginErrorFallback />}>
+      <SecurityContext.Provider value={plugin.permissions}>
+        <CSPProvider policy={plugin.contentSecurityPolicy}>
+          <IsolatedScope>
+            {children}
+          </IsolatedScope>
+        </CSPProvider>
+      </SecurityContext.Provider>
+    </ErrorBoundary>
+  );
+};
+```
+
+### Content Security Policy
+
+```typescript
+// Plugin CSP Configuration
+const pluginCSP = {
+  'default-src': ["'self'"],
+  'script-src': ["'self'", "'unsafe-inline'"],
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'img-src': ["'self'", "data:", "https:"],
+  'connect-src': ["'self'", "https://api.polybucket.com"],
+  'frame-src': ["'none'"],
+  'object-src': ["'none'"],
+  'base-uri': ["'self'"],
+  'form-action': ["'self'"]
+};
+```
+
+### Permission System
+
+```csharp
+// Backend Permission Validation
+public class PluginPermissionValidator
+{
+    public async Task<bool> ValidatePermissionAsync(string pluginId, string permission, string resource)
+    {
+        var plugin = await _pluginManager.GetPluginAsync(pluginId);
+        var user = await _userService.GetCurrentUserAsync();
+        
+        // Check plugin permissions
+        if (!plugin.Metadata.RequiredPermissions.Contains(permission))
+            return false;
+            
+        // Check user permissions
+        if (!await _permissionService.HasPermissionAsync(user.Id, permission))
+            return false;
+            
+        // Check resource access
+        if (!await _resourceService.CanAccessAsync(user.Id, resource))
+            return false;
+            
+        return true;
+    }
+}
+```
+
+### Plugin Isolation
+
+```csharp
+// Backend Plugin Isolation
+public class PluginIsolationService
+{
+    public async Task<T> ExecuteInIsolationAsync<T>(string pluginId, Func<Task<T>> action)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var pluginContext = new PluginExecutionContext(pluginId, scope.ServiceProvider);
+        
+        try
+        {
+            // Set up isolated environment
+            await _setupIsolatedEnvironment(pluginContext);
+            
+            // Execute plugin code
+            return await action();
+        }
+        catch (Exception ex)
+        {
+            // Log error and prevent plugin crash from affecting main app
+            _logger.LogError(ex, "Plugin {PluginId} execution failed", pluginId);
+            throw new PluginExecutionException($"Plugin execution failed: {ex.Message}", ex);
+        }
+        finally
+        {
+            // Clean up isolated environment
+            await _cleanupIsolatedEnvironment(pluginContext);
+        }
+    }
+}
+```
+
+### Security Monitoring
+
+```csharp
+// Plugin Security Monitoring
+public class PluginSecurityMonitor
+{
+    public async Task MonitorPluginActivityAsync(string pluginId)
+    {
+        var plugin = await _pluginManager.GetPluginAsync(pluginId);
+        
+        // Monitor API calls
+        _apiCallMonitor.Track(pluginId, (endpoint, method) => {
+            if (IsSuspiciousActivity(endpoint, method))
+            {
+                _securityLogger.LogWarning("Suspicious activity detected in plugin {PluginId}: {Endpoint} {Method}", 
+                    pluginId, endpoint, method);
+            }
+        });
+        
+        // Monitor resource usage
+        _resourceMonitor.Track(pluginId, (cpu, memory, disk) => {
+            if (IsExcessiveResourceUsage(cpu, memory, disk))
+            {
+                _securityLogger.LogWarning("Excessive resource usage in plugin {PluginId}: CPU={CPU}%, Memory={Memory}MB", 
+                    pluginId, cpu, memory);
+            }
+        });
+        
+        // Monitor network activity
+        _networkMonitor.Track(pluginId, (url, method) => {
+            if (IsUnauthorizedNetworkAccess(url, method))
+            {
+                _securityLogger.LogError("Unauthorized network access in plugin {PluginId}: {Url} {Method}", 
+                    pluginId, url, method);
+            }
+        });
     }
 }
 ```

@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
 using PolyBucket.Api.Features.Models.DeleteModel.Http;
 using PolyBucket.Api.Features.Models.GetModelByUserId.Http;
+using PolyBucket.Api.Features.Search.Http;
 
 namespace PolyBucket.Tests.Features.Models;
 
@@ -35,7 +36,7 @@ public class ModelsControllerTests : IDisposable
             new object[] { typeof(RemoveCategoryFromModelController) },
             new object[] { typeof(RemoveModelFromCollectionController) },
             new object[] { typeof(RemoveTagFromModelController) },
-            new object[] { typeof(SearchModelsController) },
+            new object[] { typeof(SearchController) },
             new object[] { typeof(UpdateModelController) },
             new object[] { typeof(CreateModelController) }
         };

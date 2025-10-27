@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
-import { usePermissions, PERMISSIONS } from '../../../../hooks/usePermissions';
-import categoryService, { CategoryDto } from '../../../../services/categoryService';
-import CreateCategoryForm from './CreateCategoryForm';
+import { usePermissions, PERMISSIONS } from '../../hooks/usePermissions';
+import categoryService, { CategoryDto } from '../../services/categoryService';
+import CreateCategoryForm from '../../components/admin/tabs/components/CreateCategoryForm';
 import CategoriesTable from './CategoriesTable';
 
 const CategoryManagement: React.FC = () => {

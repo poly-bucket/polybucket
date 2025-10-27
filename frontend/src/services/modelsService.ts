@@ -57,6 +57,11 @@ export interface Model {
   thumbnailUrl?: string;
   fileUrl?: string;
   downloads?: number;
+  isFederated?: boolean;
+  remoteInstanceId?: string;
+  remoteModelId?: string;
+  remoteAuthorId?: string;
+  lastFederationSync?: string;
 }
 
 export interface GetModelsResponse {

@@ -16,7 +16,9 @@ public static class FeatureServiceCollectionExtensions
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
         // Models
-        services.AddTransient<Features.Models.Repository.IModelsRepository, Features.Models.Repository.ModelsRepository>();
+        services.AddTransient<Features.Models.GetModels.Repository.IGetModelsRepository, Features.Models.GetModels.Repository.GetModelsRepository>();
+        services.AddTransient<Features.Models.GetModelById.Repository.IGetModelByIdRepository, Features.Models.GetModelById.Repository.GetModelByIdRepository>();
+        services.AddTransient<Features.Models.GetModelById.Services.IGetModelByIdService, Features.Models.GetModelById.Services.GetModelByIdService>();
         
         // CreateModel
         services.AddScoped<Features.Models.CreateModel.Domain.CreateModelService>();
@@ -157,6 +159,10 @@ public static class FeatureServiceCollectionExtensions
             return new PluginManager(pluginsPath);
         });
 
+        // Marketplace Integration
+        services.AddHttpClient<Features.Plugins.Services.MarketplaceClient>();
+        services.AddTransient<Features.Plugins.Services.MarketplaceClient>();
+
         // Register default plugins
         services.AddScoped<Features.Comments.Domain.ICommentsPlugin, Features.Comments.Plugins.DefaultCommentsPlugin>();
         services.AddScoped<IReportingPlugin, DefaultReportingPlugin>();
@@ -201,6 +207,11 @@ public static class FeatureServiceCollectionExtensions
 
         // Search
         services.AddTransient<Features.Search.Repository.ISearchRepository, Features.Search.Repository.SearchRepository>();
+
+        // Federation
+        services.AddTransient<Features.Federation.Repository.IFederationRepository, Features.Federation.Repository.FederationRepository>();
+        services.AddTransient<Features.Federation.Services.IFederationImportService, Features.Federation.Services.FederationImportService>();
+        services.AddSingleton<Features.Federation.Services.IFederationTokenService, Features.Federation.Services.FederationTokenService>();
 
         return services;
     }

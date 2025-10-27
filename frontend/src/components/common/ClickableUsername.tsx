@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import UserAvatar from '../UserAvatar';
+import UserAvatar from '../../ucp/UserAvatar';
 
 interface ClickableUsernameProps {
   userId: string;

@@ -100,7 +100,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
           components={{
             // Custom styling for different elements
             h1: ({ children }) => (
-              <h1 className="text-3xl font-bold text-green-400 mb-4 border-b border-gray-700 pb-2">
+              <h1 className="text-3xl font-bold text-green-400 mb-4 border-b border-white/20 pb-2">
                 {children}
               </h1>
             ),
@@ -120,27 +120,27 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
               </h4>
             ),
             p: ({ children }) => (
-              <p className="text-gray-300 leading-relaxed mb-4">
+              <p className="text-white/80 leading-relaxed mb-4">
                 {children}
               </p>
             ),
             ul: ({ children }) => (
-              <ul className="list-disc list-inside text-gray-300 mb-4 space-y-1">
+              <ul className="list-disc list-inside text-white/80 mb-4 space-y-1">
                 {children}
               </ul>
             ),
             ol: ({ children }) => (
-              <ol className="list-decimal list-inside text-gray-300 mb-4 space-y-1">
+              <ol className="list-decimal list-inside text-white/80 mb-4 space-y-1">
                 {children}
               </ol>
             ),
             li: ({ children }) => (
-              <li className="text-gray-300">
+              <li className="text-white/80">
                 {children}
               </li>
             ),
             blockquote: ({ children }) => (
-              <blockquote className="border-l-4 border-green-500 pl-4 italic text-gray-400 bg-gray-800 py-2 mb-4">
+              <blockquote className="border-l-4 border-green-500 pl-4 italic text-white/60 bg-white/5 py-2 mb-4 rounded-r">
                 {children}
               </blockquote>
             ),
@@ -148,7 +148,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
               const isInline = !className;
               if (isInline) {
                 return (
-                  <code className="bg-gray-800 text-green-400 px-1 py-0.5 rounded text-sm font-mono">
+                  <code className="bg-white/10 text-green-400 px-1 py-0.5 rounded text-sm font-mono">
                     {children}
                   </code>
                 );
@@ -160,7 +160,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
               );
             },
             pre: ({ children }) => (
-              <pre className="bg-gray-800 border border-gray-700 rounded-lg p-4 overflow-x-auto mb-4">
+              <pre className="bg-white/10 border border-white/20 rounded-lg p-4 overflow-x-auto mb-4">
                 {children}
               </pre>
             ),

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Users.Services;
-using PolyBucket.Api.Features.Models.Domain;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using PolyBucket.Api.Features.Comments.Domain;
 using System;
 using System.Linq;

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +23,7 @@ namespace PolyBucket.Api.Features.Models.GetModelByUserId.Repository
         {
             var query = _dbContext.Models
                 .Include(m => m.Files)
+                .Include(m => m.Author)
                 .Include(m => m.Categories)
                 .Include(m => m.Tags)
                 .Where(m => m.AuthorId == userId);

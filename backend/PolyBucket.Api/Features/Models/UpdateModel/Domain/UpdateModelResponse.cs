@@ -1,4 +1,4 @@
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
 
 namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
 {

@@ -3,64 +3,66 @@ using System;
 
 namespace PolyBucket.Api.Features.Federation.Domain
 {
+    /// <summary>
+    /// Represents a federation handshake between two PolyBucket instances
+    /// </summary>
     public class FederationHandshake : Auditable
     {
         public new Guid Id { get; set; }
         
-        public Guid FederatedInstanceId { get; set; }
-        public FederatedInstance FederatedInstance { get; set; } = null!;
+        /// <summary>
+        /// The federated instance ID if we initiated the handshake
+        /// </summary>
+        public Guid? InitiatorInstanceId { get; set; }
         
-        public HandshakeDirection Direction { get; set; }
+        /// <summary>
+        /// The federated instance ID if they initiated the handshake
+        /// </summary>
+        public Guid? ResponderInstanceId { get; set; }
+        
+        /// <summary>
+        /// URL of the instance that initiated the handshake
+        /// </summary>
+        public string InitiatorUrl { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// URL of the instance responding to the handshake
+        /// </summary>
+        public string ResponderUrl { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Current status of the handshake
+        /// </summary>
         public HandshakeStatus Status { get; set; } = HandshakeStatus.Initiated;
-        public string? Challenge { get; set; }
-        public string? Response { get; set; }
+        
+        /// <summary>
+        /// Temporary token used during handshake process
+        /// </summary>
+        public string? HandshakeToken { get; set; }
+        
+        /// <summary>
+        /// Error message if handshake failed
+        /// </summary>
         public string? ErrorMessage { get; set; }
         
-        // Timing information
-        public DateTime InitiatedAt { get; set; } = DateTime.UtcNow;
+        /// <summary>
+        /// When the handshake was completed
+        /// </summary>
         public DateTime? CompletedAt { get; set; }
-        public DateTime? ExpiresAt { get; set; }
         
-        // Protocol information
-        public string ProtocolVersion { get; set; } = "1.0";
-        public string? ClientVersion { get; set; }
-        public string? ServerVersion { get; set; }
+        /// <summary>
+        /// When the handshake expires (24 hours from creation)
+        /// </summary>
+        public DateTime ExpiresAt { get; set; }
         
-        // Cryptographic information
-        public string? TempPublicKey { get; set; }
-        public string? KeyExchangeData { get; set; }
-        public string? SignatureData { get; set; }
+        /// <summary>
+        /// Navigation property to the initiator instance
+        /// </summary>
+        public virtual FederatedInstance? InitiatorInstance { get; set; }
         
-        // Connection metadata
-        public string? RemoteIpAddress { get; set; }
-        public string? UserAgent { get; set; }
-        public int AttemptNumber { get; set; } = 1;
-        public int MaxAttempts { get; set; } = 3;
-        
-        // Instance information exchanged during handshake
-        public string? RemoteInstanceName { get; set; }
-        public string? RemoteInstanceVersion { get; set; }
-        public string? RemoteAdminContact { get; set; }
-        public string? RemoteCapabilities { get; set; } // JSON array of supported features
+        /// <summary>
+        /// Navigation property to the responder instance
+        /// </summary>
+        public virtual FederatedInstance? ResponderInstance { get; set; }
     }
-
-    public enum HandshakeDirection
-    {
-        Outgoing = 1, // We initiated the handshake
-        Incoming = 2  // They initiated the handshake
-    }
-
-    public enum HandshakeStatus
-    {
-        Initiated = 0,
-        ChallengeSet = 1,
-        ChallengeReceived = 2,
-        ResponseSent = 3,
-        ResponseReceived = 4,
-        KeysExchanged = 5,
-        Completed = 6,
-        Failed = 7,
-        Expired = 8,
-        Rejected = 9
-    }
-} 
+}

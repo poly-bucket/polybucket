@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Admin.GetAdminModelStatistics.Domain;
 using PolyBucket.Api.Features.Admin.GetAdminModelStatistics.Repository;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using System;
 using System.Linq;
 using System.Threading;

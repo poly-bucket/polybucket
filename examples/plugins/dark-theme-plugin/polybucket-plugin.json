@@ -1,0 +1,68 @@
+{
+  "id": "dark-theme-plugin",
+  "name": "Dark Theme",
+  "version": "1.2.0",
+  "author": "PolyBucket Community",
+  "description": "Dark theme with customizable accent colors and modern styling for PolyBucket",
+  "type": "theme",
+  "compatibility": {
+    "minVersion": "1.0.0",
+    "maxVersion": "2.0.0"
+  },
+  "dependencies": {
+    "backend": [],
+    "frontend": ["react", "typescript"]
+  },
+  "permissions": [
+    "theme.modify",
+    "ui.customize"
+  ],
+  "hooks": [
+    {
+      "name": "theme-override",
+      "component": "DarkThemeProvider",
+      "priority": 100
+    }
+  ],
+  "settings": [
+    {
+      "key": "accentColor",
+      "type": "color",
+      "default": "#007bff",
+      "label": "Accent Color",
+      "description": "Primary accent color for the theme"
+    },
+    {
+      "key": "enableAnimations",
+      "type": "boolean",
+      "default": true,
+      "label": "Enable Animations",
+      "description": "Enable smooth transitions and animations"
+    },
+    {
+      "key": "fontFamily",
+      "type": "select",
+      "default": "system-ui, -apple-system, sans-serif",
+      "label": "Font Family",
+      "description": "Custom font family for the theme",
+      "options": [
+        "system-ui, -apple-system, sans-serif",
+        "Inter, sans-serif",
+        "Roboto, sans-serif",
+        "Open Sans, sans-serif",
+        "Lato, sans-serif"
+      ]
+    }
+  ],
+  "assets": {
+    "css": ["styles/dark-theme.css"],
+    "js": ["scripts/theme-utils.js"],
+    "images": ["icons/theme-icon.png"]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polybucket/dark-theme-plugin"
+  },
+  "keywords": ["theme", "dark", "ui", "customization", "styling"],
+  "license": "MIT"
+}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logoutUser } from '../store/thunks/authThunks';
 import { useSimplePermissions } from '../hooks/useSimplePermissions';
-import UserAvatar from './UserAvatar';
+import UserAvatar from '../ucp/UserAvatar';
 
 interface UserMenuProps {
   isOpen: boolean;
@@ -123,6 +123,17 @@ const UserSettingsMenuItems: React.FC<{ onNavigate: (path: string) => void }> = 
         }
         label="My Collections"
         onClick={() => onNavigate('/my-collections')}
+      />
+
+      {/* My Models */}
+      <MenuItem
+        icon={
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        }
+        label="My Models"
+        onClick={() => onNavigate('/my-models')}
       />
 
       {/* Moderation Dashboard - Only for moderators and admins */}

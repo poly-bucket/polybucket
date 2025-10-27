@@ -1,4 +1,5 @@
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

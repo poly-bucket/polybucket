@@ -13,26 +13,10 @@ using Xunit;
 
 namespace PolyBucket.Tests.Features.Search
 {
-    public class SearchControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class SearchControllerTests : BaseIntegrationTest
     {
-        private readonly WebApplicationFactory<Program> _factory;
-        private readonly HttpClient _client;
-
-        public SearchControllerTests(WebApplicationFactory<Program> factory)
+        public SearchControllerTests(TestCollectionFixture testFixture) : base(testFixture)
         {
-            _factory = factory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureServices(services =>
-                {
-                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<PolyBucketDbContext>));
-                    if (descriptor != null)
-                        services.Remove(descriptor);
-
-                    services.AddDbContext<PolyBucketDbContext>(options =>
-                        options.UseInMemoryDatabase("TestDatabase"));
-                });
-            });
-            _client = _factory.CreateClient();
         }
 
         [Fact]
@@ -43,7 +27,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = $"/api/search?query={query}";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -57,7 +41,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
@@ -70,7 +54,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=test&page=0";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
@@ -83,7 +67,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=test&pageSize=0";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
@@ -96,7 +80,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=test&type=Models";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -109,7 +93,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=test&type=Users";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -122,7 +106,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=test&type=Collections";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -135,7 +119,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=test&page=2&pageSize=5";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -148,7 +132,7 @@ namespace PolyBucket.Tests.Features.Search
             var url = "/api/search?query=test&sortBy=relevance&sortDescending=false";
 
             // Act
-            var response = await _client.GetAsync(url);
+            var response = await Client.GetAsync(url);
 
             // Assert
             response.EnsureSuccessStatusCode();

@@ -1,6 +1,6 @@
 using PolyBucket.Api.Common.Entities;
 using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
 
 namespace PolyBucket.Api.Features.Comments.Domain
 {

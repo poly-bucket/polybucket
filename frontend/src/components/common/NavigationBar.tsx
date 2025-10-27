@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../utils/hooks';
-import UserAvatar from '../UserAvatar';
+import UserAvatar from '../../ucp/UserAvatar';
 import UserMenu from '../UserMenu';
 import SearchBar, { SearchType } from './SearchBar';
 

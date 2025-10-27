@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon } from '@mui/icons-material';
 import type { SiteModelSettings } from '../../../../services/siteModelSettingsService';
 import siteModelSettingsService from '../../../../services/siteModelSettingsService';
-import FileUploadSettings from './FileUploadSettings';
-import ModelBehaviorSettings from './ModelBehaviorSettings';
+import FileUploadSettings from '../../../../acp/model-settings/FileUploadSettings';
+import ModelBehaviorSettings from '../../../../acp/model-settings/ModelBehaviorSettings';
 
 const SiteModelSettingsComponent: React.FC = () => {
   const [loading, setLoading] = useState(false);

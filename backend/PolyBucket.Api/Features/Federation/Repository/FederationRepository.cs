@@ -196,16 +196,18 @@ namespace PolyBucket.Api.Features.Federation.Repository
         public async Task<FederationHandshake?> GetHandshakeAsync(Guid id)
         {
             return await _context.FederationHandshakes
-                .Include(h => h.FederatedInstance)
+                .Include(h => h.InitiatorInstance)
+                .Include(h => h.ResponderInstance)
                 .FirstOrDefaultAsync(h => h.Id == id);
         }
 
         public async Task<IEnumerable<FederationHandshake>> GetHandshakesAsync(Guid instanceId)
         {
             return await _context.FederationHandshakes
-                .Include(h => h.FederatedInstance)
-                .Where(h => h.FederatedInstanceId == instanceId)
-                .OrderByDescending(h => h.InitiatedAt)
+                .Include(h => h.InitiatorInstance)
+                .Include(h => h.ResponderInstance)
+                .Where(h => h.InitiatorInstanceId == instanceId || h.ResponderInstanceId == instanceId)
+                .OrderByDescending(h => h.CreatedAt)
                 .ToListAsync();
         }
 

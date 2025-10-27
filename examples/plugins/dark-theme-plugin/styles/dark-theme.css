@@ -1,0 +1,172 @@
+/* Dark Theme Plugin Styles */
+
+.dark-theme {
+  /* Base colors */
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --background-color: #1a1a1a;
+  --surface-color: #2d2d2d;
+  --text-color: #ffffff;
+  --text-muted: #b0b0b0;
+  --border-color: #404040;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  
+  /* Status colors */
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --info-color: #17a2b8;
+  
+  /* Typography */
+  --font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Dark theme animations */
+.theme-animations * {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Dark theme overrides for common components */
+.dark-theme .bg-white {
+  background-color: var(--surface-color) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-theme .bg-gray-50 {
+  background-color: var(--background-color) !important;
+}
+
+.dark-theme .text-gray-900 {
+  color: var(--text-color) !important;
+}
+
+.dark-theme .text-gray-600 {
+  color: var(--text-muted) !important;
+}
+
+.dark-theme .border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+.dark-theme .shadow {
+  box-shadow: 0 1px 3px 0 var(--shadow-color), 
+              0 1px 2px 0 var(--shadow-color) !important;
+}
+
+/* Model cards in dark theme */
+.dark-theme .model-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.dark-theme .model-card:hover {
+  box-shadow: 0 4px 6px -1px var(--shadow-color), 
+              0 2px 4px -1px var(--shadow-color);
+}
+
+/* Navigation bar in dark theme */
+.dark-theme .navbar {
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Buttons in dark theme */
+.dark-theme .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.dark-theme .btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.dark-theme .btn-secondary {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: #ffffff;
+}
+
+/* Form inputs in dark theme */
+.dark-theme input,
+.dark-theme select,
+.dark-theme textarea {
+  background-color: var(--surface-color);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.dark-theme input:focus,
+.dark-theme select:focus,
+.dark-theme textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Code blocks in dark theme */
+.dark-theme pre,
+.dark-theme code {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+/* Tables in dark theme */
+.dark-theme table {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}
+
+.dark-theme table th {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.dark-theme table td {
+  border-color: var(--border-color);
+}
+
+/* Modals in dark theme */
+.dark-theme .modal-content {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.dark-theme .modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark-theme .modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Alerts in dark theme */
+.dark-theme .alert-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.dark-theme .alert-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-color: var(--warning-color);
+  color: var(--warning-color);
+}
+
+.dark-theme .alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+.dark-theme .alert-info {
+  background-color: rgba(23, 162, 184, 0.1);
+  border-color: var(--info-color);
+  color: var(--info-color);
+}

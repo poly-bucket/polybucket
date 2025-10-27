@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using PolyBucket.Api.Features.ACL.Services;
 using System.Security.Claims;
 

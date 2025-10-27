@@ -1034,7 +1034,6 @@ select:focus {
 /* Status Badge Icon Spacing */
 .lg-status-badge svg,
 .lg-status-badge .MuiSvgIcon-root {
-  margin-right: 0.25rem;
   width: 0.875rem;
   height: 0.875rem;
 }

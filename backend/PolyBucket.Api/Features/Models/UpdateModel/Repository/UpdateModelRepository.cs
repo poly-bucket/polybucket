@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +20,7 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Repository
         {
             return await _dbContext.Models
                 .Include(m => m.Files)
+                .Include(m => m.Author)
                 .Include(m => m.Categories)
                 .Include(m => m.Tags)
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);

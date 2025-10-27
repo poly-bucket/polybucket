@@ -49,6 +49,9 @@ namespace Api.Migrations
                     b.Property<string>("Bio")
                         .HasColumnType("text");
 
+                    b.Property<bool>("CanLogin")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Country")
                         .HasColumnType("text");
 
@@ -80,8 +83,14 @@ namespace Api.Migrations
                     b.Property<bool>("IsBanned")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsFederated")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsProfilePublic")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFederationSync")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp with time zone");
@@ -94,6 +103,12 @@ namespace Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RemoteInstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RemoteUserId")
                         .HasColumnType("text");
 
                     b.Property<bool>("RequiresPasswordChange")
@@ -711,16 +726,8 @@ namespace Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AdminContact")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AllowedCategories")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("AllowedRoles")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("AutoImportNewModels")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("BaseUrl")
                         .IsRequired()
@@ -739,68 +746,56 @@ namespace Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool>("IsEnabled")
                         .HasColumnType("boolean");
-
-                    b.Property<bool>("IsTrusted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastError")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("LastHeartbeatAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("LastSyncAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("MaxModelsToSync")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ModelsReceived")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ModelsShared")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("NextSyncAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OurToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("OurTokenExpiry")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PublicKey")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("SharedSecret")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("SyncFeaturedOnly")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("SyncIntervalMinutes")
+                    b.Property<int?>("SyncInterval")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("SyncPublicOnly")
-                        .HasColumnType("boolean");
+                    b.Property<int>("SyncMode")
+                        .HasColumnType("integer");
 
-                    b.Property<long>("TotalBytesTransferred")
-                        .HasColumnType("bigint");
+                    b.Property<string>("TheirToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("TheirTokenExpiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TokenRenewalMode")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UpdatedById")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Version")
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1048,15 +1043,6 @@ namespace Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("AttemptNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Challenge")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ClientVersion")
-                        .HasColumnType("text");
-
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1072,60 +1058,31 @@ namespace Api.Migrations
                     b.Property<Guid?>("DeletedById")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Direction")
-                        .HasColumnType("integer");
-
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("ExpiresAt")
+                    b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("FederatedInstanceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("InitiatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("KeyExchangeData")
+                    b.Property<string>("HandshakeToken")
                         .HasColumnType("text");
 
-                    b.Property<int>("MaxAttempts")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("InitiatorInstanceId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("ProtocolVersion")
+                    b.Property<string>("InitiatorUrl")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("RemoteAdminContact")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("ResponderInstanceId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("RemoteCapabilities")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RemoteInstanceName")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RemoteInstanceVersion")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RemoteIpAddress")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Response")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ServerVersion")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SignatureData")
+                    b.Property<string>("ResponderUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
-
-                    b.Property<string>("TempPublicKey")
-                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1133,12 +1090,11 @@ namespace Api.Migrations
                     b.Property<Guid>("UpdatedById")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("UserAgent")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("FederatedInstanceId");
+                    b.HasIndex("InitiatorInstanceId");
+
+                    b.HasIndex("ResponderInstanceId");
 
                     b.ToTable("FederationHandshakes");
                 });
@@ -1532,11 +1488,17 @@ namespace Api.Migrations
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsFederated")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsPublic")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsRemix")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFederationSync")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("License")
                         .HasColumnType("integer");
@@ -1555,6 +1517,15 @@ namespace Api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("RemixUrl")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("RemoteAuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RemoteInstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RemoteModelId")
                         .HasColumnType("text");
 
                     b.Property<string>("ThumbnailUrl")
@@ -2907,13 +2878,19 @@ namespace Api.Migrations
 
             modelBuilder.Entity("PolyBucket.Api.Features.Federation.Domain.FederationHandshake", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Federation.Domain.FederatedInstance", "FederatedInstance")
-                        .WithMany("Handshakes")
-                        .HasForeignKey("FederatedInstanceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("PolyBucket.Api.Features.Federation.Domain.FederatedInstance", "InitiatorInstance")
+                        .WithMany()
+                        .HasForeignKey("InitiatorInstanceId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("FederatedInstance");
+                    b.HasOne("PolyBucket.Api.Features.Federation.Domain.FederatedInstance", "ResponderInstance")
+                        .WithMany("Handshakes")
+                        .HasForeignKey("ResponderInstanceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("InitiatorInstance");
+
+                    b.Navigation("ResponderInstance");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.ModelModeration.Domain.ModerationAuditLog", b =>

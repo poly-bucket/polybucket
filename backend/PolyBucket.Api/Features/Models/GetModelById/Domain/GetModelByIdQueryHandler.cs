@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Models.Domain;
-using PolyBucket.Api.Features.Models.Repository;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.GetModelById.Repository;
 using PolyBucket.Api.Features.Models.GetModelById.Domain;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using System.Security.Claims;
@@ -18,14 +18,14 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 {
     public class GetModelByIdQueryHandler : IRequestHandler<GetModelByIdQuery, GetModelByIdResponse>
     {
-        private readonly IModelsRepository _repository;
+        private readonly IGetModelByIdRepository _repository;
         private readonly ILogger<GetModelByIdQueryHandler> _logger;
         private readonly IPermissionService _permissionService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IStorageService _storageService;
 
         public GetModelByIdQueryHandler(
-            IModelsRepository repository, 
+            IGetModelByIdRepository repository, 
             ILogger<GetModelByIdQueryHandler> logger,
             IPermissionService permissionService,
             IHttpContextAccessor httpContextAccessor,

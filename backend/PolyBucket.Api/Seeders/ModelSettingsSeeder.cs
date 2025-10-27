@@ -32,7 +32,7 @@ namespace PolyBucket.Api.Seeders
                 Id = Guid.NewGuid(),
                 AllowAnonUploads = false,
                 RequireUploadModeration = true,
-                DefaultPrivacySetting = PolyBucket.Api.Features.Models.Domain.Enums.PrivacySettings.Public,
+                DefaultPrivacySetting = PolyBucket.Api.Features.Models.Shared.Domain.Enums.PrivacySettings.Public,
                 AllowAnonDownloads = true,
                 EnableModelVersioning = true,
                 LimitTotalModels = 1000,

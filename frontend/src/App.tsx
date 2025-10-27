@@ -8,29 +8,25 @@ import store, { persistor } from './store';
 import AppInitializer from './components/AppInitializer';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
-import Dashboard from './components/Dashboard';
-import RootRedirect from './components/RootRedirect';
 import ProtectedRoute from './components/ProtectedRoute';
 
-import AdminControlPanel from './pages/admin/AdminControlPanel';
-import ModelModeration from './components/moderation/ModelModeration';
-import { ModerationDashboard } from './components/moderation/ModerationDashboard';
+import AdminControlPanel from './acp/AdminControlPanel';
+import ModelModeration from './mcp/ModelModeration';
+import { ModerationDashboard } from './mcp/ModerationDashboard';
 
-import ModelUpload from './pages/ModelUpload';
-import ModelDetails from './pages/ModelDetails';
-import { UserControlPanel } from './components/user';
-import Collections from './pages/Collections';
-import AvatarDemo from './components/AvatarDemo';
-import LiquidGlassDemo from './components/LiquidGlassDemo';
-import FirstTimeSetup from './components/setup/FirstTimeSetup';
-import TestModels from './components/TestModels';
-import PublicDashboard from './components/PublicDashboard';
+import ModelUpload from './models/ModelUpload';
+import ModelDetails from './models/ModelDetails';
+import { UserControlPanel } from './ucp';
+import Collections from './collections/Collections';
+import FirstTimeSetup from './setup/FirstTimeSetup';
+import PublicDashboard from './dashboard/PublicDashboard';
 import ThemeProvider from './context/ThemeContext';
 import { UserSettingsProvider } from './context/UserSettingsContext';
-import CreateCollection from './pages/CreateCollection';
-import CollectionDetails from './pages/CollectionDetails';
-import EditCollection from './pages/EditCollection';
-import UserProfile from './pages/UserProfile';
+import CreateCollection from './collections/CreateCollection';
+import CollectionDetails from './collections/CollectionDetails';
+import EditCollection from './collections/EditCollection';
+import UserProfile from './ucp/UserProfile';
+import MyModels from './ucp/MyModels';
 
 const App: React.FC = () => {
   return (
@@ -44,19 +40,10 @@ const App: React.FC = () => {
                 <AppInitializer>
                   <Router>
               <Routes>
-                {/* Root route - determines where to go */}
-                {/* <Route path="/" element={<RootRedirect />} /> */}
-                
                 {/* Auth routes */}
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/setup" element={<FirstTimeSetup />} />
-                
-                {/* Demo routes (development only) */}
-                <Route path="/avatar-demo" element={<AvatarDemo />} />
-                <Route path="/liquid-glass-demo" element={<LiquidGlassDemo />} />
-                <Route path="/test-models" element={<TestModels />} />
-                <Route path="/public-dashboard" element={<PublicDashboard />} />
                 
                 {/* Public routes */}
                 <Route path="/profile/:id" element={<UserProfile />} />
@@ -99,6 +86,15 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <Collections />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/my-models" 
+                  element={
+                    <ProtectedRoute>
+                      <MyModels />
                     </ProtectedRoute>
                   } 
                 />

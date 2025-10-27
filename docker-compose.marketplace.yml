@@ -1,0 +1,97 @@
+services:
+  # Main PolyBucket Application
+  polybucket-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=polybucket-db;Database=polybucket;Username=polybucket;Password=password
+      - MARKETPLACE_API_URL=http://marketplace-api:5001
+    depends_on:
+      - polybucket-db
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/bin
+      - /app/obj
+
+  polybucket-frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://polybucket-api:5000
+      - REACT_APP_MARKETPLACE_URL=http://marketplace-frontend:3001
+    depends_on:
+      - polybucket-api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/build
+
+  polybucket-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=polybucket
+      - POSTGRES_USER=polybucket
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - polybucket_data:/var/lib/postgresql/data
+
+  # Marketplace Services
+  marketplace-api:
+    build: 
+      context: ./marketplace/backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:10280"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:10280
+      - ConnectionStrings__DefaultConnection=Host=polybucket-db;Database=polybucket;Username=polybucket;Password=password
+      - FileStorage__UploadPath=uploads/plugins
+    depends_on:
+      - polybucket-db
+    volumes:
+      - ./marketplace/backend:/app
+      - /app/bin
+      - /app/obj
+      - ./marketplace/uploads:/app/uploads
+
+  marketplace-frontend:
+    build:
+      context: ./marketplace/frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://marketplace-api:10280
+      - NEXT_PUBLIC_POLYBUCKET_URL=http://polybucket-frontend:80
+    depends_on:
+      - marketplace-api
+    volumes:
+      - ./marketplace/frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  # Shared Services
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+
+volumes:
+  polybucket_data:
+  redis_data:

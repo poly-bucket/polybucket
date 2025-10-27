@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using System;
 using System.Linq;
 using System.Threading.Tasks;

@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Models.Repository;
+using PolyBucket.Api.Features.Models.GetModels.Repository;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,9 +9,9 @@ using PolyBucket.Api.Common.Storage;
 
 namespace PolyBucket.Api.Features.Models.GetModels.Domain
 {
-    public class GetModelsQueryHandler(IModelsRepository repository, ILogger<GetModelsQueryHandler> logger, IStorageService storageService) : IRequestHandler<GetModelsQuery, GetModelsResponse>
+    public class GetModelsQueryHandler(IGetModelsRepository repository, ILogger<GetModelsQueryHandler> logger, IStorageService storageService) : IRequestHandler<GetModelsQuery, GetModelsResponse>
     {
-        private readonly IModelsRepository _repository = repository;
+        private readonly IGetModelsRepository _repository = repository;
         private readonly ILogger<GetModelsQueryHandler> _logger = logger;
         private readonly IStorageService _storageService = storageService;
 

@@ -3,7 +3,13 @@ using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Users.Domain;
 using PolyBucket.Api.Features.Printers.Domain;
 using CommentDomain = PolyBucket.Api.Features.Comments.Domain;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.CreateModel.Domain;
+using PolyBucket.Api.Features.Models.LikeModel.Domain;
+using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
+using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
+using PolyBucket.Api.Features.Models.AddTagToModel.Domain;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.Filaments.Domain;
 using PolyBucket.Api.Features.Filaments.Repository;
@@ -64,6 +70,7 @@ namespace PolyBucket.Api.Data
         
         // Theme Management
         public DbSet<Theme> Themes { get; set; } = null!;
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -108,7 +115,7 @@ namespace PolyBucket.Api.Data
             // Model Version Configuration
             modelBuilder.Entity<ModelVersion>()
                 .HasOne(v => v.Model)
-                .WithMany(m => m.Versions)
+                .WithMany()
                 .HasForeignKey(v => v.ModelId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -169,10 +176,16 @@ namespace PolyBucket.Api.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<FederationHandshake>()
-                .HasOne(h => h.FederatedInstance)
+                .HasOne(h => h.InitiatorInstance)
+                .WithMany()
+                .HasForeignKey(h => h.InitiatorInstanceId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<FederationHandshake>()
+                .HasOne(h => h.ResponderInstance)
                 .WithMany(i => i.Handshakes)
-                .HasForeignKey(h => h.FederatedInstanceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(h => h.ResponderInstanceId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<FederationAuditLog>()
                 .HasOne(a => a.FederatedInstance)

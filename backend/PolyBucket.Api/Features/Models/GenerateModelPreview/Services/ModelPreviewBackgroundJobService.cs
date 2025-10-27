@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Repository;
 using System;
 using System.Threading.Tasks;
