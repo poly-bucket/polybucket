@@ -1,0 +1,57 @@
+{
+  "name": "{{kebabCase name}}",
+  "version": "{{version}}",
+  "description": "{{description}}",
+  "main": "src/index.js",
+  "type": "module",
+  "keywords": [
+    "polybucket",
+    "plugin",
+    "{{category}}"
+  ],
+  "author": "{{author}}",
+  "license": "{{license}}",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/{{author}}/{{kebabCase name}}.git"
+  },
+  "bugs": {
+    "url": "https://github.com/{{author}}/{{kebabCase name}}/issues"
+  },
+  "homepage": "https://github.com/{{author}}/{{kebabCase name}}#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "polybucket": {
+    "pluginType": "{{category}}",
+    "version": "{{version}}",
+    "compatibility": {
+      "polybucket": ">=1.0.0"
+    },
+    "tools": [
+      "{{camelCase name}}"
+    ],
+    "categories": [
+      "{{category}}"
+    ],
+    "tags": [
+      "{{category}}",
+      "plugin"
+    ]
+  },
+  "scripts": {
+    "test": "node src/tests/run-tests.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ]
+}

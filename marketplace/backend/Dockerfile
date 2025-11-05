@@ -14,6 +14,24 @@ COPY . .
 WORKDIR /app/PolyBucket.Marketplace.Api
 RUN dotnet publish -c Release -o /app/publish
 
+# Development stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS development
+WORKDIR /app
+
+# Copy project file
+COPY PolyBucket.Marketplace.Api/*.csproj ./PolyBucket.Marketplace.Api/
+
+# Restore dependencies
+RUN dotnet restore PolyBucket.Marketplace.Api/PolyBucket.Marketplace.Api.csproj
+
+# Install curl for healthchecks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+EXPOSE 10280
+EXPOSE 443
+
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "PolyBucket.Marketplace.Api", "--urls", "http://*:10280"]
+
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS runtime
 WORKDIR /app

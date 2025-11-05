@@ -1,13 +1,38 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Github } from "lucide-react"
+import { Github, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/context/AuthContext"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect } from "react"
 
 export default function LoginPage() {
+  const { login, isAuthenticated, isLoading, error } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.push(returnUrl);
+    }
+  }, [isAuthenticated, router, searchParams]);
+
+  const handleGitHubLogin = async () => {
+    try {
+      await login();
+    } catch (err) {
+      console.error('Login error:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="fixed top-4 right-4">
@@ -30,8 +55,24 @@ export default function LoginPage() {
             <CardDescription>Choose your preferred sign in method</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full gap-2 bg-transparent" size="lg">
-              <Github className="h-5 w-5" />
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+            
+            <Button 
+              variant="outline" 
+              className="w-full gap-2 bg-transparent" 
+              size="lg"
+              onClick={handleGitHubLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Github className="h-5 w-5" />
+              )}
               Continue with GitHub
             </Button>
 
@@ -53,8 +94,8 @@ export default function LoginPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" />
               </div>
-              <Button className="w-full" size="lg">
-                Sign In
+              <Button className="w-full" size="lg" disabled>
+                Sign In (Coming Soon)
               </Button>
             </div>
           </CardContent>

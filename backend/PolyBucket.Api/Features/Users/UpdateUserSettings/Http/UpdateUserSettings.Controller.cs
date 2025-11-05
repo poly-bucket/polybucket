@@ -6,15 +6,17 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Http
 {
     [ApiController]
     [Route("api/users/settings")]
     [Authorize]
-    public class UpdateUserSettingsController(UpdateUserSettingsCommandHandler handler) : ControllerBase
+    public class UpdateUserSettingsController(UpdateUserSettingsCommandHandler handler, ILogger<UpdateUserSettingsController> logger) : ControllerBase
     {
         private readonly UpdateUserSettingsCommandHandler _handler = handler;
+        private readonly ILogger<UpdateUserSettingsController> _logger = logger;
 
         [HttpPut]
         [ProducesResponseType(200)]
@@ -49,10 +51,12 @@ namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Http
                 };
 
                 await _handler.ExecuteAsync(command);
+                _logger.LogInformation($"{nameof(UpdateUserSettingsController)}: User settings updated successfully");
                 return Ok(new { message = "User settings updated successfully" });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, $"{nameof(UpdateUserSettingsController)}: An error occurred while updating user settings");
                 return StatusCode(500, new { message = "An error occurred while updating user settings" });
             }
         }

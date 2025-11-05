@@ -22,6 +22,36 @@ namespace Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CategoryModel", b =>
+                {
+                    b.Property<Guid>("CategoriesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ModelsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("CategoriesId", "ModelsId");
+
+                    b.HasIndex("ModelsId");
+
+                    b.ToTable("CategoryModel");
+                });
+
+            modelBuilder.Entity("ModelTag", b =>
+                {
+                    b.Property<Guid>("ModelsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TagsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ModelsId", "TagsId");
+
+                    b.HasIndex("TagsId");
+
+                    b.ToTable("ModelTag");
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Common.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1328,11 +1358,15 @@ namespace Api.Migrations
                     b.ToTable("ModerationAuditLogs");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Category", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.AddCategoryToModel.Domain.Category", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1346,7 +1380,49 @@ namespace Api.Migrations
                     b.Property<Guid?>("DeletedById")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ModelId")
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.AddTagToModel.Domain.Tag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -1361,23 +1437,14 @@ namespace Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ModelId");
-
-                    b.ToTable("Categories");
+                    b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Comment", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.CreateModel.Domain.ModelFile", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<Guid>("AuthorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1391,11 +1458,26 @@ namespace Api.Migrations
                     b.Property<Guid?>("DeletedById")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("IsEdited")
-                        .HasColumnType("boolean");
+                    b.Property<string>("MimeType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("ModelId")
                         .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModelVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1405,14 +1487,131 @@ namespace Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
-
                     b.HasIndex("ModelId");
 
-                    b.ToTable("Comment");
+                    b.HasIndex("ModelVersionId");
+
+                    b.ToTable("ModelFiles");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Like", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.CreateModelVersion.Domain.ModelVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("ModelVersions");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.GenerateModelPreview.Domain.ModelPreview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PreviewUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelId", "Size")
+                        .IsUnique();
+
+                    b.ToTable("ModelPreviews");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.LikeModel.Domain.Like", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1451,7 +1650,7 @@ namespace Api.Migrations
                     b.ToTable("Likes");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Model", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.Shared.Domain.Model", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1545,215 +1744,6 @@ namespace Api.Migrations
                     b.HasIndex("AuthorId");
 
                     b.ToTable("Models");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("MimeType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModelVersionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedById")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModelId");
-
-                    b.HasIndex("ModelVersionId");
-
-                    b.ToTable("ModelFiles");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelPreview", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text");
-
-                    b.Property<long>("FileSizeBytes")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("GeneratedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PreviewUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("StorageKey")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Width")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModelId", "Size")
-                        .IsUnique();
-
-                    b.ToTable("ModelPreviews");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FileUrl")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("VersionNumber")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModelId", "VersionNumber")
-                        .IsUnique();
-
-                    b.ToTable("ModelVersions");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Tag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedById")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModelId");
-
-                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.Printers.Domain.Printer", b =>
@@ -2663,6 +2653,36 @@ namespace Api.Migrations
                     b.ToTable("UserSettings");
                 });
 
+            modelBuilder.Entity("CategoryModel", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Features.Models.AddCategoryToModel.Domain.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", null)
+                        .WithMany()
+                        .HasForeignKey("ModelsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ModelTag", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", null)
+                        .WithMany()
+                        .HasForeignKey("ModelsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PolyBucket.Api.Features.Models.AddTagToModel.Domain.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PolyBucket.Api.Common.Models.User", b =>
                 {
                     b.HasOne("PolyBucket.Api.Common.Models.User", "BannedByUser")
@@ -2811,7 +2831,7 @@ namespace Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
                         .WithMany()
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2830,8 +2850,8 @@ namespace Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "Model")
-                        .WithMany()
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                        .WithMany("Comments")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2849,7 +2869,7 @@ namespace Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "LocalModel")
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "LocalModel")
                         .WithMany()
                         .HasForeignKey("LocalModelId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -2904,35 +2924,46 @@ namespace Api.Migrations
                     b.Navigation("PerformedByUser");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Category", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.CreateModel.Domain.ModelFile", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", null)
-                        .WithMany("Categories")
-                        .HasForeignKey("ModelId");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Comment", b =>
-                {
-                    b.HasOne("PolyBucket.Api.Common.Models.User", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "Model")
-                        .WithMany("Comments")
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                        .WithMany("Files")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Author");
+                    b.HasOne("PolyBucket.Api.Features.Models.CreateModelVersion.Domain.ModelVersion", null)
+                        .WithMany("Files")
+                        .HasForeignKey("ModelVersionId");
 
                     b.Navigation("Model");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Like", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.CreateModelVersion.Domain.ModelVersion", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                        .WithMany("Versions")
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.GenerateModelPreview.Domain.ModelPreview", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.LikeModel.Domain.Like", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
                         .WithMany("LikeCollection")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2949,7 +2980,7 @@ namespace Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Model", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.Shared.Domain.Model", b =>
                 {
                     b.HasOne("PolyBucket.Api.Common.Models.User", "Author")
                         .WithMany()
@@ -2958,50 +2989,6 @@ namespace Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Author");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelFile", b =>
-                {
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "Model")
-                        .WithMany("Files")
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.ModelVersion", null)
-                        .WithMany("Files")
-                        .HasForeignKey("ModelVersionId");
-
-                    b.Navigation("Model");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelPreview", b =>
-                {
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "Model")
-                        .WithMany()
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Model");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelVersion", b =>
-                {
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", "Model")
-                        .WithMany("Versions")
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Model");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Tag", b =>
-                {
-                    b.HasOne("PolyBucket.Api.Features.Models.Domain.Model", null)
-                        .WithMany("Tags")
-                        .HasForeignKey("ModelId");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.ThemeManagement.Domain.ThemeColors", b =>
@@ -3073,24 +3060,20 @@ namespace Api.Migrations
                     b.Navigation("SharedModels");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.Model", b =>
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.CreateModelVersion.Domain.ModelVersion", b =>
                 {
-                    b.Navigation("Categories");
+                    b.Navigation("Files");
+                });
 
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.Shared.Domain.Model", b =>
+                {
                     b.Navigation("Comments");
 
                     b.Navigation("Files");
 
                     b.Navigation("LikeCollection");
 
-                    b.Navigation("Tags");
-
                     b.Navigation("Versions");
-                });
-
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Domain.ModelVersion", b =>
-                {
-                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.ThemeManagement.Domain.Theme", b =>

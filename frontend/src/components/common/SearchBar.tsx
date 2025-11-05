@@ -31,20 +31,42 @@ const SearchBar: React.FC<SearchBarProps> = ({
   selectedSearchTypes = ['models'],
   onSearchTypeChange
 }) => {
-  // Search input state
   const [inputValue, setInputValue] = useState('');
-  const [showTagInput, setShowTagInput] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const tagInputRef = useRef<HTMLInputElement>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Update input value when searchQuery changes
   useEffect(() => {
     if (searchQuery && !searchTags.includes(searchQuery)) {
       setInputValue(searchQuery);
     }
   }, [searchQuery, searchTags]);
 
-  // Generate dynamic placeholder text based on selected search types
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [isFocused]);
+
   const getDynamicPlaceholder = () => {
     if (selectedSearchTypes.length === 0 || selectedSearchTypes.includes('all')) {
       return "Search everything...";
@@ -66,71 +88,68 @@ const SearchBar: React.FC<SearchBarProps> = ({
     return "Search for models...";
   };
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && onSearch) {
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && onSearch) {
       e.preventDefault();
-      const value = (e.target as HTMLTextAreaElement).value.trim();
+      const value = inputValue.trim();
       if (value) {
         onSearch(value, selectedSearchTypes);
         setInputValue('');
+        setShowDropdown(false);
       }
     }
   };
 
   const handleClearSearch = () => {
     setInputValue('');
+    setShowDropdown(false);
     if (onClearSearch) {
       onClearSearch();
     }
   };
 
-  const handleTagRemove = (tag: string) => {
-    if (onSearchTagRemove) {
-      onSearchTagRemove(tag);
-    }
-  };
-
-  const handleTagAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && onSearchTagAdd) {
-      const value = (e.target as HTMLInputElement).value.trim();
-      if (value && !searchTags.includes(value)) {
-        onSearchTagAdd(value);
-        (e.target as HTMLInputElement).value = '';
-        setShowTagInput(false);
-      }
-    }
-  };
-
   const handleInputFocus = () => {
-    if (searchTags.length > 0) {
-      setShowTagInput(true);
-    }
+    setIsFocused(true);
   };
 
   const handleInputBlur = () => {
-    // Delay hiding tag input to allow for clicks on tags
     setTimeout(() => {
-      setShowTagInput(false);
+      setIsFocused(false);
     }, 200);
   };
 
-  const handleSearchTypeClick = (searchType: SearchType) => {
+  const handleSearchTypeClick = (searchType: SearchType, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     if (onSearchTypeChange) {
       let newSearchTypes: SearchType[];
       
       if (selectedSearchTypes.includes(searchType)) {
-        // Remove the type if it's already selected
         newSearchTypes = selectedSearchTypes.filter(type => type !== searchType);
-        // If no types are selected, default to models
         if (newSearchTypes.length === 0) {
           newSearchTypes = ['models'];
         }
       } else {
-        // Add the type if it's not selected
         newSearchTypes = [...selectedSearchTypes, searchType];
       }
       
       onSearchTypeChange(newSearchTypes);
+    }
+  };
+
+  const handleQuickFilter = (searchType: SearchType) => {
+    handleSearchTypeClick(searchType);
+    if (inputValue.trim() && onSearch) {
+      const newTypes = selectedSearchTypes.includes(searchType)
+        ? selectedSearchTypes.filter(type => type !== searchType)
+        : [...selectedSearchTypes, searchType];
+      if (newTypes.length === 0) {
+        onSearch(inputValue.trim(), ['models']);
+      } else {
+        onSearch(inputValue.trim(), newTypes);
+      }
     }
   };
 
@@ -139,15 +158,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
       case 'models':
         return (
           <svg
-            className="text-sky-500"
+            className="w-4 h-4"
             strokeLinejoin="round"
             strokeLinecap="round"
             strokeWidth="2"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 24 24"
-            height="16"
-            width="16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -156,15 +173,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
       case 'collections':
         return (
           <svg
-            className="text-gray-500"
+            className="w-4 h-4"
             strokeLinejoin="round"
             strokeLinecap="round"
             strokeWidth="2"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 24 24"
-            height="16"
-            width="16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -174,15 +189,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
       case 'users':
         return (
           <svg
-            className="text-gray-500"
+            className="w-4 h-4"
             strokeLinejoin="round"
             strokeLinecap="round"
             strokeWidth="2"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 24 24"
-            height="16"
-            width="16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -190,132 +203,138 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </svg>
         );
       default:
-        return (
-          <svg
-            className="text-sky-500"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth="2"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 24 24"
-            height="16"
-            width="16"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle r="10" cy="12" cx="12"></circle>
-            <path d="M2 12h20"></path>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-          </svg>
-        );
+        return null;
     }
   };
 
+  const getSearchTypeLabel = (searchType: SearchType) => {
+    switch (searchType) {
+      case 'models':
+        return 'Models';
+      case 'collections':
+        return 'Collections';
+      case 'users':
+        return 'Users';
+      default:
+        return 'All';
+    }
+  };
+
+  const activeFilters = selectedSearchTypes.filter(type => type !== 'all');
+  const isDefaultState = activeFilters.length === 1 && activeFilters[0] === 'models';
+  const hasActiveFilters = activeFilters.length > 0 && !isDefaultState;
+
+  const calculateInputPadding = () => {
+    let rightPadding = 12;
+    if (hasActiveFilters) {
+      rightPadding += activeFilters.length * 70 + 8;
+    }
+    if (inputValue || isSearching) {
+      rightPadding += 24;
+    }
+    return rightPadding;
+  };
+
   return (
-    <div className={`w-full py-4 ${className}`}>
-      <div className="relative max-w-xl w-full mx-auto">
-        <div className="relative flex flex-col bg-black/5">
-          {/* Search Textarea */}
-          <textarea
-            ref={textareaRef}
-            className="w-full min-h-[52px] max-h-[200px] rounded-xl rounded-b-none px-4 py-3 bg-black text-white placeholder:text-white/70 border-0 outline-none resize-none focus:ring-0 focus:outline-none leading-[1.2]"
-            placeholder={getDynamicPlaceholder()}
+    <div className={`relative ${className}`}>
+      <div className="relative max-w-2xl w-full">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+            <svg
+              className="w-4 h-4 text-white/40"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          
+          <input
+            ref={inputRef}
+            type="text"
+            className="w-full h-9 pl-9 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
+            style={{ paddingRight: `${calculateInputPadding()}px` }}
+            placeholder={hasActiveFilters ? "Search..." : getDynamicPlaceholder()}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleSearch}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
-            onChange={(e) => setInputValue(e.target.value)}
-            value={inputValue}
             disabled={disabled || isSearching}
           />
 
-          {/* Filter Buttons Section */}
-          <div className="h-12 bg-black rounded-b-xl">
-            <div className="absolute left-3 bottom-3 flex items-center gap-2">
-              {/* Models Button */}
-              <button
-                className={`rounded-full flex items-center gap-2 px-1.5 py-1 border h-8 cursor-pointer transition-colors ${
-                  selectedSearchTypes.includes('models')
-                    ? 'bg-sky-500/20 border-sky-400 text-sky-500'
-                    : 'bg-sky-500/15 hover:bg-sky-500/20 border-sky-400 text-sky-500'
-                }`}
-                type="button"
-                onClick={() => handleSearchTypeClick('models')}
-                disabled={disabled}
-              >
-                <div className="w-4 h-4 flex items-center justify-center shrink-0">
-                  {getSearchTypeIcon('models')}
-                </div>
-                <span className="text-sm text-sky-500">Models</span>
-              </button>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 gap-2">
+            {hasActiveFilters && (
+              <div className="flex items-center gap-1.5">
+                {activeFilters.map((type) => (
+                  <button
+                    key={type}
+                    onClick={(e) => handleSearchTypeClick(type, e)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-all bg-sky-500/30 border border-sky-400/50 text-white hover:bg-sky-500/40 shrink-0"
+                    disabled={disabled}
+                    type="button"
+                  >
+                    <div className="text-white">
+                      {getSearchTypeIcon(type)}
+                    </div>
+                    <span>{getSearchTypeLabel(type)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
-              {/* Collections Button */}
-              <button
-                className={`rounded-full flex items-center gap-2 px-1.5 py-1 border h-8 cursor-pointer transition-colors ${
-                  selectedSearchTypes.includes('collections')
-                    ? 'bg-sky-500/20 border-sky-400 text-sky-500'
-                    : 'bg-sky-500/15 hover:bg-sky-500/20 border-sky-400 text-sky-500'
-                }`}
-                type="button"
-                onClick={() => handleSearchTypeClick('collections')}
-                disabled={disabled}
-              >
-                <div className="w-4 h-4 flex items-center justify-center shrink-0">
-                  {getSearchTypeIcon('collections')}
-                </div>
-                <span className="text-sm text-sky-500">Collections</span>
-              </button>
-
-              {/* Users Button */}
-              <button
-                className={`rounded-full flex items-center gap-2 px-1.5 py-1 border h-8 cursor-pointer transition-colors ${
-                  selectedSearchTypes.includes('users')
-                    ? 'bg-sky-500/20 border-sky-400 text-sky-500'
-                    : 'bg-sky-500/15 hover:bg-sky-500/20 border-sky-400 text-sky-500'
-                }`}
-                type="button"
-                onClick={() => handleSearchTypeClick('users')}
-                disabled={disabled}
-              >
-                <div className="w-4 h-4 flex items-center justify-center shrink-0">
-                  {getSearchTypeIcon('users')}
-                </div>
-                <span className="text-sm text-sky-500">Users</span>
-              </button>
-            </div>
-
-            {/* Clear button */}
-            {(inputValue || searchTags.length > 0) && (
+            {isSearching && (
+              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/20 border-t-sky-500 shrink-0"></div>
+            )}
+            {inputValue && !isSearching && (
               <button
                 onClick={handleClearSearch}
-                className="absolute right-3 bottom-3 text-gray-400 hover:text-white transition-colors"
+                className="text-white/40 hover:text-white transition-colors p-0.5 shrink-0"
                 disabled={disabled}
+                type="button"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             )}
-
-            {/* Loading spinner */}
-            {isSearching && (
-              <div className="absolute right-3 bottom-3">
-                <div className="lg-spinner h-4 w-4"></div>
-              </div>
-            )}
           </div>
         </div>
-        
-        {/* Tag Input (appears when focused and has existing tags) */}
-        {showTagInput && onSearchTagAdd && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-            <input
-              ref={tagInputRef}
-              type="text"
-              placeholder="Add search tag..."
-              className="w-full px-3 py-2 text-sm border-0 rounded-lg focus:ring-0 focus:outline-none"
-              onKeyPress={handleTagAdd}
-              autoFocus
-            />
+
+        {showDropdown && (
+          <div
+            ref={dropdownRef}
+            className="absolute top-full left-0 right-0 mt-2 bg-black/95 backdrop-blur-sm border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden"
+          >
+            <div className="p-2">
+              <div className="text-xs font-medium text-white/60 px-2 py-1 mb-1">Filter by type</div>
+              <div className="space-y-1">
+                {(['models', 'collections', 'users'] as SearchType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => handleQuickFilter(type)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedSearchTypes.includes(type)
+                        ? 'bg-sky-500/20 text-sky-400'
+                        : 'text-white/70 hover:bg-white/5 hover:text-white'
+                    }`}
+                    disabled={disabled}
+                    type="button"
+                  >
+                    <div className={`${selectedSearchTypes.includes(type) ? 'text-sky-400' : 'text-white/50'}`}>
+                      {getSearchTypeIcon(type)}
+                    </div>
+                    <span>{getSearchTypeLabel(type)}</span>
+                    {selectedSearchTypes.includes(type) && (
+                      <svg className="w-4 h-4 ml-auto text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

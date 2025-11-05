@@ -145,7 +145,7 @@ const DashboardTab: React.FC = () => {
                 <UploadIcon className="w-4 h-4 text-red-400" />
                 <span className="text-white">AI Generated</span>
               </div>
-              <span className="text-lg font-semibold text-red-400">{statistics?.aIGeneratedModels || 0}</span>
+              <span className="text-lg font-semibold text-red-400">{statistics?.aiGeneratedModels || 0}</span>
             </div>
           </div>
         </div>
@@ -228,22 +228,6 @@ const DashboardTab: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Future Analytics Placeholder */}
-      <div className="lg-card p-6">
-        <h3 className="text-lg font-medium text-white mb-4">Future Analytics</h3>
-        <div className="lg-badge-info p-4">
-          <span className="text-lg">This analytics dashboard will be expanded to include:</span>
-          <ul className="mt-2 text-sm space-y-1">
-            <li>• User activity charts and trends</li>
-            <li>• Model popularity and download analytics</li>
-            <li>• System performance metrics</li>
-            <li>• Storage usage trends over time</li>
-            <li>• Geographic distribution of users</li>
-            <li>• Peak usage time analysis</li>
-          </ul>
-        </div>
-      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModelGrid from '../models/ModelGrid';
 import NavigationBar from '../components/common/NavigationBar';
@@ -10,14 +10,22 @@ import { ExtendedModel } from '../services/modelsService';
 import SearchService, { SearchResult } from '../services/searchService';
 import { SearchType } from '../components/common/SearchBar';
 
+const MAX_MODELS_IN_STATE = 150;
+const MODELS_PER_PAGE = 50;
+
 const PublicDashboard: React.FC = () => {
   const navigate = useNavigate();
   
   // Model state
   const [models, setModels] = useState<ExtendedModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'featured' | 'popular' | 'recent'>('popular');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchTags, setSearchTags] = useState<string[]>([]);
   const [selectedSearchTypes, setSelectedSearchTypes] = useState<SearchType[]>(['models']);
@@ -31,62 +39,165 @@ const PublicDashboard: React.FC = () => {
     localStorage.getItem('collectionsSidebarCollapsed') === 'true'
   );
 
-  // Load models when component mounts or tab changes
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
+  // Ref to track if we're currently loading to prevent duplicate requests
+  const isLoadingRef = useRef(false);
+
+  // Helper function to limit models to MAX_MODELS_IN_STATE
+  const limitModelsState = useCallback((newModels: ExtendedModel[]): ExtendedModel[] => {
+    if (newModels.length <= MAX_MODELS_IN_STATE) {
+      return newModels;
+    }
+    // Keep the most recent MAX_MODELS_IN_STATE models
+    return newModels.slice(-MAX_MODELS_IN_STATE);
+  }, []);
+
+  // Helper function to process and filter models based on active tab
+  const processModels = useCallback((rawModels: any[]): ExtendedModel[] => {
+    let processed = rawModels.map((model: any) => ({
+      ...model,
+      downloadCount: model.downloads || 0,
+      rating: 0,
+      isLiked: false,
+      isInCollection: false
+    }));
+
+    // Filter based on active tab
+    switch (activeTab) {
+      case 'featured':
+        processed = processed.filter(model => model.isFeatured);
+        break;
+      case 'popular':
+        processed = processed.filter(model => (model.downloads || 0) > 0);
+        break;
+      case 'recent':
+        // Sort by creation date (most recent first)
+        processed = processed.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        break;
+    }
+
+    return processed;
+  }, [activeTab]);
+
+  // Load models function
+  const loadModels = useCallback(async (page: number, isInitialLoad: boolean = false) => {
+    if (isLoadingRef.current) return;
+    
+    try {
+      if (isInitialLoad) {
         setLoading(true);
-        setError('');
-        
-        console.log('Loading models for tab:', activeTab);
-        
-        // Use the generated API client to get models
-        const client = ApiClientFactory.getModelsClient();
-        const response = await client.getModels(1, 50);
-        
-        console.log('API Response:', response);
-        
-        let modelData: ExtendedModel[] = [];
-        
-        if (response.models && response.models.length > 0) {
-          // Convert to ExtendedModel format
-          modelData = response.models.map((model: any) => ({
-            ...model,
-            downloadCount: model.downloads || 0,
-            rating: 0,
-            isLiked: false,
-            isInCollection: false
-          }));
-          
-          // Filter based on active tab
-          switch (activeTab) {
-            case 'featured':
-              modelData = modelData.filter(model => model.isFeatured);
-              break;
-            case 'popular':
-              modelData = modelData.filter(model => (model.downloads || 0) > 0);
-              break;
-            case 'recent':
-              // Sort by creation date (most recent first)
-              modelData = modelData.sort((a, b) => 
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-              );
-              break;
-          }
-        }
-        
-        console.log('Processed models:', modelData);
-        setModels(modelData);
-      } catch (err) {
-        console.error('Error loading models:', err);
-        setError('Failed to load models. Please try again later.');
-      } finally {
-        setLoading(false);
+      } else {
+        setLoadingMore(true);
+      }
+      setError('');
+      isLoadingRef.current = true;
+      
+      const client = ApiClientFactory.getModelsClient();
+      const response = await client.getModels(page, MODELS_PER_PAGE);
+      
+      let modelData: ExtendedModel[] = [];
+      
+      if (response.models && response.models.length > 0) {
+        modelData = processModels(response.models);
+      }
+      
+      setTotalPages(response.totalPages || 0);
+      setTotalCount(response.totalCount || 0);
+      setHasMore(page < (response.totalPages || 0));
+      
+      // Store raw models (before tab filtering) in allLoadedModels
+      const rawModels = response.models?.map((model: any) => ({
+        ...model,
+        downloadCount: model.downloads || 0,
+        rating: 0,
+        isLiked: false,
+        isInCollection: false
+      })) || [];
+      
+      setAllLoadedModels(prevAll => {
+        const existingIds = new Set(prevAll.map(m => m.id));
+        const newUniqueModels = rawModels.filter((m: any) => !existingIds.has(m.id));
+        const combined = [...prevAll, ...newUniqueModels];
+        return limitModelsState(combined);
+      });
+      
+      if (isInitialLoad) {
+        setModels(limitModelsState(modelData));
+      } else {
+        setModels(prevModels => {
+          // Combine existing models with new ones, avoiding duplicates
+          const existingIds = new Set(prevModels.map(m => m.id));
+          const newUniqueModels = modelData.filter(m => !existingIds.has(m.id));
+          const combined = [...prevModels, ...newUniqueModels];
+          return limitModelsState(combined);
+        });
+      }
+      
+      setCurrentPage(page);
+    } catch (err) {
+      console.error('Error loading models:', err);
+      setError('Failed to load models. Please try again later.');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+      isLoadingRef.current = false;
+    }
+  }, [processModels, limitModelsState]);
+
+  // Store all loaded models (before tab filtering) to avoid unnecessary reloads
+  const [allLoadedModels, setAllLoadedModels] = useState<ExtendedModel[]>([]);
+
+  // Load initial models when component mounts or tab changes
+  useEffect(() => {
+    // Reset totalCount when switching tabs to get fresh count for new tab
+    setTotalCount(0);
+    
+    // If we already have models loaded, filter them first for immediate display
+    if (allLoadedModels.length > 0) {
+      const filteredModels = processModels(allLoadedModels);
+      setModels(limitModelsState(filteredModels));
+      setLoading(false);
+      
+      // Always load fresh data in the background for the new tab
+      setCurrentPage(1);
+      setHasMore(true);
+      loadModels(1, false);
+    } else {
+      // No models loaded yet, start fresh
+      setModels([]);
+      setCurrentPage(1);
+      setHasMore(true);
+      loadModels(1, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // Handle load more
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && hasMore && !isLoadingRef.current) {
+      loadModels(currentPage + 1, false);
+    }
+  }, [loadingMore, hasMore, currentPage, loadModels]);
+
+  // Infinite scroll detection
+  useEffect(() => {
+    if (showSearchResults || loading || !hasMore) return;
+
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+
+      // Load more when user scrolls to within 200px of bottom
+      if (scrollHeight - scrollTop - clientHeight < 200) {
+        handleLoadMore();
       }
     };
 
-    loadModels();
-  }, [activeTab]);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showSearchResults, loading, hasMore, handleLoadMore]);
 
   // Filter models based on federated status
   const displayedModels = showFederatedOnly
@@ -183,33 +294,34 @@ const PublicDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex relative">
-      {/* Collections Sidebar */}
-      <CollectionsBar 
-        isCollapsed={isCollectionsSidebarCollapsed}
-        onToggle={toggleCollectionsSidebar}
+    <div className="min-h-screen flex flex-col">
+      {/* Navigation Bar - Fixed at top */}
+      <NavigationBar
+        onSearch={handleSearch}
+        onClearSearch={handleClearSearch}
+        searchQuery={searchQuery}
+        searchTags={searchTags}
+        onSearchTagRemove={handleSearchTagRemove}
+        onSearchTagAdd={handleSearchTagAdd}
+        isSearching={isSearching}
+        selectedSearchTypes={selectedSearchTypes}
+        onSearchTypeChange={handleSearchTypeChange}
       />
-      
-      {/* Main Content */}
-      <div className="flex-1 transition-all duration-300">
-        {/* Navigation Bar */}
-        <NavigationBar
-          onSearch={handleSearch}
-          onClearSearch={handleClearSearch}
-          searchQuery={searchQuery}
-          searchTags={searchTags}
-          onSearchTagRemove={handleSearchTagRemove}
-          onSearchTagAdd={handleSearchTagAdd}
-          isSearching={isSearching}
-          selectedSearchTypes={selectedSearchTypes}
-          onSearchTypeChange={handleSearchTypeChange}
-        />
 
+      {/* Main Content Container */}
+      <div className="flex flex-1 pt-20 overflow-hidden">
+        {/* Collections Sidebar */}
+        <CollectionsBar 
+          isCollapsed={isCollectionsSidebarCollapsed}
+          onToggle={toggleCollectionsSidebar}
+        />
+        
         {/* Main Content Area */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex-1 transition-all duration-300 min-w-0">
+          <main className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           {/* Tab Navigation and Layout Controls */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-2">
               <div className="border-b border-white/10 flex-1">
                 <nav className="-mb-px flex space-x-8 items-center">
                   {(['featured', 'popular', 'recent'] as const).map((tab) => (
@@ -265,12 +377,16 @@ const PublicDashboard: React.FC = () => {
           ) : (
             <ModelGrid 
               models={displayedModels} 
-              loading={loading}
+              loading={loading && (totalCount === 0 || models.length < totalCount)}
               error={error}
               onModelClick={handleModelClick}
+              onLoadMore={handleLoadMore}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
             />
           )}
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );

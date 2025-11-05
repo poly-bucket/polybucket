@@ -136,7 +136,8 @@ const SiteSettingsStep: React.FC<SiteSettingsStepProps> = ({
     };
 
     try {
-      const response = await fetch('http://localhost:11666/api/SystemSetup/site-settings', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      const response = await fetch(`${apiUrl}/api/SystemSetup/site-settings`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user?.accessToken}`,

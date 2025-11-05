@@ -11,11 +11,13 @@ export type SiteModelSettings = SiteModelSettingsData;
 
 class SiteModelSettingsService {
   private getSiteModelSettingsClient(): GetSiteModelSettingsClient {
-    return new GetSiteModelSettingsClient();
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+    return new GetSiteModelSettingsClient(baseUrl);
   }
 
   private getUpdateSiteModelSettingsClient(): UpdateSiteModelSettingsClient {
-    return new UpdateSiteModelSettingsClient();
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+    return new UpdateSiteModelSettingsClient(baseUrl);
   }
 
   async getSettings(): Promise<GetSiteModelSettingsResponse> {

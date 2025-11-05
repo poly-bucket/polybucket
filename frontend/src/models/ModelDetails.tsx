@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiClientFactory } from '../api/clientFactory';
@@ -8,10 +8,11 @@ import { API_CONFIG } from '../api/config';
 import NavigationBar from '../components/common/NavigationBar';
 import UserAvatar from '../ucp/UserAvatar';
 import EditModelModal from './EditModelModal';
-import ModelViewer from './ModelViewer';
 import PDFViewer from '../components/common/PDFViewer';
 import MarkdownViewer from '../components/common/MarkdownViewer';
 import { DeleteModelService } from '../services/deleteModelService';
+
+const ModelViewer = lazy(() => import('./ModelViewer'));
 
 interface BillOfMaterial {
   id: string;
@@ -81,16 +82,46 @@ const ModelDetails: React.FC = () => {
     bedTemp: '60°C'
   };
 
-  // Use actual model files from the backend response
-  const modelFiles: ModelFile[] = model?.files?.map((file, index) => ({
-    id: file.id || index.toString(),
-    name: file.name || `${model?.name || 'Model'}.stl`,
-    size: file.size ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
-    type: file.mimeType || 'STL',
-    downloadUrl: '' // Not used anymore since we use streaming endpoint
-  })) || [];
+  const fetchModelFile = useCallback(async (modelId: string, fileName: string): Promise<ArrayBuffer> => {
+    try {
+      console.log('Fetching model file:', { modelId, fileName });
+      const streamUrl = `${API_CONFIG.baseUrl}/api/files/stream/model/${modelId}/${encodeURIComponent(fileName)}`;
+      console.log('Stream URL:', streamUrl);
+      
+      const response = await fetch(streamUrl, {
+        headers: {
+          'Authorization': `Bearer ${user?.accessToken}`
+        }
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        console.log('File data received, size:', arrayBuffer.byteLength);
+        return arrayBuffer;
+      } else {
+        console.error('Failed to fetch file:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Failed to fetch model file:', error);
+      throw error;
+    }
+  }, [user?.accessToken]);
 
-
+  const modelFiles: ModelFile[] = useMemo(() => {
+    return model?.files?.map((file, index) => ({
+      id: file.id || index.toString(),
+      name: file.name || `${model?.name || 'Model'}.stl`,
+      size: file.size ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
+      type: file.mimeType || 'STL',
+      downloadUrl: ''
+    })) || [];
+  }, [model?.files, model?.name]);
 
   useEffect(() => {
     const fetchModel = async () => {
@@ -246,38 +277,7 @@ const ModelDetails: React.FC = () => {
     };
 
     fetchModel();
-  }, [id, isAuthenticated, user]);
-
-  const fetchModelFile = async (modelId: string, fileName: string): Promise<ArrayBuffer> => {
-    try {
-      console.log('Fetching model file:', { modelId, fileName });
-      const streamUrl = `${API_CONFIG.baseUrl}/api/files/stream/model/${modelId}/${encodeURIComponent(fileName)}`;
-      console.log('Stream URL:', streamUrl);
-      
-      const response = await fetch(streamUrl, {
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`
-        }
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer();
-        console.log('File data received, size:', arrayBuffer.byteLength);
-        return arrayBuffer;
-      } else {
-        console.error('Failed to fetch file:', response.status, response.statusText);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('Failed to fetch model file:', error);
-      throw error;
-    }
-  };
+  }, [id, fetchModelFile]);
 
   const handleDownload = async () => {
     if (model) {
@@ -476,6 +476,30 @@ const ModelDetails: React.FC = () => {
     return fileExtension === '.md' || fileExtension === '.markdown';
   };
 
+  const ModelViewerFallback: React.FC = () => {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900">
+        <div className="w-full max-w-md px-4">
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-300">Loading 3D Viewer</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out animate-pulse"
+                style={{ width: '60%' }}
+              ></div>
+            </div>
+          </div>
+          <div className="flex items-center justify-center mb-2">
+            <div className="lg-spinner"></div>
+          </div>
+          <p className="text-xs text-gray-400 text-center">Initializing 3D viewer component...</p>
+        </div>
+      </div>
+    );
+  };
+
   // Check if current user is the model owner
   // For demo purposes, allow editing of all demo models (IDs 1-12) regardless of authentication
   const isDemoModel = model && ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].includes(model.id || '');
@@ -510,7 +534,7 @@ const ModelDetails: React.FC = () => {
   }
 
   return (
-    <div className="lg-container min-h-screen">
+    <div className="lg-container min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <NavigationBar
         title={model.name}
@@ -519,6 +543,8 @@ const ModelDetails: React.FC = () => {
         showHomeLink={true}
       />
 
+      {/* Main Content - Padding for fixed navbar */}
+      <div className="flex-1 pt-20">
       <div className="max-w-[95rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Breadcrumb */}
         <nav className="flex mb-6" aria-label="Breadcrumb">
@@ -558,16 +584,18 @@ const ModelDetails: React.FC = () => {
                     />
                   ) : carouselItems[activeCarouselIndex].type === '3d' && carouselItems[activeCarouselIndex].fileData ? (
                     <div className="w-full h-full">
-                      <ModelViewer
-                        fileData={carouselItems[activeCarouselIndex].fileData}
-                        fileType={carouselItems[activeCarouselIndex].fileType}
-                        width={800}
-                        height={450}
-                        autoRotate={false}
-                        className="w-full h-full"
-                        accessToken={user?.accessToken}
-                        showControls={true}
-                      />
+                      <Suspense fallback={<ModelViewerFallback />}>
+                        <ModelViewer
+                          fileData={carouselItems[activeCarouselIndex].fileData}
+                          fileType={carouselItems[activeCarouselIndex].fileType}
+                          width="100%"
+                          height="100%"
+                          autoRotate={false}
+                          className="w-full h-full"
+                          accessToken={user?.accessToken}
+                          showControls={true}
+                        />
+                      </Suspense>
                     </div>
                   ) : carouselItems[activeCarouselIndex].type === 'pdf' && carouselItems[activeCarouselIndex].file ? (
                     <div className="w-full h-full">
@@ -650,7 +678,7 @@ const ModelDetails: React.FC = () => {
             </div>
 
             {/* Print Settings */}
-            <div className="lg-card p-6 mb-6">
+            {/* <div className="lg-card p-6 mb-6">
               <h2 className="text-xl font-bold text-white mb-4">Recommended Print Settings</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="lg-card p-4">
@@ -680,7 +708,7 @@ const ModelDetails: React.FC = () => {
                   <div className="font-semibold text-white">{printSettings.bedTemp}</div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Files */}
             <div className="lg-card p-6 mb-6">
@@ -746,7 +774,7 @@ const ModelDetails: React.FC = () => {
             </div>
 
             {/* Bill of Materials */}
-            <div className="lg-card p-6">
+            {/* <div className="lg-card p-6">
               <h2 className="text-xl font-bold text-white mb-4">Bill of Materials</h2>
               <div className="space-y-4">
                 {billOfMaterials.map((item) => (
@@ -778,7 +806,7 @@ const ModelDetails: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Column - Model Info and Actions */}
@@ -888,7 +916,7 @@ const ModelDetails: React.FC = () => {
                   )}
 
                   <div className="grid grid-cols-2 gap-3">
-                    <button
+                    {/* <button
                       onClick={handleLike}
                       className={`lg-button ${
                         isLiked 
@@ -900,7 +928,7 @@ const ModelDetails: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                       {formatNumber(likeCount)}
-                    </button>
+                    </button> */}
 
                     <button className="lg-button hover:bg-gray-700 flex items-center justify-center">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -924,18 +952,24 @@ const ModelDetails: React.FC = () => {
                     <span className="text-gray-400">Downloads</span>
                     <span className="font-semibold text-white">{formatNumber(model.downloadCount || 0)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  {/* <div className="flex justify-between">
                     <span className="text-gray-400">Likes</span>
                     <span className="font-semibold text-white">{formatNumber(likeCount)}</span>
-                  </div>
-                  <div className="flex justify-between">
+                  </div> */}
+                  {/* <div className="flex justify-between">
                     <span className="text-gray-400">Comments</span>
                     <span className="font-semibold text-white">{formatNumber(model.comments?.length || 0)}</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between">
                     <span className="text-gray-400">Published</span>
                     <span className="font-semibold text-white">
                       {new Date(model.createdAt || '').toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Last Updated</span>
+                    <span className="font-semibold text-white">
+                      {new Date(model.updatedAt || '').toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -1012,6 +1046,7 @@ const ModelDetails: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

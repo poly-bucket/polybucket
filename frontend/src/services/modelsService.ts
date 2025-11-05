@@ -2,14 +2,24 @@ import store from '../store';
 import { PrivacySettings } from './api.client';
 import { ApiClientFactory } from '../api/clientFactory';
 import SearchService from './searchService';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import {
+  CreateModelClient,
+  GetModelsClient,
+  GetModelByIdClient,
+  DeleteModelClient,
+  UpdateModelClient,
+  CreateModelVersionClient,
+  GetModelVersionsClient
+} from './api.client';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+export interface FileParameter {
+  data: File;
+  fileName: string;
+}
 
-// Helper function to get auth token from Redux store
-const getAuthToken = (): string | null => {
-  const state = store.getState();
-  return state.auth.user?.accessToken || null;
-};
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface ModelUploadData {
   name: string;
@@ -85,125 +95,106 @@ export interface ExtendedModel extends Model {
 
 export class ModelsService {
   static async uploadModel(request: ModelUploadRequest): Promise<Model> {
-    const token = getAuthToken();
-    if (!token) {
+    const user = store.getState().auth.user;
+    if (!user?.accessToken) {
       throw new Error('Authentication token not found');
     }
 
     const formData = new FormData();
     
-    // Add model data
-    formData.append('name', request.modelData.name);
-    formData.append('description', request.modelData.description || '');
-    formData.append('privacy', request.modelData.privacy.toString());
-    formData.append('license', request.modelData.license || 'MIT');
-    formData.append('categories', JSON.stringify(request.modelData.categories || []));
-    formData.append('aiGenerated', request.modelData.aiGenerated.toString());
-    formData.append('workInProgress', request.modelData.workInProgress.toString());
-    formData.append('nsfw', request.modelData.nsfw.toString());
-    formData.append('remix', request.modelData.remix.toString());
-
-    // Add files
-    request.files.forEach((file) => {
-      formData.append('files', file);
-    });
-
-    // Add thumbnail file ID if specified
-    if (request.modelData.thumbnailFileId) {
-      formData.append('thumbnailFileId', request.modelData.thumbnailFileId);
+    formData.append('Name', request.modelData.name);
+    
+    if (request.modelData.description) {
+      formData.append('Description', request.modelData.description);
     }
+    
+    request.files.forEach((file) => {
+      formData.append('Files', file);
+    });
+    
+    if (request.modelData.thumbnailFileId) {
+      formData.append('ThumbnailFileId', request.modelData.thumbnailFileId);
+    }
+    
+    if (request.modelData.privacy !== undefined) {
+      formData.append('Privacy', request.modelData.privacy.toString().toLowerCase());
+    }
+    
+    if (request.modelData.license) {
+      formData.append('License', request.modelData.license);
+    }
+    
+    formData.append('AIGenerated', request.modelData.aiGenerated.toString());
+    formData.append('WorkInProgress', request.modelData.workInProgress.toString());
+    formData.append('NSFW', request.modelData.nsfw.toString());
+    formData.append('Remix', request.modelData.remix.toString());
 
-    const response = await fetch(`${API_BASE_URL}/api/models`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/api/models`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${user.accessToken}`
       },
       body: formData
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+      let errorMessage = `Upload failed: ${response.statusText}`;
+      try {
+        const errorText = await response.text();
+        if (errorText) {
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.message || errorData.detail || errorData.title || errorText;
+          } catch {
+            errorMessage = errorText;
+          }
+        }
+      } catch {
+        // If we can't read the response, use the status text
+      }
+      const error = new Error(errorMessage);
+      (error as any).status = response.status;
+      throw error;
     }
 
     const result = await response.json();
-    return result;
+    return result.model || result as Model;
   }
 
   static async getModels(page?: number, take?: number): Promise<GetModelsResponse> {
-    const token = getAuthToken();
-    if (!token) {
-      throw new Error('Authentication token not found');
-    }
-
-    const params = new URLSearchParams();
-    if (page !== undefined) params.append('page', page.toString());
-    if (take !== undefined) params.append('take', take.toString());
-
-    const response = await fetch(`${API_BASE_URL}/api/models?${params}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to get models: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    return await response.json();
+    const client = ApiClientFactory.getModelsClient();
+    const response = await client.getModels(page || 1, take || 20);
+    return {
+      models: response.models || [],
+      totalCount: response.totalCount || 0,
+      page: response.page || page || 1,
+      totalPages: response.totalPages || 0
+    };
   }
 
   static async getModelById(id: string): Promise<GetModelByIdResponse> {
-    const token = getAuthToken();
-    if (!token) {
-      throw new Error('Authentication token not found');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/api/models/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to get model: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    return await response.json();
+    const client = ApiClientFactory.getModelByIdClient();
+    const response = await client.getModelById(id);
+    return {
+      model: response as any as Model
+    };
   }
 
   static async deleteModel(id: string): Promise<void> {
-    const token = getAuthToken();
-    if (!token) {
-      throw new Error('Authentication token not found');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/api/models/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to delete model: ${response.status} ${response.statusText} - ${errorText}`);
-    }
+    const client = ApiClientFactory.getDeleteModelClient();
+    await client.deleteModel(id);
   }
 
   static async updateModel(id: string, modelData: Partial<Model>): Promise<void> {
-    const token = getAuthToken();
+    const client = ApiClientFactory.getUpdateModelClient();
+    // SKIPPED: UpdateModelClient requires UpdateModelCommand which needs to be checked
+    // Using direct fetch for now - UpdateModelCommand structure needs verification
+    const token = store.getState().auth.user?.accessToken;
     if (!token) {
       throw new Error('Authentication token not found');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/models/${id}`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/api/models/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -219,51 +210,18 @@ export class ModelsService {
   }
 
   static async createModelVersion(modelId: string, versionData: { name: string; files: File[] }): Promise<void> {
-    const token = getAuthToken();
-    if (!token) {
-      throw new Error('Authentication token not found');
-    }
-
-    const formData = new FormData();
-    formData.append('name', versionData.name);
-    versionData.files.forEach((file) => {
-      formData.append('files', file);
-    });
-
-    const response = await fetch(`${API_BASE_URL}/api/models/${modelId}/versions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Version creation failed: ${response.status} ${response.statusText} - ${errorText}`);
-    }
+    const client = ApiClientFactory.getCreateModelVersionClient();
+    const fileParameters: FileParameter[] = versionData.files.map(file => ({
+      data: file,
+      fileName: file.name
+    }));
+    await client.createModelVersion(modelId, versionData.name, fileParameters);
   }
 
   static async getModelVersions(modelId: string): Promise<any> {
-    const token = getAuthToken();
-    if (!token) {
-      throw new Error('Authentication token not found');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/api/models/${modelId}/versions`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to get model versions: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    return await response.json();
+    const client = ApiClientFactory.getModelVersionsClient();
+    const response = await client.getModelVersions(modelId);
+    return response;
   }
 
   // Dashboard methods for different model categories

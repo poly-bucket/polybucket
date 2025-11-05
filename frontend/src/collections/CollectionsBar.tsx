@@ -182,7 +182,7 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
     }
   };
 
-  const baseClasses = "lg-sidebar absolute left-0 top-0 h-full z-40 flex flex-col transition-all duration-300 ease-out";
+  const baseClasses = "lg-sidebar flex-shrink-0 flex flex-col transition-all duration-300 ease-out z-40";
   const mountAnimation = isMounted ? "translate-x-0" : "-translate-x-full";
   const slideAnimation = isCollapsed ? "-translate-x-2" : "translate-x-0";
 
@@ -192,7 +192,7 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
         {/* Toggle Button */}
         <button
           onClick={onToggle}
-          className="p-3 hover:bg-white/10 border-b border-white/10 transition-colors duration-200 group"
+          className="flex items-center justify-center hover:bg-white/10 border-b border-white/10 transition-colors duration-200 group"
           title="Expand Collections"
         >
           <ChevronRightIcon className="w-5 h-5 text-white/60 group-hover:text-white/80 transition-colors duration-200" />
@@ -256,7 +256,7 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
           ))}
           
           {collections.length > 8 && (
-            <div className="p-2 text-center text-xs text-white/40">
+            <div className="mx-auto items-center justify-center text-center text-xs text-white/40">
               +{collections.length - 8}
             </div>
           )}
@@ -265,10 +265,10 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
         {/* Add Collection Button */}
         <button
           onClick={handleCreateCollection}
-          className="p-3 hover:bg-white/10 border-t border-white/10 transition-colors duration-200 group"
+          className="mx-auto items-center justify-center hover:bg-white/10 border-t border-white/10 transition-colors duration-200 group"
           title="Create Collection"
         >
-          <PlusIcon className="w-5 h-5 text-white/60 group-hover:text-white/80 transition-colors duration-200" />
+          <PlusIcon className="w-5 h-5 text-white/60 group-hover:text-white/80 transition-colors duration-200 mx-auto justify-center" />
         </button>
       </div>
     );

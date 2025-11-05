@@ -96,7 +96,8 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
     }
 
     try {
-      const response = await fetch('http://localhost:11666/api/ChangePassword/change', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      const response = await fetch(`${apiUrl}/api/ChangePassword/change`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user?.accessToken}`,
@@ -125,7 +126,8 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
   const handleSkip = async () => {
     setIsSkipping(true);
     try {
-      const response = await fetch('http://localhost:11666/api/ChangePassword/skip', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      const response = await fetch(`${apiUrl}/api/ChangePassword/skip`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user?.accessToken}`,

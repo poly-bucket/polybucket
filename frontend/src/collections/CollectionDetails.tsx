@@ -220,25 +220,26 @@ const CollectionDetails: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex relative">
-      {/* Collections Sidebar */}
-      <CollectionsBar 
-        isCollapsed={isCollectionsSidebarCollapsed}
-        onToggle={toggleCollectionsSidebar}
+    <div className="min-h-screen flex flex-col">
+      {/* Navigation Bar - Fixed at top */}
+      <NavigationBar
+        title={collection.name}
+        showSearch={true}
+        showUploadButton={true}
+        showHomeLink={true}
       />
-      
-      {/* Main Content */}
-      <div className="flex-1 transition-all duration-300">
-        {/* Navigation Bar */}
-        <NavigationBar
-          title={collection.name}
-          showSearch={true}
-          showUploadButton={true}
-          showHomeLink={true}
-        />
 
+      {/* Main Content Container */}
+      <div className="flex flex-1 pt-20">
+        {/* Collections Sidebar */}
+        <CollectionsBar 
+          isCollapsed={isCollectionsSidebarCollapsed}
+          onToggle={toggleCollectionsSidebar}
+        />
+        
         {/* Main Content Area */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex-1 transition-all duration-300 min-w-0">
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Collection Header */}
           <div className="mb-6">
             <div className="flex items-center mb-4">
@@ -301,7 +302,8 @@ const CollectionDetails: React.FC = () => {
             error={error}
             onModelClick={handleModelClick}
           />
-        </main>
+          </main>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

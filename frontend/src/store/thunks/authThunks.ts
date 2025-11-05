@@ -2,6 +2,9 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/axiosConfig';
 import { ApiClient, LoginCommand, LoginCommandResponse } from '../../api/client';
 import { extractUserFromJWT } from '../../utils/jwtUtils';
+import { API_CONFIG } from '../../api/config';
+import { AxiosHttpClient } from '../../api/axiosAdapter';
+import { RegisterClient, RefreshTokenClient, RegisterCommand, RefreshTokenCommand, RegisterCommandResponse, RefreshTokenCommandResponse } from '../../services/api.client';
 
 export interface LoginRequest {
   email: string;
@@ -38,14 +41,14 @@ export interface RegisterRequest {
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/auth` : 'http://localhost:11666/api/auth';
 
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials: LoginRequest, { rejectWithValue, dispatch }: { rejectWithValue: (value: string) => any; dispatch: any }) => {
     try {
-      console.log('=== LOGIN THUNK CALLED ===');
-      console.log('Sending login credentials:', credentials);
-      
-      const apiClient = new ApiClient(undefined, api);
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      const apiClient = new ApiClient(baseUrl, api);
       const loginCommand = new LoginCommand({
         emailOrUsername: credentials.email,
         password: credentials.password,
@@ -168,23 +171,36 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData: RegisterRequest, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
     try {
-      const response = await fetch(`${API_URL}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
+      const registerClient = new RegisterClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const registerCommand = new RegisterCommand({
+        email: userData.email,
+        username: userData.username,
+        password: userData.password,
+        confirmPassword: userData.confirmPassword,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        country: userData.country
       });
+
+      const response: RegisterCommandResponse = await registerClient.register(registerCommand);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+      if (response.authentication) {
+        const decodedUser = extractUserFromJWT(response.authentication.accessToken || '');
+        return {
+          id: decodedUser?.id || response.authentication.user?.id || '',
+          username: userData.username,
+          email: userData.email,
+          accessToken: response.authentication.accessToken || '',
+          refreshToken: response.authentication.refreshToken || '',
+          roles: [],
+          requiresEmailVerification: response.requiresEmailVerification || false
+        };
       }
       
-      const authData = await response.json();
-      return authData;
+      throw new Error('Registration failed: Invalid response format');
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Registration failed');
+      const errorMessage = error.result?.message || error.result?.detail || error.message || 'Registration failed';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -193,36 +209,24 @@ export const refreshUserToken = createAsyncThunk(
   'auth/refreshToken',
   async (refreshToken: string, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
     try {
-      const response = await fetch(`${API_URL}/refresh-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken }),
+      const refreshTokenClient = new RefreshTokenClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const refreshTokenCommand = new RefreshTokenCommand({
+        refreshToken: refreshToken
       });
+
+      const response: RefreshTokenCommandResponse = await refreshTokenClient.refreshToken(refreshTokenCommand);
       
-      if (!response.ok) {
-        throw new Error('Failed to refresh token');
+      if (response.authentication) {
+        return {
+          accessToken: response.authentication.accessToken || '',
+          refreshToken: response.authentication.refreshToken || refreshToken
+        };
       }
       
-      const responseData = await response.json();
-      
-      // Handle the new response format from the backend
-      if (responseData.authentication) {
-        return {
-          accessToken: responseData.authentication.accessToken,
-          refreshToken: responseData.authentication.refreshToken
-        };
-      } else if (responseData.accessToken) {
-        return {
-          accessToken: responseData.accessToken,
-          refreshToken: responseData.refreshToken || refreshToken
-        };
-      } else {
-        throw new Error('Invalid refresh token response format');
-      }
+      throw new Error('Invalid refresh token response format');
     } catch (error: any) {
-      return rejectWithValue('Failed to refresh token');
+      const errorMessage = error.result?.message || error.result?.detail || error.message || 'Failed to refresh token';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -233,6 +237,8 @@ export const logoutUser = createAsyncThunk(
     try {
       console.log('=== LOGOUT THUNK CALLED ===');
       
+      // SKIPPED: No LogoutClient found in generated API client
+      // Using direct fetch until LogoutClient is added to backend OpenAPI spec
       const response = await fetch(`${API_URL}/logout`, {
         method: 'POST',
         headers: {

@@ -1,26 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon } from '@mui/icons-material';
 import fileTypeSettingsService, { FileTypeSettingsData } from '../../services/fileTypeSettingsService';
+import { useAppSelector, useAppDispatch } from '../../store';
+import { fetchFileSettings } from '../../store/thunks/fileTypeSettingsThunks';
+import { updateFileType } from '../../store/slices/fileTypeSettingsSlice';
 
 const FileTypeSettings: React.FC = () => {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const { fileTypes, isLoading } = useAppSelector(state => state.fileTypeSettings);
   const [saving, setSaving] = useState(false);
-  const [fileTypes, setFileTypes] = useState<FileTypeSettingsData[]>([]);
   const [editingFileType, setEditingFileType] = useState<FileTypeSettingsData | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const fetchFileTypes = async () => {
     try {
-      setLoading(true);
-      const response = await fileTypeSettingsService.getFileSettings();
-      if (response.success && response.fileTypes) {
-        setFileTypes(response.fileTypes);
-      }
+      await dispatch(fetchFileSettings()).unwrap();
     } catch (err) {
       console.error('Error loading file type settings:', err);
       setMessage('Error loading file type settings');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -31,7 +28,8 @@ const FileTypeSettings: React.FC = () => {
       if (response.success) {
         setMessage('File type settings updated successfully');
         setEditingFileType(null);
-        await fetchFileTypes(); // Refresh the list
+        dispatch(updateFileType(fileType));
+        await fetchFileTypes();
       } else {
         setMessage(`Failed to update: ${response.message}`);
       }
@@ -72,8 +70,11 @@ const FileTypeSettings: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchFileTypes();
-  }, []);
+    if (fileTypes.length === 0 && !isLoading) {
+      fetchFileTypes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileTypes.length, isLoading]);
 
   useEffect(() => {
     if (message) {
@@ -82,7 +83,7 @@ const FileTypeSettings: React.FC = () => {
     }
   }, [message]);
 
-  if (loading) {
+  if (isLoading) {
     return <div className="text-center text-white/60 py-8">Loading file type settings...</div>;
   }
 

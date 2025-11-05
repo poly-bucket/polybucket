@@ -5,15 +5,23 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile
+      target: development
     ports:
-      - "5001:80"
+      - "10120:10280"
+    env_file:
+      - .env
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=marketplace-db;Database=marketplace;Username=marketplace;Password=password
-      - PolyBucket__ApiUrl=http://polybucket-api:5000
-      - Authentication__Authority=http://polybucket-api:5000
-      - Authentication__Audience=marketplace-api
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS:-http://+:10280}
+      - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection:-Host=marketplace-db;Database=marketplace;Username=marketplace;Password=password}
+      - FileStorage__UploadPath=${FileStorage__UploadPath:-uploads/plugins}
+      - Jwt__SecretKey=${Jwt__SecretKey}
+      - Jwt__Issuer=${Jwt__Issuer:-PolyBucket.Marketplace.Api}
+      - Jwt__Audience=${Jwt__Audience:-PolyBucket.Marketplace.Client}
+      - Jwt__ExpiryMinutes=${Jwt__ExpiryMinutes:-60}
+      - GitHub__ClientId=${GitHub__ClientId:-${NEXT_PUBLIC_GITHUB_CLIENT_ID}}
+      - GitHub__ClientSecret=${GitHub__ClientSecret}
+      - GitHub__RedirectUri=${GitHub__RedirectUri:-${NEXT_PUBLIC_GITHUB_REDIRECT_URI}}
     depends_on:
       - marketplace-db
       - redis
@@ -28,28 +36,21 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "3001:3000"
+      - "10110:3000"
+    env_file:
+      - .env
     environment:
-      - NEXT_PUBLIC_API_URL=http://marketplace-api:5001
-      - NEXT_PUBLIC_POLYBUCKET_URL=http://polybucket-frontend:3000
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:10120}
+      - NEXT_PUBLIC_POLYBUCKET_URL=${NEXT_PUBLIC_POLYBUCKET_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_GITHUB_CLIENT_ID=${NEXT_PUBLIC_GITHUB_CLIENT_ID}
+      - NEXT_PUBLIC_GITHUB_REDIRECT_URI=${NEXT_PUBLIC_GITHUB_REDIRECT_URI:-http://localhost:10110/auth/callback}
     depends_on:
       - marketplace-api
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
-
-  marketplace-db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=marketplace
-      - POSTGRES_USER=marketplace
-      - POSTGRES_PASSWORD=password
-    ports:
-      - "5433:5432"
-    volumes:
-      - marketplace_data:/var/lib/postgresql/data
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
     image: redis:7-alpine

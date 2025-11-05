@@ -111,7 +111,8 @@ const RoleManagement: React.FC = () => {
 
   const [editFormColor, setEditFormColor] = useState<string>('#3B82F6');
 
-  const roleManagementClient = new RoleManagementClient(undefined, defaultAxiosClient);
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+  const roleManagementClient = new RoleManagementClient(baseUrl, defaultAxiosClient);
 
   useEffect(() => {
     fetchData();

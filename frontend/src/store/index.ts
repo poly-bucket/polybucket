@@ -4,6 +4,7 @@ import storage from 'redux-persist/lib/storage';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import authReducer from './slices/authSlice';
 import roleReducer from './slices/roleSlice';
+import fileTypeSettingsReducer from './slices/fileTypeSettingsSlice';
 
 const authPersistConfig = {
   key: 'auth',
@@ -17,6 +18,7 @@ const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
     roles: roleReducer,
+    fileTypeSettings: fileTypeSettingsReducer,
   },
   middleware: (getDefaultMiddleware: any) =>
     getDefaultMiddleware({

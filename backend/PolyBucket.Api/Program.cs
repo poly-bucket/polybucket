@@ -25,6 +25,9 @@ public class Program
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
                 theme: ConsoleTheme.CustomTheme)
+#else
+            .WriteTo.Console(
+                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
 #endif
             .WriteTo.File(
                 path: "Logs/.log",
@@ -45,7 +48,7 @@ public class Program
                 .AddPolyBucketDatabase(builder.Configuration)
                 .AddPolyBucketFeatures()
                 .AddPolyBucketAuthentication(builder.Configuration)
-                .AddPolyBucketCors()
+                .AddPolyBucketCors(builder.Configuration)
                 .AddPolyBucketHealthChecks(builder.Configuration)
                 .AddPolyBucketOpenApi();
 

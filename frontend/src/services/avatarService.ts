@@ -1,9 +1,9 @@
-import api from '../utils/axiosConfig';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import { RegenerateAvatarClient, RegenerateAvatarRequest } from './api.client';
 import { minidenticon } from 'minidenticons';
 
-export interface RegenerateAvatarRequest {
-  salt?: string;
-}
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface RegenerateAvatarResponse {
   avatar: string;
@@ -12,17 +12,19 @@ export interface RegenerateAvatarResponse {
 }
 
 const avatarService = {
-  // Regenerate user avatar with optional salt
   async regenerateAvatar(salt?: string): Promise<RegenerateAvatarResponse> {
-    const response = await api.post('/users/avatar/regenerate', { salt });
-    return response.data;
+    const client = new RegenerateAvatarClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const request = new RegenerateAvatarRequest({
+      salt: salt
+    });
+    const response = await client.regenerateAvatar(request);
+    return response as any as RegenerateAvatarResponse;
   },
 
-  // Preview avatar generation (client-side only, doesn't save)
   previewAvatar(userId: string, salt?: string): string {
     const seed = salt ? `${userId}-${salt}` : userId;
     return minidenticon(seed, 50, 50);
   }
 };
 
-export default avatarService; 
+export default avatarService;

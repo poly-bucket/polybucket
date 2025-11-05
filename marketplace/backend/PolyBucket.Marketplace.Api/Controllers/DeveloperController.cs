@@ -13,9 +13,14 @@ namespace PolyBucket.Marketplace.Api.Controllers
     /// <summary>
     /// Controller for developer dashboard functionality
     /// </summary>
+    /// <remarks>
+    /// This controller provides endpoints for developers to manage their plugins, view analytics,
+    /// and access developer-specific features. All endpoints require authentication.
+    /// </remarks>
     [ApiController]
     [Route("api/developer")]
     [Authorize]
+    [Produces("application/json")]
     public class DeveloperController : ControllerBase
     {
         private readonly MarketplaceDbContext _context;

@@ -1,11 +1,16 @@
-import { UserSettings } from './api.client';
-import api from '../utils/axiosConfig';
+import { UserSettings, UpdateUserSettingsRequest } from './api.client';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import { GetUserSettingsClient, UpdateUserSettingsClient } from './api.client';
+
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 class UserSettingsService {
   async getUserSettings(accessToken: string): Promise<UserSettings | null> {
     try {
-      const response = await api.get('/users/settings');
-      return response.data.settings || null;
+      const client = new GetUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const response = await client.getUserSettings();
+      return response || null;
     } catch (error) {
       console.error('Error fetching user settings:', error);
       return null;
@@ -18,7 +23,8 @@ class UserSettingsService {
     accessToken: string
   ): Promise<boolean> {
     try {
-      const request = {
+      const client = new UpdateUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const request = new UpdateUserSettingsRequest({
         userId,
         language: settings.language,
         theme: settings.theme,
@@ -32,10 +38,10 @@ class UserSettingsService {
         cardSpacing: settings.cardSpacing,
         gridColumns: settings.gridColumns,
         customSettings: settings.customSettings
-      };
+      });
 
-      const response = await api.put('/users/settings', request);
-      return response.status >= 200 && response.status < 300;
+      await client.updateUserSettings(request);
+      return true;
     } catch (error) {
       console.error('Error updating user settings:', error);
       return false;
@@ -44,13 +50,14 @@ class UserSettingsService {
 
   async updateAutoRotateSetting(userId: string, autoRotate: boolean, accessToken: string): Promise<boolean> {
     try {
-      const request = {
+      const client = new UpdateUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const request = new UpdateUserSettingsRequest({
         userId,
         autoRotateModels: autoRotate
-      };
+      });
 
-      const response = await api.put('/users/settings', request);
-      return response.status >= 200 && response.status < 300;
+      await client.updateUserSettings(request);
+      return true;
     } catch (error) {
       console.error('Error updating auto-rotate setting:', error);
       return false;
@@ -75,4 +82,4 @@ class UserSettingsService {
 }
 
 const userSettingsService = new UserSettingsService();
-export default userSettingsService; 
+export default userSettingsService;

@@ -45,7 +45,8 @@ const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     console.log('Sending login credentials:', credentials);
     
     // Use the ApiClient with axios adapter
-    const apiClient = new ApiClient(undefined, defaultAxiosClient);
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+    const apiClient = new ApiClient(baseUrl, defaultAxiosClient);
     const loginCommand = new LoginCommand({
       email: credentials.email,
       password: credentials.password,

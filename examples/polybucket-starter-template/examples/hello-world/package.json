@@ -1,0 +1,61 @@
+{
+  "name": "hello-world",
+  "version": "1.0.0",
+  "description": "A simple hello world plugin for PolyBucket",
+  "main": "src/index.js",
+  "type": "module",
+  "keywords": [
+    "polybucket",
+    "plugin",
+    "hello",
+    "world",
+    "example"
+  ],
+  "author": "PolyBucket Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polybucket/hello-world.git"
+  },
+  "bugs": {
+    "url": "https://github.com/polybucket/hello-world/issues"
+  },
+  "homepage": "https://github.com/polybucket/hello-world#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "polybucket": {
+    "pluginType": "utilities",
+    "version": "1.0.0",
+    "compatibility": {
+      "polybucket": ">=1.0.0"
+    },
+    "tools": [
+      "hello"
+    ],
+    "categories": [
+      "utilities"
+    ],
+    "tags": [
+      "hello",
+      "world",
+      "example",
+      "utilities"
+    ]
+  },
+  "scripts": {
+    "test": "node src/tests/run-tests.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ]
+}

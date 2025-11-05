@@ -60,7 +60,14 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
       setQrCode(response.qrCodeUrl);
       setShowQRSetup(true);
     } catch (error: any) {
-      setErrors({ setup: error.response?.data?.message || 'Failed to setup 2FA' });
+      console.error('2FA initialization error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to setup 2FA';
+      // Handle concurrency errors with user-friendly message
+      if (errorMessage.includes('modified by another operation') || errorMessage.includes('Concurrent modification')) {
+        setErrors({ setup: 'The 2FA setup was modified by another operation. Please try again.' });
+      } else {
+        setErrors({ setup: errorMessage });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -81,7 +88,6 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
     setIsVerifying(true);
     try {
       const response = await twoFactorAuthService.enable(code);
-      
       if (response.success) {
         onComplete({ 
           twoFactorEnabled: true,
@@ -93,7 +99,13 @@ const TwoFactorAuthStep: React.FC<TwoFactorAuthStepProps> = ({
         setHasAutoSubmitted(false);
       }
     } catch (error: any) {
-      setErrors({ verification: error.response?.data?.message || 'An error occurred while verifying the code' });
+      const errorMessage = error.response?.data?.message || 'An error occurred while verifying the code';
+      // Handle concurrency errors with user-friendly message
+      if (errorMessage.includes('modified by another operation') || errorMessage.includes('Concurrent modification')) {
+        setErrors({ verification: 'The 2FA setup was modified by another operation. Please try again.' });
+      } else {
+        setErrors({ verification: errorMessage });
+      }
       // Reset auto-submit flag on error so user can manually retry
       setHasAutoSubmitted(false);
     } finally {

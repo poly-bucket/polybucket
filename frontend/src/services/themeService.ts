@@ -76,7 +76,7 @@ class ThemeService {
 
   constructor() {
     try {
-      const baseUrl = 'http://localhost:11666';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
       const httpClient = new AuthenticatedHttpClient(baseUrl);
       
       this.getThemesClient = new GetThemesClient(baseUrl, httpClient);

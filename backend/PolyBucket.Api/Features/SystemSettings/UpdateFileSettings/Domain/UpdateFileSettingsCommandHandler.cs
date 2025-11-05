@@ -22,7 +22,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateFileSettings.Domain
             try
             {
                 var fileType = await _context.FileTypeSettings
-                    .FirstOrDefaultAsync(ft => ft.Id == request.Id && !ft.IsDeleted, cancellationToken);
+                    .FirstOrDefaultAsync(ft => ft.Id == request.Id && ft.DeletedAt == null, cancellationToken);
                 
                 if (fileType == null)
                 {

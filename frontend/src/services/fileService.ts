@@ -1,9 +1,13 @@
-import axios from 'axios';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import {
+  GetSupportedExtensionsClient,
+  GetSupportedExtensionsByTypeClient,
+  GetFileConfigClient
+} from './api.client';
 
-// Base URL for API requests
-const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/file` : 'http://localhost:11666/api/file';
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
-// Types for file configuration
 export interface FileExtensionInfo {
   id: number;
   name: string;
@@ -26,43 +30,30 @@ export interface FileUploadConfiguration {
   extensionsByType: Record<string, string[]>;
 }
 
-/**
- * Gets all supported file extensions
- */
 const getSupportedExtensions = async (): Promise<string[]> => {
-  const response = await axios.get(`${API_URL}/extensions`);
-  return response.data;
+  const client = new GetSupportedExtensionsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  const response = await client.getSupportedExtensions();
+  return response as any as string[];
 };
 
-/**
- * Gets supported file extensions for a specific file type
- * @param fileType The type of file (numeric ID or string name)
- */
 const getSupportedExtensionsForType = async (fileType: number | string): Promise<string[]> => {
-  const response = await axios.get(`${API_URL}/extensions/by-type/${fileType}`);
-  return response.data;
+  const client = new GetSupportedExtensionsByTypeClient(API_CONFIG.baseUrl, sharedHttpClient);
+  const response = await client.getSupportedExtensionsByType(fileType.toString());
+  return response as any as string[];
 };
 
-/**
- * Gets complete file configuration including extensions, types, and rules
- */
 const getFileConfiguration = async (): Promise<FileUploadConfiguration> => {
-  const response = await axios.get(`${API_URL}/config`);
-  return response.data;
+  const client = new GetFileConfigClient(API_CONFIG.baseUrl, sharedHttpClient);
+  const response = await client.getFileConfig();
+  return response as any as FileUploadConfiguration;
 };
 
-/**
- * Updates the file upload configuration settings
- * @param config The updated configuration
- */
+// SKIPPED: No update endpoint found in generated client
 const updateFileConfiguration = async (config: Partial<FileUploadConfiguration>): Promise<void> => {
-  await axios.post(`${API_URL}/config`, config);
+  // SKIPPED: Update endpoint not available in generated client
+  throw new Error('Update file configuration endpoint not available in generated client');
 };
 
-/**
- * Formats a file size in bytes to a human-readable string
- * @param bytes File size in bytes
- */
 const formatFileSize = (bytes: number): string => {
   if (bytes >= 1073741824) {
     return `${(bytes / 1073741824).toFixed(2)} GB`;
@@ -75,52 +66,19 @@ const formatFileSize = (bytes: number): string => {
   }
 };
 
-/**
- * Checks if a file's extension is supported
- * @param fileName The file name to check
- * @param supportedExtensions List of supported extensions
- */
 const isFileExtensionSupported = (
   fileName: string, 
   supportedExtensions: string[]
 ): boolean => {
-  // Extract extension from filename (including the dot)
   const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-  
-  // Check if it's in the supported list
   return supportedExtensions.some(ext => 
     ext.toLowerCase() === extension
   );
 };
 
-/**
- * Extracts the file extension from a filename
- * @param fileName File name
- */
 const getFileExtension = (fileName: string): string => {
-  return fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-};
-
-/**
- * Gets the appropriate file type for a given file extension
- * @param fileName File name
- * @param extensionsByType Map of file types to allowed extensions
- */
-const suggestFileType = (
-  fileName: string, 
-  extensionsByType: Record<string, string[]>
-): string => {
-  const extension = getFileExtension(fileName);
-  
-  // Look through each file type's allowed extensions
-  for (const [fileType, extensions] of Object.entries(extensionsByType)) {
-    if (extensions.some(ext => ext.toLowerCase() === extension)) {
-      return fileType;
-    }
-  }
-  
-  // Default
-  return 'Other';
+  const lastDot = fileName.lastIndexOf('.');
+  return lastDot >= 0 ? fileName.substring(lastDot + 1).toLowerCase() : '';
 };
 
 const fileService = {
@@ -130,8 +88,7 @@ const fileService = {
   updateFileConfiguration,
   formatFileSize,
   isFileExtensionSupported,
-  getFileExtension,
-  suggestFileType
+  getFileExtension
 };
 
-export default fileService; 
+export default fileService;

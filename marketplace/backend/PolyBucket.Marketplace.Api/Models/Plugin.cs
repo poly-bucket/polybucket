@@ -26,7 +26,7 @@ namespace PolyBucket.Marketplace.Api.Models
         public string? AuthorId { get; set; }
 
         // Navigation properties
-        public User? Author { get; set; }
+        public MarketplaceUser? Author { get; set; }
         public List<PluginVersion> Versions { get; set; } = new();
         public List<PluginReview> Reviews { get; set; } = new();
     }
@@ -85,7 +85,7 @@ namespace PolyBucket.Marketplace.Api.Models
 
         // Navigation properties
         public Plugin Plugin { get; set; } = null!;
-        public User? User { get; set; }
+        public MarketplaceUser? User { get; set; }
     }
 
     public class PluginDownload
@@ -118,7 +118,7 @@ namespace PolyBucket.Marketplace.Api.Models
         public DateTime? PublishedAt { get; set; }
 
         // Navigation properties
-        public User? Submitter { get; set; }
+        public MarketplaceUser? Submitter { get; set; }
     }
 
     public class ReviewHelpful
@@ -132,13 +132,4 @@ namespace PolyBucket.Marketplace.Api.Models
         public PluginReview Review { get; set; } = null!;
     }
 
-    public class User
-    {
-        public string Id { get; set; } = string.Empty;
-        public string UserName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string AvatarUrl { get; set; } = string.Empty;
-        public bool IsVerified { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
 }

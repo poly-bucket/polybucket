@@ -1,4 +1,19 @@
-import api from '../utils/axiosConfig';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import {
+  GetCategoriesClient,
+  CreateCategoryClient,
+  UpdateCategoryClient,
+  DeleteCategoryClient,
+  CreateCategoryCommand,
+  UpdateCategoryCommand,
+  GetCategoriesResponse,
+  CreateCategoryResponse,
+  UpdateCategoryResponse,
+  DeleteCategoryResponse
+} from './api.client';
+
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface CategoryDto {
   id: string;
@@ -24,66 +39,39 @@ export interface GetCategoriesRequest {
   searchTerm?: string;
 }
 
-export interface GetCategoriesResponse {
-  categories: CategoryDto[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-
-export interface CreateCategoryResponse {
-  id: string;
-  name: string;
-  createdAt: string;
-  createdById: string;
-}
-
-export interface UpdateCategoryResponse {
-  id: string;
-  name: string;
-  updatedAt: string;
-  updatedById: string;
-}
-
-export interface DeleteCategoryResponse {
-  id: string;
-  name: string;
-  success: boolean;
-  message: string;
-  deletedAt: string;
-  deletedById: string;
-}
-
 class CategoryService {
-  private readonly baseUrl = '/admin/categories';
-
   async getCategories(params?: GetCategoriesRequest): Promise<GetCategoriesResponse> {
-    const response = await api.get<GetCategoriesResponse>(this.baseUrl, {
-      params: {
-        page: params?.page || 1,
-        pageSize: params?.pageSize || 20,
-        searchTerm: params?.searchTerm || undefined
-      }
-    });
-    return response.data;
+    const client = new GetCategoriesClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getCategories(
+      params?.page || 1,
+      params?.pageSize || 20,
+      params?.searchTerm || null
+    );
+    return response;
   }
 
   async createCategory(request: CreateCategoryRequest): Promise<CreateCategoryResponse> {
-    const response = await api.post<CreateCategoryResponse>(this.baseUrl, request);
-    return response.data;
+    const client = new CreateCategoryClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const command = new CreateCategoryCommand({
+      name: request.name
+    });
+    const response = await client.createCategory(command);
+    return response;
   }
 
   async updateCategory(request: UpdateCategoryRequest): Promise<UpdateCategoryResponse> {
-    const response = await api.put<UpdateCategoryResponse>(`${this.baseUrl}/${request.id}`, request);
-    return response.data;
+    const client = new UpdateCategoryClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const command = new UpdateCategoryCommand({
+      name: request.name
+    });
+    const response = await client.updateCategory(request.id, command);
+    return response;
   }
 
   async deleteCategory(id: string): Promise<DeleteCategoryResponse> {
-    const response = await api.delete<DeleteCategoryResponse>(`${this.baseUrl}/${id}`);
-    return response.data;
+    const client = new DeleteCategoryClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.deleteCategory(id);
+    return response;
   }
 }
 

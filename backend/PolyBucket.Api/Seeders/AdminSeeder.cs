@@ -7,9 +7,9 @@ using System;
 using System.Collections.Generic;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Services;
-using System.IO;
 using Microsoft.Extensions.Logging;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace PolyBucket.Api.Data.Seeders
 {
@@ -17,11 +17,13 @@ namespace PolyBucket.Api.Data.Seeders
         PolyBucketDbContext context,
         IPasswordGenerator passwordGenerator,
         IPasswordHasher passwordHasher,
+        IConfiguration configuration,
         ILogger<AdminSeeder> logger)
     {
         private readonly PolyBucketDbContext _context = context;
         private readonly IPasswordGenerator _passwordGenerator = passwordGenerator;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
+        private readonly IConfiguration _configuration = configuration;
         private readonly ILogger<AdminSeeder> _logger = logger;
 
         public async Task SeedAsync()
@@ -30,7 +32,7 @@ namespace PolyBucket.Api.Data.Seeders
             var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
             if (adminRole == null)
             {
-                throw new InvalidOperationException("Admin role not found. Please ensure roles are seeded first.");
+                throw new InvalidOperationException($"{nameof(AdminSeeder)}: Admin role not found. Please ensure roles are seeded first.");
             }
 
             // Check if admin users already exist
@@ -40,53 +42,96 @@ namespace PolyBucket.Api.Data.Seeders
 
             if (existingAdmins.Any())
             {
-                _logger.LogInformation("Admin users already exist, skipping admin seeding");
+                _logger.LogInformation($"{nameof(AdminSeeder)}: Admin users already exist, skipping admin seeding");
                 return;
             }
 
-            // Create regular admin account
-            await CreateAdminAccount("admin", "admin@polybucket.com", adminRole);
+            // Read admin configuration from IConfiguration
+            // IConfiguration already has the correct priority: Environment Variables > appsettings.{Environment}.json > appsettings.json
+            var adminUsername = _configuration["Admin:Username"];
+            var adminEmail = _configuration["Admin:Email"];
+            var adminPassword = _configuration["Admin:Password"];
+
+            // Log what values are being read from configuration (Information level for visibility in containers)
+            _logger.LogInformation(
+                "Reading Admin configuration from IConfiguration - Username: {Username}, Email: {Email}, Password: {HasPassword}",
+                adminUsername ?? "(null)",
+                adminEmail ?? "(null)",
+                string.IsNullOrWhiteSpace(adminPassword) ? "(not set - will generate)" : "(provided)");
+
+            // Also log raw environment variables for debugging (if they exist)
+            var envUsername = Environment.GetEnvironmentVariable("Admin__Username");
+            var envEmail = Environment.GetEnvironmentVariable("Admin__Email");
+            var envPassword = Environment.GetEnvironmentVariable("Admin__Password");
             
-            // Create test admin account for testing
-            await CreateAdminAccount("testadmin", "testadmin@polybucket.com", adminRole);
-            
-            _logger.LogInformation("Admin users created successfully");
+            if (!string.IsNullOrWhiteSpace(envUsername) || !string.IsNullOrWhiteSpace(envEmail) || !string.IsNullOrWhiteSpace(envPassword))
+            {
+                _logger.LogInformation(
+                    "Environment variables detected - Admin__Username: {EnvUsername}, Admin__Email: {EnvEmail}, Admin__Password: {EnvPasswordSet}",
+                    envUsername ?? "(not set)",
+                    envEmail ?? "(not set)",
+                    string.IsNullOrWhiteSpace(envPassword) ? "(not set)" : "(set)");
+            }
+
+            // Use defaults if not provided
+            if (string.IsNullOrWhiteSpace(adminUsername))
+            {
+                adminUsername = "admin";
+                _logger.LogInformation("Admin username not configured in IConfiguration, using default: {Username}", adminUsername);
+            }
+            else
+            {
+                _logger.LogInformation("Admin username configured: {Username}", adminUsername);
+            }
+
+            if (string.IsNullOrWhiteSpace(adminEmail))
+            {
+                adminEmail = "admin@polybucket.com";
+                _logger.LogInformation("Admin email not configured in IConfiguration, using default: {Email}", adminEmail);
+            }
+            else
+            {
+                _logger.LogInformation("Admin email configured: {Email}", adminEmail);
+            }
+
+            // Password is optional - if not provided, will be generated
+            if (string.IsNullOrWhiteSpace(adminPassword))
+            {
+                adminPassword = null;
+                _logger.LogInformation("Admin password not configured in IConfiguration, will generate a secure password");
+            }
+            else
+            {
+                _logger.LogInformation("Admin password configured from IConfiguration (password value not logged for security)");
+            }
+
+            await CreateAdminAccount(adminUsername, adminEmail, adminPassword, adminRole);
+            _logger.LogInformation($"{nameof(AdminSeeder)}: Admin users created successfully");
         }
 
-        private async Task CreateAdminAccount(string username, string email, Role adminRole)
+        private async Task CreateAdminAccount(string username, string email, string? providedPassword, Role adminRole)
         {
-            // Generate a secure random password
-            var adminPassword = _passwordGenerator.GeneratePassword(16, 20);
+            _logger.LogInformation($"{nameof(AdminSeeder)}: Creating admin user with username: {username}, email: {email}");
             
-            // Save password to file in mapped volume (only for regular admin)
-            if (username == "admin")
+            // Use provided password or generate a secure random password
+            string adminPassword;
+            
+            if (string.IsNullOrWhiteSpace(providedPassword))
             {
-                try
-                {
-                    var passwordFilePath = Path.Combine(Directory.GetCurrentDirectory(), "files", "admin-credentials.txt");
-                    var credentialsContent = $"PolyBucket Admin Credentials\n" +
-                                           $"========================\n" +
-                                           $"Username: {username}\n" +
-                                           $"Email: {email}\n" +
-                                           $"Password: {adminPassword}\n" +
-                                           $"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC\n\n" +
-                                           $"IMPORTANT: Please change this password after first login for security.\n" +
-                                           $"This file should be deleted after you have safely stored the credentials.";
-                    
-                    // Ensure the files directory exists
-                    var filesDirectory = Path.GetDirectoryName(passwordFilePath);
-                    if (!string.IsNullOrEmpty(filesDirectory) && !Directory.Exists(filesDirectory))
-                    {
-                        Directory.CreateDirectory(filesDirectory);
-                    }
-                    
-                    await File.WriteAllTextAsync(passwordFilePath, credentialsContent);
-                    _logger.LogInformation("Admin credentials saved to {FilePath}", passwordFilePath);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to save admin credentials to file, but continuing with seeding");
-                }
+                adminPassword = _passwordGenerator.GeneratePassword(16, 20);
+                
+                // Log the generated password for the main admin account
+                _logger.LogInformation(
+                    "Admin account created with generated password. " +
+                    "Username: {Username}, Email: {Email}, Password: {Password}. " +
+                    "Please change this password after first login. " +
+                    "To set a custom password, use the Admin__Password environment variable.",
+                    username, email, adminPassword);
+            }
+            else
+            {
+                adminPassword = providedPassword;
+                _logger.LogInformation("Admin account created with password from configuration. Username: {Username}, Email: {Email}", username, email);
             }
 
             // Hash the password
@@ -118,7 +163,7 @@ namespace PolyBucket.Api.Data.Seeders
             _context.Users.Add(admin);
             await _context.SaveChangesAsync();
             
-            _logger.LogInformation("Admin user created successfully with username: {Username}", admin.Username);
+            _logger.LogInformation($"{nameof(AdminSeeder)}: Admin user created successfully.");
         }
     }
 } 

@@ -1,65 +1,119 @@
 services:
   # Main PolyBucket Application
   polybucket-api:
-    build: 
-      context: .
-      dockerfile: Dockerfile.backend
-    ports:
-      - "5000:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=polybucket-db;Database=polybucket;Username=polybucket;Password=password
-      - MARKETPLACE_API_URL=http://marketplace-api:5001
-    depends_on:
-      - polybucket-db
-      - redis
-    volumes:
-      - ./backend:/app
-      - /app/bin
-      - /app/obj
-
-  polybucket-frontend:
+    container_name: polybucket-api
     build:
       context: .
-      dockerfile: frontend/Dockerfile.frontend
+      dockerfile: Dockerfile.backend
+      target: build
     ports:
-      - "3000:80"
+      - "11666:11666"
     environment:
-      - REACT_APP_API_URL=http://polybucket-api:5000
-      - REACT_APP_MARKETPLACE_URL=http://marketplace-frontend:3001
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://*:11666
+      - ConnectionStrings__DefaultConnection=Host=polybucket-db;Port=5432;Database=polybucket;Username=postgres;Password=postgres
+      - MARKETPLACE_API_URL=http://localhost:10120
+      - JWT_SECRET=${JWT_SECRET:-development-jwt-secret-key-change-in-production-minimum-32-characters-long}
+      - AppSettings__Security__JwtSecret=${JWT_SECRET:-development-jwt-secret-key-change-in-production-minimum-32-characters-long}
+      - Admin__Username=admin
+      - Admin__Email=admin@polybucket.app
+      - Admin__Password=PolyBucket123
+    depends_on:
+      polybucket-db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - polybucket-network
+    volumes:
+      - ./backend:/app/backend
+      - ./PolyBucket.sln:/app/PolyBucket.sln
+    command: dotnet watch run --urls http://*:11666
+
+  polybucket-frontend:
+    container_name: polybucket-frontend
+    ports:
+      - "32768:3000"
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: development
     depends_on:
       - polybucket-api
+    networks:
+      - polybucket-network
+    environment:
+      - VITE_API_URL=http://localhost:11666
     volumes:
       - ./frontend:/app
-      - /app/node_modules
-      - /app/build
+      - ./node_modules:/app/node_modules
+    command: npm start
 
   polybucket-db:
-    image: postgres:15-alpine
+    image: postgres:latest
+    container_name: polybucket-db
+    restart: unless-stopped
     environment:
-      - POSTGRES_DB=polybucket
-      - POSTGRES_USER=polybucket
-      - POSTGRES_PASSWORD=password
+      POSTGRES_DB: polybucket
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - polybucket_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - polybucket-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d polybucket"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: polybucket-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    networks:
+      - polybucket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
   # Marketplace Services
   marketplace-api:
+    container_name: marketplace-api
     build: 
       context: ./marketplace/backend
       dockerfile: Dockerfile
     ports:
-      - "5001:10280"
+      - "10120:10280"
+    env_file:
+      - ./marketplace/.env
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:10280
-      - ConnectionStrings__DefaultConnection=Host=polybucket-db;Database=polybucket;Username=polybucket;Password=password
-      - FileStorage__UploadPath=uploads/plugins
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS:-http://+:10280}
+      - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection:-Host=polybucket-db;Port=5432;Database=polybucket_marketplace;Username=postgres;Password=postgres}
+      - FileStorage__UploadPath=${FileStorage__UploadPath:-uploads/plugins}
+      - Jwt__SecretKey=${Jwt__SecretKey:-your-super-secret-jwt-key-here-change-in-production-min-32-chars}
+      - Jwt__Issuer=${Jwt__Issuer:-PolyBucket.Marketplace.Api}
+      - Jwt__Audience=${Jwt__Audience:-PolyBucket.Marketplace.Client}
+      - Jwt__ExpiryMinutes=${Jwt__ExpiryMinutes:-60}
     depends_on:
-      - polybucket-db
+      polybucket-db:
+        condition: service_healthy
+    networks:
+      - polybucket-network
     volumes:
       - ./marketplace/backend:/app
       - /app/bin
@@ -67,17 +121,23 @@ services:
       - ./marketplace/uploads:/app/uploads
 
   marketplace-frontend:
+    container_name: marketplace-frontend
     build:
       context: ./marketplace/frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: development
     ports:
-      - "3001:3000"
+      - "10110:3000"
+    env_file:
+      - ./marketplace/.env
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://marketplace-api:10280
-      - NEXT_PUBLIC_POLYBUCKET_URL=http://polybucket-frontend:80
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:10120}
+      - NEXT_PUBLIC_POLYBUCKET_URL=${NEXT_PUBLIC_POLYBUCKET_URL:-http://localhost:11666}
     depends_on:
       - marketplace-api
+    networks:
+      - polybucket-network
     volumes:
       - ./marketplace/frontend:/app
       - /app/node_modules
@@ -90,8 +150,15 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - polybucket-network
 
+networks:
+  polybucket-network:
+    name: polybucket-network
+    driver: bridge
 
 volumes:
-  polybucket_data:
+  postgres-data:
+  minio-data:
   redis_data:

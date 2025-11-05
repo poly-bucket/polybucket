@@ -129,7 +129,7 @@ export const ModerationDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="lg-container min-h-screen">
+    <div className="lg-container min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <NavigationBar
         title="Moderation Dashboard"
@@ -138,6 +138,8 @@ export const ModerationDashboard: React.FC = () => {
         showHomeLink={true}
       />
 
+      {/* Main Content - Padding for fixed navbar */}
+      <div className="flex-1 pt-20">
       {/* Navigation Tabs */}
       <div className="lg-tabs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,6 +167,7 @@ export const ModerationDashboard: React.FC = () => {
             </div>
           </TabPanel>
         ))}
+      </div>
       </div>
     </div>
   );

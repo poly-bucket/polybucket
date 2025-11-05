@@ -1,4 +1,15 @@
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import {
+  GetPluginsClient,
+  GetPluginDetailsClient,
+  ReloadPluginsClient,
+  UpdatePluginSettingsClient,
+  UpdatePluginSettingsRequest
+} from './api.client';
 import api from '../utils/axiosConfig';
+
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface PluginSummary {
   id: string;
@@ -135,42 +146,43 @@ export interface PluginStatusResponse {
 }
 
 class PluginAdminService {
-  // Get plugin overview
+  // SKIPPED: /api/plugins/overview endpoint not found in generated client
   async getPluginsOverview(): Promise<PluginOverview> {
     const response = await api.get('/api/plugins/overview');
     return response.data;
   }
 
-  // Get detailed plugin information
   async getPluginDetails(pluginId: string): Promise<PluginDetails> {
-    const response = await api.get(`/api/plugins/${pluginId}/details`);
-    return response.data;
+    const client = new GetPluginDetailsClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getPluginDetails(pluginId);
+    return response as any as PluginDetails;
   }
 
-  // Get plugin hooks information
+  // SKIPPED: /api/plugins/hooks endpoint not found in generated client
   async getPluginHooks(): Promise<PluginHooksResponse> {
     const response = await api.get('/api/plugins/hooks');
     return response.data;
   }
 
-  // Get plugin settings
+  // SKIPPED: GET /api/plugins/{pluginId}/settings endpoint not found in generated client
   async getPluginSettings(pluginId: string): Promise<PluginSettingsResponse> {
     const response = await api.get(`/api/plugins/${pluginId}/settings`);
     return response.data;
   }
 
-  // Update plugin settings
   async updatePluginSettings(
     pluginId: string,
     settings: Record<string, any>
   ): Promise<UpdatePluginSettingsResponse> {
-    const response = await api.put(`/api/plugins/${pluginId}/settings`, {
-      settings
+    const client = new UpdatePluginSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const request = new UpdatePluginSettingsRequest({
+      settings: settings
     });
-    return response.data;
+    const response = await client.updatePluginSettings(pluginId, request);
+    return response;
   }
 
-  // Update plugin status (enable/disable)
+  // SKIPPED: /api/plugins/{pluginId}/status endpoint not found in generated client
   async updatePluginStatus(
     pluginId: string,
     enabled: boolean
@@ -181,17 +193,17 @@ class PluginAdminService {
     return response.data;
   }
 
-  // Reload all plugins
   async reloadPlugins(): Promise<void> {
-    await api.post('/api/plugins/reload');
+    const client = new ReloadPluginsClient(API_CONFIG.baseUrl, sharedHttpClient);
+    await client.reloadPlugins();
   }
 
-  // Get basic plugin list (legacy endpoint)
   async getPlugins(): Promise<any[]> {
-    const response = await api.get('/api/plugins');
-    return response.data;
+    const client = new GetPluginsClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getPlugins();
+    return response as any as any[];
   }
 }
 
 export const pluginAdminService = new PluginAdminService();
-export default pluginAdminService; 
+export default pluginAdminService;

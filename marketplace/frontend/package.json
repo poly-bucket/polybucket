@@ -6,7 +6,9 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -46,12 +48,13 @@
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "16.0.0",
+    "next": "15.0.3",
     "next-themes": "^0.4.6",
     "react": "^18.2.0",
     "react-day-picker": "9.8.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.60.0",
+    "react-is": "^18.2.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
     "sonner": "^1.7.4",
@@ -65,7 +68,8 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.16",
-    "typescript": "^5"
+    "@tailwindcss/postcss": "^4.0.0",
+    "typescript": "^5",
+    "cypress": "^13.0.0"
   }
 }

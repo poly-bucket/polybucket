@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationBar from '../components/common/NavigationBar';
-import { useAppSelector } from '../store';
+import { useAppSelector, useAppDispatch } from '../store';
 import { PrivacySettings } from '../services/api.client';
 import ThumbnailGenerator from './ThumbnailGenerator';
 import ModelViewer, { ViewMode } from './ModelViewer';
@@ -9,7 +9,8 @@ import PDFViewer from '../components/common/PDFViewer';
 import MarkdownViewer from '../components/common/MarkdownViewer';
 import { parseModelMarkdown, isMarkdownFile, generateMarkdownTemplate } from '../utils/markdownParser';
 import { extractZipFile, isValidZipFile, convertToFiles } from '../utils/zipExtractor';
-import fileTypeSettingsService, { FileTypeSettingsData } from '../services/fileTypeSettingsService';
+import { FileTypeSettingsData } from '../services/fileTypeSettingsService';
+import { fetchFileSettings } from '../store/thunks/fileTypeSettingsThunks';
 import modelConfigurationSettingsService, { ModelConfigurationSettings } from '../services/modelConfigurationSettingsService';
 
 interface UploadedFile {
@@ -34,9 +35,13 @@ interface ModelData {
   remix: boolean;
 }
 
+const MAX_FILES_PER_UPLOAD = 20;
+
 const ModelUpload: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
+  const { fileTypes: fileTypeSettings, isLoading: fileTypeSettingsLoading } = useAppSelector(state => state.fileTypeSettings);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [modelData, setModelData] = useState<ModelData>({
     title: '',
@@ -56,18 +61,24 @@ const ModelUpload: React.FC = () => {
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
   const [thumbnailGeneratedMessage, setThumbnailGeneratedMessage] = useState<string | null>(null);
   const [isExtractingZip, setIsExtractingZip] = useState(false);
-  const [fileTypeSettings, setFileTypeSettings] = useState<FileTypeSettingsData[]>([]);
-  const [fileTypeSettingsLoading, setFileTypeSettingsLoading] = useState(true);
   const [modelConfigurationSettings, setModelConfigurationSettings] = useState<ModelConfigurationSettings | null>(null);
   const [modelConfigurationSettingsLoading, setModelConfigurationSettingsLoading] = useState(true);
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'warning' | 'info' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const canAddMoreFiles = uploadedFiles.length < MAX_FILES_PER_UPLOAD;
+  const remainingFiles = MAX_FILES_PER_UPLOAD - uploadedFiles.length;
   
   // Get supported formats from API settings
-  const supported3DFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === '3D').map(ft => ft.fileExtension);
-  const supportedImageFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === 'Image').map(ft => ft.fileExtension);
-  const supportedDocumentFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === 'Document').map(ft => ft.fileExtension);
-  const supportedZipFormats = fileTypeSettings.filter(ft => ft.enabled && ft.category === 'Archive').map(ft => ft.fileExtension);
+  const supported3DFormats = fileTypeSettings.filter((ft: FileTypeSettingsData) => ft.enabled && ft.category === '3D').map((ft: FileTypeSettingsData) => ft.fileExtension);
+  const supportedImageFormats = fileTypeSettings.filter((ft: FileTypeSettingsData) => ft.enabled && ft.category === 'Image').map((ft: FileTypeSettingsData) => ft.fileExtension);
+  const supportedDocumentFormats = fileTypeSettings.filter((ft: FileTypeSettingsData) => ft.enabled && ft.category === 'Document').map((ft: FileTypeSettingsData) => ft.fileExtension);
+  const supportedZipFormats = fileTypeSettings.filter((ft: FileTypeSettingsData) => ft.enabled && ft.category === 'Archive').map((ft: FileTypeSettingsData) => ft.fileExtension);
   const allSupportedFormats = [...supported3DFormats, ...supportedImageFormats, ...supportedDocumentFormats, ...supportedZipFormats];
 
   const categories = [
@@ -79,24 +90,12 @@ const ModelUpload: React.FC = () => {
     'MIT', 'GPL', 'Creative Commons', 'Commercial', 'Custom'
   ];
 
-  // Fetch file type settings on component mount
+  // Fetch file type settings from Redux store if not already loaded
   useEffect(() => {
-    const fetchFileTypeSettings = async () => {
-      try {
-        setFileTypeSettingsLoading(true);
-        const response = await fileTypeSettingsService.getFileSettings();
-        if (response.success && response.fileTypes) {
-          setFileTypeSettings(response.fileTypes);
-        }
-      } catch (error) {
-        console.error('Error fetching file type settings:', error);
-      } finally {
-        setFileTypeSettingsLoading(false);
-      }
-    };
-
-    fetchFileTypeSettings();
-  }, []);
+    if (fileTypeSettings.length === 0 && !fileTypeSettingsLoading) {
+      dispatch(fetchFileSettings());
+    }
+  }, [dispatch, fileTypeSettings.length, fileTypeSettingsLoading]);
 
   // Fetch model configuration settings on component mount
   useEffect(() => {
@@ -160,6 +159,15 @@ const ModelUpload: React.FC = () => {
   // Process zip file and extract contents
   const processZipFile = async (file: File) => {
     try {
+      if (!canAddMoreFiles) {
+        setToast({
+          open: true,
+          message: `Maximum of ${MAX_FILES_PER_UPLOAD} files allowed per upload. Please remove some files before extracting this zip.`,
+          severity: 'error'
+        });
+        return;
+      }
+
       setIsExtractingZip(true);
       setThumbnailGeneratedMessage(`Extracting zip file: ${file.name}...`);
       
@@ -197,8 +205,12 @@ const ModelUpload: React.FC = () => {
       // Convert extracted files to File objects
       const extractedFiles = convertToFiles(extractionResult.files);
       
+      // Limit files to maximum allowed
+      const filesToAdd = extractedFiles.slice(0, remainingFiles);
+      const filesSkipped = extractedFiles.length - filesToAdd.length;
+      
       // Add extracted files to upload queue
-      const newFiles: UploadedFile[] = extractedFiles.map(extFile => ({
+      const newFiles: UploadedFile[] = filesToAdd.map(extFile => ({
         id: Math.random().toString(36).substr(2, 9),
         name: extFile.name,
         size: extFile.size,
@@ -208,7 +220,17 @@ const ModelUpload: React.FC = () => {
         isThumbnail: false
       }));
 
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+      setUploadedFiles(prev => {
+        const updated = [...prev, ...newFiles];
+        if (filesSkipped > 0) {
+          setToast({
+            open: true,
+            message: `Maximum of ${MAX_FILES_PER_UPLOAD} files reached. ${filesSkipped} file(s) from the zip were not added.`,
+            severity: 'warning'
+          });
+        }
+        return updated;
+      });
 
       // Auto-preview first 3D model, image, PDF, or markdown found
       const firstPreviewableFile = newFiles.find(f => {
@@ -268,9 +290,26 @@ const ModelUpload: React.FC = () => {
     const files = event.target.files;
     if (!files) return;
 
+    if (!canAddMoreFiles) {
+      setToast({
+        open: true,
+        message: `Maximum of ${MAX_FILES_PER_UPLOAD} files allowed per upload. Please remove some files before adding more.`,
+        severity: 'error'
+      });
+      event.target.value = '';
+      return;
+    }
+
+    const filesToAdd: File[] = [];
+    const filesToProcess: File[] = [];
+
     for (const file of Array.from(files)) {
       if (!isFileAllowed(file)) {
-        alert(`File ${file.name} is not allowed or exceeds size limit.`);
+        setToast({
+          open: true,
+          message: `File ${file.name} is not allowed or exceeds size limit.`,
+          severity: 'error'
+        });
         continue;
       }
       
@@ -278,16 +317,42 @@ const ModelUpload: React.FC = () => {
       
       // Process zip files immediately
       if (supportedZipFormats.includes(fileExtension)) {
-        await processZipFile(file);
-        continue; // Don't add zip files to upload queue
+        filesToProcess.push(file);
+        continue;
       }
 
       // Process markdown files immediately
       if (isMarkdownFile(file.name)) {
-        await processMarkdownFile(file);
-        continue; // Don't add markdown files to upload queue
+        filesToProcess.push(file);
+        continue;
       }
 
+      // Check if we can add this file
+      if (uploadedFiles.length + filesToAdd.length >= MAX_FILES_PER_UPLOAD) {
+        setToast({
+          open: true,
+          message: `Maximum of ${MAX_FILES_PER_UPLOAD} files allowed per upload. Only the first ${remainingFiles} files will be added.`,
+          severity: 'warning'
+        });
+        break;
+      }
+
+      filesToAdd.push(file);
+    }
+
+    // Process zip and markdown files
+    for (const file of filesToProcess) {
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      if (supportedZipFormats.includes(fileExtension)) {
+        await processZipFile(file);
+      } else if (isMarkdownFile(file.name)) {
+        await processMarkdownFile(file);
+      }
+    }
+
+    // Add regular files
+    const newFiles: UploadedFile[] = filesToAdd.map(file => {
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
       const newFile: UploadedFile = {
         id: Math.random().toString(36).substr(2, 9),
         name: file.name,
@@ -298,16 +363,21 @@ const ModelUpload: React.FC = () => {
         isThumbnail: false
       };
 
-      setUploadedFiles(prev => [...prev, newFile]);
-
       // Auto-preview 3D models, images, PDFs, and markdown files
       if (supported3DFormats.includes(fileExtension) || 
           supportedImageFormats.includes(fileExtension) ||
           file.name.toLowerCase().endsWith('.pdf') ||
           isMarkdownFile(file.name)) {
-        setPreviewFile(newFile);
+        if (!previewFile) {
+          setPreviewFile(newFile);
+        }
       }
-    }
+
+      return newFile;
+    });
+
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+    event.target.value = '';
   };
 
   const handleDragOver = (event: React.DragEvent) => {
@@ -316,12 +386,29 @@ const ModelUpload: React.FC = () => {
 
   const handleDrop = async (event: React.DragEvent) => {
     event.preventDefault();
+    
+    if (!canAddMoreFiles) {
+      setToast({
+        open: true,
+        message: `Maximum of ${MAX_FILES_PER_UPLOAD} files allowed per upload. Please remove some files before adding more.`,
+        severity: 'error'
+      });
+      return;
+    }
+
     const files = event.dataTransfer.files;
     
     if (files.length > 0) {
+      const filesToAdd: File[] = [];
+      const filesToProcess: File[] = [];
+
       for (const file of Array.from(files)) {
         if (!isFileAllowed(file)) {
-          alert(`File ${file.name} is not allowed or exceeds size limit.`);
+          setToast({
+            open: true,
+            message: `File ${file.name} is not allowed or exceeds size limit.`,
+            severity: 'error'
+          });
           continue;
         }
         
@@ -329,16 +416,42 @@ const ModelUpload: React.FC = () => {
         
         // Process zip files immediately
         if (supportedZipFormats.includes(fileExtension)) {
-          await processZipFile(file);
-          continue; // Don't add zip files to upload queue
+          filesToProcess.push(file);
+          continue;
         }
 
         // Process markdown files immediately
         if (isMarkdownFile(file.name)) {
-          await processMarkdownFile(file);
-          continue; // Don't add markdown files to upload queue
+          filesToProcess.push(file);
+          continue;
         }
 
+        // Check if we can add this file
+        if (uploadedFiles.length + filesToAdd.length >= MAX_FILES_PER_UPLOAD) {
+          setToast({
+            open: true,
+            message: `Maximum of ${MAX_FILES_PER_UPLOAD} files allowed per upload. Only the first ${remainingFiles} files will be added.`,
+            severity: 'warning'
+          });
+          break;
+        }
+
+        filesToAdd.push(file);
+      }
+
+      // Process zip and markdown files
+      for (const file of filesToProcess) {
+        const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+        if (supportedZipFormats.includes(fileExtension)) {
+          await processZipFile(file);
+        } else if (isMarkdownFile(file.name)) {
+          await processMarkdownFile(file);
+        }
+      }
+
+      // Add regular files
+      const newFiles: UploadedFile[] = filesToAdd.map(file => {
+        const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
         const newFile: UploadedFile = {
           id: Math.random().toString(36).substr(2, 9),
           name: file.name,
@@ -349,16 +462,20 @@ const ModelUpload: React.FC = () => {
           isThumbnail: false
         };
 
-        setUploadedFiles(prev => [...prev, newFile]);
-
         // Auto-preview 3D models, images, PDFs, and markdown files
         if (supported3DFormats.includes(fileExtension) || 
             supportedImageFormats.includes(fileExtension) ||
             file.name.toLowerCase().endsWith('.pdf') ||
             isMarkdownFile(file.name)) {
-          setPreviewFile(newFile);
+          if (!previewFile) {
+            setPreviewFile(newFile);
+          }
         }
-      }
+
+        return newFile;
+      });
+
+      setUploadedFiles(prev => [...prev, ...newFiles]);
     }
   };
 
@@ -375,12 +492,12 @@ const ModelUpload: React.FC = () => {
 
   const getFileTypeSettings = (fileName: string) => {
     const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
-    return fileTypeSettings.find(ft => ft.enabled && ft.fileExtension.toLowerCase() === fileExtension);
+    return fileTypeSettings.find((ft: FileTypeSettingsData) => ft.enabled && ft.fileExtension.toLowerCase() === fileExtension);
   };
 
   const isFileAllowed = (file: File) => {
     const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-    const fileType = fileTypeSettings.find(ft => ft.enabled && ft.fileExtension.toLowerCase() === fileExtension);
+    const fileType = fileTypeSettings.find((ft: FileTypeSettingsData) => ft.enabled && ft.fileExtension.toLowerCase() === fileExtension);
     
     if (!fileType) return false;
     
@@ -464,6 +581,7 @@ const ModelUpload: React.FC = () => {
 
     try {
       // Prepare model data
+      const thumbnailFile = uploadedFiles.find(f => f.isThumbnail);
       const modelUploadData = {
         name: modelData.title,
         description: modelData.description,
@@ -474,7 +592,7 @@ const ModelUpload: React.FC = () => {
         workInProgress: modelData.workInProgress,
         nsfw: modelData.nsfw,
         remix: modelData.remix,
-        thumbnailFileId: uploadedFiles.find(f => f.isThumbnail)?.id
+        thumbnailFileId: thumbnailFile?.name
       };
 
       // Prepare files - all files including thumbnails are already in uploadedFiles
@@ -490,14 +608,22 @@ const ModelUpload: React.FC = () => {
       
       console.log('Upload successful:', result);
       
-      // Navigate back to dashboard after successful upload
-      setTimeout(() => {
+      // Navigate to the newly created model's page
+      if (result?.id) {
+        navigate(`/models/${result.id}`);
+      } else {
+        // Fallback to dashboard if model ID is not available
         navigate('/dashboard');
-      }, 1000);
+      }
 
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed. Please try again.';
+      setToast({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -505,7 +631,7 @@ const ModelUpload: React.FC = () => {
   };
 
   return (
-    <div className="lg-container min-h-screen text-white">
+    <div className="lg-container min-h-screen text-white flex flex-col">
       <style>{`
         .slider::-webkit-slider-thumb {
           appearance: none;
@@ -534,6 +660,8 @@ const ModelUpload: React.FC = () => {
         showHomeLink={true}
       />
 
+      {/* Main Content - Padding for fixed navbar */}
+      <div className="flex-1 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* Left Panel - Upload Form */}
@@ -607,17 +735,24 @@ const ModelUpload: React.FC = () => {
                 {/* Compact drag and drop area after files are uploaded */}
                 <div className="mb-6">
                   <div
-                    className="lg-card border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-green-500 transition-colors"
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
+                    className={`lg-card border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                      canAddMoreFiles
+                        ? 'border-gray-600 hover:border-green-500'
+                        : 'border-gray-700 bg-gray-800/50 opacity-60 cursor-not-allowed'
+                    }`}
+                    onDragOver={canAddMoreFiles ? handleDragOver : undefined}
+                    onDrop={canAddMoreFiles ? handleDrop : undefined}
                   >
-                    <svg className="mx-auto h-8 w-8 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`mx-auto h-8 w-8 mb-3 ${canAddMoreFiles ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <p className="text-gray-300 mb-2">Add more files</p>
+                    <p className={`mb-2 ${canAddMoreFiles ? 'text-gray-300' : 'text-gray-500'}`}>
+                      {canAddMoreFiles ? 'Add more files' : `Maximum files reached (${MAX_FILES_PER_UPLOAD})`}
+                    </p>
                     <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="lg-button lg-button-primary text-sm"
+                      onClick={() => canAddMoreFiles && fileInputRef.current?.click()}
+                      disabled={!canAddMoreFiles}
+                      className={`lg-button lg-button-primary text-sm ${!canAddMoreFiles ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       Choose Files
                     </button>
@@ -627,6 +762,7 @@ const ModelUpload: React.FC = () => {
                       multiple
                       accept={allSupportedFormats.join(',')}
                       onChange={handleFileSelect}
+                      disabled={!canAddMoreFiles}
                       className="hidden"
                     />
                   </div>
@@ -840,7 +976,15 @@ const ModelUpload: React.FC = () => {
           <div className="w-80">
             <div className="lg-card p-4">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-green-400">Upload Queue</h3>
+                <div>
+                  <h3 className="text-lg font-medium text-green-400">Upload Queue</h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {uploadedFiles.length} / {MAX_FILES_PER_UPLOAD} files
+                    {!canAddMoreFiles && (
+                      <span className="ml-2 text-yellow-400">(Maximum reached)</span>
+                    )}
+                  </p>
+                </div>
                 {uploadedFiles.length > 0 && (
                   <button
                     onClick={clearAllFiles}
@@ -966,6 +1110,28 @@ const ModelUpload: React.FC = () => {
           onCancel={() => setShowThumbnailGenerator(false)}
         />
       )}
+
+      {/* Toast Notification */}
+      {toast.open && (
+        <div className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 min-w-[300px] max-w-[500px] ${
+          toast.severity === 'success' ? 'bg-green-600' :
+          toast.severity === 'warning' ? 'bg-yellow-600' :
+          toast.severity === 'info' ? 'bg-blue-600' :
+          'bg-red-600'
+        } text-white`}>
+          <div className="flex items-center justify-between">
+            <span className="flex-1 pr-4">{toast.message}</span>
+            <button
+              onClick={() => setToast(prev => ({ ...prev, open: false }))}
+              className="text-white/80 hover:text-white font-bold text-lg leading-none"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 };

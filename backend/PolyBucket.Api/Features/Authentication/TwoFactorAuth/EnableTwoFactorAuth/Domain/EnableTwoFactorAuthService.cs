@@ -76,7 +76,8 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                     CreatedAt = DateTime.UtcNow,
                     CreatedById = twoFactorAuth.UserId,
                     UpdatedAt = DateTime.UtcNow,
-                    UpdatedById = twoFactorAuth.UserId
+                    UpdatedById = twoFactorAuth.UserId,
+                    Version = 1
                 };
                 
                 twoFactorAuth.BackupCodes.Add(backupCodeEntity);

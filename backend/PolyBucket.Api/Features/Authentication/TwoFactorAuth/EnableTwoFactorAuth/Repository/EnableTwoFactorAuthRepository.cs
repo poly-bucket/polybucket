@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Authentication.Domain;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
@@ -11,9 +12,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
     public interface IEnableTwoFactorAuthRepository
     {
         Task<TwoFactorAuthDomain.TwoFactorAuth?> GetByUserIdAsync(Guid userId);
-        Task<TwoFactorAuthDomain.TwoFactorAuth?> GetByUserIdWithLockAsync(Guid userId);
         Task<TwoFactorAuthDomain.TwoFactorAuth> UpdateAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth);
-        Task<TwoFactorAuthDomain.TwoFactorAuth> UpdateWithVersionAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, int expectedVersion);
     }
 
     public class EnableTwoFactorAuthRepository : IEnableTwoFactorAuthRepository
@@ -29,119 +28,119 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
 
         public async Task<TwoFactorAuthDomain.TwoFactorAuth?> GetByUserIdAsync(Guid userId)
         {
-            return await _context.TwoFactorAuths
+            var entity = await _context.TwoFactorAuths
                 .Include(tfa => tfa.BackupCodes)
                 .Include(tfa => tfa.User)
+                .AsTracking()
                 .FirstOrDefaultAsync(tfa => tfa.UserId == userId);
-        }
-
-        // CONCURRENCY FIX: Add database-level locking to prevent race conditions
-        public async Task<TwoFactorAuthDomain.TwoFactorAuth?> GetByUserIdWithLockAsync(Guid userId)
-        {
-            // Use raw SQL with FOR UPDATE to implement proper row-level locking
-            var result = await _context.TwoFactorAuths
-                .FromSqlRaw("SELECT * FROM \"TwoFactorAuths\" WHERE \"UserId\" = {0} FOR UPDATE", userId)
-                .FirstOrDefaultAsync();
             
-            if (result != null)
+            if (entity != null)
             {
-                // Load related entities separately
-                await _context.Entry(result).Reference(tfa => tfa.User).LoadAsync();
-                await _context.Entry(result).Collection(tfa => tfa.BackupCodes).LoadAsync();
+                _logger.LogInformation("EnableTwoFactorAuthRepository.GetByUserIdAsync: Loaded 2FA - Id: {Id}, Version: {Version}, BackupCodesCount: {Count}", 
+                    entity.Id, entity.Version, entity.BackupCodes?.Count ?? 0);
+                
+                // Log existing BackupCodes if any
+                if (entity.BackupCodes != null && entity.BackupCodes.Any())
+                {
+                    foreach (var bc in entity.BackupCodes)
+                    {
+                        _logger.LogInformation("EnableTwoFactorAuthRepository.GetByUserIdAsync: Existing BackupCode - Id: {Id}, Version: {Version}, IsUsed: {IsUsed}", 
+                            bc.Id, bc.Version, bc.IsUsed);
+                    }
+                }
             }
             
-            return result;
+            return entity;
         }
 
         public async Task<TwoFactorAuthDomain.TwoFactorAuth> UpdateAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth)
         {
             _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: Updating 2FA for user {UserId}", twoFactorAuth.UserId);
-            
-            // Get the existing entity from the database to ensure we're working with the correct state
-            var existingEntity = await _context.TwoFactorAuths
-                .Include(tfa => tfa.BackupCodes)
-                .FirstOrDefaultAsync(tfa => tfa.Id == twoFactorAuth.Id);
 
-            if (existingEntity == null)
+            // Log entity state before save
+            var entry = _context.Entry(twoFactorAuth);
+            _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: TwoFactorAuth entity state: {State}, Version: {Version}", 
+                entry.State, twoFactorAuth.Version);
+            
+            // Log all modified properties
+            var modifiedProperties = entry.Properties
+                .Where(p => p.IsModified)
+                .Select(p => $"{p.Metadata.Name}={p.CurrentValue}")
+                .ToList();
+            _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: Modified properties: {Properties}", string.Join(", ", modifiedProperties));
+
+            // Log BackupCodes state BEFORE fixing
+            var backupCodeEntriesBefore = _context.ChangeTracker.Entries<TwoFactorAuthDomain.BackupCode>()
+                .Where(e => e.Entity.TwoFactorAuthId == twoFactorAuth.Id)
+                .ToList();
+            _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: BackupCodes tracked BEFORE fix - Count: {Count}", backupCodeEntriesBefore.Count);
+            foreach (var bcEntry in backupCodeEntriesBefore)
             {
-                _logger.LogError("EnableTwoFactorAuthRepository.UpdateAsync: TwoFactorAuth with Id {Id} not found", twoFactorAuth.Id);
-                throw new InvalidOperationException($"TwoFactorAuth with Id {twoFactorAuth.Id} not found");
+                _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: BackupCode BEFORE - Id: {Id}, State: {State}, Version: {Version}, Code: {Code}", 
+                    bcEntry.Entity.Id, bcEntry.State, bcEntry.Entity.Version, bcEntry.Entity.Code);
             }
 
-            // Update the main entity properties
-            existingEntity.IsEnabled = twoFactorAuth.IsEnabled;
-            existingEntity.EnabledAt = twoFactorAuth.EnabledAt;
-            existingEntity.LastUsedAt = twoFactorAuth.LastUsedAt;
-            existingEntity.UpdatedAt = twoFactorAuth.UpdatedAt;
-            existingEntity.UpdatedById = twoFactorAuth.UpdatedById;
-
-            // Add new backup codes to the database
+            // CRITICAL FIX: Ensure new BackupCodes are marked as Added, not Modified
+            // New BackupCodes should have state = Added, existing ones should be Unchanged
+            var existingBackupCodeIds = twoFactorAuth.BackupCodes
+                .Where(bc => bc.Id != Guid.Empty)
+                .Select(bc => bc.Id)
+                .ToHashSet();
+            
+            // Get all BackupCodes for this TwoFactorAuth from the database to check which are new
+            var existingBackupCodesInDb = await _context.BackupCodes
+                .Where(bc => bc.TwoFactorAuthId == twoFactorAuth.Id)
+                .Select(bc => bc.Id)
+                .ToListAsync();
+            
+            _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: Existing BackupCodes in DB - Count: {Count}, Ids: {Ids}", 
+                existingBackupCodesInDb.Count, string.Join(", ", existingBackupCodesInDb));
+            
+            // Ensure all new BackupCodes are explicitly marked as Added
             foreach (var backupCode in twoFactorAuth.BackupCodes)
             {
-                // Check if this backup code already exists in the database
-                var existingBackupCode = existingEntity.BackupCodes.FirstOrDefault(bc => bc.Id == backupCode.Id);
-                if (existingBackupCode == null)
+                var bcEntry = _context.Entry(backupCode);
+                
+                // If this BackupCode doesn't exist in the database, it must be new
+                if (!existingBackupCodesInDb.Contains(backupCode.Id))
                 {
-                    // This is a new backup code that needs to be added
-                    _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: Adding new backup code {BackupCodeId} for user {UserId}", backupCode.Id, twoFactorAuth.UserId);
-                    existingEntity.BackupCodes.Add(backupCode);
-                    await _context.BackupCodes.AddAsync(backupCode);
+                    if (bcEntry.State != EntityState.Added)
+                    {
+                        _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: Marking BackupCode {Id} as Added (was {State})", 
+                            backupCode.Id, bcEntry.State);
+                        bcEntry.State = EntityState.Added;
+                    }
+                }
+                else
+                {
+                    // If it exists in DB but we're trying to modify it, that's wrong - we should only be adding new ones
+                    if (bcEntry.State == EntityState.Modified)
+                    {
+                        _logger.LogWarning("EnableTwoFactorAuthRepository.UpdateAsync: BackupCode {Id} exists in DB but is marked as Modified. This shouldn't happen during enable.", 
+                            backupCode.Id);
+                        // Reset to Unchanged since we're not modifying existing codes
+                        bcEntry.State = EntityState.Unchanged;
+                    }
                 }
             }
-            
+
+            // Log BackupCodes state AFTER fixing
+            var backupCodeEntriesAfter = _context.ChangeTracker.Entries<TwoFactorAuthDomain.BackupCode>()
+                .Where(e => e.Entity.TwoFactorAuthId == twoFactorAuth.Id)
+                .ToList();
+            _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: BackupCodes tracked AFTER fix - Count: {Count}", backupCodeEntriesAfter.Count);
+            foreach (var bcEntry in backupCodeEntriesAfter)
+            {
+                _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: BackupCode AFTER - Id: {Id}, State: {State}, Version: {Version}", 
+                    bcEntry.Entity.Id, bcEntry.State, bcEntry.Entity.Version);
+            }
+
+            // Entity should already be tracked from GetByUserIdAsync
+            // Backup codes are already added to the entity in the service
+            // EF Core will automatically detect changes and save them
             await _context.SaveChangesAsync();
             _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateAsync: Successfully updated 2FA for user {UserId}", twoFactorAuth.UserId);
-            return existingEntity;
-        }
-
-        // CONCURRENCY FIX: Add optimistic concurrency control with version checking
-        public async Task<TwoFactorAuthDomain.TwoFactorAuth> UpdateWithVersionAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, int expectedVersion)
-        {
-            _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateWithVersionAsync: Updating 2FA for user {UserId} with version check", twoFactorAuth.UserId);
-            
-            // Get the existing entity from the database to ensure we're working with the correct state
-            var existingEntity = await _context.TwoFactorAuths
-                .Include(tfa => tfa.BackupCodes)
-                .FirstOrDefaultAsync(tfa => tfa.Id == twoFactorAuth.Id);
-
-            if (existingEntity == null)
-            {
-                _logger.LogError("EnableTwoFactorAuthRepository.UpdateWithVersionAsync: TwoFactorAuth with Id {Id} not found", twoFactorAuth.Id);
-                throw new InvalidOperationException($"TwoFactorAuth with Id {twoFactorAuth.Id} not found");
-            }
-
-            // CONCURRENCY FIX: Check version for optimistic concurrency control
-            if (existingEntity.Version != expectedVersion)
-            {
-                _logger.LogWarning("EnableTwoFactorAuthRepository.UpdateWithVersionAsync: Version mismatch for TwoFactorAuth {Id}. Expected: {Expected}, Actual: {Actual}", 
-                    twoFactorAuth.Id, expectedVersion, existingEntity.Version);
-                throw new InvalidOperationException("Concurrent modification detected. Please try again.");
-            }
-
-            // Update the main entity properties
-            existingEntity.IsEnabled = twoFactorAuth.IsEnabled;
-            existingEntity.EnabledAt = twoFactorAuth.EnabledAt;
-            existingEntity.LastUsedAt = twoFactorAuth.LastUsedAt;
-            existingEntity.UpdatedAt = twoFactorAuth.UpdatedAt;
-            existingEntity.UpdatedById = twoFactorAuth.UpdatedById;
-            existingEntity.Version = twoFactorAuth.Version; // Update version
-
-            // Add new backup codes to the database
-            foreach (var backupCode in twoFactorAuth.BackupCodes)
-            {
-                // Check if this backup code already exists in the database
-                var existingBackupCode = existingEntity.BackupCodes.FirstOrDefault(bc => bc.Id == backupCode.Id);
-                if (existingBackupCode == null)
-                {
-                    // This is a new backup code that needs to be added
-                    _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateWithVersionAsync: Adding new backup code {BackupCodeId} for user {UserId}", backupCode.Id, twoFactorAuth.UserId);
-                    existingEntity.BackupCodes.Add(backupCode);
-                }
-            }
-            
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("EnableTwoFactorAuthRepository.UpdateWithVersionAsync: Successfully updated 2FA for user {UserId}", twoFactorAuth.UserId);
-            return existingEntity;
+            return twoFactorAuth;
         }
     }
 } 

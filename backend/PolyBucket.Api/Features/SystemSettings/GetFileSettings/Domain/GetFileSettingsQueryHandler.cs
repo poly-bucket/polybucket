@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.SystemSettings.Domain;
+using PolyBucket.Api.Features.SystemSettings.Domain; 
 using PolyBucket.Api.Features.SystemSettings.GetFileSettings.Domain;
 
 namespace PolyBucket.Api.Features.SystemSettings.GetFileSettings.Domain
@@ -19,7 +19,7 @@ namespace PolyBucket.Api.Features.SystemSettings.GetFileSettings.Domain
             try
             {
                 var fileTypes = await _context.FileTypeSettings
-                    .Where(ft => !ft.IsDeleted)
+                    .Where(ft => ft.DeletedAt == null)
                     .OrderBy(ft => ft.Category)
                     .ThenBy(ft => ft.Priority)
                     .ThenBy(ft => ft.FileExtension)

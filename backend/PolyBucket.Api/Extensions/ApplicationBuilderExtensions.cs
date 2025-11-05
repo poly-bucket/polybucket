@@ -1,10 +1,12 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Data.Seeders;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Seeders;
 using PolyBucket.Api.Features.ThemeManagement.Domain;
+using PolyBucket.Api.Middleware;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -14,8 +16,6 @@ public static class ApplicationBuilderExtensions
     {
         await InitializeDatabaseAsync(app);
         ConfigureMiddleware(app);
-        ConfigureStaticFiles(app);
-        ConfigureEndpoints(app);
 
         return app;
     }
@@ -66,37 +66,45 @@ public static class ApplicationBuilderExtensions
 
     private static void ConfigureMiddleware(WebApplication app)
     {
+        app.UseGlobalExceptionHandler();
+        
+        app.UseRequestLogging();
+        
+        app.UseSecurityHeaders();
+        
         if (app.Environment.IsDevelopment())
         {
             app.UseOpenApi();
             app.UseSwaggerUi();
         }
+        else
+        {
+            app.UseHttpsRedirection();
+        }
 
-        app.UseCors();
-        app.UseStaticFiles();
-    }
-
-    private static void ConfigureStaticFiles(WebApplication app)
-    {
         var filesPath = Path.Combine(Directory.GetCurrentDirectory(), "files");
         if (!Directory.Exists(filesPath))
         {
             Directory.CreateDirectory(filesPath);
         }
         
+        app.UseStaticFiles();
+        
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(filesPath),
             RequestPath = "/files"
         });
-    }
 
-    private static void ConfigureEndpoints(WebApplication app)
-    {
+        app.UseCors();
+        
         app.UseRouting();
+        
         app.UseAuthentication();
         app.UseAuthorization();
-        app.MapControllers();
+        
         app.MapHealthChecks("/health");
+        
+        app.MapControllers();
     }
 } 

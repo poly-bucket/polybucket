@@ -11,7 +11,6 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
     public interface IInitializeTwoFactorAuthRepository
     {
         Task<TwoFactorAuthDomain.TwoFactorAuth?> GetByUserIdAsync(Guid userId);
-        Task<TwoFactorAuthDomain.TwoFactorAuth?> GetByUserIdWithLockAsync(Guid userId);
         Task<TwoFactorAuthDomain.TwoFactorAuth> CreateAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth);
         Task<bool> DeleteAsync(Guid twoFactorAuthId);
     }
@@ -32,25 +31,8 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
             return await _context.TwoFactorAuths
                 .Include(tfa => tfa.BackupCodes)
                 .Include(tfa => tfa.User)
+                .AsTracking()
                 .FirstOrDefaultAsync(tfa => tfa.UserId == userId);
-        }
-
-        // CONCURRENCY FIX: Add database-level locking to prevent race conditions
-        public async Task<TwoFactorAuthDomain.TwoFactorAuth?> GetByUserIdWithLockAsync(Guid userId)
-        {
-            // Use raw SQL with FOR UPDATE to implement proper row-level locking
-            var result = await _context.TwoFactorAuths
-                .FromSqlRaw("SELECT * FROM \"TwoFactorAuths\" WHERE \"UserId\" = {0} FOR UPDATE", userId)
-                .FirstOrDefaultAsync();
-            
-            if (result != null)
-            {
-                // Load related entities separately
-                await _context.Entry(result).Reference(tfa => tfa.User).LoadAsync();
-                await _context.Entry(result).Collection(tfa => tfa.BackupCodes).LoadAsync();
-            }
-            
-            return result;
         }
 
         public async Task<TwoFactorAuthDomain.TwoFactorAuth> CreateAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth)

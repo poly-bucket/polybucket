@@ -5,6 +5,7 @@ using PolyBucket.Api.Features.Users.Repository;
 using PolyBucket.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
@@ -44,16 +45,19 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 throw new ArgumentException("User not found");
             }
 
-            // CONCURRENCY FIX: Use database-level locking to prevent race conditions
-            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var twoFactorAuth = await _enableTwoFactorAuthRepository.GetByUserIdWithLockAsync(command.UserId);
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Starting 2FA enable for user {UserId}", command.UserId);
+                
+                var twoFactorAuth = await _enableTwoFactorAuthRepository.GetByUserIdAsync(command.UserId);
                 if (twoFactorAuth is null)
                 {
                     _logger.LogError("EnableTwoFactorAuthCommandHandler.Handle: 2FA not initialized for user {UserId}", command.UserId);
                     throw new InvalidOperationException("2FA not initialized for this user. Please initialize 2FA first.");
                 }
+
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Loaded 2FA entity - Id: {Id}, Version: {Version}, IsEnabled: {IsEnabled}, BackupCodesCount: {BackupCodesCount}", 
+                    twoFactorAuth.Id, twoFactorAuth.Version, twoFactorAuth.IsEnabled, twoFactorAuth.BackupCodes?.Count ?? 0);
 
                 if (twoFactorAuth.IsEnabled)
                 {
@@ -61,75 +65,96 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                     throw new InvalidOperationException("2FA is already enabled for this user");
                 }
 
-                // CONCURRENCY FIX: Store current version for optimistic concurrency control
-                var currentVersion = twoFactorAuth.Version;
-
-                // Validate the token against the existing entity (without modifying it)
+                // Store original version for concurrency check
+                var originalVersion = twoFactorAuth.Version;
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Original Version: {Version}", originalVersion);
+                
+                var entryBeforeValidation = _dbContext.Entry(twoFactorAuth);
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Entity state before validation: {State}", entryBeforeValidation.State);
+                
                 var isValid = await _enableTwoFactorAuthService.ValidateTokenAsync(twoFactorAuth, command.Token, allowSetupTime: true);
                 
-                if (isValid)
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Token validation result: {IsValid}", isValid);
+                
+                if (!isValid)
                 {
-                    // CONCURRENCY FIX: Check version before any modifications
-                    var existingEntity = await _dbContext.TwoFactorAuths
-                        .Include(tfa => tfa.BackupCodes)
-                        .FirstOrDefaultAsync(tfa => tfa.Id == twoFactorAuth.Id);
-
-                    if (existingEntity == null)
-                    {
-                        _logger.LogError("EnableTwoFactorAuthCommandHandler.Handle: TwoFactorAuth with Id {Id} not found", twoFactorAuth.Id);
-                        throw new InvalidOperationException($"TwoFactorAuth with Id {twoFactorAuth.Id} not found");
-                    }
-
-                    // CONCURRENCY FIX: Check version for optimistic concurrency control
-                    if (existingEntity.Version != currentVersion)
-                    {
-                        _logger.LogWarning("EnableTwoFactorAuthCommandHandler.Handle: Version mismatch for TwoFactorAuth {Id}. Expected: {Expected}, Actual: {Actual}", 
-                            twoFactorAuth.Id, currentVersion, existingEntity.Version);
-                        throw new InvalidOperationException("Concurrent modification detected. Please try again.");
-                    }
-
-                    // Now modify the entity after successful version check
-                    twoFactorAuth.IsEnabled = true;
-                    twoFactorAuth.EnabledAt = DateTime.UtcNow;
-                    twoFactorAuth.UpdatedAt = DateTime.UtcNow;
-                    twoFactorAuth.Version = currentVersion + 1;
-                    
-                    // Generate backup codes after successful validation
-                    var backupCodes = await _enableTwoFactorAuthService.GenerateBackupCodesAsync(twoFactorAuth);
-                    
-                    // Update the TwoFactorAuth entity in the database
-                    var updatedTwoFactorAuth = await _enableTwoFactorAuthRepository.UpdateAsync(twoFactorAuth);
-                    
-                    // Commit the transaction
-                    await transaction.CommitAsync(cancellationToken);
-                    
-                    _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: 2FA enabled successfully for user {UserId}", command.UserId);
-                    
-                    return new EnableTwoFactorAuthResponse
-                    {
-                        Success = true,
-                        Message = "Two-factor authentication has been enabled successfully",
-                        BackupCodes = backupCodes
-                    };
-                }
-                else
-                {
-                    // Rollback the transaction on validation failure
-                    await transaction.RollbackAsync(cancellationToken);
-                    
                     _logger.LogWarning("EnableTwoFactorAuthCommandHandler.Handle: Invalid token provided for 2FA enablement for user {UserId}", command.UserId);
-                    
                     return new EnableTwoFactorAuthResponse
                     {
                         Success = false,
                         Message = "Invalid token provided"
                     };
                 }
+
+                // Check entity state after validation
+                var entryAfterValidation = _dbContext.Entry(twoFactorAuth);
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Entity state after validation: {State}", entryAfterValidation.State);
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: LastUsedAt modified: {IsModified}, Value: {Value}", 
+                    entryAfterValidation.Property(tfa => tfa.LastUsedAt).IsModified, twoFactorAuth.LastUsedAt);
+
+                // Clear LastUsedAt change if ValidateTokenAsync modified it during setup
+                // We don't want to save LastUsedAt during initial enable, only during actual use
+                if (!twoFactorAuth.IsEnabled)
+                {
+                    if (entryAfterValidation.Property(tfa => tfa.LastUsedAt).IsModified)
+                    {
+                        _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Clearing LastUsedAt modification for user {UserId}", command.UserId);
+                        entryAfterValidation.Property(tfa => tfa.LastUsedAt).IsModified = false;
+                        twoFactorAuth.LastUsedAt = null;
+                    }
+                }
+
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Setting IsEnabled=true, Version from {OldVersion} to {NewVersion}", 
+                    originalVersion, originalVersion + 1);
+
+                twoFactorAuth.IsEnabled = true;
+                twoFactorAuth.EnabledAt = DateTime.UtcNow;
+                twoFactorAuth.UpdatedAt = DateTime.UtcNow;
+                twoFactorAuth.Version = originalVersion + 1;
+                
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Before GenerateBackupCodes - Version: {Version}, BackupCodesCount: {Count}", 
+                    twoFactorAuth.Version, twoFactorAuth.BackupCodes?.Count ?? 0);
+                
+                var backupCodes = await _enableTwoFactorAuthService.GenerateBackupCodesAsync(twoFactorAuth);
+                
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: After GenerateBackupCodes - Version: {Version}, BackupCodesCount: {Count}, GeneratedCodesCount: {GeneratedCount}", 
+                    twoFactorAuth.Version, twoFactorAuth.BackupCodes?.Count ?? 0, backupCodes.Count());
+                
+                // Log all tracked entities before save
+                var trackedEntities = _dbContext.ChangeTracker.Entries()
+                    .Where(e => e.Entity is TwoFactorAuthDomain.TwoFactorAuth || e.Entity is TwoFactorAuthDomain.BackupCode)
+                    .ToList();
+                
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Tracked entities before SaveChanges - Count: {Count}", trackedEntities.Count);
+                foreach (var tracked in trackedEntities)
+                {
+                    if (tracked.Entity is TwoFactorAuthDomain.TwoFactorAuth tfa)
+                    {
+                        _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Tracked TwoFactorAuth - Id: {Id}, State: {State}, Version: {Version}, IsEnabled: {IsEnabled}", 
+                            tfa.Id, tracked.State, tfa.Version, tfa.IsEnabled);
+                    }
+                    else if (tracked.Entity is TwoFactorAuthDomain.BackupCode bc)
+                    {
+                        _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Tracked BackupCode - Id: {Id}, State: {State}, Version: {Version}, Code: {Code}", 
+                            bc.Id, tracked.State, bc.Version, bc.Code);
+                    }
+                }
+                
+                await _enableTwoFactorAuthRepository.UpdateAsync(twoFactorAuth);
+                
+                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: 2FA enabled successfully for user {UserId}", command.UserId);
+                
+                return new EnableTwoFactorAuthResponse
+                {
+                    Success = true,
+                    Message = "Two-factor authentication has been enabled successfully",
+                    BackupCodes = backupCodes
+                };
             }
-            catch (Exception)
+            catch (DbUpdateConcurrencyException ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
+                _logger.LogWarning(ex, "EnableTwoFactorAuthCommandHandler.Handle: Concurrent modification detected for user {UserId}", command.UserId);
+                throw new InvalidOperationException("The 2FA configuration was modified by another operation. Please try again.");
             }
         }
     }

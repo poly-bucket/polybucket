@@ -15,7 +15,7 @@ export class UpdateUserSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateUserSettings(request: UpdateUserSettingsRequest): Promise<void> {
@@ -78,7 +78,7 @@ export class GetUserSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUserSettings(): Promise<GetUserSettingsResponse> {
@@ -123,7 +123,7 @@ export class UpdateUserProfileClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateUserProfile(request: UpdateUserProfileRequest): Promise<void> {
@@ -186,7 +186,7 @@ export class RegenerateAvatarClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     regenerateAvatar(request: RegenerateAvatarRequest): Promise<RegenerateAvatarResponse> {
@@ -253,7 +253,7 @@ export class GetUserByIdClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUserById(id: string): Promise<GetUserByIdResponse> {
@@ -312,7 +312,7 @@ export class GetUsersClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUsersResponse> {
@@ -395,7 +395,7 @@ export class CreateUserClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     createUser(command: CreateUserCommand): Promise<CreateUserCommandResponse> {
@@ -465,7 +465,7 @@ export class GetUserProfileClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUserProfileById(id: string): Promise<PrivateProfileResponse> {
@@ -572,7 +572,7 @@ export class GetUserPrintersClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserPrintersResponse> {
@@ -711,7 +711,7 @@ export class GetUserModelsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined): Promise<GetUserModelsResponse> {
@@ -778,7 +778,7 @@ export class GetUserLikedModelsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUserLikedModels(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserLikedModelsResponse> {
@@ -917,7 +917,7 @@ export class GetUserCommentsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUserComments(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetUserCommentsResponse> {
@@ -1056,7 +1056,7 @@ export class GetPublicUserCollectionsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getPublicUserCollections(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<GetPublicUserCollectionsResponse> {
@@ -1195,7 +1195,7 @@ export class BanUserClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     banUser(userId: string, request: BanUserRequest): Promise<void> {
@@ -1360,7 +1360,7 @@ export class SetActiveThemeClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     setActiveTheme(themeId: number): Promise<SetActiveThemeResponse> {
@@ -1422,7 +1422,7 @@ export class GetThemesClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getThemes(): Promise<ThemeListResponse> {
@@ -1474,7 +1474,7 @@ export class CreateThemeClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     createTheme(request: CreateThemeRequest): Promise<ThemeResponse> {
@@ -1544,7 +1544,7 @@ export class GetActiveThemeClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getActiveTheme(): Promise<ThemeDto> {
@@ -1596,7 +1596,7 @@ export class AuthenticationSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAuthenticationSettings(): Promise<AuthenticationSettings> {
@@ -1715,7 +1715,7 @@ export class ExtensibleThemeClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAvailableThemes(): Promise<ThemeDefinition[]> {
@@ -2207,7 +2207,7 @@ export class FontAwesomeSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getSettings(): Promise<FontAwesomeSettings> {
@@ -2442,7 +2442,7 @@ export class GetEmailSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getEmailSettings(): Promise<EmailSettingsResponse> {
@@ -2501,7 +2501,7 @@ export class UpdateEmailSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateEmailSettings(command: UpdateEmailSettingsCommand): Promise<UpdateEmailSettingsResponse> {
@@ -2571,7 +2571,7 @@ export class GetFileSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getFileSettings(): Promise<GetFileSettingsResponse> {
@@ -2623,7 +2623,7 @@ export class UpdateFileSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateFileSettings(command: UpdateFileSettingsCommand): Promise<UpdateFileSettingsResponse> {
@@ -2693,7 +2693,7 @@ export class GetModelConfigurationSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModelConfigurationSettings(): Promise<GetModelConfigurationSettingsResponse> {
@@ -2745,7 +2745,7 @@ export class UpdateModelConfigurationSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateModelConfigurationSettings(command: UpdateModelConfigurationSettingsCommand): Promise<UpdateModelConfigurationSettingsResponse> {
@@ -2815,7 +2815,7 @@ export class GetSiteModelSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getSiteModelSettings(): Promise<GetSiteModelSettingsResponse> {
@@ -2867,7 +2867,7 @@ export class UpdateSiteModelSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateSiteModelSettings(command: UpdateSiteModelSettingsCommand): Promise<UpdateSiteModelSettingsResponse> {
@@ -2937,7 +2937,7 @@ export class SystemSetupClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getSetupStatus(): Promise<CheckFirstTimeSetupResponse> {
@@ -3054,7 +3054,7 @@ export class TestEmailConfigurationClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     testEmailConfiguration(command: TestEmailConfigurationCommand): Promise<TestEmailConfigurationResponse> {
@@ -3124,7 +3124,7 @@ export class ThemeSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getThemeSettings(): Promise<GetThemeSettingsResponse> {
@@ -3235,7 +3235,7 @@ export class TokenSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getTokenSettings(): Promise<TokenSettings> {
@@ -3354,7 +3354,7 @@ export class SearchClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     search(query: string | undefined, page: number | undefined, pageSize: number | undefined, type: SearchType | undefined, category: string | null | undefined, sortBy: string | undefined, sortDescending: boolean | undefined): Promise<SearchResponse> {
@@ -3436,7 +3436,7 @@ export class GetAllReportsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAllReports(page: number | undefined, pageSize: number | undefined, isResolved: boolean | null | undefined, type: ReportType | null | undefined): Promise<ReportsResponse> {
@@ -3507,7 +3507,7 @@ export class SubmitReportClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     submitReport(request: SubmitReportRequest): Promise<FileResponse> {
@@ -3560,7 +3560,7 @@ export class GetReportClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getReport(reportId: string): Promise<FileResponse> {
@@ -3612,7 +3612,7 @@ export class GetReportsAnalyticsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getReportsAnalytics(fromDate: Date | null | undefined, toDate: Date | null | undefined): Promise<ReportsAnalytics> {
@@ -3974,7 +3974,7 @@ export class GetReportsForTargetClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getReportsForTarget(targetId: string, type: ReportType | undefined): Promise<FileResponse> {
@@ -4030,7 +4030,7 @@ export class GetUnresolvedReportsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getUnresolvedReports(): Promise<FileResponse> {
@@ -4079,7 +4079,7 @@ export class ResolveReportClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     resolveReport(reportId: string, request: ResolveReportRequest): Promise<FileResponse> {
@@ -4135,7 +4135,7 @@ export class GetPrintersClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getPrinters(): Promise<FileResponse> {
@@ -4184,7 +4184,7 @@ export class GetPluginDetailsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getPluginDetails(pluginId: string): Promise<PluginDetailsResponse> {
@@ -4307,7 +4307,7 @@ export class GetPluginsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getPlugins(): Promise<PluginInfo[]> {
@@ -4352,6 +4352,1273 @@ export class GetPluginsClient {
     }
 }
 
+export class MetadataPluginClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getMetadataPlugins(): Promise<MetadataPluginInfo[]> {
+        let url_ = this.baseUrl + "/api/plugins/metadata/plugins";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMetadataPlugins(_response);
+        });
+    }
+
+    protected processGetMetadataPlugins(response: Response): Promise<MetadataPluginInfo[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(MetadataPluginInfo.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MetadataPluginInfo[]>(null as any);
+    }
+
+    getEntityFields(entityType: string): Promise<MetadataField[]> {
+        let url_ = this.baseUrl + "/api/plugins/metadata/fields/{entityType}";
+        if (entityType === undefined || entityType === null)
+            throw new Error("The parameter 'entityType' must be defined.");
+        url_ = url_.replace("{entityType}", encodeURIComponent("" + entityType));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetEntityFields(_response);
+        });
+    }
+
+    protected processGetEntityFields(response: Response): Promise<MetadataField[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(MetadataField.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MetadataField[]>(null as any);
+    }
+
+    validateMetadata(entityType: string, entityId: string, request: MetadataValidationRequest): Promise<MetadataValidationResult> {
+        let url_ = this.baseUrl + "/api/plugins/metadata/validate/{entityType}/{entityId}";
+        if (entityType === undefined || entityType === null)
+            throw new Error("The parameter 'entityType' must be defined.");
+        url_ = url_.replace("{entityType}", encodeURIComponent("" + entityType));
+        if (entityId === undefined || entityId === null)
+            throw new Error("The parameter 'entityId' must be defined.");
+        url_ = url_.replace("{entityId}", encodeURIComponent("" + entityId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processValidateMetadata(_response);
+        });
+    }
+
+    protected processValidateMetadata(response: Response): Promise<MetadataValidationResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MetadataValidationResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MetadataValidationResult>(null as any);
+    }
+
+    transformMetadata(entityType: string, request: MetadataTransformRequest): Promise<{ [key: string]: any; }> {
+        let url_ = this.baseUrl + "/api/plugins/metadata/transform/{entityType}";
+        if (entityType === undefined || entityType === null)
+            throw new Error("The parameter 'entityType' must be defined.");
+        url_ = url_.replace("{entityType}", encodeURIComponent("" + entityType));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processTransformMetadata(_response);
+        });
+    }
+
+    protected processTransformMetadata(response: Response): Promise<{ [key: string]: any; }> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        (<any>result200)![key] = resultData200[key] !== undefined ? resultData200[key] : <any>null;
+                }
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<{ [key: string]: any; }>(null as any);
+    }
+
+    getDefaultMetadata(entityType: string): Promise<{ [key: string]: any; }> {
+        let url_ = this.baseUrl + "/api/plugins/metadata/defaults/{entityType}";
+        if (entityType === undefined || entityType === null)
+            throw new Error("The parameter 'entityType' must be defined.");
+        url_ = url_.replace("{entityType}", encodeURIComponent("" + entityType));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetDefaultMetadata(_response);
+        });
+    }
+
+    protected processGetDefaultMetadata(response: Response): Promise<{ [key: string]: any; }> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        (<any>result200)![key] = resultData200[key] !== undefined ? resultData200[key] : <any>null;
+                }
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<{ [key: string]: any; }>(null as any);
+    }
+
+    getMetadataSchema(entityType: string): Promise<MetadataSchema> {
+        let url_ = this.baseUrl + "/api/plugins/metadata/schema/{entityType}";
+        if (entityType === undefined || entityType === null)
+            throw new Error("The parameter 'entityType' must be defined.");
+        url_ = url_.replace("{entityType}", encodeURIComponent("" + entityType));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMetadataSchema(_response);
+        });
+    }
+
+    protected processGetMetadataSchema(response: Response): Promise<MetadataSchema> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MetadataSchema.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MetadataSchema>(null as any);
+    }
+}
+
+export class OAuthPluginClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getOAuthProviders(): Promise<OAuthProviderInfo[]> {
+        let url_ = this.baseUrl + "/api/plugins/oauth/providers";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetOAuthProviders(_response);
+        });
+    }
+
+    protected processGetOAuthProviders(response: Response): Promise<OAuthProviderInfo[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(OAuthProviderInfo.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OAuthProviderInfo[]>(null as any);
+    }
+
+    getAuthorizationUrl(providerName: string, redirectUri: string | undefined, state: string | null | undefined): Promise<any> {
+        let url_ = this.baseUrl + "/api/plugins/oauth/authorize/{providerName}?";
+        if (providerName === undefined || providerName === null)
+            throw new Error("The parameter 'providerName' must be defined.");
+        url_ = url_.replace("{providerName}", encodeURIComponent("" + providerName));
+        if (redirectUri === null)
+            throw new Error("The parameter 'redirectUri' cannot be null.");
+        else if (redirectUri !== undefined)
+            url_ += "redirectUri=" + encodeURIComponent("" + redirectUri) + "&";
+        if (state !== undefined && state !== null)
+            url_ += "state=" + encodeURIComponent("" + state) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAuthorizationUrl(_response);
+        });
+    }
+
+    protected processGetAuthorizationUrl(response: Response): Promise<any> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<any>(null as any);
+    }
+
+    handleCallback(providerName: string, request: OAuthCallbackRequest): Promise<OAuthAuthorizationResult> {
+        let url_ = this.baseUrl + "/api/plugins/oauth/callback/{providerName}";
+        if (providerName === undefined || providerName === null)
+            throw new Error("The parameter 'providerName' must be defined.");
+        url_ = url_.replace("{providerName}", encodeURIComponent("" + providerName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processHandleCallback(_response);
+        });
+    }
+
+    protected processHandleCallback(response: Response): Promise<OAuthAuthorizationResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OAuthAuthorizationResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OAuthAuthorizationResult>(null as any);
+    }
+
+    getUserInfo(providerName: string, accessToken: string | undefined): Promise<OAuthUserInfo> {
+        let url_ = this.baseUrl + "/api/plugins/oauth/userinfo/{providerName}?";
+        if (providerName === undefined || providerName === null)
+            throw new Error("The parameter 'providerName' must be defined.");
+        url_ = url_.replace("{providerName}", encodeURIComponent("" + providerName));
+        if (accessToken === null)
+            throw new Error("The parameter 'accessToken' cannot be null.");
+        else if (accessToken !== undefined)
+            url_ += "accessToken=" + encodeURIComponent("" + accessToken) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUserInfo(_response);
+        });
+    }
+
+    protected processGetUserInfo(response: Response): Promise<OAuthUserInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OAuthUserInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OAuthUserInfo>(null as any);
+    }
+
+    refreshToken(providerName: string, request: OAuthRefreshRequest): Promise<OAuthTokenRefreshResult> {
+        let url_ = this.baseUrl + "/api/plugins/oauth/refresh/{providerName}";
+        if (providerName === undefined || providerName === null)
+            throw new Error("The parameter 'providerName' must be defined.");
+        url_ = url_.replace("{providerName}", encodeURIComponent("" + providerName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRefreshToken(_response);
+        });
+    }
+
+    protected processRefreshToken(response: Response): Promise<OAuthTokenRefreshResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OAuthTokenRefreshResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OAuthTokenRefreshResult>(null as any);
+    }
+
+    validateToken(providerName: string, request: OAuthValidateRequest): Promise<any> {
+        let url_ = this.baseUrl + "/api/plugins/oauth/validate/{providerName}";
+        if (providerName === undefined || providerName === null)
+            throw new Error("The parameter 'providerName' must be defined.");
+        url_ = url_.replace("{providerName}", encodeURIComponent("" + providerName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processValidateToken(_response);
+        });
+    }
+
+    protected processValidateToken(response: Response): Promise<any> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<any>(null as any);
+    }
+}
+
+export class PluginManagementClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getInstalledPlugins(): Promise<InstalledPlugin[]> {
+        let url_ = this.baseUrl + "/api/plugins/installed";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetInstalledPlugins(_response);
+        });
+    }
+
+    protected processGetInstalledPlugins(response: Response): Promise<InstalledPlugin[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(InstalledPlugin.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<InstalledPlugin[]>(null as any);
+    }
+
+    installPlugin(request: PluginInstallationRequest): Promise<PluginInstallationResult> {
+        let url_ = this.baseUrl + "/api/plugins/install";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processInstallPlugin(_response);
+        });
+    }
+
+    protected processInstallPlugin(response: Response): Promise<PluginInstallationResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PluginInstallationResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PluginInstallationResult>(null as any);
+    }
+
+    uninstallPlugin(pluginId: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/plugins/{pluginId}";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUninstallPlugin(_response);
+        });
+    }
+
+    protected processUninstallPlugin(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getPluginHealth(): Promise<any> {
+        let url_ = this.baseUrl + "/api/plugins/health";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPluginHealth(_response);
+        });
+    }
+
+    protected processGetPluginHealth(response: Response): Promise<any> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<any>(null as any);
+    }
+}
+
+export class ThemePluginClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getActiveThemes(): Promise<ActiveTheme[]> {
+        let url_ = this.baseUrl + "/api/plugins/themes/active";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetActiveThemes(_response);
+        });
+    }
+
+    protected processGetActiveThemes(response: Response): Promise<ActiveTheme[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ActiveTheme.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ActiveTheme[]>(null as any);
+    }
+
+    applyTheme(pluginId: string): Promise<ThemeApplicationResult2> {
+        let url_ = this.baseUrl + "/api/plugins/themes/{pluginId}/apply";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processApplyTheme(_response);
+        });
+    }
+
+    protected processApplyTheme(response: Response): Promise<ThemeApplicationResult2> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ThemeApplicationResult2.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ThemeApplicationResult2>(null as any);
+    }
+
+    removeTheme(pluginId: string): Promise<ThemeApplicationResult2> {
+        let url_ = this.baseUrl + "/api/plugins/themes/{pluginId}";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRemoveTheme(_response);
+        });
+    }
+
+    protected processRemoveTheme(response: Response): Promise<ThemeApplicationResult2> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ThemeApplicationResult2.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ThemeApplicationResult2>(null as any);
+    }
+
+    updateThemeSettings(pluginId: string, settings: ThemeSettings): Promise<ThemeApplicationResult2> {
+        let url_ = this.baseUrl + "/api/plugins/themes/{pluginId}/settings";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(settings);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateThemeSettings(_response);
+        });
+    }
+
+    protected processUpdateThemeSettings(response: Response): Promise<ThemeApplicationResult2> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ThemeApplicationResult2.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ThemeApplicationResult2>(null as any);
+    }
+
+    getThemeSettings(pluginId: string): Promise<ThemeSettings> {
+        let url_ = this.baseUrl + "/api/plugins/themes/{pluginId}/settings";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetThemeSettings(_response);
+        });
+    }
+
+    protected processGetThemeSettings(response: Response): Promise<ThemeSettings> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ThemeSettings.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ThemeSettings>(null as any);
+    }
+}
+
 export class ReloadPluginsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -4359,7 +5626,7 @@ export class ReloadPluginsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     reloadPlugins(): Promise<FileResponse> {
@@ -4408,7 +5675,7 @@ export class UpdatePluginSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updatePluginSettings(pluginId: string, request: UpdatePluginSettingsRequest): Promise<UpdatePluginSettingsResponse> {
@@ -4573,7 +5840,7 @@ export class UpdateModelVersionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateModelVersion(modelId: string, versionId: string, request: UpdateModelVersionRequest): Promise<UpdateModelVersionResponse> {
@@ -4649,7 +5916,7 @@ export class DeleteModelVersionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     deleteModelVersion(modelId: string, versionId: string): Promise<void> {
@@ -4717,7 +5984,7 @@ export class UpdateModelClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateModel(id: string, request: UpdateModelRequest): Promise<UpdateModelResponse> {
@@ -4790,7 +6057,7 @@ export class GetModelByIdClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModel(id: string): Promise<GetModelByIdResponse> {
@@ -4838,7 +6105,7 @@ export class DeleteModelClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     deleteModel(id: string): Promise<void> {
@@ -4896,79 +6163,24 @@ export class DeleteModelClient {
     }
 }
 
-export class AddCategoryToModelClient {
+export class RemoveTagFromModelClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
-    addCategoryToModel(id: string, categoryId: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/categories/{categoryId}";
+    removeTagFromModel(id: string, tagId: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/tags/{tagId}";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (categoryId === undefined || categoryId === null)
-            throw new Error("The parameter 'categoryId' must be defined.");
-        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "POST",
-            headers: {
-                "Accept": "application/octet-stream"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processAddCategoryToModel(_response);
-        });
-    }
-
-    protected processAddCategoryToModel(response: Response): Promise<FileResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FileResponse>(null as any);
-    }
-}
-
-export class RemoveCategoryFromModelClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    removeCategoryFromModel(id: string, categoryId: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/categories/{categoryId}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (categoryId === undefined || categoryId === null)
-            throw new Error("The parameter 'categoryId' must be defined.");
-        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
+        if (tagId === undefined || tagId === null)
+            throw new Error("The parameter 'tagId' must be defined.");
+        url_ = url_.replace("{tagId}", encodeURIComponent("" + tagId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4979,110 +6191,11 @@ export class RemoveCategoryFromModelClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processRemoveCategoryFromModel(_response);
+            return this.processRemoveTagFromModel(_response);
         });
     }
 
-    protected processRemoveCategoryFromModel(response: Response): Promise<FileResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FileResponse>(null as any);
-    }
-}
-
-export class AddModelToCollectionClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    addModelToCollection(id: string, collectionId: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/collections/{collectionId}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (collectionId === undefined || collectionId === null)
-            throw new Error("The parameter 'collectionId' must be defined.");
-        url_ = url_.replace("{collectionId}", encodeURIComponent("" + collectionId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "POST",
-            headers: {
-                "Accept": "application/octet-stream"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processAddModelToCollection(_response);
-        });
-    }
-
-    protected processAddModelToCollection(response: Response): Promise<FileResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FileResponse>(null as any);
-    }
-
-    addModelToCollection2(collectionId: string, modelId: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/collections/{collectionId}/models/{modelId}";
-        if (collectionId === undefined || collectionId === null)
-            throw new Error("The parameter 'collectionId' must be defined.");
-        url_ = url_.replace("{collectionId}", encodeURIComponent("" + collectionId));
-        if (modelId === undefined || modelId === null)
-            throw new Error("The parameter 'modelId' must be defined.");
-        url_ = url_.replace("{modelId}", encodeURIComponent("" + modelId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "POST",
-            headers: {
-                "Accept": "application/octet-stream"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processAddModelToCollection2(_response);
-        });
-    }
-
-    protected processAddModelToCollection2(response: Response): Promise<FileResponse> {
+    protected processRemoveTagFromModel(response: Response): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200 || status === 206) {
@@ -5112,7 +6225,7 @@ export class RemoveModelFromCollectionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     removeModelFromCollection(id: string, collectionId: string): Promise<FileResponse> {
@@ -5204,40 +6317,83 @@ export class RemoveModelFromCollectionClient {
     }
 }
 
-export class AddTagToModelClient {
+export class AddModelToCollectionClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
-    addTagToModel(id: string, tagName: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/tags";
+    addModelToCollection(id: string, collectionId: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/collections/{collectionId}";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (collectionId === undefined || collectionId === null)
+            throw new Error("The parameter 'collectionId' must be defined.");
+        url_ = url_.replace("{collectionId}", encodeURIComponent("" + collectionId));
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(tagName);
-
         let options_: RequestInit = {
-            body: content_,
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 "Accept": "application/octet-stream"
             }
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processAddTagToModel(_response);
+            return this.processAddModelToCollection(_response);
         });
     }
 
-    protected processAddTagToModel(response: Response): Promise<FileResponse> {
+    protected processAddModelToCollection(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+
+    addModelToCollection2(collectionId: string, modelId: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/collections/{collectionId}/models/{modelId}";
+        if (collectionId === undefined || collectionId === null)
+            throw new Error("The parameter 'collectionId' must be defined.");
+        url_ = url_.replace("{collectionId}", encodeURIComponent("" + collectionId));
+        if (modelId === undefined || modelId === null)
+            throw new Error("The parameter 'modelId' must be defined.");
+        url_ = url_.replace("{modelId}", encodeURIComponent("" + modelId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddModelToCollection2(_response);
+        });
+    }
+
+    protected processAddModelToCollection2(response: Response): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200 || status === 206) {
@@ -5260,36 +6416,146 @@ export class AddTagToModelClient {
     }
 }
 
-export class DownloadModelClient {
+export class RemoveCategoryFromModelClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
-    downloadModel(id: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/download";
+    removeCategoryFromModel(id: string, categoryId: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/categories/{categoryId}";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (categoryId === undefined || categoryId === null)
+            throw new Error("The parameter 'categoryId' must be defined.");
+        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
-            method: "GET",
+            method: "DELETE",
             headers: {
                 "Accept": "application/octet-stream"
             }
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processDownloadModel(_response);
+            return this.processRemoveCategoryFromModel(_response);
         });
     }
 
-    protected processDownloadModel(response: Response): Promise<FileResponse> {
+    protected processRemoveCategoryFromModel(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+}
+
+export class AddCategoryToModelClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    addCategoryToModel(id: string, categoryId: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/categories/{categoryId}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (categoryId === undefined || categoryId === null)
+            throw new Error("The parameter 'categoryId' must be defined.");
+        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddCategoryToModel(_response);
+        });
+    }
+
+    protected processAddCategoryToModel(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+}
+
+export class LikeModelClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    likeModel(id: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/like";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLikeModel(_response);
+        });
+    }
+
+    protected processLikeModel(response: Response): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200 || status === 206) {
@@ -5319,7 +6585,7 @@ export class GetModelVersionsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModelVersions(id: string): Promise<FileResponse> {
@@ -5371,7 +6637,7 @@ export class CreateModelVersionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     createModelVersion(id: string, files: FileParameter[] | undefined, name: string | null | undefined, notes: string | null | undefined, thumbnailFileId: string | null | undefined): Promise<CreateModelVersionResponse> {
@@ -5446,113 +6712,6 @@ export class CreateModelVersionClient {
     }
 }
 
-export class LikeModelClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    likeModel(id: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/like";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "POST",
-            headers: {
-                "Accept": "application/octet-stream"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processLikeModel(_response);
-        });
-    }
-
-    protected processLikeModel(response: Response): Promise<FileResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FileResponse>(null as any);
-    }
-}
-
-export class RemoveTagFromModelClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    removeTagFromModel(id: string, tagId: string): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/tags/{tagId}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (tagId === undefined || tagId === null)
-            throw new Error("The parameter 'tagId' must be defined.");
-        url_ = url_.replace("{tagId}", encodeURIComponent("" + tagId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "DELETE",
-            headers: {
-                "Accept": "application/octet-stream"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processRemoveTagFromModel(_response);
-        });
-    }
-
-    protected processRemoveTagFromModel(response: Response): Promise<FileResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FileResponse>(null as any);
-    }
-}
-
 export class GetModelsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -5560,7 +6719,7 @@ export class GetModelsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModels(page: number | undefined, take: number | undefined): Promise<GetModelsResponse> {
@@ -5613,7 +6772,7 @@ export class CreateModelClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     createModel(files: FileParameter[] | undefined, name: string | undefined, description: string | null | undefined, thumbnailFileId: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, aIGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined): Promise<CreateModelResponse> {
@@ -5707,7 +6866,7 @@ export class GetModelPreviewClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModelPreview(modelId: string, size: string): Promise<GetModelPreviewResponse> {
@@ -5765,7 +6924,7 @@ export class GetModelByUserIdClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModelsByUserId(userId: string, page: number | undefined, take: number | undefined, includeDeleted: boolean | undefined, includePrivate: boolean | undefined): Promise<GetModelByUserIdResponse> {
@@ -5890,7 +7049,7 @@ export class GenerateModelPreviewClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     generateModelPreview(modelId: string, size: string | undefined, forceRegenerate: boolean | undefined): Promise<GenerateModelPreviewResponse> {
@@ -5960,7 +7119,7 @@ export class GenerateCustomThumbnailClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     generateCustomThumbnail(modelId: string, request: GenerateCustomThumbnailRequest): Promise<GenerateCustomThumbnailResponse> {
@@ -6019,6 +7178,58 @@ export class GenerateCustomThumbnailClient {
     }
 }
 
+export class DownloadModelClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    downloadModel(id: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/download";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDownloadModel(_response);
+        });
+    }
+
+    protected processDownloadModel(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+}
+
 export class DeleteAllModelsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -6026,7 +7237,7 @@ export class DeleteAllModelsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     deleteAllModels(request: DeleteAllModelsRequest): Promise<DeleteAllModelsResponse> {
@@ -6093,6 +7304,62 @@ export class DeleteAllModelsClient {
     }
 }
 
+export class AddTagToModelClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    addTagToModel(id: string, tagName: string): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/tags";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(tagName);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddTagToModel(_response);
+        });
+    }
+
+    protected processAddTagToModel(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+}
+
 export class ApproveModelClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -6100,7 +7367,7 @@ export class ApproveModelClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     approveModel(id: string): Promise<FileResponse> {
@@ -6152,7 +7419,7 @@ export class GetModelsAwaitingModerationClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModelsAwaitingModeration(page: number | undefined, pageSize: number | undefined): Promise<FileResponse> {
@@ -6209,7 +7476,7 @@ export class GetModerationSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getModerationSettings(): Promise<FileResponse> {
@@ -6258,7 +7525,7 @@ export class UpdateModerationSettingsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateModerationSettings(): Promise<FileResponse> {
@@ -6307,7 +7574,7 @@ export class ModeratorEditModelClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     editModel(id: string, request: ModeratorEditRequest): Promise<Model> {
@@ -6431,7 +7698,7 @@ export class RejectModelClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     rejectModel(id: string): Promise<FileResponse> {
@@ -6483,17 +7750,17 @@ export class GetFileConfigClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
-    getFileConfig(): Promise<FileResponse> {
+    getFileConfig(): Promise<FileConfigResponse> {
         let url_ = this.baseUrl + "/api/files/config";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
             method: "GET",
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             }
         };
 
@@ -6502,26 +7769,26 @@ export class GetFileConfigClient {
         });
     }
 
-    protected processGetFileConfig(response: Response): Promise<FileResponse> {
+    protected processGetFileConfig(response: Response): Promise<FileConfigResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = FileConfigResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<FileConfigResponse>(null as any);
     }
 }
 
@@ -6532,7 +7799,7 @@ export class GetSupportedExtensionsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getSupportedExtensions(): Promise<string[]> {
@@ -6568,6 +7835,10 @@ export class GetSupportedExtensionsClient {
             }
             return result200;
             });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -6584,7 +7855,7 @@ export class GetSupportedExtensionsByTypeClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getSupportedExtensionsForType(fileType: string): Promise<string[]> {
@@ -6623,6 +7894,17 @@ export class GetSupportedExtensionsByTypeClient {
             }
             return result200;
             });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -6639,7 +7921,7 @@ export class StreamFileClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     streamFile(fileId: string): Promise<FileResponse> {
@@ -6735,7 +8017,7 @@ export class CreateFilamentClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     create(command: CreateFilamentCommand): Promise<FileResponse> {
@@ -6788,7 +8070,7 @@ export class GetAllFilamentsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAll(): Promise<FileResponse> {
@@ -6837,7 +8119,7 @@ export class DeleteFilamentClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     delete(id: string): Promise<FileResponse> {
@@ -6889,7 +8171,7 @@ export class GetFilamentByIdClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getById(id: string): Promise<FileResponse> {
@@ -6941,7 +8223,7 @@ export class UpdateFilamentClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     update(id: string, command: UpdateFilamentCommand): Promise<FileResponse> {
@@ -6990,184 +8272,6 @@ export class UpdateFilamentClient {
     }
 }
 
-export class GenerateInviteUrlClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    generateInviteUrl(request: GenerateInviteUrlRequest | undefined): Promise<InviteUrlResponse> {
-        let url_ = this.baseUrl + "/api/federation/invite";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(request);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGenerateInviteUrl(_response);
-        });
-    }
-
-    protected processGenerateInviteUrl(response: Response): Promise<InviteUrlResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = InviteUrlResponse.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<InviteUrlResponse>(null as any);
-    }
-}
-
-export class GetFederationSettingsClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    getFederationSettings(): Promise<FederationSettingsDto> {
-        let url_ = this.baseUrl + "/api/federation/settings";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetFederationSettings(_response);
-        });
-    }
-
-    protected processGetFederationSettings(response: Response): Promise<FederationSettingsDto> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = FederationSettingsDto.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status === 404) {
-            return response.text().then((_responseText) => {
-            let result404: any = null;
-            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result404 = ProblemDetails.fromJS(resultData404);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FederationSettingsDto>(null as any);
-    }
-}
-
-export class UpdateFederationSettingsClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
-    }
-
-    updateFederationSettings(request: UpdateFederationSettingsRequest): Promise<FederationSettingsDto> {
-        let url_ = this.baseUrl + "/api/federation/settings";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(request);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdateFederationSettings(_response);
-        });
-    }
-
-    protected processUpdateFederationSettings(response: Response): Promise<FederationSettingsDto> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = FederationSettingsDto.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<FederationSettingsDto>(null as any);
-    }
-}
-
 export class GetCommentsForModelClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -7175,7 +8279,7 @@ export class GetCommentsForModelClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getCommentsForModel(modelId: string): Promise<FileResponse> {
@@ -7227,7 +8331,7 @@ export class AddCommentClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     addComment(modelId: string, request: AddCommentRequest2): Promise<FileResponse> {
@@ -7283,7 +8387,7 @@ export class EnhancedCommentsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     addComment(request: AddCommentRequest): Promise<FileResponse> {
@@ -8034,7 +9138,7 @@ export class UpdateCollectionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateCollection(id: string, command: UpdateCollectionCommand): Promise<FileResponse> {
@@ -8090,7 +9194,7 @@ export class GetCollectionByIdClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getCollectionById(id: string): Promise<FileResponse> {
@@ -8142,7 +9246,7 @@ export class DeleteCollectionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     deleteCollection(id: string): Promise<FileResponse> {
@@ -8194,7 +9298,7 @@ export class GetUserCollectionsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getCurrentUserCollections(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined): Promise<FileResponse> {
@@ -8304,7 +9408,7 @@ export class GetFavoriteCollectionsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getFavoriteCollections(): Promise<FileResponse> {
@@ -8353,7 +9457,7 @@ export class FavoriteCollectionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     toggleFavorite(id: string, command: FavoriteCollectionCommand): Promise<FileResponse> {
@@ -8409,7 +9513,7 @@ export class CreateCollectionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     createCollection(command: CreateCollectionCommand): Promise<FileResponse> {
@@ -8462,7 +9566,7 @@ export class AccessCollectionClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     accessCollection(id: string, command: AccessCollectionCommand): Promise<FileResponse> {
@@ -8518,7 +9622,7 @@ export class UpdateCategoryClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     updateCategory(id: string, command: UpdateCategoryCommand): Promise<UpdateCategoryResponse> {
@@ -8605,7 +9709,7 @@ export class DeleteCategoryClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     deleteCategory(id: string): Promise<DeleteCategoryResponse> {
@@ -8688,7 +9792,7 @@ export class CreateCategoryClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getCategory(id: string): Promise<CreateCategoryResponse> {
@@ -8809,7 +9913,7 @@ export class GetCategoriesClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getCategories(page: number | undefined, pageSize: number | undefined, searchTerm: string | null | undefined): Promise<GetCategoriesResponse> {
@@ -8878,7 +9982,7 @@ export class VerifyEmailClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     verifyEmail(command: VerifyEmailCommand): Promise<void> {
@@ -8930,7 +10034,7 @@ export class RegenerateBackupCodesClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     regenerateBackupCodes(command: RegenerateBackupCodesCommand): Promise<RegenerateBackupCodesResponse> {
@@ -8997,7 +10101,7 @@ export class InitializeTwoFactorAuthClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     initialize(command: InitializeTwoFactorAuthCommand): Promise<InitializeTwoFactorAuthResponse> {
@@ -9094,7 +10198,7 @@ export class GetTwoFactorAuthStatusClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getStatus(): Promise<GetTwoFactorAuthStatusResponse> {
@@ -9150,7 +10254,7 @@ export class EnableTwoFactorAuthClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     enable(command: EnableTwoFactorAuthCommand): Promise<EnableTwoFactorAuthResponse> {
@@ -9217,7 +10321,7 @@ export class DisableTwoFactorAuthClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     disable(command: DisableTwoFactorAuthCommand): Promise<DisableTwoFactorAuthResponse> {
@@ -9284,7 +10388,7 @@ export class ResetPasswordClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     resetPassword(command: ResetPasswordCommand): Promise<void> {
@@ -9337,7 +10441,7 @@ export class RegisterClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     register(command: RegisterCommand): Promise<RegisterCommandResponse> {
@@ -9400,7 +10504,7 @@ export class RefreshTokenClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     refreshToken(command: RefreshTokenCommand): Promise<RefreshTokenCommandResponse> {
@@ -9463,7 +10567,7 @@ export class OAuthClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAuthorizationUrl(provider: string, redirectUri: string | undefined, state: string | null | undefined): Promise<void> {
@@ -9575,7 +10679,7 @@ export class MeClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getCurrentUser(): Promise<MeResponse> {
@@ -9634,7 +10738,7 @@ export class LoginClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     login(command: LoginCommand): Promise<LoginCommandResponse> {
@@ -9694,7 +10798,7 @@ export class ForgotPasswordClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     forgotPassword(command: ForgotPasswordCommand): Promise<void> {
@@ -9746,7 +10850,7 @@ export class ChangePasswordClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     changePassword(command: ChangePasswordCommand): Promise<ChangePasswordResponse> {
@@ -9829,7 +10933,7 @@ export class GetModerationAuditLogsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAuditLogs(page: number | undefined, pageSize: number | undefined, action: string | null | undefined, userId: string | null | undefined, modelId: string | null | undefined): Promise<ModerationAuditResponse> {
@@ -9895,7 +10999,7 @@ export class GetAdminModelStatisticsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAdminModelStatistics(): Promise<GetAdminModelStatisticsResponse> {
@@ -9954,7 +11058,7 @@ export class RoleManagementClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getAllRoles(page: number | undefined, pageSize: number | undefined, searchTerm: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined): Promise<PaginatedRolesResponse> {
@@ -10390,7 +11494,7 @@ export class UserPermissionManagementClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
     }
 
     getCurrentUserPermissions(): Promise<UserPermissionsDto> {
@@ -10702,6 +11806,1123 @@ export class UserPermissionManagementClient {
             });
         }
         return Promise.resolve<PermissionDto[]>(null as any);
+    }
+}
+
+export class MarketplacePluginClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getMarketplacePlugins(page: number | undefined, pageSize: number | undefined, category: string | null | undefined, search: string | null | undefined): Promise<MarketplacePluginsResponse> {
+        let url_ = this.baseUrl + "/api/plugins/marketplace?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (category !== undefined && category !== null)
+            url_ += "category=" + encodeURIComponent("" + category) + "&";
+        if (search !== undefined && search !== null)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMarketplacePlugins(_response);
+        });
+    }
+
+    protected processGetMarketplacePlugins(response: Response): Promise<MarketplacePluginsResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MarketplacePluginsResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MarketplacePluginsResponse>(null as any);
+    }
+
+    getMarketplacePlugin(pluginId: string): Promise<MarketplacePluginDetails> {
+        let url_ = this.baseUrl + "/api/plugins/marketplace/{pluginId}";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMarketplacePlugin(_response);
+        });
+    }
+
+    protected processGetMarketplacePlugin(response: Response): Promise<MarketplacePluginDetails> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MarketplacePluginDetails.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MarketplacePluginDetails>(null as any);
+    }
+
+    getMarketplaceCategories(): Promise<MarketplaceCategory[]> {
+        let url_ = this.baseUrl + "/api/plugins/marketplace/categories";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMarketplaceCategories(_response);
+        });
+    }
+
+    protected processGetMarketplaceCategories(response: Response): Promise<MarketplaceCategory[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(MarketplaceCategory.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MarketplaceCategory[]>(null as any);
+    }
+
+    installFromMarketplace(pluginId: string, version: string | null | undefined): Promise<PluginInstallationResult> {
+        let url_ = this.baseUrl + "/api/plugins/marketplace/{pluginId}/install?";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        if (version !== undefined && version !== null)
+            url_ += "version=" + encodeURIComponent("" + version) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processInstallFromMarketplace(_response);
+        });
+    }
+
+    protected processInstallFromMarketplace(response: Response): Promise<PluginInstallationResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PluginInstallationResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PluginInstallationResult>(null as any);
+    }
+
+    getPluginInstallationStatus(pluginId: string): Promise<PluginInstallationStatus> {
+        let url_ = this.baseUrl + "/api/plugins/marketplace/{pluginId}/status";
+        if (pluginId === undefined || pluginId === null)
+            throw new Error("The parameter 'pluginId' must be defined.");
+        url_ = url_.replace("{pluginId}", encodeURIComponent("" + pluginId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPluginInstallationStatus(_response);
+        });
+    }
+
+    protected processGetPluginInstallationStatus(response: Response): Promise<PluginInstallationStatus> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PluginInstallationStatus.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PluginInstallationStatus>(null as any);
+    }
+}
+
+export class CreateFederatedInstanceClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    createFederatedInstance(request: CreateFederatedInstanceRequest): Promise<CreateFederatedInstanceResponse> {
+        let url_ = this.baseUrl + "/api/federation/instances";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateFederatedInstance(_response);
+        });
+    }
+
+    protected processCreateFederatedInstance(response: Response): Promise<CreateFederatedInstanceResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result201 = CreateFederatedInstanceResponse.fromJS(resultData201);
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CreateFederatedInstanceResponse>(null as any);
+    }
+}
+
+export class GetFederatedInstancesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getFederatedInstances(): Promise<FederatedInstanceDto[]> {
+        let url_ = this.baseUrl + "/api/federation/instances";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFederatedInstances(_response);
+        });
+    }
+
+    protected processGetFederatedInstances(response: Response): Promise<FederatedInstanceDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FederatedInstanceDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FederatedInstanceDto[]>(null as any);
+    }
+}
+
+export class DeleteFederatedInstanceClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    deleteFederatedInstance(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/federation/instances/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteFederatedInstance(_response);
+        });
+    }
+
+    protected processDeleteFederatedInstance(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class GetFederatedInstanceClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getFederatedInstance(id: string): Promise<FederatedInstanceDetailDto> {
+        let url_ = this.baseUrl + "/api/federation/instances/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFederatedInstance(_response);
+        });
+    }
+
+    protected processGetFederatedInstance(response: Response): Promise<FederatedInstanceDetailDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = FederatedInstanceDetailDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FederatedInstanceDetailDto>(null as any);
+    }
+}
+
+export class UpdateFederatedInstanceClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    updateFederatedInstance(id: string, request: UpdateFederatedInstanceRequest): Promise<UpdateFederatedInstanceResponse> {
+        let url_ = this.baseUrl + "/api/federation/instances/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateFederatedInstance(_response);
+        });
+    }
+
+    protected processUpdateFederatedInstance(response: Response): Promise<UpdateFederatedInstanceResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UpdateFederatedInstanceResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UpdateFederatedInstanceResponse>(null as any);
+    }
+}
+
+export class ExchangeTokenClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    exchangeToken(request: ExchangeTokenRequest): Promise<ExchangeTokenResponse> {
+        let url_ = this.baseUrl + "/api/federation/handshake/exchange-token";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processExchangeToken(_response);
+        });
+    }
+
+    protected processExchangeToken(response: Response): Promise<ExchangeTokenResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ExchangeTokenResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ExchangeTokenResponse>(null as any);
+    }
+}
+
+export class GetCatalogClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getCatalog(page: number | undefined, pageSize: number | undefined, since: Date | null | undefined): Promise<CatalogResponse> {
+        let url_ = this.baseUrl + "/api/federation/catalog?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (since !== undefined && since !== null)
+            url_ += "since=" + encodeURIComponent(since ? "" + since.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCatalog(_response);
+        });
+    }
+
+    protected processGetCatalog(response: Response): Promise<CatalogResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CatalogResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CatalogResponse>(null as any);
+    }
+
+    getChanges(since: Date | undefined): Promise<CatalogChangesResponse> {
+        let url_ = this.baseUrl + "/api/federation/catalog/changes?";
+        if (since === null)
+            throw new Error("The parameter 'since' cannot be null.");
+        else if (since !== undefined)
+            url_ += "since=" + encodeURIComponent(since ? "" + since.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetChanges(_response);
+        });
+    }
+
+    protected processGetChanges(response: Response): Promise<CatalogChangesResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CatalogChangesResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CatalogChangesResponse>(null as any);
+    }
+}
+
+export class GetFederatedModelsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getFederatedModels(instanceId: string | null | undefined, page: number | undefined, pageSize: number | undefined): Promise<FederatedModelDto[]> {
+        let url_ = this.baseUrl + "/api/federation/models?";
+        if (instanceId !== undefined && instanceId !== null)
+            url_ += "instanceId=" + encodeURIComponent("" + instanceId) + "&";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFederatedModels(_response);
+        });
+    }
+
+    protected processGetFederatedModels(response: Response): Promise<FederatedModelDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FederatedModelDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FederatedModelDto[]>(null as any);
+    }
+}
+
+export class GetFederationHealthClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    getFederationHealth(instanceId: string): Promise<FederationHealthResponse> {
+        let url_ = this.baseUrl + "/api/federation/health/{instanceId}";
+        if (instanceId === undefined || instanceId === null)
+            throw new Error("The parameter 'instanceId' must be defined.");
+        url_ = url_.replace("{instanceId}", encodeURIComponent("" + instanceId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFederationHealth(_response);
+        });
+    }
+
+    protected processGetFederationHealth(response: Response): Promise<FederationHealthResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = FederationHealthResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FederationHealthResponse>(null as any);
+    }
+}
+
+export class ImportFederatedModelClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    importFederatedModel(request: ImportFederatedModelRequest): Promise<ImportFederatedModelResponse> {
+        let url_ = this.baseUrl + "/api/federation/models/import";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processImportFederatedModel(_response);
+        });
+    }
+
+    protected processImportFederatedModel(response: Response): Promise<ImportFederatedModelResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result201 = ImportFederatedModelResponse.fromJS(resultData201);
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ImportFederatedModelResponse>(null as any);
+    }
+}
+
+export class InitiateHandshakeClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "http://localhost:5166";
+    }
+
+    initiateHandshake(request: InitiateHandshakeRequest): Promise<InitiateHandshakeResponse> {
+        let url_ = this.baseUrl + "/api/federation/handshake/initiate";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processInitiateHandshake(_response);
+        });
+    }
+
+    protected processInitiateHandshake(response: Response): Promise<InitiateHandshakeResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = InitiateHandshakeResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
+        } else if (status === 422) {
+            return response.text().then((_responseText) => {
+            let result422: any = null;
+            let resultData422 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result422 = ProblemDetails.fromJS(resultData422);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result422);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<InitiateHandshakeResponse>(null as any);
     }
 }
 
@@ -11345,6 +13566,11 @@ export class User extends Auditable implements IUser {
     settings?: UserSettings;
     userPermissions?: UserPermission[];
     twoFactorAuth?: TwoFactorAuth | undefined;
+    remoteInstanceId?: string | undefined;
+    remoteUserId?: string | undefined;
+    isFederated?: boolean;
+    canLogin?: boolean;
+    lastFederationSync?: Date | undefined;
 
     constructor(data?: IUser) {
         super(data);
@@ -11394,6 +13620,11 @@ export class User extends Auditable implements IUser {
                     this.userPermissions!.push(UserPermission.fromJS(item));
             }
             this.twoFactorAuth = _data["twoFactorAuth"] ? TwoFactorAuth.fromJS(_data["twoFactorAuth"]) : <any>undefined;
+            this.remoteInstanceId = _data["remoteInstanceId"];
+            this.remoteUserId = _data["remoteUserId"];
+            this.isFederated = _data["isFederated"];
+            this.canLogin = _data["canLogin"];
+            this.lastFederationSync = _data["lastFederationSync"] ? new Date(_data["lastFederationSync"].toString()) : <any>undefined;
         }
     }
 
@@ -11447,6 +13678,11 @@ export class User extends Auditable implements IUser {
                 data["userPermissions"].push(item ? item.toJSON() : <any>undefined);
         }
         data["twoFactorAuth"] = this.twoFactorAuth ? this.twoFactorAuth.toJSON() : <any>undefined;
+        data["remoteInstanceId"] = this.remoteInstanceId;
+        data["remoteUserId"] = this.remoteUserId;
+        data["isFederated"] = this.isFederated;
+        data["canLogin"] = this.canLogin;
+        data["lastFederationSync"] = this.lastFederationSync ? this.lastFederationSync.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -11486,6 +13722,11 @@ export interface IUser extends IAuditable {
     settings?: UserSettings;
     userPermissions?: UserPermission[];
     twoFactorAuth?: TwoFactorAuth | undefined;
+    remoteInstanceId?: string | undefined;
+    remoteUserId?: string | undefined;
+    isFederated?: boolean;
+    canLogin?: boolean;
+    lastFederationSync?: Date | undefined;
 }
 
 export class Role extends BaseEntity implements IRole {
@@ -18142,6 +20383,1251 @@ export interface IPluginInfo {
     description?: string;
 }
 
+export class MetadataPluginInfo implements IMetadataPluginInfo {
+    pluginId?: string;
+    pluginName?: string;
+    entityType?: string;
+    fieldCount?: number;
+    isEnabled?: boolean;
+
+    constructor(data?: IMetadataPluginInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.pluginId = _data["pluginId"];
+            this.pluginName = _data["pluginName"];
+            this.entityType = _data["entityType"];
+            this.fieldCount = _data["fieldCount"];
+            this.isEnabled = _data["isEnabled"];
+        }
+    }
+
+    static fromJS(data: any): MetadataPluginInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new MetadataPluginInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["pluginId"] = this.pluginId;
+        data["pluginName"] = this.pluginName;
+        data["entityType"] = this.entityType;
+        data["fieldCount"] = this.fieldCount;
+        data["isEnabled"] = this.isEnabled;
+        return data;
+    }
+}
+
+export interface IMetadataPluginInfo {
+    pluginId?: string;
+    pluginName?: string;
+    entityType?: string;
+    fieldCount?: number;
+    isEnabled?: boolean;
+}
+
+export class MetadataField implements IMetadataField {
+    name?: string;
+    displayName?: string;
+    description?: string;
+    type?: MetadataFieldType;
+    required?: boolean;
+    defaultValue?: any | undefined;
+    options?: string[];
+    validation?: MetadataFieldValidation | undefined;
+    order?: number;
+    isVisible?: boolean;
+    isEditable?: boolean;
+
+    constructor(data?: IMetadataField) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.displayName = _data["displayName"];
+            this.description = _data["description"];
+            this.type = _data["type"];
+            this.required = _data["required"];
+            this.defaultValue = _data["defaultValue"];
+            if (Array.isArray(_data["options"])) {
+                this.options = [] as any;
+                for (let item of _data["options"])
+                    this.options!.push(item);
+            }
+            this.validation = _data["validation"] ? MetadataFieldValidation.fromJS(_data["validation"]) : <any>undefined;
+            this.order = _data["order"];
+            this.isVisible = _data["isVisible"];
+            this.isEditable = _data["isEditable"];
+        }
+    }
+
+    static fromJS(data: any): MetadataField {
+        data = typeof data === 'object' ? data : {};
+        let result = new MetadataField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["displayName"] = this.displayName;
+        data["description"] = this.description;
+        data["type"] = this.type;
+        data["required"] = this.required;
+        data["defaultValue"] = this.defaultValue;
+        if (Array.isArray(this.options)) {
+            data["options"] = [];
+            for (let item of this.options)
+                data["options"].push(item);
+        }
+        data["validation"] = this.validation ? this.validation.toJSON() : <any>undefined;
+        data["order"] = this.order;
+        data["isVisible"] = this.isVisible;
+        data["isEditable"] = this.isEditable;
+        return data;
+    }
+}
+
+export interface IMetadataField {
+    name?: string;
+    displayName?: string;
+    description?: string;
+    type?: MetadataFieldType;
+    required?: boolean;
+    defaultValue?: any | undefined;
+    options?: string[];
+    validation?: MetadataFieldValidation | undefined;
+    order?: number;
+    isVisible?: boolean;
+    isEditable?: boolean;
+}
+
+export enum MetadataFieldType {
+    Text = "Text",
+    Number = "Number",
+    Boolean = "Boolean",
+    Date = "Date",
+    Select = "Select",
+    MultiSelect = "MultiSelect",
+    TextArea = "TextArea",
+    Url = "Url",
+    Email = "Email",
+    Json = "Json",
+}
+
+export class MetadataFieldValidation implements IMetadataFieldValidation {
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    minValue?: number | undefined;
+    maxValue?: number | undefined;
+    pattern?: string | undefined;
+    allowedValues?: string[];
+    required?: boolean;
+
+    constructor(data?: IMetadataFieldValidation) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.minLength = _data["minLength"];
+            this.maxLength = _data["maxLength"];
+            this.minValue = _data["minValue"];
+            this.maxValue = _data["maxValue"];
+            this.pattern = _data["pattern"];
+            if (Array.isArray(_data["allowedValues"])) {
+                this.allowedValues = [] as any;
+                for (let item of _data["allowedValues"])
+                    this.allowedValues!.push(item);
+            }
+            this.required = _data["required"];
+        }
+    }
+
+    static fromJS(data: any): MetadataFieldValidation {
+        data = typeof data === 'object' ? data : {};
+        let result = new MetadataFieldValidation();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["minLength"] = this.minLength;
+        data["maxLength"] = this.maxLength;
+        data["minValue"] = this.minValue;
+        data["maxValue"] = this.maxValue;
+        data["pattern"] = this.pattern;
+        if (Array.isArray(this.allowedValues)) {
+            data["allowedValues"] = [];
+            for (let item of this.allowedValues)
+                data["allowedValues"].push(item);
+        }
+        data["required"] = this.required;
+        return data;
+    }
+}
+
+export interface IMetadataFieldValidation {
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    minValue?: number | undefined;
+    maxValue?: number | undefined;
+    pattern?: string | undefined;
+    allowedValues?: string[];
+    required?: boolean;
+}
+
+export class MetadataValidationResult implements IMetadataValidationResult {
+    isValid?: boolean;
+    errorMessage?: string;
+    fieldName?: string;
+    value?: any | undefined;
+
+    constructor(data?: IMetadataValidationResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.isValid = _data["isValid"];
+            this.errorMessage = _data["errorMessage"];
+            this.fieldName = _data["fieldName"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): MetadataValidationResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new MetadataValidationResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isValid"] = this.isValid;
+        data["errorMessage"] = this.errorMessage;
+        data["fieldName"] = this.fieldName;
+        data["value"] = this.value;
+        return data;
+    }
+}
+
+export interface IMetadataValidationResult {
+    isValid?: boolean;
+    errorMessage?: string;
+    fieldName?: string;
+    value?: any | undefined;
+}
+
+export class MetadataValidationRequest implements IMetadataValidationRequest {
+    fieldValues?: { [key: string]: any; };
+
+    constructor(data?: IMetadataValidationRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (_data["fieldValues"]) {
+                this.fieldValues = {} as any;
+                for (let key in _data["fieldValues"]) {
+                    if (_data["fieldValues"].hasOwnProperty(key))
+                        (<any>this.fieldValues)![key] = _data["fieldValues"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): MetadataValidationRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new MetadataValidationRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (this.fieldValues) {
+            data["fieldValues"] = {};
+            for (let key in this.fieldValues) {
+                if (this.fieldValues.hasOwnProperty(key))
+                    (<any>data["fieldValues"])[key] = (<any>this.fieldValues)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface IMetadataValidationRequest {
+    fieldValues?: { [key: string]: any; };
+}
+
+export class MetadataTransformRequest implements IMetadataTransformRequest {
+    fieldValues?: { [key: string]: any; };
+
+    constructor(data?: IMetadataTransformRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (_data["fieldValues"]) {
+                this.fieldValues = {} as any;
+                for (let key in _data["fieldValues"]) {
+                    if (_data["fieldValues"].hasOwnProperty(key))
+                        (<any>this.fieldValues)![key] = _data["fieldValues"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): MetadataTransformRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new MetadataTransformRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (this.fieldValues) {
+            data["fieldValues"] = {};
+            for (let key in this.fieldValues) {
+                if (this.fieldValues.hasOwnProperty(key))
+                    (<any>data["fieldValues"])[key] = (<any>this.fieldValues)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface IMetadataTransformRequest {
+    fieldValues?: { [key: string]: any; };
+}
+
+export class MetadataSchema implements IMetadataSchema {
+    entityType?: string;
+    fields?: MetadataField[];
+    defaultValues?: { [key: string]: any; };
+    generatedAt?: Date;
+
+    constructor(data?: IMetadataSchema) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.entityType = _data["entityType"];
+            if (Array.isArray(_data["fields"])) {
+                this.fields = [] as any;
+                for (let item of _data["fields"])
+                    this.fields!.push(MetadataField.fromJS(item));
+            }
+            if (_data["defaultValues"]) {
+                this.defaultValues = {} as any;
+                for (let key in _data["defaultValues"]) {
+                    if (_data["defaultValues"].hasOwnProperty(key))
+                        (<any>this.defaultValues)![key] = _data["defaultValues"][key];
+                }
+            }
+            this.generatedAt = _data["generatedAt"] ? new Date(_data["generatedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): MetadataSchema {
+        data = typeof data === 'object' ? data : {};
+        let result = new MetadataSchema();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["entityType"] = this.entityType;
+        if (Array.isArray(this.fields)) {
+            data["fields"] = [];
+            for (let item of this.fields)
+                data["fields"].push(item ? item.toJSON() : <any>undefined);
+        }
+        if (this.defaultValues) {
+            data["defaultValues"] = {};
+            for (let key in this.defaultValues) {
+                if (this.defaultValues.hasOwnProperty(key))
+                    (<any>data["defaultValues"])[key] = (<any>this.defaultValues)[key];
+            }
+        }
+        data["generatedAt"] = this.generatedAt ? this.generatedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IMetadataSchema {
+    entityType?: string;
+    fields?: MetadataField[];
+    defaultValues?: { [key: string]: any; };
+    generatedAt?: Date;
+}
+
+export class OAuthProviderInfo implements IOAuthProviderInfo {
+    providerName?: string;
+    pluginId?: string;
+    pluginName?: string;
+    clientId?: string;
+    authorizationEndpoint?: string;
+    scopes?: string[];
+    isEnabled?: boolean;
+
+    constructor(data?: IOAuthProviderInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.providerName = _data["providerName"];
+            this.pluginId = _data["pluginId"];
+            this.pluginName = _data["pluginName"];
+            this.clientId = _data["clientId"];
+            this.authorizationEndpoint = _data["authorizationEndpoint"];
+            if (Array.isArray(_data["scopes"])) {
+                this.scopes = [] as any;
+                for (let item of _data["scopes"])
+                    this.scopes!.push(item);
+            }
+            this.isEnabled = _data["isEnabled"];
+        }
+    }
+
+    static fromJS(data: any): OAuthProviderInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new OAuthProviderInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["providerName"] = this.providerName;
+        data["pluginId"] = this.pluginId;
+        data["pluginName"] = this.pluginName;
+        data["clientId"] = this.clientId;
+        data["authorizationEndpoint"] = this.authorizationEndpoint;
+        if (Array.isArray(this.scopes)) {
+            data["scopes"] = [];
+            for (let item of this.scopes)
+                data["scopes"].push(item);
+        }
+        data["isEnabled"] = this.isEnabled;
+        return data;
+    }
+}
+
+export interface IOAuthProviderInfo {
+    providerName?: string;
+    pluginId?: string;
+    pluginName?: string;
+    clientId?: string;
+    authorizationEndpoint?: string;
+    scopes?: string[];
+    isEnabled?: boolean;
+}
+
+export class OAuthAuthorizationResult implements IOAuthAuthorizationResult {
+    success?: boolean;
+    accessToken?: string;
+    refreshToken?: string;
+    tokenType?: string;
+    expiresIn?: number;
+    scope?: string;
+    error?: string;
+    errorDescription?: string;
+    issuedAt?: Date;
+
+    constructor(data?: IOAuthAuthorizationResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.accessToken = _data["accessToken"];
+            this.refreshToken = _data["refreshToken"];
+            this.tokenType = _data["tokenType"];
+            this.expiresIn = _data["expiresIn"];
+            this.scope = _data["scope"];
+            this.error = _data["error"];
+            this.errorDescription = _data["errorDescription"];
+            this.issuedAt = _data["issuedAt"] ? new Date(_data["issuedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): OAuthAuthorizationResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new OAuthAuthorizationResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["accessToken"] = this.accessToken;
+        data["refreshToken"] = this.refreshToken;
+        data["tokenType"] = this.tokenType;
+        data["expiresIn"] = this.expiresIn;
+        data["scope"] = this.scope;
+        data["error"] = this.error;
+        data["errorDescription"] = this.errorDescription;
+        data["issuedAt"] = this.issuedAt ? this.issuedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IOAuthAuthorizationResult {
+    success?: boolean;
+    accessToken?: string;
+    refreshToken?: string;
+    tokenType?: string;
+    expiresIn?: number;
+    scope?: string;
+    error?: string;
+    errorDescription?: string;
+    issuedAt?: Date;
+}
+
+export class OAuthCallbackRequest implements IOAuthCallbackRequest {
+    code?: string;
+    redirectUri?: string;
+    state?: string | undefined;
+
+    constructor(data?: IOAuthCallbackRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.code = _data["code"];
+            this.redirectUri = _data["redirectUri"];
+            this.state = _data["state"];
+        }
+    }
+
+    static fromJS(data: any): OAuthCallbackRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new OAuthCallbackRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["code"] = this.code;
+        data["redirectUri"] = this.redirectUri;
+        data["state"] = this.state;
+        return data;
+    }
+}
+
+export interface IOAuthCallbackRequest {
+    code?: string;
+    redirectUri?: string;
+    state?: string | undefined;
+}
+
+export class OAuthUserInfo implements IOAuthUserInfo {
+    id?: string;
+    username?: string;
+    email?: string;
+    displayName?: string;
+    avatarUrl?: string;
+    profileUrl?: string;
+    additionalData?: { [key: string]: any; };
+
+    constructor(data?: IOAuthUserInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.username = _data["username"];
+            this.email = _data["email"];
+            this.displayName = _data["displayName"];
+            this.avatarUrl = _data["avatarUrl"];
+            this.profileUrl = _data["profileUrl"];
+            if (_data["additionalData"]) {
+                this.additionalData = {} as any;
+                for (let key in _data["additionalData"]) {
+                    if (_data["additionalData"].hasOwnProperty(key))
+                        (<any>this.additionalData)![key] = _data["additionalData"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): OAuthUserInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new OAuthUserInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["username"] = this.username;
+        data["email"] = this.email;
+        data["displayName"] = this.displayName;
+        data["avatarUrl"] = this.avatarUrl;
+        data["profileUrl"] = this.profileUrl;
+        if (this.additionalData) {
+            data["additionalData"] = {};
+            for (let key in this.additionalData) {
+                if (this.additionalData.hasOwnProperty(key))
+                    (<any>data["additionalData"])[key] = (<any>this.additionalData)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface IOAuthUserInfo {
+    id?: string;
+    username?: string;
+    email?: string;
+    displayName?: string;
+    avatarUrl?: string;
+    profileUrl?: string;
+    additionalData?: { [key: string]: any; };
+}
+
+export class OAuthTokenRefreshResult implements IOAuthTokenRefreshResult {
+    success?: boolean;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    error?: string;
+    errorDescription?: string;
+
+    constructor(data?: IOAuthTokenRefreshResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.accessToken = _data["accessToken"];
+            this.refreshToken = _data["refreshToken"];
+            this.expiresIn = _data["expiresIn"];
+            this.error = _data["error"];
+            this.errorDescription = _data["errorDescription"];
+        }
+    }
+
+    static fromJS(data: any): OAuthTokenRefreshResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new OAuthTokenRefreshResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["accessToken"] = this.accessToken;
+        data["refreshToken"] = this.refreshToken;
+        data["expiresIn"] = this.expiresIn;
+        data["error"] = this.error;
+        data["errorDescription"] = this.errorDescription;
+        return data;
+    }
+}
+
+export interface IOAuthTokenRefreshResult {
+    success?: boolean;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    error?: string;
+    errorDescription?: string;
+}
+
+export class OAuthRefreshRequest implements IOAuthRefreshRequest {
+    refreshToken?: string;
+
+    constructor(data?: IOAuthRefreshRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.refreshToken = _data["refreshToken"];
+        }
+    }
+
+    static fromJS(data: any): OAuthRefreshRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new OAuthRefreshRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["refreshToken"] = this.refreshToken;
+        return data;
+    }
+}
+
+export interface IOAuthRefreshRequest {
+    refreshToken?: string;
+}
+
+export class OAuthValidateRequest implements IOAuthValidateRequest {
+    accessToken?: string;
+
+    constructor(data?: IOAuthValidateRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.accessToken = _data["accessToken"];
+        }
+    }
+
+    static fromJS(data: any): OAuthValidateRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new OAuthValidateRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["accessToken"] = this.accessToken;
+        return data;
+    }
+}
+
+export interface IOAuthValidateRequest {
+    accessToken?: string;
+}
+
+export class InstalledPlugin implements IInstalledPlugin {
+    id?: string;
+    name?: string;
+    version?: string;
+    author?: string;
+    description?: string;
+    type?: string;
+    status?: string;
+    installedAt?: Date;
+    updatedAt?: Date | undefined;
+    installationPath?: string;
+    permissions?: string[];
+    isEnabled?: boolean;
+
+    constructor(data?: IInstalledPlugin) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.version = _data["version"];
+            this.author = _data["author"];
+            this.description = _data["description"];
+            this.type = _data["type"];
+            this.status = _data["status"];
+            this.installedAt = _data["installedAt"] ? new Date(_data["installedAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.installationPath = _data["installationPath"];
+            if (Array.isArray(_data["permissions"])) {
+                this.permissions = [] as any;
+                for (let item of _data["permissions"])
+                    this.permissions!.push(item);
+            }
+            this.isEnabled = _data["isEnabled"];
+        }
+    }
+
+    static fromJS(data: any): InstalledPlugin {
+        data = typeof data === 'object' ? data : {};
+        let result = new InstalledPlugin();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["version"] = this.version;
+        data["author"] = this.author;
+        data["description"] = this.description;
+        data["type"] = this.type;
+        data["status"] = this.status;
+        data["installedAt"] = this.installedAt ? this.installedAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["installationPath"] = this.installationPath;
+        if (Array.isArray(this.permissions)) {
+            data["permissions"] = [];
+            for (let item of this.permissions)
+                data["permissions"].push(item);
+        }
+        data["isEnabled"] = this.isEnabled;
+        return data;
+    }
+}
+
+export interface IInstalledPlugin {
+    id?: string;
+    name?: string;
+    version?: string;
+    author?: string;
+    description?: string;
+    type?: string;
+    status?: string;
+    installedAt?: Date;
+    updatedAt?: Date | undefined;
+    installationPath?: string;
+    permissions?: string[];
+    isEnabled?: boolean;
+}
+
+export class PluginInstallationResult implements IPluginInstallationResult {
+    success?: boolean;
+    message?: string;
+    pluginId?: string;
+    version?: string;
+    warnings?: string[];
+    errors?: string[];
+    installedAt?: Date;
+    installationPath?: string;
+
+    constructor(data?: IPluginInstallationResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            this.pluginId = _data["pluginId"];
+            this.version = _data["version"];
+            if (Array.isArray(_data["warnings"])) {
+                this.warnings = [] as any;
+                for (let item of _data["warnings"])
+                    this.warnings!.push(item);
+            }
+            if (Array.isArray(_data["errors"])) {
+                this.errors = [] as any;
+                for (let item of _data["errors"])
+                    this.errors!.push(item);
+            }
+            this.installedAt = _data["installedAt"] ? new Date(_data["installedAt"].toString()) : <any>undefined;
+            this.installationPath = _data["installationPath"];
+        }
+    }
+
+    static fromJS(data: any): PluginInstallationResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new PluginInstallationResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        data["pluginId"] = this.pluginId;
+        data["version"] = this.version;
+        if (Array.isArray(this.warnings)) {
+            data["warnings"] = [];
+            for (let item of this.warnings)
+                data["warnings"].push(item);
+        }
+        if (Array.isArray(this.errors)) {
+            data["errors"] = [];
+            for (let item of this.errors)
+                data["errors"].push(item);
+        }
+        data["installedAt"] = this.installedAt ? this.installedAt.toISOString() : <any>undefined;
+        data["installationPath"] = this.installationPath;
+        return data;
+    }
+}
+
+export interface IPluginInstallationResult {
+    success?: boolean;
+    message?: string;
+    pluginId?: string;
+    version?: string;
+    warnings?: string[];
+    errors?: string[];
+    installedAt?: Date;
+    installationPath?: string;
+}
+
+export class PluginInstallationRequest implements IPluginInstallationRequest {
+    source?: string;
+    url?: string;
+    branch?: string | undefined;
+    pluginId?: string | undefined;
+    version?: string | undefined;
+
+    constructor(data?: IPluginInstallationRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.source = _data["source"];
+            this.url = _data["url"];
+            this.branch = _data["branch"];
+            this.pluginId = _data["pluginId"];
+            this.version = _data["version"];
+        }
+    }
+
+    static fromJS(data: any): PluginInstallationRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new PluginInstallationRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["source"] = this.source;
+        data["url"] = this.url;
+        data["branch"] = this.branch;
+        data["pluginId"] = this.pluginId;
+        data["version"] = this.version;
+        return data;
+    }
+}
+
+export interface IPluginInstallationRequest {
+    source?: string;
+    url?: string;
+    branch?: string | undefined;
+    pluginId?: string | undefined;
+    version?: string | undefined;
+}
+
+export class ActiveTheme implements IActiveTheme {
+    pluginId?: string;
+    themeName?: string;
+    cssVariables?: { [key: string]: string; };
+    componentOverrides?: { [key: string]: any; };
+
+    constructor(data?: IActiveTheme) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.pluginId = _data["pluginId"];
+            this.themeName = _data["themeName"];
+            if (_data["cssVariables"]) {
+                this.cssVariables = {} as any;
+                for (let key in _data["cssVariables"]) {
+                    if (_data["cssVariables"].hasOwnProperty(key))
+                        (<any>this.cssVariables)![key] = _data["cssVariables"][key];
+                }
+            }
+            if (_data["componentOverrides"]) {
+                this.componentOverrides = {} as any;
+                for (let key in _data["componentOverrides"]) {
+                    if (_data["componentOverrides"].hasOwnProperty(key))
+                        (<any>this.componentOverrides)![key] = _data["componentOverrides"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): ActiveTheme {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActiveTheme();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["pluginId"] = this.pluginId;
+        data["themeName"] = this.themeName;
+        if (this.cssVariables) {
+            data["cssVariables"] = {};
+            for (let key in this.cssVariables) {
+                if (this.cssVariables.hasOwnProperty(key))
+                    (<any>data["cssVariables"])[key] = (<any>this.cssVariables)[key];
+            }
+        }
+        if (this.componentOverrides) {
+            data["componentOverrides"] = {};
+            for (let key in this.componentOverrides) {
+                if (this.componentOverrides.hasOwnProperty(key))
+                    (<any>data["componentOverrides"])[key] = (<any>this.componentOverrides)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface IActiveTheme {
+    pluginId?: string;
+    themeName?: string;
+    cssVariables?: { [key: string]: string; };
+    componentOverrides?: { [key: string]: any; };
+}
+
+export class ThemeApplicationResult2 implements IThemeApplicationResult2 {
+    success?: boolean;
+    message?: string;
+    appliedVariables?: { [key: string]: string; };
+    errors?: string[];
+
+    constructor(data?: IThemeApplicationResult2) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.success = _data["success"];
+            this.message = _data["message"];
+            if (_data["appliedVariables"]) {
+                this.appliedVariables = {} as any;
+                for (let key in _data["appliedVariables"]) {
+                    if (_data["appliedVariables"].hasOwnProperty(key))
+                        (<any>this.appliedVariables)![key] = _data["appliedVariables"][key];
+                }
+            }
+            if (Array.isArray(_data["errors"])) {
+                this.errors = [] as any;
+                for (let item of _data["errors"])
+                    this.errors!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ThemeApplicationResult2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new ThemeApplicationResult2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["success"] = this.success;
+        data["message"] = this.message;
+        if (this.appliedVariables) {
+            data["appliedVariables"] = {};
+            for (let key in this.appliedVariables) {
+                if (this.appliedVariables.hasOwnProperty(key))
+                    (<any>data["appliedVariables"])[key] = (<any>this.appliedVariables)[key];
+            }
+        }
+        if (Array.isArray(this.errors)) {
+            data["errors"] = [];
+            for (let item of this.errors)
+                data["errors"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IThemeApplicationResult2 {
+    success?: boolean;
+    message?: string;
+    appliedVariables?: { [key: string]: string; };
+    errors?: string[];
+}
+
+export class ThemeSettings implements IThemeSettings {
+    primaryColor?: string;
+    secondaryColor?: string;
+    backgroundColor?: string;
+    surfaceColor?: string;
+    textColor?: string;
+    textMutedColor?: string;
+    borderColor?: string;
+    shadowColor?: string;
+    enableAnimations?: boolean;
+    fontFamily?: string;
+    borderRadius?: number;
+
+    constructor(data?: IThemeSettings) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.primaryColor = _data["primaryColor"];
+            this.secondaryColor = _data["secondaryColor"];
+            this.backgroundColor = _data["backgroundColor"];
+            this.surfaceColor = _data["surfaceColor"];
+            this.textColor = _data["textColor"];
+            this.textMutedColor = _data["textMutedColor"];
+            this.borderColor = _data["borderColor"];
+            this.shadowColor = _data["shadowColor"];
+            this.enableAnimations = _data["enableAnimations"];
+            this.fontFamily = _data["fontFamily"];
+            this.borderRadius = _data["borderRadius"];
+        }
+    }
+
+    static fromJS(data: any): ThemeSettings {
+        data = typeof data === 'object' ? data : {};
+        let result = new ThemeSettings();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["primaryColor"] = this.primaryColor;
+        data["secondaryColor"] = this.secondaryColor;
+        data["backgroundColor"] = this.backgroundColor;
+        data["surfaceColor"] = this.surfaceColor;
+        data["textColor"] = this.textColor;
+        data["textMutedColor"] = this.textMutedColor;
+        data["borderColor"] = this.borderColor;
+        data["shadowColor"] = this.shadowColor;
+        data["enableAnimations"] = this.enableAnimations;
+        data["fontFamily"] = this.fontFamily;
+        data["borderRadius"] = this.borderRadius;
+        return data;
+    }
+}
+
+export interface IThemeSettings {
+    primaryColor?: string;
+    secondaryColor?: string;
+    backgroundColor?: string;
+    surfaceColor?: string;
+    textColor?: string;
+    textMutedColor?: string;
+    borderColor?: string;
+    shadowColor?: string;
+    enableAnimations?: boolean;
+    fontFamily?: string;
+    borderRadius?: number;
+}
+
 export class UpdatePluginSettingsResponse implements IUpdatePluginSettingsResponse {
     success?: boolean;
     message?: string;
@@ -18631,6 +22117,11 @@ export class Model extends Auditable implements IModel {
     versions?: ModelVersion[];
     comments?: Comment[];
     likeCollection?: Like[];
+    remoteInstanceId?: string | undefined;
+    remoteModelId?: string | undefined;
+    remoteAuthorId?: string | undefined;
+    isFederated?: boolean;
+    lastFederationSync?: Date | undefined;
 
     constructor(data?: IModel) {
         super(data);
@@ -18687,6 +22178,11 @@ export class Model extends Auditable implements IModel {
                 for (let item of _data["likeCollection"])
                     this.likeCollection!.push(Like.fromJS(item));
             }
+            this.remoteInstanceId = _data["remoteInstanceId"];
+            this.remoteModelId = _data["remoteModelId"];
+            this.remoteAuthorId = _data["remoteAuthorId"];
+            this.isFederated = _data["isFederated"];
+            this.lastFederationSync = _data["lastFederationSync"] ? new Date(_data["lastFederationSync"].toString()) : <any>undefined;
         }
     }
 
@@ -18747,6 +22243,11 @@ export class Model extends Auditable implements IModel {
             for (let item of this.likeCollection)
                 data["likeCollection"].push(item ? item.toJSON() : <any>undefined);
         }
+        data["remoteInstanceId"] = this.remoteInstanceId;
+        data["remoteModelId"] = this.remoteModelId;
+        data["remoteAuthorId"] = this.remoteAuthorId;
+        data["isFederated"] = this.isFederated;
+        data["lastFederationSync"] = this.lastFederationSync ? this.lastFederationSync.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -18777,6 +22278,11 @@ export interface IModel extends IAuditable {
     versions?: ModelVersion[];
     comments?: Comment[];
     likeCollection?: Like[];
+    remoteInstanceId?: string | undefined;
+    remoteModelId?: string | undefined;
+    remoteAuthorId?: string | undefined;
+    isFederated?: boolean;
+    lastFederationSync?: Date | undefined;
 }
 
 export enum LicenseTypes {
@@ -18848,6 +22354,10 @@ export interface IModelFile extends IAuditable {
 export class Category extends Auditable implements ICategory {
     id?: string;
     name?: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    models?: Model[];
 
     constructor(data?: ICategory) {
         super(data);
@@ -18858,6 +22368,14 @@ export class Category extends Auditable implements ICategory {
         if (_data) {
             this.id = _data["id"];
             this.name = _data["name"];
+            this.description = _data["description"];
+            this.icon = _data["icon"];
+            this.color = _data["color"];
+            if (Array.isArray(_data["models"])) {
+                this.models = [] as any;
+                for (let item of _data["models"])
+                    this.models!.push(Model.fromJS(item));
+            }
         }
     }
 
@@ -18872,6 +22390,14 @@ export class Category extends Auditable implements ICategory {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["name"] = this.name;
+        data["description"] = this.description;
+        data["icon"] = this.icon;
+        data["color"] = this.color;
+        if (Array.isArray(this.models)) {
+            data["models"] = [];
+            for (let item of this.models)
+                data["models"].push(item ? item.toJSON() : <any>undefined);
+        }
         super.toJSON(data);
         return data;
     }
@@ -18880,11 +22406,17 @@ export class Category extends Auditable implements ICategory {
 export interface ICategory extends IAuditable {
     id?: string;
     name?: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    models?: Model[];
 }
 
 export class Tag extends Auditable implements ITag {
     id?: string;
     name?: string;
+    color?: string;
+    models?: Model[];
 
     constructor(data?: ITag) {
         super(data);
@@ -18895,6 +22427,12 @@ export class Tag extends Auditable implements ITag {
         if (_data) {
             this.id = _data["id"];
             this.name = _data["name"];
+            this.color = _data["color"];
+            if (Array.isArray(_data["models"])) {
+                this.models = [] as any;
+                for (let item of _data["models"])
+                    this.models!.push(Model.fromJS(item));
+            }
         }
     }
 
@@ -18909,6 +22447,12 @@ export class Tag extends Auditable implements ITag {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["name"] = this.name;
+        data["color"] = this.color;
+        if (Array.isArray(this.models)) {
+            data["models"] = [];
+            for (let item of this.models)
+                data["models"].push(item ? item.toJSON() : <any>undefined);
+        }
         super.toJSON(data);
         return data;
     }
@@ -18917,16 +22461,16 @@ export class Tag extends Auditable implements ITag {
 export interface ITag extends IAuditable {
     id?: string;
     name?: string;
+    color?: string;
+    models?: Model[];
 }
 
 export class Comment extends Auditable implements IComment {
-    id?: string;
     content?: string;
-    authorId?: string;
-    author?: User;
-    modelId?: string;
+    likes?: number;
+    dislikes?: number;
     model?: Model;
-    isEdited?: boolean;
+    author?: User;
 
     constructor(data?: IComment) {
         super(data);
@@ -18935,13 +22479,11 @@ export class Comment extends Auditable implements IComment {
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.id = _data["id"];
             this.content = _data["content"];
-            this.authorId = _data["authorId"];
-            this.author = _data["author"] ? User.fromJS(_data["author"]) : <any>undefined;
-            this.modelId = _data["modelId"];
+            this.likes = _data["likes"];
+            this.dislikes = _data["dislikes"];
             this.model = _data["model"] ? Model.fromJS(_data["model"]) : <any>undefined;
-            this.isEdited = _data["isEdited"];
+            this.author = _data["author"] ? User.fromJS(_data["author"]) : <any>undefined;
         }
     }
 
@@ -18954,34 +22496,30 @@ export class Comment extends Auditable implements IComment {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
         data["content"] = this.content;
-        data["authorId"] = this.authorId;
-        data["author"] = this.author ? this.author.toJSON() : <any>undefined;
-        data["modelId"] = this.modelId;
+        data["likes"] = this.likes;
+        data["dislikes"] = this.dislikes;
         data["model"] = this.model ? this.model.toJSON() : <any>undefined;
-        data["isEdited"] = this.isEdited;
+        data["author"] = this.author ? this.author.toJSON() : <any>undefined;
         super.toJSON(data);
         return data;
     }
 }
 
 export interface IComment extends IAuditable {
-    id?: string;
     content?: string;
-    authorId?: string;
-    author?: User;
-    modelId?: string;
+    likes?: number;
+    dislikes?: number;
     model?: Model;
-    isEdited?: boolean;
+    author?: User;
 }
 
 export class Like extends Auditable implements ILike {
     id?: string;
-    userId?: string;
-    user?: User;
     modelId?: string;
     model?: Model;
+    userId?: string;
+    user?: User;
 
     constructor(data?: ILike) {
         super(data);
@@ -18991,10 +22529,10 @@ export class Like extends Auditable implements ILike {
         super.init(_data);
         if (_data) {
             this.id = _data["id"];
-            this.userId = _data["userId"];
-            this.user = _data["user"] ? User.fromJS(_data["user"]) : <any>undefined;
             this.modelId = _data["modelId"];
             this.model = _data["model"] ? Model.fromJS(_data["model"]) : <any>undefined;
+            this.userId = _data["userId"];
+            this.user = _data["user"] ? User.fromJS(_data["user"]) : <any>undefined;
         }
     }
 
@@ -19008,10 +22546,10 @@ export class Like extends Auditable implements ILike {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["userId"] = this.userId;
-        data["user"] = this.user ? this.user.toJSON() : <any>undefined;
         data["modelId"] = this.modelId;
         data["model"] = this.model ? this.model.toJSON() : <any>undefined;
+        data["userId"] = this.userId;
+        data["user"] = this.user ? this.user.toJSON() : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -19019,10 +22557,10 @@ export class Like extends Auditable implements ILike {
 
 export interface ILike extends IAuditable {
     id?: string;
-    userId?: string;
-    user?: User;
     modelId?: string;
     model?: Model;
+    userId?: string;
+    user?: User;
 }
 
 export class UpdateModelVersionRequest implements IUpdateModelVersionRequest {
@@ -19924,6 +23462,202 @@ export enum ModerationAction {
     UnfeatureModel = "UnfeatureModel",
 }
 
+export class FileConfigResponse implements IFileConfigResponse {
+    storageProvider?: string;
+    maxTotalFileSize?: number;
+    maxFilesPerUpload?: number;
+    supportedExtensions?: string[];
+    fileTypes?: { [key: string]: FileTypeConfig[]; };
+    globalSettings?: GlobalFileSettings;
+
+    constructor(data?: IFileConfigResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.storageProvider = _data["storageProvider"];
+            this.maxTotalFileSize = _data["maxTotalFileSize"];
+            this.maxFilesPerUpload = _data["maxFilesPerUpload"];
+            if (Array.isArray(_data["supportedExtensions"])) {
+                this.supportedExtensions = [] as any;
+                for (let item of _data["supportedExtensions"])
+                    this.supportedExtensions!.push(item);
+            }
+            if (_data["fileTypes"]) {
+                this.fileTypes = {} as any;
+                for (let key in _data["fileTypes"]) {
+                    if (_data["fileTypes"].hasOwnProperty(key))
+                        (<any>this.fileTypes)![key] = _data["fileTypes"][key] ? _data["fileTypes"][key].map((i: any) => FileTypeConfig.fromJS(i)) : [];
+                }
+            }
+            this.globalSettings = _data["globalSettings"] ? GlobalFileSettings.fromJS(_data["globalSettings"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FileConfigResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileConfigResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["storageProvider"] = this.storageProvider;
+        data["maxTotalFileSize"] = this.maxTotalFileSize;
+        data["maxFilesPerUpload"] = this.maxFilesPerUpload;
+        if (Array.isArray(this.supportedExtensions)) {
+            data["supportedExtensions"] = [];
+            for (let item of this.supportedExtensions)
+                data["supportedExtensions"].push(item);
+        }
+        if (this.fileTypes) {
+            data["fileTypes"] = {};
+            for (let key in this.fileTypes) {
+                if (this.fileTypes.hasOwnProperty(key))
+                    (<any>data["fileTypes"])[key] = (<any>this.fileTypes)[key];
+            }
+        }
+        data["globalSettings"] = this.globalSettings ? this.globalSettings.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFileConfigResponse {
+    storageProvider?: string;
+    maxTotalFileSize?: number;
+    maxFilesPerUpload?: number;
+    supportedExtensions?: string[];
+    fileTypes?: { [key: string]: FileTypeConfig[]; };
+    globalSettings?: GlobalFileSettings;
+}
+
+export class FileTypeConfig implements IFileTypeConfig {
+    extension?: string;
+    displayName?: string;
+    description?: string;
+    mimeType?: string;
+    maxFileSizeBytes?: number;
+    maxPerUpload?: number;
+    requiresPreview?: boolean;
+    isCompressible?: boolean;
+    category?: string;
+    priority?: number;
+
+    constructor(data?: IFileTypeConfig) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.extension = _data["extension"];
+            this.displayName = _data["displayName"];
+            this.description = _data["description"];
+            this.mimeType = _data["mimeType"];
+            this.maxFileSizeBytes = _data["maxFileSizeBytes"];
+            this.maxPerUpload = _data["maxPerUpload"];
+            this.requiresPreview = _data["requiresPreview"];
+            this.isCompressible = _data["isCompressible"];
+            this.category = _data["category"];
+            this.priority = _data["priority"];
+        }
+    }
+
+    static fromJS(data: any): FileTypeConfig {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileTypeConfig();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["extension"] = this.extension;
+        data["displayName"] = this.displayName;
+        data["description"] = this.description;
+        data["mimeType"] = this.mimeType;
+        data["maxFileSizeBytes"] = this.maxFileSizeBytes;
+        data["maxPerUpload"] = this.maxPerUpload;
+        data["requiresPreview"] = this.requiresPreview;
+        data["isCompressible"] = this.isCompressible;
+        data["category"] = this.category;
+        data["priority"] = this.priority;
+        return data;
+    }
+}
+
+export interface IFileTypeConfig {
+    extension?: string;
+    displayName?: string;
+    description?: string;
+    mimeType?: string;
+    maxFileSizeBytes?: number;
+    maxPerUpload?: number;
+    requiresPreview?: boolean;
+    isCompressible?: boolean;
+    category?: string;
+    priority?: number;
+}
+
+export class GlobalFileSettings implements IGlobalFileSettings {
+    allowMultipleFiles?: boolean;
+    requirePreviewFor3D?: boolean;
+    autoCompressLargeFiles?: boolean;
+    maxConcurrentUploads?: number;
+
+    constructor(data?: IGlobalFileSettings) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.allowMultipleFiles = _data["allowMultipleFiles"];
+            this.requirePreviewFor3D = _data["requirePreviewFor3D"];
+            this.autoCompressLargeFiles = _data["autoCompressLargeFiles"];
+            this.maxConcurrentUploads = _data["maxConcurrentUploads"];
+        }
+    }
+
+    static fromJS(data: any): GlobalFileSettings {
+        data = typeof data === 'object' ? data : {};
+        let result = new GlobalFileSettings();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["allowMultipleFiles"] = this.allowMultipleFiles;
+        data["requirePreviewFor3D"] = this.requirePreviewFor3D;
+        data["autoCompressLargeFiles"] = this.autoCompressLargeFiles;
+        data["maxConcurrentUploads"] = this.maxConcurrentUploads;
+        return data;
+    }
+}
+
+export interface IGlobalFileSettings {
+    allowMultipleFiles?: boolean;
+    requirePreviewFor3D?: boolean;
+    autoCompressLargeFiles?: boolean;
+    maxConcurrentUploads?: number;
+}
+
 export class CreateFilamentCommand implements ICreateFilamentCommand {
     manufacturer?: string;
     type?: MaterialType;
@@ -20035,458 +23769,6 @@ export interface IUpdateFilamentCommand {
     type?: MaterialType;
     color?: string;
     diameter?: string;
-}
-
-export class InviteUrlResponse implements IInviteUrlResponse {
-    inviteUrl?: string;
-    expiresAt?: Date;
-    generatedAt?: Date;
-
-    constructor(data?: IInviteUrlResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.inviteUrl = _data["inviteUrl"];
-            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : <any>undefined;
-            this.generatedAt = _data["generatedAt"] ? new Date(_data["generatedAt"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): InviteUrlResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new InviteUrlResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["inviteUrl"] = this.inviteUrl;
-        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : <any>undefined;
-        data["generatedAt"] = this.generatedAt ? this.generatedAt.toISOString() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IInviteUrlResponse {
-    inviteUrl?: string;
-    expiresAt?: Date;
-    generatedAt?: Date;
-}
-
-export class GenerateInviteUrlRequest implements IGenerateInviteUrlRequest {
-    expiresAt?: Date | undefined;
-
-    constructor(data?: IGenerateInviteUrlRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): GenerateInviteUrlRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new GenerateInviteUrlRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IGenerateInviteUrlRequest {
-    expiresAt?: Date | undefined;
-}
-
-export class FederationSettingsDto implements IFederationSettingsDto {
-    id?: string;
-    isFederationEnabled?: boolean;
-    instanceName?: string;
-    instanceDescription?: string;
-    adminContact?: string;
-    baseUrl?: string;
-    keyRotationIntervalDays?: number;
-    lastKeyRotation?: Date | undefined;
-    requireHttps?: boolean;
-    allowSelfSignedCertificates?: boolean;
-    handshakeTimeoutMinutes?: number;
-    defaultSyncIntervalMinutes?: number;
-    maxConcurrentSyncs?: number;
-    maxModelsPerInstance?: number;
-    maxModelFileSizeBytes?: number;
-    modelCacheRetentionDays?: number;
-    autoAcceptHandshakes?: boolean;
-    sharePublicModelsOnly?: boolean;
-    shareFeaturedModelsOnly?: boolean;
-    allowedFileTypes?: string;
-    blockedCategories?: string;
-    allowNSFWContent?: boolean;
-    requireApprovalForNewInstances?: boolean;
-    maxRequestsPerMinute?: number;
-    maxDownloadsPerHour?: number;
-    maxBandwidthPerDay?: number;
-    heartbeatIntervalMinutes?: number;
-    healthCheckTimeoutSeconds?: number;
-    enableMetrics?: boolean;
-    enableDetailedLogging?: boolean;
-    federationInviteUrl?: string;
-    inviteUrlGeneratedAt?: Date | undefined;
-    inviteUrlExpiresAt?: Date | undefined;
-    enableDiscovery?: boolean;
-    discoveryTags?: string | undefined;
-    enableAutomaticBackup?: boolean;
-    backupRetentionDays?: number;
-    lastBackupAt?: Date | undefined;
-    federationProtocolVersion?: string;
-    supportedVersions?: string | undefined;
-    totalConnectedInstances?: number;
-    totalModelsShared?: number;
-    totalModelsReceived?: number;
-    totalBytesTransferred?: number;
-    lastStatsUpdate?: Date | undefined;
-
-    constructor(data?: IFederationSettingsDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.isFederationEnabled = _data["isFederationEnabled"];
-            this.instanceName = _data["instanceName"];
-            this.instanceDescription = _data["instanceDescription"];
-            this.adminContact = _data["adminContact"];
-            this.baseUrl = _data["baseUrl"];
-            this.keyRotationIntervalDays = _data["keyRotationIntervalDays"];
-            this.lastKeyRotation = _data["lastKeyRotation"] ? new Date(_data["lastKeyRotation"].toString()) : <any>undefined;
-            this.requireHttps = _data["requireHttps"];
-            this.allowSelfSignedCertificates = _data["allowSelfSignedCertificates"];
-            this.handshakeTimeoutMinutes = _data["handshakeTimeoutMinutes"];
-            this.defaultSyncIntervalMinutes = _data["defaultSyncIntervalMinutes"];
-            this.maxConcurrentSyncs = _data["maxConcurrentSyncs"];
-            this.maxModelsPerInstance = _data["maxModelsPerInstance"];
-            this.maxModelFileSizeBytes = _data["maxModelFileSizeBytes"];
-            this.modelCacheRetentionDays = _data["modelCacheRetentionDays"];
-            this.autoAcceptHandshakes = _data["autoAcceptHandshakes"];
-            this.sharePublicModelsOnly = _data["sharePublicModelsOnly"];
-            this.shareFeaturedModelsOnly = _data["shareFeaturedModelsOnly"];
-            this.allowedFileTypes = _data["allowedFileTypes"];
-            this.blockedCategories = _data["blockedCategories"];
-            this.allowNSFWContent = _data["allowNSFWContent"];
-            this.requireApprovalForNewInstances = _data["requireApprovalForNewInstances"];
-            this.maxRequestsPerMinute = _data["maxRequestsPerMinute"];
-            this.maxDownloadsPerHour = _data["maxDownloadsPerHour"];
-            this.maxBandwidthPerDay = _data["maxBandwidthPerDay"];
-            this.heartbeatIntervalMinutes = _data["heartbeatIntervalMinutes"];
-            this.healthCheckTimeoutSeconds = _data["healthCheckTimeoutSeconds"];
-            this.enableMetrics = _data["enableMetrics"];
-            this.enableDetailedLogging = _data["enableDetailedLogging"];
-            this.federationInviteUrl = _data["federationInviteUrl"];
-            this.inviteUrlGeneratedAt = _data["inviteUrlGeneratedAt"] ? new Date(_data["inviteUrlGeneratedAt"].toString()) : <any>undefined;
-            this.inviteUrlExpiresAt = _data["inviteUrlExpiresAt"] ? new Date(_data["inviteUrlExpiresAt"].toString()) : <any>undefined;
-            this.enableDiscovery = _data["enableDiscovery"];
-            this.discoveryTags = _data["discoveryTags"];
-            this.enableAutomaticBackup = _data["enableAutomaticBackup"];
-            this.backupRetentionDays = _data["backupRetentionDays"];
-            this.lastBackupAt = _data["lastBackupAt"] ? new Date(_data["lastBackupAt"].toString()) : <any>undefined;
-            this.federationProtocolVersion = _data["federationProtocolVersion"];
-            this.supportedVersions = _data["supportedVersions"];
-            this.totalConnectedInstances = _data["totalConnectedInstances"];
-            this.totalModelsShared = _data["totalModelsShared"];
-            this.totalModelsReceived = _data["totalModelsReceived"];
-            this.totalBytesTransferred = _data["totalBytesTransferred"];
-            this.lastStatsUpdate = _data["lastStatsUpdate"] ? new Date(_data["lastStatsUpdate"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): FederationSettingsDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new FederationSettingsDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["isFederationEnabled"] = this.isFederationEnabled;
-        data["instanceName"] = this.instanceName;
-        data["instanceDescription"] = this.instanceDescription;
-        data["adminContact"] = this.adminContact;
-        data["baseUrl"] = this.baseUrl;
-        data["keyRotationIntervalDays"] = this.keyRotationIntervalDays;
-        data["lastKeyRotation"] = this.lastKeyRotation ? this.lastKeyRotation.toISOString() : <any>undefined;
-        data["requireHttps"] = this.requireHttps;
-        data["allowSelfSignedCertificates"] = this.allowSelfSignedCertificates;
-        data["handshakeTimeoutMinutes"] = this.handshakeTimeoutMinutes;
-        data["defaultSyncIntervalMinutes"] = this.defaultSyncIntervalMinutes;
-        data["maxConcurrentSyncs"] = this.maxConcurrentSyncs;
-        data["maxModelsPerInstance"] = this.maxModelsPerInstance;
-        data["maxModelFileSizeBytes"] = this.maxModelFileSizeBytes;
-        data["modelCacheRetentionDays"] = this.modelCacheRetentionDays;
-        data["autoAcceptHandshakes"] = this.autoAcceptHandshakes;
-        data["sharePublicModelsOnly"] = this.sharePublicModelsOnly;
-        data["shareFeaturedModelsOnly"] = this.shareFeaturedModelsOnly;
-        data["allowedFileTypes"] = this.allowedFileTypes;
-        data["blockedCategories"] = this.blockedCategories;
-        data["allowNSFWContent"] = this.allowNSFWContent;
-        data["requireApprovalForNewInstances"] = this.requireApprovalForNewInstances;
-        data["maxRequestsPerMinute"] = this.maxRequestsPerMinute;
-        data["maxDownloadsPerHour"] = this.maxDownloadsPerHour;
-        data["maxBandwidthPerDay"] = this.maxBandwidthPerDay;
-        data["heartbeatIntervalMinutes"] = this.heartbeatIntervalMinutes;
-        data["healthCheckTimeoutSeconds"] = this.healthCheckTimeoutSeconds;
-        data["enableMetrics"] = this.enableMetrics;
-        data["enableDetailedLogging"] = this.enableDetailedLogging;
-        data["federationInviteUrl"] = this.federationInviteUrl;
-        data["inviteUrlGeneratedAt"] = this.inviteUrlGeneratedAt ? this.inviteUrlGeneratedAt.toISOString() : <any>undefined;
-        data["inviteUrlExpiresAt"] = this.inviteUrlExpiresAt ? this.inviteUrlExpiresAt.toISOString() : <any>undefined;
-        data["enableDiscovery"] = this.enableDiscovery;
-        data["discoveryTags"] = this.discoveryTags;
-        data["enableAutomaticBackup"] = this.enableAutomaticBackup;
-        data["backupRetentionDays"] = this.backupRetentionDays;
-        data["lastBackupAt"] = this.lastBackupAt ? this.lastBackupAt.toISOString() : <any>undefined;
-        data["federationProtocolVersion"] = this.federationProtocolVersion;
-        data["supportedVersions"] = this.supportedVersions;
-        data["totalConnectedInstances"] = this.totalConnectedInstances;
-        data["totalModelsShared"] = this.totalModelsShared;
-        data["totalModelsReceived"] = this.totalModelsReceived;
-        data["totalBytesTransferred"] = this.totalBytesTransferred;
-        data["lastStatsUpdate"] = this.lastStatsUpdate ? this.lastStatsUpdate.toISOString() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IFederationSettingsDto {
-    id?: string;
-    isFederationEnabled?: boolean;
-    instanceName?: string;
-    instanceDescription?: string;
-    adminContact?: string;
-    baseUrl?: string;
-    keyRotationIntervalDays?: number;
-    lastKeyRotation?: Date | undefined;
-    requireHttps?: boolean;
-    allowSelfSignedCertificates?: boolean;
-    handshakeTimeoutMinutes?: number;
-    defaultSyncIntervalMinutes?: number;
-    maxConcurrentSyncs?: number;
-    maxModelsPerInstance?: number;
-    maxModelFileSizeBytes?: number;
-    modelCacheRetentionDays?: number;
-    autoAcceptHandshakes?: boolean;
-    sharePublicModelsOnly?: boolean;
-    shareFeaturedModelsOnly?: boolean;
-    allowedFileTypes?: string;
-    blockedCategories?: string;
-    allowNSFWContent?: boolean;
-    requireApprovalForNewInstances?: boolean;
-    maxRequestsPerMinute?: number;
-    maxDownloadsPerHour?: number;
-    maxBandwidthPerDay?: number;
-    heartbeatIntervalMinutes?: number;
-    healthCheckTimeoutSeconds?: number;
-    enableMetrics?: boolean;
-    enableDetailedLogging?: boolean;
-    federationInviteUrl?: string;
-    inviteUrlGeneratedAt?: Date | undefined;
-    inviteUrlExpiresAt?: Date | undefined;
-    enableDiscovery?: boolean;
-    discoveryTags?: string | undefined;
-    enableAutomaticBackup?: boolean;
-    backupRetentionDays?: number;
-    lastBackupAt?: Date | undefined;
-    federationProtocolVersion?: string;
-    supportedVersions?: string | undefined;
-    totalConnectedInstances?: number;
-    totalModelsShared?: number;
-    totalModelsReceived?: number;
-    totalBytesTransferred?: number;
-    lastStatsUpdate?: Date | undefined;
-}
-
-export class UpdateFederationSettingsRequest implements IUpdateFederationSettingsRequest {
-    isFederationEnabled!: boolean;
-    instanceName!: string;
-    instanceDescription?: string;
-    adminContact!: string;
-    baseUrl!: string;
-    keyRotationIntervalDays?: number;
-    requireHttps?: boolean;
-    allowSelfSignedCertificates?: boolean;
-    handshakeTimeoutMinutes?: number;
-    defaultSyncIntervalMinutes?: number;
-    maxConcurrentSyncs?: number;
-    maxModelsPerInstance?: number;
-    maxModelFileSizeBytes?: number;
-    modelCacheRetentionDays?: number;
-    autoAcceptHandshakes?: boolean;
-    sharePublicModelsOnly?: boolean;
-    shareFeaturedModelsOnly?: boolean;
-    allowedFileTypes?: string | undefined;
-    blockedCategories?: string | undefined;
-    allowNSFWContent?: boolean;
-    requireApprovalForNewInstances?: boolean;
-    maxRequestsPerMinute?: number;
-    maxDownloadsPerHour?: number;
-    maxBandwidthPerDay?: number;
-    heartbeatIntervalMinutes?: number;
-    healthCheckTimeoutSeconds?: number;
-    enableMetrics?: boolean;
-    enableDetailedLogging?: boolean;
-    enableDiscovery?: boolean;
-    discoveryTags?: string | undefined;
-    enableAutomaticBackup?: boolean;
-    backupRetentionDays?: number;
-
-    constructor(data?: IUpdateFederationSettingsRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.isFederationEnabled = _data["isFederationEnabled"];
-            this.instanceName = _data["instanceName"];
-            this.instanceDescription = _data["instanceDescription"];
-            this.adminContact = _data["adminContact"];
-            this.baseUrl = _data["baseUrl"];
-            this.keyRotationIntervalDays = _data["keyRotationIntervalDays"];
-            this.requireHttps = _data["requireHttps"];
-            this.allowSelfSignedCertificates = _data["allowSelfSignedCertificates"];
-            this.handshakeTimeoutMinutes = _data["handshakeTimeoutMinutes"];
-            this.defaultSyncIntervalMinutes = _data["defaultSyncIntervalMinutes"];
-            this.maxConcurrentSyncs = _data["maxConcurrentSyncs"];
-            this.maxModelsPerInstance = _data["maxModelsPerInstance"];
-            this.maxModelFileSizeBytes = _data["maxModelFileSizeBytes"];
-            this.modelCacheRetentionDays = _data["modelCacheRetentionDays"];
-            this.autoAcceptHandshakes = _data["autoAcceptHandshakes"];
-            this.sharePublicModelsOnly = _data["sharePublicModelsOnly"];
-            this.shareFeaturedModelsOnly = _data["shareFeaturedModelsOnly"];
-            this.allowedFileTypes = _data["allowedFileTypes"];
-            this.blockedCategories = _data["blockedCategories"];
-            this.allowNSFWContent = _data["allowNSFWContent"];
-            this.requireApprovalForNewInstances = _data["requireApprovalForNewInstances"];
-            this.maxRequestsPerMinute = _data["maxRequestsPerMinute"];
-            this.maxDownloadsPerHour = _data["maxDownloadsPerHour"];
-            this.maxBandwidthPerDay = _data["maxBandwidthPerDay"];
-            this.heartbeatIntervalMinutes = _data["heartbeatIntervalMinutes"];
-            this.healthCheckTimeoutSeconds = _data["healthCheckTimeoutSeconds"];
-            this.enableMetrics = _data["enableMetrics"];
-            this.enableDetailedLogging = _data["enableDetailedLogging"];
-            this.enableDiscovery = _data["enableDiscovery"];
-            this.discoveryTags = _data["discoveryTags"];
-            this.enableAutomaticBackup = _data["enableAutomaticBackup"];
-            this.backupRetentionDays = _data["backupRetentionDays"];
-        }
-    }
-
-    static fromJS(data: any): UpdateFederationSettingsRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdateFederationSettingsRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["isFederationEnabled"] = this.isFederationEnabled;
-        data["instanceName"] = this.instanceName;
-        data["instanceDescription"] = this.instanceDescription;
-        data["adminContact"] = this.adminContact;
-        data["baseUrl"] = this.baseUrl;
-        data["keyRotationIntervalDays"] = this.keyRotationIntervalDays;
-        data["requireHttps"] = this.requireHttps;
-        data["allowSelfSignedCertificates"] = this.allowSelfSignedCertificates;
-        data["handshakeTimeoutMinutes"] = this.handshakeTimeoutMinutes;
-        data["defaultSyncIntervalMinutes"] = this.defaultSyncIntervalMinutes;
-        data["maxConcurrentSyncs"] = this.maxConcurrentSyncs;
-        data["maxModelsPerInstance"] = this.maxModelsPerInstance;
-        data["maxModelFileSizeBytes"] = this.maxModelFileSizeBytes;
-        data["modelCacheRetentionDays"] = this.modelCacheRetentionDays;
-        data["autoAcceptHandshakes"] = this.autoAcceptHandshakes;
-        data["sharePublicModelsOnly"] = this.sharePublicModelsOnly;
-        data["shareFeaturedModelsOnly"] = this.shareFeaturedModelsOnly;
-        data["allowedFileTypes"] = this.allowedFileTypes;
-        data["blockedCategories"] = this.blockedCategories;
-        data["allowNSFWContent"] = this.allowNSFWContent;
-        data["requireApprovalForNewInstances"] = this.requireApprovalForNewInstances;
-        data["maxRequestsPerMinute"] = this.maxRequestsPerMinute;
-        data["maxDownloadsPerHour"] = this.maxDownloadsPerHour;
-        data["maxBandwidthPerDay"] = this.maxBandwidthPerDay;
-        data["heartbeatIntervalMinutes"] = this.heartbeatIntervalMinutes;
-        data["healthCheckTimeoutSeconds"] = this.healthCheckTimeoutSeconds;
-        data["enableMetrics"] = this.enableMetrics;
-        data["enableDetailedLogging"] = this.enableDetailedLogging;
-        data["enableDiscovery"] = this.enableDiscovery;
-        data["discoveryTags"] = this.discoveryTags;
-        data["enableAutomaticBackup"] = this.enableAutomaticBackup;
-        data["backupRetentionDays"] = this.backupRetentionDays;
-        return data;
-    }
-}
-
-export interface IUpdateFederationSettingsRequest {
-    isFederationEnabled: boolean;
-    instanceName: string;
-    instanceDescription?: string;
-    adminContact: string;
-    baseUrl: string;
-    keyRotationIntervalDays?: number;
-    requireHttps?: boolean;
-    allowSelfSignedCertificates?: boolean;
-    handshakeTimeoutMinutes?: number;
-    defaultSyncIntervalMinutes?: number;
-    maxConcurrentSyncs?: number;
-    maxModelsPerInstance?: number;
-    maxModelFileSizeBytes?: number;
-    modelCacheRetentionDays?: number;
-    autoAcceptHandshakes?: boolean;
-    sharePublicModelsOnly?: boolean;
-    shareFeaturedModelsOnly?: boolean;
-    allowedFileTypes?: string | undefined;
-    blockedCategories?: string | undefined;
-    allowNSFWContent?: boolean;
-    requireApprovalForNewInstances?: boolean;
-    maxRequestsPerMinute?: number;
-    maxDownloadsPerHour?: number;
-    maxBandwidthPerDay?: number;
-    heartbeatIntervalMinutes?: number;
-    healthCheckTimeoutSeconds?: number;
-    enableMetrics?: boolean;
-    enableDetailedLogging?: boolean;
-    enableDiscovery?: boolean;
-    discoveryTags?: string | undefined;
-    enableAutomaticBackup?: boolean;
-    backupRetentionDays?: number;
 }
 
 export class AddCommentRequest implements IAddCommentRequest {
@@ -23682,6 +26964,1679 @@ export interface IModerationCheckDto {
     moderatorRole?: string;
     targetRole?: string;
     reason?: string;
+}
+
+export class MarketplacePluginsResponse implements IMarketplacePluginsResponse {
+    plugins?: MarketplacePlugin[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IMarketplacePluginsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["plugins"])) {
+                this.plugins = [] as any;
+                for (let item of _data["plugins"])
+                    this.plugins!.push(MarketplacePlugin.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): MarketplacePluginsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarketplacePluginsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.plugins)) {
+            data["plugins"] = [];
+            for (let item of this.plugins)
+                data["plugins"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IMarketplacePluginsResponse {
+    plugins?: MarketplacePlugin[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class MarketplacePlugin implements IMarketplacePlugin {
+    id?: string;
+    name?: string;
+    description?: string;
+    version?: string;
+    author?: string;
+    category?: string;
+    tags?: string[];
+    downloads?: number;
+    rating?: number;
+    reviewCount?: number;
+    repositoryUrl?: string;
+    isVerified?: boolean;
+    isFeatured?: boolean;
+    lastUpdated?: Date;
+    license?: string;
+    screenshots?: string[];
+    documentationUrl?: string;
+
+    constructor(data?: IMarketplacePlugin) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.version = _data["version"];
+            this.author = _data["author"];
+            this.category = _data["category"];
+            if (Array.isArray(_data["tags"])) {
+                this.tags = [] as any;
+                for (let item of _data["tags"])
+                    this.tags!.push(item);
+            }
+            this.downloads = _data["downloads"];
+            this.rating = _data["rating"];
+            this.reviewCount = _data["reviewCount"];
+            this.repositoryUrl = _data["repositoryUrl"];
+            this.isVerified = _data["isVerified"];
+            this.isFeatured = _data["isFeatured"];
+            this.lastUpdated = _data["lastUpdated"] ? new Date(_data["lastUpdated"].toString()) : <any>undefined;
+            this.license = _data["license"];
+            if (Array.isArray(_data["screenshots"])) {
+                this.screenshots = [] as any;
+                for (let item of _data["screenshots"])
+                    this.screenshots!.push(item);
+            }
+            this.documentationUrl = _data["documentationUrl"];
+        }
+    }
+
+    static fromJS(data: any): MarketplacePlugin {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarketplacePlugin();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["version"] = this.version;
+        data["author"] = this.author;
+        data["category"] = this.category;
+        if (Array.isArray(this.tags)) {
+            data["tags"] = [];
+            for (let item of this.tags)
+                data["tags"].push(item);
+        }
+        data["downloads"] = this.downloads;
+        data["rating"] = this.rating;
+        data["reviewCount"] = this.reviewCount;
+        data["repositoryUrl"] = this.repositoryUrl;
+        data["isVerified"] = this.isVerified;
+        data["isFeatured"] = this.isFeatured;
+        data["lastUpdated"] = this.lastUpdated ? this.lastUpdated.toISOString() : <any>undefined;
+        data["license"] = this.license;
+        if (Array.isArray(this.screenshots)) {
+            data["screenshots"] = [];
+            for (let item of this.screenshots)
+                data["screenshots"].push(item);
+        }
+        data["documentationUrl"] = this.documentationUrl;
+        return data;
+    }
+}
+
+export interface IMarketplacePlugin {
+    id?: string;
+    name?: string;
+    description?: string;
+    version?: string;
+    author?: string;
+    category?: string;
+    tags?: string[];
+    downloads?: number;
+    rating?: number;
+    reviewCount?: number;
+    repositoryUrl?: string;
+    isVerified?: boolean;
+    isFeatured?: boolean;
+    lastUpdated?: Date;
+    license?: string;
+    screenshots?: string[];
+    documentationUrl?: string;
+}
+
+export class MarketplacePluginDetails extends MarketplacePlugin implements IMarketplacePluginDetails {
+    readme?: string;
+    versions?: MarketplacePluginVersion[];
+    reviews?: MarketplacePluginReview[];
+    stats?: MarketplacePluginStats;
+
+    constructor(data?: IMarketplacePluginDetails) {
+        super(data);
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.readme = _data["readme"];
+            if (Array.isArray(_data["versions"])) {
+                this.versions = [] as any;
+                for (let item of _data["versions"])
+                    this.versions!.push(MarketplacePluginVersion.fromJS(item));
+            }
+            if (Array.isArray(_data["reviews"])) {
+                this.reviews = [] as any;
+                for (let item of _data["reviews"])
+                    this.reviews!.push(MarketplacePluginReview.fromJS(item));
+            }
+            this.stats = _data["stats"] ? MarketplacePluginStats.fromJS(_data["stats"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): MarketplacePluginDetails {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarketplacePluginDetails();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["readme"] = this.readme;
+        if (Array.isArray(this.versions)) {
+            data["versions"] = [];
+            for (let item of this.versions)
+                data["versions"].push(item ? item.toJSON() : <any>undefined);
+        }
+        if (Array.isArray(this.reviews)) {
+            data["reviews"] = [];
+            for (let item of this.reviews)
+                data["reviews"].push(item ? item.toJSON() : <any>undefined);
+        }
+        data["stats"] = this.stats ? this.stats.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarketplacePluginDetails extends IMarketplacePlugin {
+    readme?: string;
+    versions?: MarketplacePluginVersion[];
+    reviews?: MarketplacePluginReview[];
+    stats?: MarketplacePluginStats;
+}
+
+export class MarketplacePluginVersion implements IMarketplacePluginVersion {
+    version?: string;
+    releaseNotes?: string;
+    releasedAt?: Date;
+    isLatest?: boolean;
+    downloadUrl?: string;
+    fileSize?: number;
+
+    constructor(data?: IMarketplacePluginVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.releaseNotes = _data["releaseNotes"];
+            this.releasedAt = _data["releasedAt"] ? new Date(_data["releasedAt"].toString()) : <any>undefined;
+            this.isLatest = _data["isLatest"];
+            this.downloadUrl = _data["downloadUrl"];
+            this.fileSize = _data["fileSize"];
+        }
+    }
+
+    static fromJS(data: any): MarketplacePluginVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarketplacePluginVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["releaseNotes"] = this.releaseNotes;
+        data["releasedAt"] = this.releasedAt ? this.releasedAt.toISOString() : <any>undefined;
+        data["isLatest"] = this.isLatest;
+        data["downloadUrl"] = this.downloadUrl;
+        data["fileSize"] = this.fileSize;
+        return data;
+    }
+}
+
+export interface IMarketplacePluginVersion {
+    version?: string;
+    releaseNotes?: string;
+    releasedAt?: Date;
+    isLatest?: boolean;
+    downloadUrl?: string;
+    fileSize?: number;
+}
+
+export class MarketplacePluginReview implements IMarketplacePluginReview {
+    id?: string;
+    userId?: string;
+    username?: string;
+    rating?: number;
+    title?: string;
+    content?: string;
+    createdAt?: Date;
+    isVerified?: boolean;
+
+    constructor(data?: IMarketplacePluginReview) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.userId = _data["userId"];
+            this.username = _data["username"];
+            this.rating = _data["rating"];
+            this.title = _data["title"];
+            this.content = _data["content"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.isVerified = _data["isVerified"];
+        }
+    }
+
+    static fromJS(data: any): MarketplacePluginReview {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarketplacePluginReview();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["userId"] = this.userId;
+        data["username"] = this.username;
+        data["rating"] = this.rating;
+        data["title"] = this.title;
+        data["content"] = this.content;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["isVerified"] = this.isVerified;
+        return data;
+    }
+}
+
+export interface IMarketplacePluginReview {
+    id?: string;
+    userId?: string;
+    username?: string;
+    rating?: number;
+    title?: string;
+    content?: string;
+    createdAt?: Date;
+    isVerified?: boolean;
+}
+
+export class MarketplacePluginStats implements IMarketplacePluginStats {
+    totalDownloads?: number;
+    downloadsThisMonth?: number;
+    downloadsThisWeek?: number;
+    averageRating?: number;
+    totalReviews?: number;
+    lastDownloaded?: Date;
+
+    constructor(data?: IMarketplacePluginStats) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.totalDownloads = _data["totalDownloads"];
+            this.downloadsThisMonth = _data["downloadsThisMonth"];
+            this.downloadsThisWeek = _data["downloadsThisWeek"];
+            this.averageRating = _data["averageRating"];
+            this.totalReviews = _data["totalReviews"];
+            this.lastDownloaded = _data["lastDownloaded"] ? new Date(_data["lastDownloaded"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): MarketplacePluginStats {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarketplacePluginStats();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["totalDownloads"] = this.totalDownloads;
+        data["downloadsThisMonth"] = this.downloadsThisMonth;
+        data["downloadsThisWeek"] = this.downloadsThisWeek;
+        data["averageRating"] = this.averageRating;
+        data["totalReviews"] = this.totalReviews;
+        data["lastDownloaded"] = this.lastDownloaded ? this.lastDownloaded.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IMarketplacePluginStats {
+    totalDownloads?: number;
+    downloadsThisMonth?: number;
+    downloadsThisWeek?: number;
+    averageRating?: number;
+    totalReviews?: number;
+    lastDownloaded?: Date;
+}
+
+export class MarketplaceCategory implements IMarketplaceCategory {
+    id?: string;
+    name?: string;
+    description?: string;
+    icon?: string;
+    pluginCount?: number;
+    sortOrder?: number;
+
+    constructor(data?: IMarketplaceCategory) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.icon = _data["icon"];
+            this.pluginCount = _data["pluginCount"];
+            this.sortOrder = _data["sortOrder"];
+        }
+    }
+
+    static fromJS(data: any): MarketplaceCategory {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarketplaceCategory();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["icon"] = this.icon;
+        data["pluginCount"] = this.pluginCount;
+        data["sortOrder"] = this.sortOrder;
+        return data;
+    }
+}
+
+export interface IMarketplaceCategory {
+    id?: string;
+    name?: string;
+    description?: string;
+    icon?: string;
+    pluginCount?: number;
+    sortOrder?: number;
+}
+
+export class PluginInstallationStatus implements IPluginInstallationStatus {
+    pluginId?: string;
+    isInstalled?: boolean;
+    installedVersion?: string | undefined;
+    installedAt?: Date | undefined;
+
+    constructor(data?: IPluginInstallationStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.pluginId = _data["pluginId"];
+            this.isInstalled = _data["isInstalled"];
+            this.installedVersion = _data["installedVersion"];
+            this.installedAt = _data["installedAt"] ? new Date(_data["installedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): PluginInstallationStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new PluginInstallationStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["pluginId"] = this.pluginId;
+        data["isInstalled"] = this.isInstalled;
+        data["installedVersion"] = this.installedVersion;
+        data["installedAt"] = this.installedAt ? this.installedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IPluginInstallationStatus {
+    pluginId?: string;
+    isInstalled?: boolean;
+    installedVersion?: string | undefined;
+    installedAt?: Date | undefined;
+}
+
+export class CreateFederatedInstanceResponse implements ICreateFederatedInstanceResponse {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    createdAt?: Date;
+
+    constructor(data?: ICreateFederatedInstanceResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.baseUrl = _data["baseUrl"];
+            this.status = _data["status"];
+            this.description = _data["description"];
+            this.isEnabled = _data["isEnabled"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CreateFederatedInstanceResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateFederatedInstanceResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["baseUrl"] = this.baseUrl;
+        data["status"] = this.status;
+        data["description"] = this.description;
+        data["isEnabled"] = this.isEnabled;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface ICreateFederatedInstanceResponse {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    createdAt?: Date;
+}
+
+export class CreateFederatedInstanceRequest implements ICreateFederatedInstanceRequest {
+    name?: string;
+    baseUrl?: string;
+    description?: string | undefined;
+    publicKey?: string | undefined;
+    sharedSecret?: string | undefined;
+    isEnabled?: boolean | undefined;
+
+    constructor(data?: ICreateFederatedInstanceRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.baseUrl = _data["baseUrl"];
+            this.description = _data["description"];
+            this.publicKey = _data["publicKey"];
+            this.sharedSecret = _data["sharedSecret"];
+            this.isEnabled = _data["isEnabled"];
+        }
+    }
+
+    static fromJS(data: any): CreateFederatedInstanceRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateFederatedInstanceRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["baseUrl"] = this.baseUrl;
+        data["description"] = this.description;
+        data["publicKey"] = this.publicKey;
+        data["sharedSecret"] = this.sharedSecret;
+        data["isEnabled"] = this.isEnabled;
+        return data;
+    }
+}
+
+export interface ICreateFederatedInstanceRequest {
+    name?: string;
+    baseUrl?: string;
+    description?: string | undefined;
+    publicKey?: string | undefined;
+    sharedSecret?: string | undefined;
+    isEnabled?: boolean | undefined;
+}
+
+export class ExchangeTokenResponse implements IExchangeTokenResponse {
+    ourToken?: string;
+    tokenExpiry?: Date;
+    status?: string;
+    instanceId?: string;
+    message?: string | undefined;
+
+    constructor(data?: IExchangeTokenResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.ourToken = _data["ourToken"];
+            this.tokenExpiry = _data["tokenExpiry"] ? new Date(_data["tokenExpiry"].toString()) : <any>undefined;
+            this.status = _data["status"];
+            this.instanceId = _data["instanceId"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): ExchangeTokenResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExchangeTokenResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["ourToken"] = this.ourToken;
+        data["tokenExpiry"] = this.tokenExpiry ? this.tokenExpiry.toISOString() : <any>undefined;
+        data["status"] = this.status;
+        data["instanceId"] = this.instanceId;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IExchangeTokenResponse {
+    ourToken?: string;
+    tokenExpiry?: Date;
+    status?: string;
+    instanceId?: string;
+    message?: string | undefined;
+}
+
+export class ExchangeTokenRequest implements IExchangeTokenRequest {
+    handshakeId?: string;
+    handshakeToken?: string;
+    instanceName?: string | undefined;
+    theirToken?: string | undefined;
+
+    constructor(data?: IExchangeTokenRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.handshakeId = _data["handshakeId"];
+            this.handshakeToken = _data["handshakeToken"];
+            this.instanceName = _data["instanceName"];
+            this.theirToken = _data["theirToken"];
+        }
+    }
+
+    static fromJS(data: any): ExchangeTokenRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExchangeTokenRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["handshakeId"] = this.handshakeId;
+        data["handshakeToken"] = this.handshakeToken;
+        data["instanceName"] = this.instanceName;
+        data["theirToken"] = this.theirToken;
+        return data;
+    }
+}
+
+export interface IExchangeTokenRequest {
+    handshakeId?: string;
+    handshakeToken?: string;
+    instanceName?: string | undefined;
+    theirToken?: string | undefined;
+}
+
+export class CatalogResponse implements ICatalogResponse {
+    instanceId?: string;
+    instanceName?: string;
+    totalModels?: number;
+    page?: number;
+    pageSize?: number;
+    models?: CatalogModelDto[];
+
+    constructor(data?: ICatalogResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.instanceId = _data["instanceId"];
+            this.instanceName = _data["instanceName"];
+            this.totalModels = _data["totalModels"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            if (Array.isArray(_data["models"])) {
+                this.models = [] as any;
+                for (let item of _data["models"])
+                    this.models!.push(CatalogModelDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): CatalogResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new CatalogResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["instanceId"] = this.instanceId;
+        data["instanceName"] = this.instanceName;
+        data["totalModels"] = this.totalModels;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        if (Array.isArray(this.models)) {
+            data["models"] = [];
+            for (let item of this.models)
+                data["models"].push(item ? item.toJSON() : <any>undefined);
+        }
+        return data;
+    }
+}
+
+export interface ICatalogResponse {
+    instanceId?: string;
+    instanceName?: string;
+    totalModels?: number;
+    page?: number;
+    pageSize?: number;
+    models?: CatalogModelDto[];
+}
+
+export class CatalogModelDto implements ICatalogModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    author?: CatalogAuthorDto;
+    license?: string;
+    categories?: string[];
+    tags?: string[];
+    filesSize?: number;
+    fileCount?: number;
+    downloads?: number;
+    likes?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+
+    constructor(data?: ICatalogModelDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
+            this.author = _data["author"] ? CatalogAuthorDto.fromJS(_data["author"]) : <any>undefined;
+            this.license = _data["license"];
+            if (Array.isArray(_data["categories"])) {
+                this.categories = [] as any;
+                for (let item of _data["categories"])
+                    this.categories!.push(item);
+            }
+            if (Array.isArray(_data["tags"])) {
+                this.tags = [] as any;
+                for (let item of _data["tags"])
+                    this.tags!.push(item);
+            }
+            this.filesSize = _data["filesSize"];
+            this.fileCount = _data["fileCount"];
+            this.downloads = _data["downloads"];
+            this.likes = _data["likes"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CatalogModelDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CatalogModelDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["thumbnailUrl"] = this.thumbnailUrl;
+        data["author"] = this.author ? this.author.toJSON() : <any>undefined;
+        data["license"] = this.license;
+        if (Array.isArray(this.categories)) {
+            data["categories"] = [];
+            for (let item of this.categories)
+                data["categories"].push(item);
+        }
+        if (Array.isArray(this.tags)) {
+            data["tags"] = [];
+            for (let item of this.tags)
+                data["tags"].push(item);
+        }
+        data["filesSize"] = this.filesSize;
+        data["fileCount"] = this.fileCount;
+        data["downloads"] = this.downloads;
+        data["likes"] = this.likes;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface ICatalogModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    author?: CatalogAuthorDto;
+    license?: string;
+    categories?: string[];
+    tags?: string[];
+    filesSize?: number;
+    fileCount?: number;
+    downloads?: number;
+    likes?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export class CatalogAuthorDto implements ICatalogAuthorDto {
+    id?: string;
+    username?: string;
+    displayName?: string;
+    avatarUrl?: string | undefined;
+
+    constructor(data?: ICatalogAuthorDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.username = _data["username"];
+            this.displayName = _data["displayName"];
+            this.avatarUrl = _data["avatarUrl"];
+        }
+    }
+
+    static fromJS(data: any): CatalogAuthorDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CatalogAuthorDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["username"] = this.username;
+        data["displayName"] = this.displayName;
+        data["avatarUrl"] = this.avatarUrl;
+        return data;
+    }
+}
+
+export interface ICatalogAuthorDto {
+    id?: string;
+    username?: string;
+    displayName?: string;
+    avatarUrl?: string | undefined;
+}
+
+export class CatalogChangesResponse implements ICatalogChangesResponse {
+    newModels?: number;
+    updatedModels?: number;
+    deletedModels?: number;
+    models?: CatalogChangeDto[];
+
+    constructor(data?: ICatalogChangesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.newModels = _data["newModels"];
+            this.updatedModels = _data["updatedModels"];
+            this.deletedModels = _data["deletedModels"];
+            if (Array.isArray(_data["models"])) {
+                this.models = [] as any;
+                for (let item of _data["models"])
+                    this.models!.push(CatalogChangeDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): CatalogChangesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new CatalogChangesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["newModels"] = this.newModels;
+        data["updatedModels"] = this.updatedModels;
+        data["deletedModels"] = this.deletedModels;
+        if (Array.isArray(this.models)) {
+            data["models"] = [];
+            for (let item of this.models)
+                data["models"].push(item ? item.toJSON() : <any>undefined);
+        }
+        return data;
+    }
+}
+
+export interface ICatalogChangesResponse {
+    newModels?: number;
+    updatedModels?: number;
+    deletedModels?: number;
+    models?: CatalogChangeDto[];
+}
+
+export class CatalogChangeDto implements ICatalogChangeDto {
+    id?: string;
+    action?: string;
+    updatedAt?: Date;
+    version?: number | undefined;
+
+    constructor(data?: ICatalogChangeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.action = _data["action"];
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+            this.version = _data["version"];
+        }
+    }
+
+    static fromJS(data: any): CatalogChangeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CatalogChangeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["action"] = this.action;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        data["version"] = this.version;
+        return data;
+    }
+}
+
+export interface ICatalogChangeDto {
+    id?: string;
+    action?: string;
+    updatedAt?: Date;
+    version?: number | undefined;
+}
+
+export class FederatedInstanceDetailDto implements IFederatedInstanceDetailDto {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    lastSyncAt?: Date | undefined;
+    createdAt?: Date;
+    updatedAt?: Date | undefined;
+
+    constructor(data?: IFederatedInstanceDetailDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.baseUrl = _data["baseUrl"];
+            this.status = _data["status"];
+            this.description = _data["description"];
+            this.isEnabled = _data["isEnabled"];
+            this.lastSyncAt = _data["lastSyncAt"] ? new Date(_data["lastSyncAt"].toString()) : <any>undefined;
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FederatedInstanceDetailDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new FederatedInstanceDetailDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["baseUrl"] = this.baseUrl;
+        data["status"] = this.status;
+        data["description"] = this.description;
+        data["isEnabled"] = this.isEnabled;
+        data["lastSyncAt"] = this.lastSyncAt ? this.lastSyncAt.toISOString() : <any>undefined;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFederatedInstanceDetailDto {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    lastSyncAt?: Date | undefined;
+    createdAt?: Date;
+    updatedAt?: Date | undefined;
+}
+
+export class FederatedInstanceDto implements IFederatedInstanceDto {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    lastSyncAt?: Date | undefined;
+    createdAt?: Date;
+    updatedAt?: Date | undefined;
+
+    constructor(data?: IFederatedInstanceDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.baseUrl = _data["baseUrl"];
+            this.status = _data["status"];
+            this.description = _data["description"];
+            this.isEnabled = _data["isEnabled"];
+            this.lastSyncAt = _data["lastSyncAt"] ? new Date(_data["lastSyncAt"].toString()) : <any>undefined;
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FederatedInstanceDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new FederatedInstanceDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["baseUrl"] = this.baseUrl;
+        data["status"] = this.status;
+        data["description"] = this.description;
+        data["isEnabled"] = this.isEnabled;
+        data["lastSyncAt"] = this.lastSyncAt ? this.lastSyncAt.toISOString() : <any>undefined;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFederatedInstanceDto {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    lastSyncAt?: Date | undefined;
+    createdAt?: Date;
+    updatedAt?: Date | undefined;
+}
+
+export class FederatedModelDto implements IFederatedModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    remoteInstanceId?: string | undefined;
+    remoteModelId?: string | undefined;
+    remoteAuthorId?: string | undefined;
+    authorUsername?: string;
+    downloads?: number;
+    likes?: number;
+    lastFederationSync?: Date | undefined;
+    createdAt?: Date;
+
+    constructor(data?: IFederatedModelDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
+            this.remoteInstanceId = _data["remoteInstanceId"];
+            this.remoteModelId = _data["remoteModelId"];
+            this.remoteAuthorId = _data["remoteAuthorId"];
+            this.authorUsername = _data["authorUsername"];
+            this.downloads = _data["downloads"];
+            this.likes = _data["likes"];
+            this.lastFederationSync = _data["lastFederationSync"] ? new Date(_data["lastFederationSync"].toString()) : <any>undefined;
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FederatedModelDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new FederatedModelDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["thumbnailUrl"] = this.thumbnailUrl;
+        data["remoteInstanceId"] = this.remoteInstanceId;
+        data["remoteModelId"] = this.remoteModelId;
+        data["remoteAuthorId"] = this.remoteAuthorId;
+        data["authorUsername"] = this.authorUsername;
+        data["downloads"] = this.downloads;
+        data["likes"] = this.likes;
+        data["lastFederationSync"] = this.lastFederationSync ? this.lastFederationSync.toISOString() : <any>undefined;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFederatedModelDto {
+    id?: string;
+    name?: string;
+    description?: string;
+    thumbnailUrl?: string | undefined;
+    remoteInstanceId?: string | undefined;
+    remoteModelId?: string | undefined;
+    remoteAuthorId?: string | undefined;
+    authorUsername?: string;
+    downloads?: number;
+    likes?: number;
+    lastFederationSync?: Date | undefined;
+    createdAt?: Date;
+}
+
+export class FederationHealthResponse implements IFederationHealthResponse {
+    instanceId?: string;
+    instanceName?: string;
+    baseUrl?: string;
+    status?: string;
+    isEnabled?: boolean;
+    isReachable?: boolean;
+    responseTimeMs?: number;
+    lastSyncAt?: Date | undefined;
+    errorMessage?: string | undefined;
+    checkedAt?: Date;
+
+    constructor(data?: IFederationHealthResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.instanceId = _data["instanceId"];
+            this.instanceName = _data["instanceName"];
+            this.baseUrl = _data["baseUrl"];
+            this.status = _data["status"];
+            this.isEnabled = _data["isEnabled"];
+            this.isReachable = _data["isReachable"];
+            this.responseTimeMs = _data["responseTimeMs"];
+            this.lastSyncAt = _data["lastSyncAt"] ? new Date(_data["lastSyncAt"].toString()) : <any>undefined;
+            this.errorMessage = _data["errorMessage"];
+            this.checkedAt = _data["checkedAt"] ? new Date(_data["checkedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FederationHealthResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new FederationHealthResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["instanceId"] = this.instanceId;
+        data["instanceName"] = this.instanceName;
+        data["baseUrl"] = this.baseUrl;
+        data["status"] = this.status;
+        data["isEnabled"] = this.isEnabled;
+        data["isReachable"] = this.isReachable;
+        data["responseTimeMs"] = this.responseTimeMs;
+        data["lastSyncAt"] = this.lastSyncAt ? this.lastSyncAt.toISOString() : <any>undefined;
+        data["errorMessage"] = this.errorMessage;
+        data["checkedAt"] = this.checkedAt ? this.checkedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFederationHealthResponse {
+    instanceId?: string;
+    instanceName?: string;
+    baseUrl?: string;
+    status?: string;
+    isEnabled?: boolean;
+    isReachable?: boolean;
+    responseTimeMs?: number;
+    lastSyncAt?: Date | undefined;
+    errorMessage?: string | undefined;
+    checkedAt?: Date;
+}
+
+export class ImportFederatedModelResponse implements IImportFederatedModelResponse {
+    id?: string;
+    name?: string;
+    description?: string;
+    remoteInstanceId?: string | undefined;
+    remoteModelId?: string | undefined;
+    isFederated?: boolean;
+    lastFederationSync?: Date | undefined;
+    createdAt?: Date;
+
+    constructor(data?: IImportFederatedModelResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.description = _data["description"];
+            this.remoteInstanceId = _data["remoteInstanceId"];
+            this.remoteModelId = _data["remoteModelId"];
+            this.isFederated = _data["isFederated"];
+            this.lastFederationSync = _data["lastFederationSync"] ? new Date(_data["lastFederationSync"].toString()) : <any>undefined;
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ImportFederatedModelResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ImportFederatedModelResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["description"] = this.description;
+        data["remoteInstanceId"] = this.remoteInstanceId;
+        data["remoteModelId"] = this.remoteModelId;
+        data["isFederated"] = this.isFederated;
+        data["lastFederationSync"] = this.lastFederationSync ? this.lastFederationSync.toISOString() : <any>undefined;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IImportFederatedModelResponse {
+    id?: string;
+    name?: string;
+    description?: string;
+    remoteInstanceId?: string | undefined;
+    remoteModelId?: string | undefined;
+    isFederated?: boolean;
+    lastFederationSync?: Date | undefined;
+    createdAt?: Date;
+}
+
+export class ImportFederatedModelRequest implements IImportFederatedModelRequest {
+    instanceId?: string;
+    remoteModelId?: string;
+
+    constructor(data?: IImportFederatedModelRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.instanceId = _data["instanceId"];
+            this.remoteModelId = _data["remoteModelId"];
+        }
+    }
+
+    static fromJS(data: any): ImportFederatedModelRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ImportFederatedModelRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["instanceId"] = this.instanceId;
+        data["remoteModelId"] = this.remoteModelId;
+        return data;
+    }
+}
+
+export interface IImportFederatedModelRequest {
+    instanceId?: string;
+    remoteModelId?: string;
+}
+
+export class InitiateHandshakeResponse implements IInitiateHandshakeResponse {
+    handshakeId?: string;
+    status?: string;
+    responderUrl?: string;
+    responderName?: string;
+    handshakeToken?: string | undefined;
+    expiresAt?: Date;
+    message?: string | undefined;
+
+    constructor(data?: IInitiateHandshakeResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.handshakeId = _data["handshakeId"];
+            this.status = _data["status"];
+            this.responderUrl = _data["responderUrl"];
+            this.responderName = _data["responderName"];
+            this.handshakeToken = _data["handshakeToken"];
+            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : <any>undefined;
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): InitiateHandshakeResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new InitiateHandshakeResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["handshakeId"] = this.handshakeId;
+        data["status"] = this.status;
+        data["responderUrl"] = this.responderUrl;
+        data["responderName"] = this.responderName;
+        data["handshakeToken"] = this.handshakeToken;
+        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : <any>undefined;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IInitiateHandshakeResponse {
+    handshakeId?: string;
+    status?: string;
+    responderUrl?: string;
+    responderName?: string;
+    handshakeToken?: string | undefined;
+    expiresAt?: Date;
+    message?: string | undefined;
+}
+
+export class InitiateHandshakeRequest implements IInitiateHandshakeRequest {
+    initiatorUrl?: string;
+    initiatorName?: string;
+    version?: string | undefined;
+
+    constructor(data?: IInitiateHandshakeRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.initiatorUrl = _data["initiatorUrl"];
+            this.initiatorName = _data["initiatorName"];
+            this.version = _data["version"];
+        }
+    }
+
+    static fromJS(data: any): InitiateHandshakeRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new InitiateHandshakeRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["initiatorUrl"] = this.initiatorUrl;
+        data["initiatorName"] = this.initiatorName;
+        data["version"] = this.version;
+        return data;
+    }
+}
+
+export interface IInitiateHandshakeRequest {
+    initiatorUrl?: string;
+    initiatorName?: string;
+    version?: string | undefined;
+}
+
+export class UpdateFederatedInstanceResponse implements IUpdateFederatedInstanceResponse {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    lastSyncAt?: Date | undefined;
+    updatedAt?: Date | undefined;
+
+    constructor(data?: IUpdateFederatedInstanceResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.baseUrl = _data["baseUrl"];
+            this.status = _data["status"];
+            this.description = _data["description"];
+            this.isEnabled = _data["isEnabled"];
+            this.lastSyncAt = _data["lastSyncAt"] ? new Date(_data["lastSyncAt"].toString()) : <any>undefined;
+            this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UpdateFederatedInstanceResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateFederatedInstanceResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["baseUrl"] = this.baseUrl;
+        data["status"] = this.status;
+        data["description"] = this.description;
+        data["isEnabled"] = this.isEnabled;
+        data["lastSyncAt"] = this.lastSyncAt ? this.lastSyncAt.toISOString() : <any>undefined;
+        data["updatedAt"] = this.updatedAt ? this.updatedAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IUpdateFederatedInstanceResponse {
+    id?: string;
+    name?: string;
+    baseUrl?: string;
+    status?: string;
+    description?: string | undefined;
+    isEnabled?: boolean;
+    lastSyncAt?: Date | undefined;
+    updatedAt?: Date | undefined;
+}
+
+export class UpdateFederatedInstanceRequest implements IUpdateFederatedInstanceRequest {
+    name?: string | undefined;
+    baseUrl?: string | undefined;
+    description?: string | undefined;
+    publicKey?: string | undefined;
+    sharedSecret?: string | undefined;
+    isEnabled?: boolean | undefined;
+    status?: string | undefined;
+
+    constructor(data?: IUpdateFederatedInstanceRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.baseUrl = _data["baseUrl"];
+            this.description = _data["description"];
+            this.publicKey = _data["publicKey"];
+            this.sharedSecret = _data["sharedSecret"];
+            this.isEnabled = _data["isEnabled"];
+            this.status = _data["status"];
+        }
+    }
+
+    static fromJS(data: any): UpdateFederatedInstanceRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateFederatedInstanceRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["baseUrl"] = this.baseUrl;
+        data["description"] = this.description;
+        data["publicKey"] = this.publicKey;
+        data["sharedSecret"] = this.sharedSecret;
+        data["isEnabled"] = this.isEnabled;
+        data["status"] = this.status;
+        return data;
+    }
+}
+
+export interface IUpdateFederatedInstanceRequest {
+    name?: string | undefined;
+    baseUrl?: string | undefined;
+    description?: string | undefined;
+    publicKey?: string | undefined;
+    sharedSecret?: string | undefined;
+    isEnabled?: boolean | undefined;
+    status?: string | undefined;
 }
 
 export interface FileResponse {

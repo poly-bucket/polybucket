@@ -74,15 +74,17 @@ const EditCollection: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <NavigationBar
           title="Edit Collection"
           showSearch={false}
           showUploadButton={false}
           showHomeLink={true}
         />
+        <div className="flex-1 pt-20">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
         </div>
       </div>
     );
@@ -90,13 +92,14 @@ const EditCollection: React.FC = () => {
 
   if (error || !collection) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <NavigationBar
           title="Edit Collection"
           showSearch={false}
           showUploadButton={false}
           showHomeLink={true}
         />
+        <div className="flex-1 pt-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md mx-auto">
@@ -110,6 +113,7 @@ const EditCollection: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
     );
   }
@@ -117,13 +121,14 @@ const EditCollection: React.FC = () => {
   // Check if user is the owner
   if (collection.ownerId !== user?.id) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <NavigationBar
           title="Edit Collection"
           showSearch={false}
           showUploadButton={false}
           showHomeLink={true}
         />
+        <div className="flex-1 pt-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md mx-auto">
@@ -137,12 +142,13 @@ const EditCollection: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <NavigationBar
         title="Edit Collection"
         showSearch={false}
@@ -150,6 +156,8 @@ const EditCollection: React.FC = () => {
         showHomeLink={true}
       />
 
+      {/* Main Content - Padding for fixed navbar */}
+      <div className="flex-1 pt-20">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {/* Header */}
@@ -303,6 +311,7 @@ const EditCollection: React.FC = () => {
             </div>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

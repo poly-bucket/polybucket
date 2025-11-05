@@ -1,4 +1,8 @@
-import api from '../utils/axiosConfig';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import { GetFileSettingsClient, UpdateFileSettingsClient, UpdateFileSettingsCommand } from './api.client';
+
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface FileTypeSettingsData {
   id: string;
@@ -46,8 +50,9 @@ export interface UpdateFileSettingsResponse {
 class FileTypeSettingsService {
   async getFileSettings(): Promise<GetFileSettingsResponse> {
     try {
-      const response = await api.get('/api/system-settings/file-settings');
-      return response.data;
+      const client = new GetFileSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const response = await client.getFileSettings();
+      return response as any as GetFileSettingsResponse;
     } catch (error) {
       console.error('Error fetching file type settings:', error);
       throw error;
@@ -56,15 +61,30 @@ class FileTypeSettingsService {
 
   async updateFileSettings(request: UpdateFileSettingsRequest): Promise<UpdateFileSettingsResponse> {
     try {
-      const response = await api.put('/api/system-settings/file-settings', request);
-      return response.data;
+      const client = new UpdateFileSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const updateCommand = new UpdateFileSettingsCommand({
+        id: request.id,
+        fileExtension: request.fileExtension,
+        enabled: request.enabled,
+        maxFileSizeBytes: request.maxFileSizeBytes,
+        maxPerUpload: request.maxPerUpload,
+        displayName: request.displayName,
+        description: request.description,
+        mimeType: request.mimeType,
+        requiresPreview: request.requiresPreview,
+        isCompressible: request.isCompressible,
+        category: request.category,
+        priority: request.priority,
+        isDefault: request.isDefault
+      });
+      const response = await client.updateFileSettings(updateCommand);
+      return response as any as UpdateFileSettingsResponse;
     } catch (error) {
       console.error('Error updating file type settings:', error);
       throw error;
     }
   }
 
-  // Helper method to get enabled file types by category
   getEnabledFileTypesByCategory(fileTypes: FileTypeSettingsData[]): Record<string, FileTypeSettingsData[]> {
     const enabledTypes = fileTypes.filter(ft => ft.enabled);
     const grouped = enabledTypes.reduce((acc, fileType) => {
@@ -75,7 +95,6 @@ class FileTypeSettingsService {
       return acc;
     }, {} as Record<string, FileTypeSettingsData[]>);
 
-    // Sort each category by priority
     Object.keys(grouped).forEach(category => {
       grouped[category].sort((a, b) => a.priority - b.priority);
     });
@@ -83,7 +102,6 @@ class FileTypeSettingsService {
     return grouped;
   }
 
-  // Helper method to get all enabled file extensions
   getEnabledFileExtensions(fileTypes: FileTypeSettingsData[]): string[] {
     return fileTypes
       .filter(ft => ft.enabled)
@@ -91,15 +109,13 @@ class FileTypeSettingsService {
       .sort();
   }
 
-  // Helper method to get max file size for a specific file type
   getMaxFileSizeForExtension(fileTypes: FileTypeSettingsData[], extension: string): number {
     const fileType = fileTypes.find(ft => 
       ft.enabled && ft.fileExtension.toLowerCase() === extension.toLowerCase()
     );
-    return fileType?.maxFileSizeBytes || 100 * 1024 * 1024; // Default to 100MB
+    return fileType?.maxFileSizeBytes || 100 * 1024 * 1024;
   }
 
-  // Helper method to check if a file type is allowed
   isFileTypeAllowed(fileTypes: FileTypeSettingsData[], extension: string): boolean {
     return fileTypes.some(ft => 
       ft.enabled && ft.fileExtension.toLowerCase() === extension.toLowerCase()

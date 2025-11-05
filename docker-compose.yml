@@ -3,17 +3,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      target: development
     ports:
       - "11666:11666"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://*:11666
       - ConnectionStrings__DefaultConnection=Host=db;Database=polybucket;Username=postgres;Password=postgres
+      - Admin__Username=${Admin__Username:-admin}
+      - Admin__Email=${Admin__Email:-admin@polybucket.com}
+      - Admin__Password=${Admin__Password:-}
     depends_on:
       db:
         condition: service_healthy
       minio:
         condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/bin
+      - /app/backend/obj
+    networks:
+      - polybucket-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11666/health"]
       interval: 30s
@@ -24,8 +34,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      target: development
+    ports:
+      - "3000:3000"
     depends_on:
       - api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - polybucket-network
 
   db:
     image: postgres:latest
@@ -39,6 +57,8 @@ services:
       - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - polybucket-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d polybucket"]
       interval: 10s
@@ -58,11 +78,18 @@ services:
       - minio-data:/data
     command: server /data --console-address ":9001"
     restart: unless-stopped
+    networks:
+      - polybucket-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
+
+networks:
+  polybucket-network:
+    name: polybucket-network
+    driver: bridge
 
 volumes:
   postgres-data:

@@ -122,7 +122,7 @@ const MyModels: React.FC = () => {
   }
 
   return (
-    <div className="lg-container min-h-screen">
+    <div className="lg-container min-h-screen flex flex-col">
       <NavigationBar
         title="My Models"
         showSearch={false}
@@ -130,6 +130,8 @@ const MyModels: React.FC = () => {
         showHomeLink={true}
       />
 
+      {/* Main Content - Padding for fixed navbar */}
+      <div className="flex-1 pt-20">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header with bulk actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -256,6 +258,7 @@ const MyModels: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

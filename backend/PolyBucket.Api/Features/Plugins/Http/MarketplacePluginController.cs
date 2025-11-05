@@ -201,44 +201,6 @@ namespace PolyBucket.Api.Features.Plugins.Http
             }
         }
 
-        /// <summary>
-        /// Search plugins in the marketplace
-        /// </summary>
-        /// <param name="query">Search query</param>
-        /// <param name="category">Filter by category</param>
-        /// <param name="page">Page number</param>
-        /// <param name="pageSize">Page size</param>
-        /// <returns>Search results</returns>
-        [HttpGet("search")]
-        [ProducesResponseType(typeof(MarketplacePluginsResponse), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(500)]
-        public async Task<ActionResult<MarketplacePluginsResponse>> SearchPlugins(
-            [FromQuery] string query,
-            [FromQuery] string? category = null,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(query))
-                {
-                    return BadRequest(new { message = "Search query is required" });
-                }
-
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 20;
-
-                var response = await _marketplaceClient.GetPluginsAsync(page, pageSize, category, query);
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error searching marketplace plugins with query: {Query}", query);
-                return StatusCode(500, new { message = "Error searching plugins" });
-            }
-        }
     }
 
     public class PluginInstallationStatus

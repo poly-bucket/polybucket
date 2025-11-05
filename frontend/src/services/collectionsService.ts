@@ -1,6 +1,32 @@
-import api from '../utils/axiosConfig';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import {
+  GetUserCollectionsClient,
+  GetCollectionByIdClient,
+  CreateCollectionClient,
+  UpdateCollectionClient,
+  DeleteCollectionClient,
+  AccessCollectionClient,
+  GetFavoriteCollectionsClient,
+  FavoriteCollectionClient,
+  AddModelToCollectionClient,
+  RemoveModelFromCollectionClient,
+  CreateCollectionCommand,
+  UpdateCollectionCommand,
+  AccessCollectionCommand,
+  FavoriteCollectionCommand,
+  FileResponse
+} from './api.client';
 
-const API_URL = '/collections';
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+
+async function parseFileResponseAsJson<T>(fileResponse: FileResponse): Promise<T> {
+  if (fileResponse.data instanceof Blob) {
+    const text = await fileResponse.data.text();
+    return JSON.parse(text);
+  }
+  throw new Error('Invalid response format');
+}
 
 export interface Collection {
   id: string;
@@ -56,65 +82,86 @@ export interface AccessCollectionRequest {
 }
 
 const collectionsService = {
-  // Get all collections for the current user
   async getUserCollections(): Promise<Collection[]> {
-    const response = await api.get(`${API_URL}/mine`);
-    return response.data.collections || response.data;
+    const client = new GetUserCollectionsClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getCurrentUserCollections(1, 100, null);
+    const data = await parseFileResponseAsJson<{ collections?: Collection[]; items?: Collection[] }>(response);
+    return data.collections || data.items || [];
   },
 
-  // Get a specific collection by ID
   async getCollectionById(id: string): Promise<Collection> {
-    const response = await api.get(`${API_URL}/${id}`);
-    return response.data;
+    const client = new GetCollectionByIdClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getCollectionById(id);
+    return await parseFileResponseAsJson<Collection>(response);
   },
 
-  // Access a collection (with password if required)
   async accessCollection(id: string, password?: string): Promise<Collection> {
-    const response = await api.post(`${API_URL}/${id}/access`, { collectionId: id, password });
-    return response.data;
-  },
-
-  // Create a new collection
-  async createCollection(collection: CreateCollectionRequest): Promise<Collection> {
-    const response = await api.post(API_URL, collection);
-    return response.data;
-  },
-
-  // Update an existing collection
-  async updateCollection(collection: UpdateCollectionRequest): Promise<Collection> {
-    const response = await api.put(`${API_URL}/${collection.id}`, collection);
-    return response.data;
-  },
-
-  // Delete a collection
-  async deleteCollection(id: string): Promise<void> {
-    await api.delete(`${API_URL}/${id}`);
-  },
-
-  // Add a model to a collection
-  async addModelToCollection(collectionId: string, modelId: string): Promise<void> {
-    await api.post(`${API_URL}/${collectionId}/models/${modelId}`);
-  },
-
-  // Remove a model from a collection
-  async removeModelFromCollection(collectionId: string, modelId: string): Promise<void> {
-    await api.delete(`${API_URL}/${collectionId}/models/${modelId}`);
-  },
-
-  // Get favorite collections for the current user
-  async getFavoriteCollections(): Promise<Collection[]> {
-    const response = await api.get(`${API_URL}/favorites`);
-    return response.data.collections || response.data;
-  },
-
-  // Toggle favorite status of a collection
-  async toggleFavorite(collectionId: string, isFavorite: boolean): Promise<{ success: boolean; message: string; isFavorite: boolean }> {
-    const response = await api.post(`${API_URL}/${collectionId}/favorite`, {
-      collectionId,
-      isFavorite
+    const client = new AccessCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const command = new AccessCollectionCommand({
+      collectionId: id,
+      password: password
     });
-    return response.data;
+    const response = await client.accessCollection(id, command);
+    return await parseFileResponseAsJson<Collection>(response);
+  },
+
+  async createCollection(collection: CreateCollectionRequest): Promise<Collection> {
+    const client = new CreateCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const command = new CreateCollectionCommand({
+      name: collection.name,
+      description: collection.description,
+      visibility: collection.visibility as any,
+      password: collection.password,
+      avatar: collection.avatar
+    });
+    const response = await client.createCollection(command);
+    return await parseFileResponseAsJson<Collection>(response);
+  },
+
+  async updateCollection(collection: UpdateCollectionRequest): Promise<Collection> {
+    const client = new UpdateCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const command = new UpdateCollectionCommand({
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      visibility: collection.visibility as any,
+      password: collection.password
+    });
+    const response = await client.updateCollection(collection.id, command);
+    return await parseFileResponseAsJson<Collection>(response);
+  },
+
+  async deleteCollection(id: string): Promise<void> {
+    const client = new DeleteCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+    await client.deleteCollection(id);
+  },
+
+  async addModelToCollection(collectionId: string, modelId: string): Promise<void> {
+    const client = new AddModelToCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+    await client.addModelToCollection2(collectionId, modelId);
+  },
+
+  async removeModelFromCollection(collectionId: string, modelId: string): Promise<void> {
+    const client = new RemoveModelFromCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+    await client.removeModelFromCollection2(collectionId, modelId);
+  },
+
+  async getFavoriteCollections(): Promise<Collection[]> {
+    const client = new GetFavoriteCollectionsClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getFavoriteCollections();
+    const data = await parseFileResponseAsJson<{ collections?: Collection[]; items?: Collection[] }>(response);
+    return data.collections || data.items || [];
+  },
+
+  async toggleFavorite(collectionId: string, isFavorite: boolean): Promise<{ success: boolean; message: string; isFavorite: boolean }> {
+    const client = new FavoriteCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const command = new FavoriteCollectionCommand({
+      collectionId: collectionId,
+      isFavorite: isFavorite
+    });
+    const response = await client.toggleFavorite(collectionId, command);
+    return await parseFileResponseAsJson<{ success: boolean; message: string; isFavorite: boolean }>(response);
   }
 };
 
-export default collectionsService; 
+export default collectionsService;

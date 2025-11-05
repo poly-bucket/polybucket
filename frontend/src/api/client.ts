@@ -246,7 +246,7 @@ export class ApiClient implements IApiClient {
 
         this.instance = instance || axios.create();
 
-        this.baseUrl = baseUrl ?? "http://localhost:11666";
+        this.baseUrl = baseUrl ?? (import.meta.env.VITE_API_URL || "http://localhost:11666");
 
     }
 

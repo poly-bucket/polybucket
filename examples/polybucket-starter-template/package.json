@@ -1,0 +1,84 @@
+{
+  "name": "polybucket-starter-template",
+  "version": "1.0.0",
+  "description": "A comprehensive starter template and development toolkit for creating PolyBucket plugins",
+  "main": "src/index.js",
+  "type": "module",
+  "keywords": [
+    "polybucket",
+    "plugin",
+    "template",
+    "starter",
+    "development",
+    "tools"
+  ],
+  "author": {
+    "name": "PolyBucket Team",
+    "email": "team@polybucket.com",
+    "url": "https://polybucket.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polybucket/polybucket-starter-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/polybucket/polybucket-starter-template/issues"
+  },
+  "homepage": "https://github.com/polybucket/polybucket-starter-template#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "polybucket": {
+    "pluginType": "development-tools",
+    "version": "1.0.0",
+    "compatibility": {
+      "polybucket": ">=1.0.0"
+    },
+    "tools": [
+      "create-plugin",
+      "validate-plugin", 
+      "test-plugin",
+      "package-plugin"
+    ],
+    "categories": [
+      "development",
+      "templates",
+      "tools"
+    ],
+    "tags": [
+      "starter",
+      "template",
+      "development",
+      "scaffolding",
+      "tools"
+    ]
+  },
+  "scripts": {
+    "test": "node src/tools/test-plugin.js",
+    "validate": "node src/tools/validate-plugin.js",
+    "package": "node src/tools/package-plugin.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.12",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.10",
+    "handlebars": "^4.7.8",
+    "ora": "^7.0.1",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.55.0"
+  },
+  "files": [
+    "src/",
+    "templates/",
+    "examples/",
+    "docs/",
+    "README.md",
+    "LICENSE"
+  ]
+}

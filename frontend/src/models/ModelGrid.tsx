@@ -227,16 +227,16 @@ const ModelGrid: React.FC<ModelGridProps> = ({
   }
 
   // Loading state
-  if (loading) {
-    const gridProps = getGridClasses();
-    return (
-      <div className={`${gridProps.className} ${className}`} style={gridProps.style}>
-        {Array.from({ length: viewType === 'list' ? 10 : 10 }).map((_, index) => (
-          viewType === 'list' ? <ListLoadingSkeleton key={index} /> : <LoadingSkeleton key={index} />
-        ))}
-      </div>
-    );
-  }
+  // if (loading) {
+  //   const gridProps = getGridClasses();
+  //   return (
+  //     <div className={`${gridProps.className} ${className}`} style={gridProps.style}>
+  //       {Array.from({ length: viewType === 'list' ? 10 : 10 }).map((_, index) => (
+  //         viewType === 'list' ? <ListLoadingSkeleton key={index} /> : <LoadingSkeleton key={index} />
+  //       ))}
+  //     </div>
+  //   );
+  // }
 
   // Empty state
   if (!loading && models.length === 0) {
@@ -282,9 +282,9 @@ const ModelGrid: React.FC<ModelGridProps> = ({
             ))}
             
             {/* Loading more skeletons */}
-            {loadingMore && Array.from({ length: viewType === 'list' ? 5 : 5 }).map((_, index) => (
+            {/* {loadingMore && Array.from({ length: viewType === 'list' ? 5 : 5 }).map((_, index) => (
               viewType === 'list' ? <ListLoadingSkeleton key={`loading-${index}`} /> : <LoadingSkeleton key={`loading-${index}`} />
-            ))}
+            ))} */}
           </div>
         );
       })()}
@@ -302,14 +302,14 @@ const ModelGrid: React.FC<ModelGridProps> = ({
       )}
 
       {/* Loading more indicator */}
-      {loadingMore && (
+      {/* {loadingMore && (
         <div className="text-center mt-8">
           <div className="inline-flex items-center">
             <div className="lg-spinner h-5 w-5 mr-3"></div>
             <span className="text-white/80">Loading more models...</span>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { PlusIcon, FolderIcon } from '@heroicons/react/24/outline';
 import CollectionCard from './CollectionCard';
 import NavigationBar from '../components/common/NavigationBar';
+import CollectionsBar from './CollectionsBar';
 import collectionsService, { Collection } from '../services/collectionsService';
 import { useAppSelector } from '../utils/hooks';
 
@@ -12,6 +13,10 @@ const Collections: React.FC = () => {
   const [error, setError] = useState('');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
+  const [isCollectionsSidebarCollapsed, setIsCollectionsSidebarCollapsed] = useState(
+    localStorage.getItem('collectionsSidebarCollapsed') === 'true'
+  );
   
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
@@ -76,37 +81,63 @@ const Collections: React.FC = () => {
     setSelectedCollection(null);
   };
 
+  const toggleCollectionsSidebar = () => {
+    const newCollapsedState = !isCollectionsSidebarCollapsed;
+    setIsCollectionsSidebarCollapsed(newCollapsedState);
+    localStorage.setItem('collectionsSidebarCollapsed', newCollapsedState.toString());
+  };
+
   if (loading) {
     return (
-      <div className="lg-container min-h-screen">
-        {/* Navigation Bar */}
-        <NavigationBar
-          title="My Collections"
-          showSearch={true}
-          showUploadButton={true}
-          showHomeLink={true}
+      <div className="min-h-screen flex relative">
+        {/* Collections Sidebar */}
+        <CollectionsBar 
+          isCollapsed={isCollectionsSidebarCollapsed}
+          onToggle={toggleCollectionsSidebar}
         />
+        
+        {/* Main Content */}
+        <div className="flex-1 transition-all duration-300">
+          {/* Navigation Bar */}
+          <NavigationBar
+            title="My Collections"
+            showSearch={true}
+            showUploadButton={true}
+            showHomeLink={true}
+          />
 
-        {/* Loading State */}
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          {/* Loading State - Padding for fixed navbar */}
+          <div className="flex-1 pt-20">
+            <div className="flex items-center justify-center py-12">
+              <div className="lg-spinner h-12 w-12"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="lg-container min-h-screen">
-    {/* Navigation Bar */}
-    <NavigationBar
-      title="My Collections"
-      showSearch={true}
-      showUploadButton={true}
-      showHomeLink={true}
-    />
+    <div className="min-h-screen flex flex-col">
+      {/* Navigation Bar - Fixed at top */}
+      <NavigationBar
+        title="My Collections"
+        showSearch={true}
+        showUploadButton={true}
+        showHomeLink={true}
+      />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content Container */}
+      <div className="flex flex-1 pt-20">
+        {/* Collections Sidebar */}
+        <CollectionsBar 
+          isCollapsed={isCollectionsSidebarCollapsed}
+          onToggle={toggleCollectionsSidebar}
+        />
+        
+        {/* Main Content Area */}
+        <div className="flex-1 transition-all duration-300 min-w-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error ? (
           <div className="text-center py-12">
             <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md mx-auto">
@@ -150,6 +181,8 @@ const Collections: React.FC = () => {
             </div>
           </>
         )}
+          </div>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -182,9 +215,9 @@ const Collections: React.FC = () => {
                   Delete
                 </button>
               </div>
-            </div>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

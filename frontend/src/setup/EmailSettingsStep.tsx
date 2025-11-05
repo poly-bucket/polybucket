@@ -26,7 +26,8 @@ const EmailSettingsStep: React.FC<EmailSettingsStepProps> = ({ onComplete, onBac
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:11666/api/SystemSetup/email-settings', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      const response = await fetch(`${apiUrl}/api/SystemSetup/email-settings`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user?.accessToken}`,

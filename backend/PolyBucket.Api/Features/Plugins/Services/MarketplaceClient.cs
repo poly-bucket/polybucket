@@ -22,7 +22,7 @@ namespace PolyBucket.Api.Features.Plugins.Services
             _httpClient = httpClient;
             _configuration = configuration;
             _logger = logger;
-            _marketplaceBaseUrl = _configuration["Marketplace:BaseUrl"] ?? "http://marketplace-api:5001";
+            _marketplaceBaseUrl = _configuration["Marketplace:BaseUrl"] ?? "http://localhost:5001";
         }
 
         /// <summary>

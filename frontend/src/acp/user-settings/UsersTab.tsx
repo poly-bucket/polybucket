@@ -80,7 +80,8 @@ const UsersTab: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const client = new GetUsersClient(undefined, defaultAxiosClient);
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+      const client = new GetUsersClient(baseUrl, defaultAxiosClient);
       const response = await client.getUsers(
         pagination.page,
         pagination.pageSize,

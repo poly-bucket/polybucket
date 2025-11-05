@@ -1,0 +1,87 @@
+/**
+ * {{titleCase name}} Plugin
+ * 
+ * {{description}}
+ */
+
+import { {{camelCase name}}Tool } from './tools/{{kebabCase name}}.js';
+import { logger } from './utils/logger.js';
+
+/**
+ * Plugin initialization function
+ * Called when the plugin is loaded by PolyBucket
+ */
+export async function initialize(context) {
+  logger.info('🚀 Initializing {{titleCase name}} plugin');
+  
+  try {
+    // Register tools with PolyBucket
+    await context.registerTool('{{camelCase name}}', {{camelCase name}}Tool);
+    
+    logger.info('✅ Plugin initialized successfully');
+    
+    return {
+      success: true,
+      message: '{{titleCase name}} plugin initialized successfully'
+    };
+    
+  } catch (error) {
+    logger.error('❌ Failed to initialize plugin:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Plugin cleanup function
+ * Called when the plugin is unloaded
+ */
+export async function cleanup(context) {
+  logger.info('🧹 Cleaning up {{titleCase name}} plugin');
+  
+  try {
+    // Unregister tools
+    await context.unregisterTool('{{camelCase name}}');
+    
+    logger.info('✅ Plugin cleanup completed');
+    
+    return {
+      success: true,
+      message: 'Plugin cleanup completed successfully'
+    };
+    
+  } catch (error) {
+    logger.error('❌ Failed to cleanup plugin:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Plugin information
+ */
+export const pluginInfo = {
+  name: '{{kebabCase name}}',
+  version: '{{version}}',
+  description: '{{description}}',
+  author: '{{author}}',
+  license: '{{license}}',
+  repository: 'https://github.com/{{author}}/{{kebabCase name}}',
+  homepage: 'https://github.com/{{author}}/{{kebabCase name}}#readme',
+  bugs: 'https://github.com/{{author}}/{{kebabCase name}}/issues',
+  keywords: ['polybucket', 'plugin', '{{category}}'],
+  tools: ['{{camelCase name}}'],
+  compatibility: {
+    polybucket: '>=1.0.0',
+    node: '>=18.0.0'
+  }
+};
+
+// Export tools for direct access
+export {
+  {{camelCase name}}Tool
+};

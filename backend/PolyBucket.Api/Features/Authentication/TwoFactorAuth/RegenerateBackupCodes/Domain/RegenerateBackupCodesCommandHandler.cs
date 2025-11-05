@@ -37,11 +37,9 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
         {
             _logger.LogInformation("Regenerating backup codes for user {UserId}", command.UserId);
 
-            // CONCURRENCY FIX: Use database-level locking to prevent race conditions
-            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var twoFactorAuth = await _regenerateBackupCodesRepository.GetByUserIdWithLockAsync(command.UserId);
+                var twoFactorAuth = await _regenerateBackupCodesRepository.GetByUserIdAsync(command.UserId);
                 if (twoFactorAuth is null)
                 {
                     _logger.LogError("RegenerateBackupCodesCommandHandler.Handle: 2FA not found for user {UserId}", command.UserId);
@@ -54,20 +52,10 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
                     throw new InvalidOperationException("2FA is not enabled for this user");
                 }
 
-                // CONCURRENCY FIX: Store current version for optimistic concurrency control
-                var currentVersion = twoFactorAuth.Version;
-
-                // Generate new backup codes
                 var backupCodes = await _regenerateBackupCodesService.RegenerateBackupCodesAsync(twoFactorAuth);
+                twoFactorAuth.Version++;
                 
-                // CONCURRENCY FIX: Increment version for optimistic concurrency control
-                twoFactorAuth.Version = currentVersion + 1;
-                
-                // Update the TwoFactorAuth entity in the database with version check
-                var updatedTwoFactorAuth = await _regenerateBackupCodesRepository.UpdateWithVersionAsync(twoFactorAuth, currentVersion);
-                
-                // Commit the transaction
-                await transaction.CommitAsync(cancellationToken);
+                await _regenerateBackupCodesRepository.UpdateAsync(twoFactorAuth);
                 
                 _logger.LogInformation("RegenerateBackupCodesCommandHandler.Handle: Backup codes regenerated successfully for user {UserId}", command.UserId);
                 
@@ -78,10 +66,10 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
                     BackupCodes = backupCodes
                 };
             }
-            catch (Exception)
+            catch (DbUpdateConcurrencyException ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
+                _logger.LogWarning(ex, "RegenerateBackupCodesCommandHandler.Handle: Concurrent modification detected for user {UserId}", command.UserId);
+                throw new InvalidOperationException("The 2FA configuration was modified by another operation. Please try again.");
             }
         }
     }

@@ -89,7 +89,7 @@ const AdminControlPanel: React.FC = () => {
   ];
 
   return (
-    <div className="lg-container min-h-screen">
+    <div className="lg-container min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <NavigationBar
         title="Admin Control Panel"
@@ -97,6 +97,9 @@ const AdminControlPanel: React.FC = () => {
         showUploadButton={false}
         showHomeLink={true}
       />
+      
+      {/* Main Content - Padding for fixed navbar */}
+      <div className="flex-1 pt-20">
 
       {/* Navigation Tabs */}
       <div className="lg-tabs">
@@ -125,6 +128,7 @@ const AdminControlPanel: React.FC = () => {
             </div>
           </TabPanel>
         ))}
+      </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '../../utils/hooks';
 import api from '../../utils/axiosConfig';
 import { minidenticon } from 'minidenticons';
+import { Edit as EditIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
 
 const AccountPreferencesTab: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -11,6 +12,15 @@ const AccountPreferencesTab: React.FC = () => {
     firstName: '',
     lastName: '',
     bio: '',
+    country: '',
+    websiteUrl: '',
+    twitterUrl: '',
+    instagramUrl: '',
+    youtubeUrl: '',
+    isProfilePublic: true,
+    showEmail: false,
+    showLastLogin: false,
+    showStatistics: true,
     avatar: '',
     timezone: 'UTC',
     language: 'en',
@@ -23,6 +33,8 @@ const AccountPreferencesTab: React.FC = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user) {
@@ -33,6 +45,15 @@ const AccountPreferencesTab: React.FC = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         bio: user.bio || '',
+        country: user.country || '',
+        websiteUrl: user.websiteUrl || '',
+        twitterUrl: user.twitterUrl || '',
+        instagramUrl: user.instagramUrl || '',
+        youtubeUrl: user.youtubeUrl || '',
+        isProfilePublic: user.isProfilePublic ?? true,
+        showEmail: user.showEmail ?? false,
+        showLastLogin: user.showLastLogin ?? false,
+        showStatistics: user.showStatistics ?? true,
         avatar: user.avatar || ''
       }));
     }
@@ -40,6 +61,32 @@ const AccountPreferencesTab: React.FC = () => {
 
   const handleProfileChange = (field: string, value: any) => {
     setProfile(prev => ({ ...prev, [field]: value }));
+  };
+
+  const startEditing = (field: string) => {
+    setEditingField(field);
+    setEditValues({ [field]: profile[field as keyof typeof profile] as string || '' });
+  };
+
+  const cancelEditing = () => {
+    setEditingField(null);
+    setEditValues({});
+  };
+
+  const saveField = (field: string) => {
+    const value = editValues[field] || '';
+    handleProfileChange(field, value);
+    setEditingField(null);
+    setEditValues({});
+  };
+
+  const handleEditValueChange = (field: string, value: string) => {
+    setEditValues(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getDisplayValue = (field: string): string => {
+    const value = profile[field as keyof typeof profile] as string;
+    return value && value.trim() ? value : 'n/a';
   };
 
   const handleNotificationChange = (key: string, value: boolean) => {
@@ -55,10 +102,21 @@ const AccountPreferencesTab: React.FC = () => {
   const saveProfile = async () => {
     setIsSaving(true);
     try {
-      // Mock API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.put('/api/users/profile/update', {
+        bio: profile.bio,
+        country: profile.country,
+        websiteUrl: profile.websiteUrl || null,
+        twitterUrl: profile.twitterUrl || null,
+        instagramUrl: profile.instagramUrl || null,
+        youtubeUrl: profile.youtubeUrl || null,
+        isProfilePublic: profile.isProfilePublic,
+        showEmail: profile.showEmail,
+        showLastLogin: profile.showLastLogin,
+        showStatistics: profile.showStatistics
+      });
       setSnackbar({ open: true, message: 'Profile updated successfully', severity: 'success' });
     } catch (error) {
+      console.error('Error updating profile:', error);
       setSnackbar({ open: true, message: 'Failed to update profile', severity: 'error' });
     } finally {
       setIsSaving(false);
@@ -91,17 +149,17 @@ const AccountPreferencesTab: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Basic Information</h2>
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold text-white mb-3">Basic Information</h2>
       
       {/* Profile Information */}
-      <div className="lg-card p-6">
-        <div className="space-y-4">
+      <div className="lg-card p-4">
+        <div className="space-y-0">
           {/* Avatar Row */}
-          <div className="flex items-center justify-between py-3 border-b border-white/10">
-            <span className="text-white/80">Avatar</span>
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Avatar</span>
+            <div className="flex items-center space-x-2 ml-auto">
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                 <img
                   src={getAvatarUrl()}
                   alt="Avatar"
@@ -117,193 +175,409 @@ const AccountPreferencesTab: React.FC = () => {
               />
               <label
                 htmlFor="avatar-upload"
-                className="lg-button lg-button-secondary text-sm cursor-pointer"
+                className="lg-button lg-button-secondary text-xs cursor-pointer py-1 px-2"
               >
                 Change
               </label>
             </div>
-            <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
           </div>
 
-          {/* Display Name Row */}
-          <div className="flex items-center justify-between py-3 border-b border-white/10">
-            <span className="text-white/80">Display Name</span>
-            <span className="text-white">{profile.firstName && profile.lastName ? `${profile.firstName} ${profile.lastName}` : profile.username}</span>
-            <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Username Row - Read-only */}
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Username</span>
+            <span className="text-sm text-white/50 ml-auto">@{profile.username}</span>
           </div>
 
-          {/* Username Row */}
-          <div className="flex items-center justify-between py-3 border-b border-white/10">
-            <span className="text-white/80">Username</span>
-            <span className="text-white">@{profile.username}</span>
-            <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Email Row - Read-only */}
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Email</span>
+            <span className="text-sm text-white/50 ml-auto">{profile.email}</span>
           </div>
 
-          {/* Email Row */}
-          <div className="flex items-center justify-between py-3 border-b border-white/10">
-            <span className="text-white/80">Email</span>
-            <div className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span className="text-white">{profile.email}</span>
-            </div>
-            <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Bio Row - Editable */}
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Bio</span>
+            {editingField === 'bio' ? (
+              <div className="flex items-center gap-2 ml-auto w-64 max-w-md">
+                <input
+                  type="text"
+                  value={editValues.bio || ''}
+                  onChange={(e) => handleEditValueChange('bio', e.target.value)}
+                  placeholder="Tell us about yourself..."
+                  className="lg-input text-sm py-1.5 flex-1"
+                  maxLength={500}
+                  autoFocus
+                />
+                <button
+                  onClick={() => saveField('bio')}
+                  className="text-green-400 hover:text-green-300 transition-colors p-1"
+                  title="Save"
+                >
+                  <CheckIcon style={{ fontSize: '18px' }} />
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="text-red-400 hover:text-red-300 transition-colors p-1"
+                  title="Cancel"
+                >
+                  <CloseIcon style={{ fontSize: '18px' }} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-white">{getDisplayValue('bio')}</span>
+                <button
+                  onClick={() => startEditing('bio')}
+                  className="text-white/40 hover:text-white/70 transition-colors p-1"
+                  title="Edit"
+                >
+                  <EditIcon style={{ fontSize: '16px' }} />
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Gender Row */}
-          <div className="flex items-center justify-between py-3 border-b border-white/10">
-            <span className="text-white/80">Gender</span>
-            <div className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span className="text-white">Unknown</span>
-            </div>
-            <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Country Row - Editable */}
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Country</span>
+            {editingField === 'country' ? (
+              <div className="flex items-center gap-2 ml-auto w-64 max-w-md">
+                <input
+                  type="text"
+                  value={editValues.country || ''}
+                  onChange={(e) => handleEditValueChange('country', e.target.value)}
+                  placeholder="Your country"
+                  className="lg-input text-sm py-1.5 flex-1"
+                  maxLength={100}
+                  autoFocus
+                />
+                <button
+                  onClick={() => saveField('country')}
+                  className="text-green-400 hover:text-green-300 transition-colors p-1"
+                  title="Save"
+                >
+                  <CheckIcon style={{ fontSize: '18px' }} />
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="text-red-400 hover:text-red-300 transition-colors p-1"
+                  title="Cancel"
+                >
+                  <CloseIcon style={{ fontSize: '18px' }} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-white">{getDisplayValue('country')}</span>
+                <button
+                  onClick={() => startEditing('country')}
+                  className="text-white/40 hover:text-white/70 transition-colors p-1"
+                  title="Edit"
+                >
+                  <EditIcon style={{ fontSize: '16px' }} />
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Region Row */}
-          <div className="flex items-center justify-between py-3 border-b border-white/10">
-            <span className="text-white/80">Region</span>
-            <div className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span className="text-white">--</span>
-            </div>
-            <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Website URL Row - Editable */}
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Website</span>
+            {editingField === 'websiteUrl' ? (
+              <div className="flex items-center gap-2 ml-auto w-64 max-w-md">
+                <input
+                  type="url"
+                  value={editValues.websiteUrl || ''}
+                  onChange={(e) => handleEditValueChange('websiteUrl', e.target.value)}
+                  placeholder="https://example.com"
+                  className="lg-input text-sm py-1.5 flex-1"
+                  maxLength={500}
+                  autoFocus
+                />
+                <button
+                  onClick={() => saveField('websiteUrl')}
+                  className="text-green-400 hover:text-green-300 transition-colors p-1"
+                  title="Save"
+                >
+                  <CheckIcon style={{ fontSize: '18px' }} />
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="text-red-400 hover:text-red-300 transition-colors p-1"
+                  title="Cancel"
+                >
+                  <CloseIcon style={{ fontSize: '18px' }} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-white">{getDisplayValue('websiteUrl')}</span>
+                <button
+                  onClick={() => startEditing('websiteUrl')}
+                  className="text-white/40 hover:text-white/70 transition-colors p-1"
+                  title="Edit"
+                >
+                  <EditIcon style={{ fontSize: '16px' }} />
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Bio Row */}
-          <div className="flex items-center justify-between py-3">
-            <span className="text-white/80">Bio</span>
-            <span className="text-white">{profile.bio || ''}</span>
-            <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Twitter URL Row - Editable */}
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Twitter</span>
+            {editingField === 'twitterUrl' ? (
+              <div className="flex items-center gap-2 ml-auto w-64 max-w-md">
+                <input
+                  type="url"
+                  value={editValues.twitterUrl || ''}
+                  onChange={(e) => handleEditValueChange('twitterUrl', e.target.value)}
+                  placeholder="https://twitter.com/username"
+                  className="lg-input text-sm py-1.5 flex-1"
+                  maxLength={500}
+                  autoFocus
+                />
+                <button
+                  onClick={() => saveField('twitterUrl')}
+                  className="text-green-400 hover:text-green-300 transition-colors p-1"
+                  title="Save"
+                >
+                  <CheckIcon style={{ fontSize: '18px' }} />
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="text-red-400 hover:text-red-300 transition-colors p-1"
+                  title="Cancel"
+                >
+                  <CloseIcon style={{ fontSize: '18px' }} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-white">{getDisplayValue('twitterUrl')}</span>
+                <button
+                  onClick={() => startEditing('twitterUrl')}
+                  className="text-white/40 hover:text-white/70 transition-colors p-1"
+                  title="Edit"
+                >
+                  <EditIcon style={{ fontSize: '16px' }} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Instagram URL Row - Editable */}
+          <div className="flex items-center py-2 border-b border-white/10">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">Instagram</span>
+            {editingField === 'instagramUrl' ? (
+              <div className="flex items-center gap-2 ml-auto w-64 max-w-md">
+                <input
+                  type="url"
+                  value={editValues.instagramUrl || ''}
+                  onChange={(e) => handleEditValueChange('instagramUrl', e.target.value)}
+                  placeholder="https://instagram.com/username"
+                  className="lg-input text-sm py-1.5 flex-1"
+                  maxLength={500}
+                  autoFocus
+                />
+                <button
+                  onClick={() => saveField('instagramUrl')}
+                  className="text-green-400 hover:text-green-300 transition-colors p-1"
+                  title="Save"
+                >
+                  <CheckIcon style={{ fontSize: '18px' }} />
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="text-red-400 hover:text-red-300 transition-colors p-1"
+                  title="Cancel"
+                >
+                  <CloseIcon style={{ fontSize: '18px' }} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-white">{getDisplayValue('instagramUrl')}</span>
+                <button
+                  onClick={() => startEditing('instagramUrl')}
+                  className="text-white/40 hover:text-white/70 transition-colors p-1"
+                  title="Edit"
+                >
+                  <EditIcon style={{ fontSize: '16px' }} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* YouTube URL Row - Editable */}
+          <div className="flex items-center py-2">
+            <span className="text-sm text-white/70 w-32 flex-shrink-0">YouTube</span>
+            {editingField === 'youtubeUrl' ? (
+              <div className="flex items-center gap-2 ml-auto w-64 max-w-md">
+                <input
+                  type="url"
+                  value={editValues.youtubeUrl || ''}
+                  onChange={(e) => handleEditValueChange('youtubeUrl', e.target.value)}
+                  placeholder="https://youtube.com/username"
+                  className="lg-input text-sm py-1.5 flex-1"
+                  maxLength={500}
+                  autoFocus
+                />
+                <button
+                  onClick={() => saveField('youtubeUrl')}
+                  className="text-green-400 hover:text-green-300 transition-colors p-1"
+                  title="Save"
+                >
+                  <CheckIcon style={{ fontSize: '18px' }} />
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="text-red-400 hover:text-red-300 transition-colors p-1"
+                  title="Cancel"
+                >
+                  <CloseIcon style={{ fontSize: '18px' }} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-white">{getDisplayValue('youtubeUrl')}</span>
+                <button
+                  onClick={() => startEditing('youtubeUrl')}
+                  className="text-white/40 hover:text-white/70 transition-colors p-1"
+                  title="Edit"
+                >
+                  <EditIcon style={{ fontSize: '16px' }} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Preferences */}
-      <div className="lg-card p-6">
-        <h3 className="text-lg font-medium text-white mb-4">Preferences</h3>
+      {/* Privacy Settings */}
+      <div className="lg-card p-4">
+        <h3 className="text-base font-medium text-white mb-3">Privacy Settings</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Timezone</label>
-            <select
-              value={profile.timezone}
-              onChange={(e) => handleProfileChange('timezone', e.target.value)}
-              className="lg-input"
-            >
-              <option value="UTC">UTC</option>
-              <option value="America/New_York">Eastern Time</option>
-              <option value="America/Chicago">Central Time</option>
-              <option value="America/Denver">Mountain Time</option>
-              <option value="America/Los_Angeles">Pacific Time</option>
-              <option value="Europe/London">London</option>
-              <option value="Europe/Paris">Paris</option>
-              <option value="Asia/Tokyo">Tokyo</option>
-            </select>
+        <div className="space-y-0">
+          <div className="flex items-center py-2 border-b border-white/10">
+            <div className="flex-1">
+              <span className="text-sm text-white font-medium">Public Profile</span>
+              <p className="text-xs text-white/60">Allow others to view your profile</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={profile.isProfilePublic}
+              onChange={(e) => handleProfileChange('isProfilePublic', e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
+            />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Language</label>
-            <select
-              value={profile.language}
-              onChange={(e) => handleProfileChange('language', e.target.value)}
-              className="lg-input"
-            >
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="ja">Japanese</option>
-              <option value="zh">Chinese</option>
-            </select>
+          <div className="flex items-center py-2 border-b border-white/10">
+            <div className="flex-1">
+              <span className="text-sm text-white font-medium">Show Email</span>
+              <p className="text-xs text-white/60">Display your email on your profile</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={profile.showEmail}
+              onChange={(e) => handleProfileChange('showEmail', e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
+            />
+          </div>
+          
+          <div className="flex items-center py-2 border-b border-white/10">
+            <div className="flex-1">
+              <span className="text-sm text-white font-medium">Show Last Login</span>
+              <p className="text-xs text-white/60">Display when you last logged in</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={profile.showLastLogin}
+              onChange={(e) => handleProfileChange('showLastLogin', e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
+            />
+          </div>
+          
+          <div className="flex items-center py-2">
+            <div className="flex-1">
+              <span className="text-sm text-white font-medium">Show Statistics</span>
+              <p className="text-xs text-white/60">Display your model and collection statistics</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={profile.showStatistics}
+              onChange={(e) => handleProfileChange('showStatistics', e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
+            />
           </div>
         </div>
       </div>
 
       {/* Email Notifications */}
-      <div className="lg-card p-6">
-        <h3 className="text-lg font-medium text-white mb-4">Email Notifications</h3>
+      <div className="lg-card p-4">
+        <h3 className="text-base font-medium text-white mb-3">Email Notifications</h3>
         
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-white font-medium">New Followers</div>
-              <div className="text-sm text-white/60">Get notified when someone follows you</div>
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between py-1.5">
+            <div className="flex-1">
+              <div className="text-sm text-white font-medium">New Followers</div>
+              <div className="text-xs text-white/60">Get notified when someone follows you</div>
             </div>
             <input
               type="checkbox"
               checked={profile.emailNotifications.newFollowers}
               onChange={(e) => handleNotificationChange('newFollowers', e.target.checked)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-white font-medium">Collection Updates</div>
-              <div className="text-sm text-white/60">Get notified about collection changes</div>
+          <div className="flex items-center justify-between py-1.5">
+            <div className="flex-1">
+              <div className="text-sm text-white font-medium">Collection Updates</div>
+              <div className="text-xs text-white/60">Get notified about collection changes</div>
             </div>
             <input
               type="checkbox"
               checked={profile.emailNotifications.collectionUpdates}
               onChange={(e) => handleNotificationChange('collectionUpdates', e.target.checked)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-white font-medium">Model Comments</div>
-              <div className="text-sm text-white/60">Get notified about comments on your models</div>
+          <div className="flex items-center justify-between py-1.5">
+            <div className="flex-1">
+              <div className="text-sm text-white font-medium">Model Comments</div>
+              <div className="text-xs text-white/60">Get notified about comments on your models</div>
             </div>
             <input
               type="checkbox"
               checked={profile.emailNotifications.modelComments}
               onChange={(e) => handleNotificationChange('modelComments', e.target.checked)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-white font-medium">System Announcements</div>
-              <div className="text-sm text-white/60">Get notified about system updates and maintenance</div>
+          <div className="flex items-center justify-between py-1.5">
+            <div className="flex-1">
+              <div className="text-sm text-white font-medium">System Announcements</div>
+              <div className="text-xs text-white/60">Get notified about system updates and maintenance</div>
             </div>
             <input
               type="checkbox"
               checked={profile.emailNotifications.systemAnnouncements}
               onChange={(e) => handleNotificationChange('systemAnnouncements', e.target.checked)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-white/20 rounded bg-transparent cursor-pointer"
             />
           </div>
         </div>
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <button
           onClick={saveProfile}
           disabled={isSaving}
-          className="lg-button lg-button-primary"
+          className="lg-button lg-button-primary text-sm py-2 px-4"
         >
           {isSaving ? 'Saving...' : 'Save Changes'}
         </button>

@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Marketplace.Api.Models;
 
 namespace PolyBucket.Marketplace.Api.Data
 {
-    public class MarketplaceDbContext : DbContext
+    public class MarketplaceDbContext : IdentityDbContext<MarketplaceUser>
     {
         public MarketplaceDbContext(DbContextOptions<MarketplaceDbContext> options) : base(options)
         {
@@ -18,7 +19,7 @@ namespace PolyBucket.Marketplace.Api.Data
         public DbSet<PluginRating> Ratings { get; set; }
         public DbSet<PluginDownload> Downloads { get; set; }
         public DbSet<PluginSubmission> Submissions { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<PluginInstallation> PluginInstallations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,7 +33,6 @@ namespace PolyBucket.Marketplace.Api.Data
                 entity.Property(e => e.Description).HasMaxLength(2000);
                 entity.Property(e => e.LongDescription).HasMaxLength(10000);
                 entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Author).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Version).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.RepositoryUrl).HasMaxLength(500);
                 entity.Property(e => e.License).HasMaxLength(100);
@@ -176,17 +176,59 @@ namespace PolyBucket.Marketplace.Api.Data
                 entity.HasIndex(e => e.SubmittedAt);
             });
 
-            // User configuration
-            modelBuilder.Entity<User>(entity =>
+            // MarketplaceUser configuration (extends IdentityUser)
+            modelBuilder.Entity<MarketplaceUser>(entity =>
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.AvatarUrl).HasMaxLength(500);
+                entity.Property(e => e.GitHubId);
+                entity.Property(e => e.GitHubUsername).HasMaxLength(255);
+                entity.Property(e => e.GitHubDisplayName).HasMaxLength(255);
+                entity.Property(e => e.GitHubAvatarUrl).HasMaxLength(500);
+                entity.Property(e => e.GitHubProfileUrl).HasMaxLength(500);
+                entity.Property(e => e.GitHubAccessToken).HasMaxLength(1000);
+                entity.Property(e => e.GitHubRefreshToken).HasMaxLength(1000);
+                entity.Property(e => e.Bio).HasMaxLength(1000);
+                entity.Property(e => e.Location).HasMaxLength(255);
+                entity.Property(e => e.Website).HasMaxLength(500);
+                entity.Property(e => e.Company).HasMaxLength(255);
+                entity.Property(e => e.IsVerified).HasDefaultValue(false);
+                entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("active");
+                entity.Property(e => e.PrimaryRole).HasMaxLength(50).HasDefaultValue("User");
+                entity.Property(e => e.AdditionalRoles).HasMaxLength(500);
+                entity.Property(e => e.CustomPermissions).HasMaxLength(1000);
+                entity.Property(e => e.ReputationScore).HasDefaultValue(0);
+                entity.Property(e => e.ContributionScore).HasDefaultValue(0);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
 
-                entity.HasIndex(e => e.UserName).IsUnique();
-                entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.GitHubId).IsUnique();
+                entity.HasIndex(e => e.GitHubUsername);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.PrimaryRole);
+            });
+
+            // Plugin Installation configuration
+            modelBuilder.Entity<PluginInstallation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PluginId).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.UserId).HasMaxLength(255);
+                entity.Property(e => e.Version).HasMaxLength(50);
+                entity.Property(e => e.InstallationMethod).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.UserAgent).HasMaxLength(500);
+                entity.Property(e => e.InstalledAt).HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.Plugin)
+                      .WithMany()
+                      .HasForeignKey(e => e.PluginId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.User)
+                      .WithMany(u => u.Installations)
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(e => e.PluginId);
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.InstalledAt);
             });
         }
     }

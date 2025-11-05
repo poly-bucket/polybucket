@@ -47,7 +47,34 @@ import {
   AddCommentClient,
   EnhancedCommentsClient,
   LoginClient,
-  GetEmailSettingsClient
+  GetEmailSettingsClient,
+  RegisterClient,
+  RefreshTokenClient,
+  CreateCollectionClient,
+  UpdateCollectionClient,
+  GetCollectionByIdClient,
+  DeleteCollectionClient,
+  GetUserCollectionsClient,
+  GetFavoriteCollectionsClient,
+  FavoriteCollectionClient,
+  AccessCollectionClient,
+  GetCategoriesClient,
+  CreateCategoryClient,
+  UpdateCategoryClient,
+  DeleteCategoryClient,
+  GetTwoFactorAuthStatusClient,
+  InitializeTwoFactorAuthClient,
+  EnableTwoFactorAuthClient,
+  DisableTwoFactorAuthClient,
+  RegenerateAvatarClient,
+  GetFileSettingsClient,
+  UpdateFileSettingsClient,
+  GetPluginDetailsClient,
+  GetAllReportsClient,
+  GetReportsAnalyticsClient,
+  GetModerationAuditLogsClient,
+  RoleManagementClient,
+  BanUserClient
 } from '../services/api.client';
 
 // Create a shared HTTP client instance
@@ -95,7 +122,7 @@ export class ApiClientFactory {
   static getModelsByUserClient = () => new GetModelByUserIdClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getLikeModelClient = () => new LikeModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getRemoveTagFromModelClient = () => new RemoveTagFromModelClient(API_CONFIG.baseUrl, sharedHttpClient);
-  static getSearchModelsClient = () => new SearchModelsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getSearchModelsClient = () => new SearchClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getApproveModelClient = () => new ApproveModelClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getModelsAwaitingModerationClient = () => new GetModelsAwaitingModerationClient(API_CONFIG.baseUrl, sharedHttpClient);
   static getModerationSettingsClient = () => new GetModerationSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
@@ -123,6 +150,52 @@ export class ApiClientFactory {
 
   // Authentication-related clients
   static getLoginClient = () => new LoginClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getRegisterClient = () => new RegisterClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getRefreshTokenClient = () => new RefreshTokenClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Collection-related clients
+  static getCreateCollectionClient = () => new CreateCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUpdateCollectionClient = () => new UpdateCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getGetCollectionByIdClient = () => new GetCollectionByIdClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getDeleteCollectionClient = () => new DeleteCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getGetUserCollectionsClient = () => new GetUserCollectionsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getGetFavoriteCollectionsClient = () => new GetFavoriteCollectionsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getFavoriteCollectionClient = () => new FavoriteCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getAccessCollectionClient = () => new AccessCollectionClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Category-related clients
+  static getGetCategoriesClient = () => new GetCategoriesClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getCreateCategoryClient = () => new CreateCategoryClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUpdateCategoryClient = () => new UpdateCategoryClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getDeleteCategoryClient = () => new DeleteCategoryClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Two-Factor Auth clients
+  static getGetTwoFactorAuthStatusClient = () => new GetTwoFactorAuthStatusClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getInitializeTwoFactorAuthClient = () => new InitializeTwoFactorAuthClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getEnableTwoFactorAuthClient = () => new EnableTwoFactorAuthClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getDisableTwoFactorAuthClient = () => new DisableTwoFactorAuthClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Avatar client
+  static getRegenerateAvatarClient = () => new RegenerateAvatarClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // File Settings clients
+  static getGetFileSettingsClient = () => new GetFileSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getUpdateFileSettingsClient = () => new UpdateFileSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // File clients
+  static getGetSupportedExtensionsClient = () => new GetSupportedExtensionsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getGetSupportedExtensionsByTypeClient = () => new GetSupportedExtensionsByTypeClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Plugin clients
+  static getGetPluginDetailsClient = () => new GetPluginDetailsClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Moderation clients
+  static getGetAllReportsClient = () => new GetAllReportsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getGetReportsAnalyticsClient = () => new GetReportsAnalyticsClient(API_CONFIG.baseUrl, sharedHttpClient);
+  static getGetModerationAuditLogsClient = () => new GetModerationAuditLogsClient(API_CONFIG.baseUrl, sharedHttpClient);
+
+  // Role management client
+  static getRoleManagementClient = () => new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
 
   // Search-related clients
   static getSearchClient = () => new SearchClient(API_CONFIG.baseUrl, sharedHttpClient);

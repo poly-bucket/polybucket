@@ -4,7 +4,7 @@ import { OrbitControls, useGLTF, useProgress, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { ThreeMFLoader } from 'three-stdlib';
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 import { exportTo3MF } from 'three-3mf-exporter';
 import { API_CONFIG } from '../api/config';
 
@@ -14,7 +14,7 @@ export type ViewMode = 'solid' | 'wireframe' | 'points' | 'normals';
 interface ModelViewerProps {
   modelUrl?: string;
   width?: number | string;
-  height?: number;
+  height?: number | string;
   autoRotate?: boolean;
   className?: string;
   accessToken?: string;
@@ -29,6 +29,7 @@ interface ModelViewerProps {
   modelFile?: File;
   onShowThumbnailGenerator?: () => void;
   showFPS?: boolean;
+  showBuildPlate?: boolean;
 }
 
 // Floating Control Panel Components
@@ -627,36 +628,70 @@ const ThreeMFModel = React.memo(({ url, accessToken, fileData, renderSettings, a
 
   useEffect(() => {
     const load3MF = async () => {
+      let blobUrl: string | null = null;
+      
       try {
         const loader = new ThreeMFLoader();
         
         let arrayBuffer: ArrayBuffer;
         
         if (fileData) {
-          // Use direct file data if provided
-          if (fileData instanceof Blob) {
-            arrayBuffer = await fileData.arrayBuffer();
-          } else {
-            arrayBuffer = fileData;
-          }
+          // Use direct file data
+          arrayBuffer = fileData instanceof Blob ? await fileData.arrayBuffer() : fileData;
         } else if (url) {
-          // Fallback to fetching from URL
+          // Fetch from URL
           const headers: HeadersInit = {};
           if (accessToken) {
             headers['Authorization'] = `Bearer ${accessToken}`;
           }
-          
           const response = await fetch(url, { headers });
           if (!response.ok) {
             throw new Error(`Failed to fetch 3MF: ${response.status}`);
           }
-          
           arrayBuffer = await response.arrayBuffer();
         } else {
           throw new Error('No file data or URL provided');
         }
         
-        const group = loader.parse(arrayBuffer);
+        // Use parse method which directly accepts ArrayBuffer
+        // This is the most efficient method for the official Three.js loader
+        let group: THREE.Group;
+        
+        try {
+          group = loader.parse(arrayBuffer);
+        } catch (parseError) {
+          // If parse fails, try using loadAsync with a Blob URL as fallback
+          const blob = new Blob([arrayBuffer], { type: 'model/3mf' });
+          blobUrl = URL.createObjectURL(blob);
+          group = await loader.loadAsync(blobUrl);
+        }
+        
+        if (!group || !(group instanceof THREE.Group)) {
+          throw new Error('Failed to load 3MF file: Invalid group returned');
+        }
+        
+        // Traverse the group to ensure all meshes are properly set up
+        group.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            // Ensure geometry is valid
+            if (!child.geometry) {
+              return;
+            }
+            
+            // Update material based on render settings
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((mat) => {
+                  if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhongMaterial) {
+                    mat.wireframe = renderSettings.view === 'wireframe';
+                  }
+                });
+              } else if (child.material instanceof THREE.MeshStandardMaterial || child.material instanceof THREE.MeshPhongMaterial) {
+                child.material.wireframe = renderSettings.view === 'wireframe';
+              }
+            }
+          }
+        });
         
         // Use startTransition for expensive operations to prevent UI blocking
         startTransition(() => {
@@ -669,12 +704,20 @@ const ThreeMFModel = React.memo(({ url, accessToken, fileData, renderSettings, a
           }
         });
       } catch (error) {
-        // Error loading 3MF
+        console.error('Error loading 3MF:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message, error.stack);
+        }
+      } finally {
+        // Clean up blob URL if we created one
+        if (blobUrl) {
+          URL.revokeObjectURL(blobUrl);
+        }
       }
     };
     
     load3MF();
-  }, [url, accessToken, fileData, onBoundingBoxCalculated]);
+  }, [url, accessToken, fileData, onBoundingBoxCalculated, renderSettings.view]);
 
   useFrame((state: any) => {
     if (meshRef.current && autoRotate) {
@@ -725,6 +768,87 @@ const OrbitControlsComponent = React.memo((props: any) => {
   return <OrbitControls {...props} />;
 });
 
+// Build Plate component - Creates a 3D printer build plate with grid pattern
+const BuildPlate = React.memo(({ boundingBox }: { boundingBox: THREE.Box3 | null }) => {
+  const gridTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d')!;
+    
+    // White background for build plate
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Dark gray grid lines for visibility on white background
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = 1;
+    
+    const gridSize = 32;
+    
+    // Draw vertical lines
+    for (let x = 0; x <= canvas.width; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    
+    // Draw horizontal lines
+    for (let y = 0; y <= canvas.height; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(10, 10);
+    
+    return texture;
+  }, []);
+
+  // Cleanup texture on unmount
+  useEffect(() => {
+    return () => {
+      gridTexture.dispose();
+    };
+  }, [gridTexture]);
+
+  if (!boundingBox) {
+    return null;
+  }
+
+  const size = boundingBox.getSize(new THREE.Vector3());
+  const center = boundingBox.getCenter(new THREE.Vector3());
+  
+  // Calculate plate size: 1.5x the model's largest dimension
+  const maxDimension = Math.max(size.x, size.z);
+  const plateSize = Math.max(maxDimension * 1.5, 50);
+  
+  // Position plate slightly below the bottom of the model
+  const plateY = boundingBox.min.y - 0.1;
+  
+  return (
+    <mesh 
+      position={[center.x, plateY, center.z]} 
+      rotation={[-Math.PI / 2, 0, 0]}
+      receiveShadow
+    >
+      <planeGeometry args={[plateSize, plateSize]} />
+      <meshStandardMaterial 
+        map={gridTexture}
+        color="#FFFFFF"
+        metalness={0.1}
+        roughness={0.8}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+});
+
 // FPS Counter component - Optimized to reduce render calls
 const FPSCounter = React.memo(() => {
   const [fps, setFps] = useState(0);
@@ -761,13 +885,34 @@ const FPSCounter = React.memo(() => {
   );
 });
 
-// Loading component
+// Loading component with progress bar
 function Loader() {
-  const { progress } = useProgress();
+  const { progress, active } = useProgress();
+  const roundedProgress = Math.round(progress);
+  
+  if (!active) return null;
+  
   return (
     <Html center>
-      <div className="text-white text-sm">
-        Loading... {Math.round(progress)}%
+      <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-6 min-w-[320px] shadow-xl border border-gray-700">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-white">Loading 3D Model</span>
+            <span className="text-sm font-semibold text-blue-400">{roundedProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out shadow-sm"
+              style={{ width: `${roundedProgress}%` }}
+            ></div>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 text-center">
+          {roundedProgress < 30 ? 'Initializing viewer...' : 
+           roundedProgress < 60 ? 'Loading geometry...' : 
+           roundedProgress < 90 ? 'Processing mesh...' : 
+           'Finalizing...'}
+        </p>
       </div>
     </Html>
   );
@@ -821,8 +966,15 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   isUploadMode = false,
   modelFile,
   onShowThumbnailGenerator,
-  showFPS = false
+  showFPS = false,
+  showBuildPlate = true
 }) => {
+  const containerStyle = useMemo(() => {
+    return {
+      width: typeof width === 'string' ? width : `${width}px`,
+      height: typeof height === 'string' ? height : `${height}px`
+    };
+  }, [width, height]);
 
 
   const [isLoading, setIsLoading] = useState(true);
@@ -859,8 +1011,13 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
     target: [0, 0, 0] as [number, number, number]
   });
 
+  // Store the last calculated bounding box for reset functionality
+  const [lastBoundingBox, setLastBoundingBox] = useState<THREE.Box3 | null>(null);
+  const [shouldResetCamera, setShouldResetCamera] = useState(false);
+
   // Calculate optimal camera position based on bounding box
-  const calculateCameraPosition = (boundingBox: THREE.Box3) => {
+  // Memoize to prevent recreation on every render
+  const calculateCameraPosition = useCallback((boundingBox: THREE.Box3) => {
     const size = boundingBox.getSize(new THREE.Vector3());
     const center = boundingBox.getCenter(new THREE.Vector3());
     
@@ -889,30 +1046,52 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
       center.z + clampedDistance
     ];
     
-    setCameraSettings({
-      position: cameraPosition,
-      minDistance,
-      maxDistance,
-      target: [center.x, center.y, center.z]
+    setCameraSettings(prev => {
+      // Only update if the values actually changed to prevent unnecessary re-renders
+      const newTarget = [center.x, center.y, center.z] as [number, number, number];
+      if (
+        prev.position[0] === cameraPosition[0] &&
+        prev.position[1] === cameraPosition[1] &&
+        prev.position[2] === cameraPosition[2] &&
+        prev.minDistance === minDistance &&
+        prev.maxDistance === maxDistance &&
+        prev.target[0] === newTarget[0] &&
+        prev.target[1] === newTarget[1] &&
+        prev.target[2] === newTarget[2]
+      ) {
+        return prev;
+      }
+      return {
+        position: cameraPosition,
+        minDistance,
+        maxDistance,
+        target: newTarget
+      };
     });
-  };
+  }, []);
 
   // Handle bounding box calculation
-  const handleBoundingBoxCalculated = (boundingBox: THREE.Box3) => {
-    setLastBoundingBox(boundingBox);
+  // Memoize to prevent recreation on every render, which causes infinite loops in child components
+  const handleBoundingBoxCalculated = useCallback((boundingBox: THREE.Box3) => {
+    setLastBoundingBox(prev => {
+      // Only update if bounding box actually changed
+      if (prev && 
+          prev.min.equals(boundingBox.min) && 
+          prev.max.equals(boundingBox.max)) {
+        return prev;
+      }
+      return boundingBox.clone();
+    });
     
     // Use startTransition for expensive camera calculations
     startTransition(() => {
       calculateCameraPosition(boundingBox);
     });
-  };
-
-  // Store the last calculated bounding box for reset functionality
-  const [lastBoundingBox, setLastBoundingBox] = useState<THREE.Box3 | null>(null);
-  const [shouldResetCamera, setShouldResetCamera] = useState(false);
+  }, [calculateCameraPosition]);
 
   // Reset camera to optimal position
-  const handleResetCamera = () => {
+  // Memoize to prevent recreation on every render
+  const handleResetCamera = useCallback(() => {
     if (lastBoundingBox) {
       // Use startTransition for smooth camera reset
       startTransition(() => {
@@ -922,44 +1101,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
         setTimeout(() => setShouldResetCamera(false), 100);
       });
     }
-  };
-
-
-
-  // Keyboard shortcuts for controls
-  useEffect(() => {
-    if (!showControls) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
-        event.preventDefault();
-        setShowViewControls(prev => !prev);
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'm') {
-        event.preventDefault();
-        setShowMaterialControls(prev => !prev);
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
-        event.preventDefault();
-        setShowLightingControls(prev => !prev);
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
-        event.preventDefault();
-        setShowAnimationControls(prev => !prev);
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
-        event.preventDefault();
-        handleResetCamera();
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
-        event.preventDefault();
-        handleExport3MF();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showControls]);
+  }, [lastBoundingBox, calculateCameraPosition]);
 
   useEffect(() => {
     const generateStreamUrl = () => {
@@ -1145,6 +1287,41 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
     }
   }, [isSTL, isGLTF, is3MF, fileData, fileName, renderSettings]);
 
+  // Keyboard shortcuts for controls
+  useEffect(() => {
+    if (!showControls) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+        event.preventDefault();
+        setShowViewControls(prev => !prev);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === 'm') {
+        event.preventDefault();
+        setShowMaterialControls(prev => !prev);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
+        event.preventDefault();
+        setShowLightingControls(prev => !prev);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+        event.preventDefault();
+        setShowAnimationControls(prev => !prev);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+        event.preventDefault();
+        handleResetCamera();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+        event.preventDefault();
+        handleExport3MF();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showControls, handleResetCamera, handleExport3MF]);
+
   if (!isSTL && !isGLTF && !is3MF && !isSTEP) {
     return (
       <div 
@@ -1160,19 +1337,19 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
 
   return (
     <div 
-      className={`bg-gray-900 rounded-lg overflow-hidden relative ${className}`}
-      style={{ width, height }}
+      className={`rounded-lg overflow-hidden relative ${className}`}
+      style={containerStyle}
     >
       <Canvas
         camera={{ 
           position: cameraSettings.position, 
           fov: 50 
         }}
-        style={{ width, height }}
+        style={containerStyle}
         frameloop="demand"
         gl={{ 
           antialias: false,
-          alpha: false,
+          alpha: true,
           powerPreference: "high-performance",
           stencil: false,
           depth: true,
@@ -1194,6 +1371,8 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
         
         {isLoading && <Loader />}
         {showFPS && <FPSCounter />}
+        
+        {showBuildPlate && <BuildPlate boundingBox={lastBoundingBox} />}
         
         {isSTL && (
           <STLModel 

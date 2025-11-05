@@ -1,0 +1,156 @@
+# {{titleCase name}}
+
+{{description}}
+
+## 🚀 Features
+
+- **{{titleCase name}} Tool**: Main functionality for {{category}} operations
+- **Easy Integration**: Simple integration with PolyBucket
+- **Configurable**: Customizable options and settings
+
+## 📦 Installation
+
+Install this plugin through the PolyBucket marketplace or directly from GitHub:
+
+```bash
+# Via marketplace (recommended)
+polybucket install {{kebabCase name}}
+
+# Direct from GitHub
+git clone https://github.com/{{author}}/{{kebabCase name}}.git
+cd {{kebabCase name}}
+npm install
+```
+
+## 🛠️ Usage
+
+### Basic Usage
+
+```bash
+# Run the main tool
+polybucket {{camelCase name}} <input>
+
+# With options
+polybucket {{camelCase name}} <input> --verbose
+```
+
+### Examples
+
+```bash
+# Process a file
+polybucket {{camelCase name}} ./data.txt
+
+# Process with verbose output
+polybucket {{camelCase name}} ./data.txt --verbose
+
+# Get help
+polybucket {{camelCase name}} --help
+```
+
+## 🔧 Configuration
+
+The plugin can be configured through the PolyBucket configuration file:
+
+```json
+{
+  "plugins": {
+    "{{kebabCase name}}": {
+      "enabled": true,
+      "options": {
+        "verbose": false,
+        "outputFormat": "text"
+      }
+    }
+  }
+}
+```
+
+## 📚 API Reference
+
+### {{camelCase name}}Tool(context)
+
+Main tool function for processing input.
+
+**Parameters:**
+- `context` (Object): Tool execution context
+  - `args` (Array): Command line arguments
+  - `options` (Object): Command line options
+
+**Returns:**
+- `Promise<Object>`: Tool execution result
+  - `success` (boolean): Whether the tool succeeded
+  - `message` (string): Success message
+  - `result` (any): Tool output result
+  - `error` (string): Error message if failed
+
+## 🧪 Testing
+
+Run the plugin tests:
+
+```bash
+npm test
+```
+
+## 🔧 Development
+
+### Prerequisites
+- Node.js 18.0.0 or higher
+- npm or yarn package manager
+
+### Local Development
+```bash
+# Clone the repository
+git clone https://github.com/{{author}}/{{kebabCase name}}.git
+cd {{kebabCase name}}
+
+# Install dependencies
+npm install
+
+# Run in development mode
+npm run dev
+
+# Run tests
+npm test
+```
+
+### Project Structure
+```
+{{kebabCase name}}/
+├── README.md                 # This file
+├── package.json              # Plugin metadata and dependencies
+├── src/
+│   ├── index.js              # Main plugin entry point
+│   ├── tools/                # Tool implementations
+│   │   └── {{kebabCase name}}.js
+│   └── utils/                # Utility functions
+│       └── logger.js
+├── tests/                    # Plugin tests
+│   ├── unit/
+│   └── integration/
+└── docs/                     # Additional documentation
+```
+
+## 📄 License
+
+This project is licensed under the {{license}} License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+## 🐛 Issues
+
+Report bugs and request features on [GitHub Issues](https://github.com/{{author}}/{{kebabCase name}}/issues).
+
+## 🙏 Acknowledgments
+
+- PolyBucket community for feedback and contributions
+- Open source tools and libraries that make this possible
+
+---
+
+**Made with ❤️ by {{author}}**

@@ -1,7 +1,13 @@
-import axios from 'axios';
-import store from '../store';
+import { API_CONFIG } from '../api/config';
+import { AxiosHttpClient } from '../api/axiosAdapter';
+import {
+  RoleManagementClient,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+  RoleDto
+} from './api.client';
 
-const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/admin/roles` : 'http://localhost:11666/api/admin/roles';
+const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface RoleDto {
   id: string;
@@ -24,47 +30,22 @@ export interface UpdateRoleRequest {
   color?: string;
 }
 
-const getAuthHeaders = () => {
-  const state = store.getState();
-  const user = state.auth.user;
-  
-  if (user?.accessToken) {
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${user.accessToken}`
-    };
-  }
-  throw new Error('No access token found in Redux store');
-};
-
 const getAllRoles = async (): Promise<RoleDto[]> => {
   try {
-    const headers = getAuthHeaders();
-    console.log('Fetching roles with headers:', headers);
-    
-    const response = await axios.get(`${API_URL}`, { headers });
-    return response.data;
+    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getAllRolesUnpaginated();
+    return response;
   } catch (error) {
     console.error('Error fetching roles:', error);
-    if (axios.isAxiosError(error) && error.response) {
-      console.error('Response status:', error.response.status);
-      console.error('Response data:', error.response.data);
-      
-      if (error.response.status === 401) {
-        localStorage.removeItem('user');
-      } else if (error.response.status === 403) {
-        console.warn('Permission denied. User is authenticated but lacks required permissions.');
-      }
-    }
     throw error;
   }
 };
 
 const getRoleById = async (id: string): Promise<RoleDto> => {
   try {
-    const headers = getAuthHeaders();
-    const response = await axios.get(`${API_URL}/${id}`, { headers });
-    return response.data;
+    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const response = await client.getRole(id);
+    return response;
   } catch (error) {
     console.error(`Error fetching role with id ${id}:`, error);
     throw error;
@@ -73,9 +54,14 @@ const getRoleById = async (id: string): Promise<RoleDto> => {
 
 const createRole = async (role: CreateRoleRequest): Promise<RoleDto> => {
   try {
-    const headers = getAuthHeaders();
-    const response = await axios.post(`${API_URL}`, role, { headers });
-    return response.data;
+    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const request = new CreateRoleRequest({
+      name: role.name,
+      description: role.description,
+      color: role.color
+    });
+    const response = await client.createRole(request);
+    return response;
   } catch (error) {
     console.error('Error creating role:', error);
     throw error;
@@ -84,9 +70,14 @@ const createRole = async (role: CreateRoleRequest): Promise<RoleDto> => {
 
 const updateRole = async (id: string, role: UpdateRoleRequest): Promise<RoleDto> => {
   try {
-    const headers = getAuthHeaders();
-    const response = await axios.put(`${API_URL}/${id}`, role, { headers });
-    return response.data;
+    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
+    const request = new UpdateRoleRequest({
+      name: role.name,
+      description: role.description,
+      color: role.color
+    });
+    const response = await client.updateRole(id, request);
+    return response;
   } catch (error) {
     console.error(`Error updating role with id ${id}:`, error);
     throw error;
@@ -95,8 +86,8 @@ const updateRole = async (id: string, role: UpdateRoleRequest): Promise<RoleDto>
 
 const deleteRole = async (id: string): Promise<void> => {
   try {
-    const headers = getAuthHeaders();
-    await axios.delete(`${API_URL}/${id}`, { headers });
+    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
+    await client.deleteRole(id);
   } catch (error) {
     console.error(`Error deleting role with id ${id}:`, error);
     throw error;

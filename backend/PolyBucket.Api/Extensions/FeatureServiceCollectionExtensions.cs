@@ -160,8 +160,8 @@ public static class FeatureServiceCollectionExtensions
         });
 
         // Marketplace Integration
-        services.AddHttpClient<Features.Plugins.Services.MarketplaceClient>();
-        services.AddTransient<Features.Plugins.Services.MarketplaceClient>();
+        // services.AddHttpClient<Features.Plugins.Services.MarketplaceClient>();
+        // services.AddTransient<Features.Plugins.Services.MarketplaceClient>();
 
         // Register default plugins
         services.AddScoped<Features.Comments.Domain.ICommentsPlugin, Features.Comments.Plugins.DefaultCommentsPlugin>();

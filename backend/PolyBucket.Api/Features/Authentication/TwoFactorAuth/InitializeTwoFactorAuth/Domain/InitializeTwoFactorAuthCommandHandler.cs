@@ -44,51 +44,33 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
                 throw new ArgumentException("User not found");
             }
 
-            // CONCURRENCY FIX: Use database-level locking to prevent race conditions
-            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            try
+            var existingTwoFactorAuth = await _initializeTwoFactorAuthRepository.GetByUserIdAsync(command.UserId);
+            if (existingTwoFactorAuth is not null && existingTwoFactorAuth.IsEnabled)
             {
-                var existingTwoFactorAuth = await _initializeTwoFactorAuthRepository.GetByUserIdWithLockAsync(command.UserId);
-                if (existingTwoFactorAuth is not null && existingTwoFactorAuth.IsEnabled)
-                {
-                    throw new InvalidOperationException("2FA is already initialized for this user");
-                }
-
-                // If 2FA exists but is not enabled, delete it to start fresh
-                if (existingTwoFactorAuth is not null && !existingTwoFactorAuth.IsEnabled)
-                {
-                    await _initializeTwoFactorAuthRepository.DeleteAsync(existingTwoFactorAuth.Id);
-                    _logger.LogInformation("Deleted existing unenabled 2FA for user {UserId} to start fresh", command.UserId);
-                }
-
-                // Initialize 2FA (this creates the entity with IsEnabled = false)
-                var twoFactorAuth = await _initializeTwoFactorAuthService.InitializeTwoFactorAuthAsync(user);
-                
-                // CONCURRENCY FIX: Set initial version for optimistic concurrency control
-                twoFactorAuth.Version = 1;
-                
-                // Save the TwoFactorAuth entity to the database (with IsEnabled = false)
-                await _initializeTwoFactorAuthRepository.CreateAsync(twoFactorAuth);
-                
-                // Generate QR code
-                var qrCodeUrl = await _initializeTwoFactorAuthService.GenerateQrCodeAsync(twoFactorAuth, user.Email);
-
-                // Commit the transaction
-                await transaction.CommitAsync(cancellationToken);
-
-                _logger.LogInformation("2FA initialized successfully for user {UserId} (saved to database with IsEnabled = false)", command.UserId);
-
-                return new InitializeTwoFactorAuthResponse
-                {
-                    QrCodeUrl = qrCodeUrl,
-                    SecretKey = twoFactorAuth.SecretKey
-                };
+                throw new InvalidOperationException("2FA is already initialized for this user");
             }
-            catch (Exception)
+
+            if (existingTwoFactorAuth is not null && !existingTwoFactorAuth.IsEnabled)
             {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
+                _dbContext.TwoFactorAuths.Remove(existingTwoFactorAuth);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Deleted existing unenabled 2FA for user {UserId} to start fresh", command.UserId);
             }
+
+            var twoFactorAuth = await _initializeTwoFactorAuthService.InitializeTwoFactorAuthAsync(user);
+            twoFactorAuth.Version = 1;
+            
+            await _initializeTwoFactorAuthRepository.CreateAsync(twoFactorAuth);
+            
+            var qrCodeUrl = await _initializeTwoFactorAuthService.GenerateQrCodeAsync(twoFactorAuth, user.Email);
+
+            _logger.LogInformation("2FA initialized successfully for user {UserId} (saved to database with IsEnabled = false)", command.UserId);
+
+            return new InitializeTwoFactorAuthResponse
+            {
+                QrCodeUrl = qrCodeUrl,
+                SecretKey = twoFactorAuth.SecretKey
+            };
         }
     }
 } 

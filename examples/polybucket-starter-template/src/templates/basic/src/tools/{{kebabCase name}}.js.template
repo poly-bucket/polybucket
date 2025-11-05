@@ -1,0 +1,75 @@
+/**
+ * {{titleCase name}} Tool
+ * 
+ * Main tool for the {{titleCase name}} plugin
+ */
+
+import { logger } from '../utils/logger.js';
+
+export async function {{camelCase name}}Tool(context) {
+  const { args, options } = context;
+  
+  try {
+    logger.info('🔧 Running {{titleCase name}} tool');
+    
+    // TODO: Implement your tool logic here
+    console.log('Hello from {{titleCase name}} plugin!');
+    console.log('Arguments:', args);
+    console.log('Options:', options);
+    
+    // Example: Process arguments
+    if (args.length === 0) {
+      logger.warn('No arguments provided');
+      console.log('\nUsage: polybucket {{camelCase name}} <input> [options]');
+      console.log('\nOptions:');
+      console.log('  --help     Show help information');
+      console.log('  --verbose  Enable verbose output');
+      
+      return {
+        success: false,
+        error: 'No arguments provided'
+      };
+    }
+    
+    // Example: Process input
+    const input = args[0];
+    logger.info(`Processing input: ${input}`);
+    
+    // Example: Tool logic
+    const result = await processInput(input, options);
+    
+    // Example: Display result
+    logger.success('Tool completed successfully');
+    console.log(`Result: ${result}`);
+    
+    return {
+      success: true,
+      message: 'Tool completed successfully',
+      result: result
+    };
+    
+  } catch (error) {
+    logger.error('Tool failed:', error.message);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Process input data
+ */
+async function processInput(input, options) {
+  // TODO: Implement your processing logic here
+  logger.debug(`Processing input: ${input}`);
+  
+  // Example processing
+  const processed = input.toUpperCase();
+  
+  if (options.verbose) {
+    logger.debug(`Input processed: ${input} -> ${processed}`);
+  }
+  
+  return processed;
+}

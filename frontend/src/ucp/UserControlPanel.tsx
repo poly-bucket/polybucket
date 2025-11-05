@@ -195,7 +195,7 @@ const UserControlPanel: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="lg-container min-h-screen">
+      <div className="lg-container min-h-screen flex flex-col">
         <NavigationBar
           title="User Control Panel"
           icon={<Settings className="w-6 h-6" />}
@@ -203,6 +203,7 @@ const UserControlPanel: React.FC = () => {
           showUploadButton={false}
           showHomeLink={true}
         />
+        <div className="flex-1 pt-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="lg-card p-6">
             <div className="animate-pulse">
@@ -212,12 +213,13 @@ const UserControlPanel: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="lg-container min-h-screen">
+    <div className="lg-container min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <NavigationBar
         title="User Control Panel"
@@ -228,7 +230,8 @@ const UserControlPanel: React.FC = () => {
         showHomeLink={true}
       />
 
-      {/* Main Content */}
+      {/* Main Content - Padding for fixed navbar */}
+      <div className="flex-1 pt-20">
 
         {/* Navigation Tabs */}
         <div className="lg-tabs">
@@ -265,6 +268,7 @@ const UserControlPanel: React.FC = () => {
             </TabPanel>
           ))}
         </div>
+      </div>
     </div>
   );
 };

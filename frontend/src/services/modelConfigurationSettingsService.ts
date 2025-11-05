@@ -11,11 +11,13 @@ export type ModelConfigurationSettings = ModelConfigurationSettingsData;
 
 class ModelConfigurationSettingsService {
   private getModelConfigurationSettingsClient(): GetModelConfigurationSettingsClient {
-    return new GetModelConfigurationSettingsClient();
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+    return new GetModelConfigurationSettingsClient(baseUrl);
   }
 
   private getUpdateModelConfigurationSettingsClient(): UpdateModelConfigurationSettingsClient {
-    return new UpdateModelConfigurationSettingsClient();
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
+    return new UpdateModelConfigurationSettingsClient(baseUrl);
   }
 
   async getSettings(): Promise<GetModelConfigurationSettingsResponse> {

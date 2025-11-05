@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Storage;
+using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Repository;
 using PolyBucket.Api.Features.Models.Shared.Domain;
@@ -38,7 +39,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
 
         public async Task<CreateModelResponse> CreateModelAsync(CreateModelRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            ValidateRequest(request);
+            await ValidateRequestAsync(request);
             
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(userIdClaim, out var authorId))
@@ -153,7 +154,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             }
         }
 
-        private void ValidateRequest(CreateModelRequest request)
+        private async Task ValidateRequestAsync(CreateModelRequest request)
         {
             if (request.Files == null || request.Files.Length == 0)
             {
@@ -165,14 +166,14 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                 throw new ValidationException("Model name is required");
             }
 
-            var validationError = ValidateFiles(request.Files);
+            var validationError = await ValidateFilesAsync(request.Files);
             if (validationError != null)
             {
                 throw new ValidationException(validationError);
             }
         }
 
-        private string? ValidateFiles(IFormFile[] files)
+        private async Task<string?> ValidateFilesAsync(IFormFile[] files)
         {
             if (files.Length > 20)
             {
@@ -191,6 +192,15 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                 if (!AllSupportedFormats.Contains(extension))
                 {
                     return $"Unsupported file type: {extension}. Supported formats: {string.Join(", ", AllSupportedFormats)}";
+                }
+
+                if (!FileSignatureValidator.IsTextFile(extension))
+                {
+                    var isValidSignature = await FileSignatureValidator.ValidateFileSignatureAsync(file, extension);
+                    if (!isValidSignature)
+                    {
+                        return $"File {file.FileName} does not match expected file signature for {extension}. File may be corrupted or have incorrect extension.";
+                    }
                 }
 
                 var maxSize = Is3DModelFile(file.FileName) ? Max3DModelSize : MaxFileSize;

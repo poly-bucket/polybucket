@@ -37,11 +37,9 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
         {
             _logger.LogInformation("Disabling 2FA for user {UserId}", command.UserId);
 
-            // CONCURRENCY FIX: Use database-level locking to prevent race conditions
-            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var twoFactorAuth = await _disableTwoFactorAuthRepository.GetByUserIdWithLockAsync(command.UserId);
+                var twoFactorAuth = await _disableTwoFactorAuthRepository.GetByUserIdAsync(command.UserId);
                 if (twoFactorAuth is null)
                 {
                     throw new InvalidOperationException("2FA not found for this user");
@@ -52,21 +50,12 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
                     throw new InvalidOperationException("2FA is not enabled for this user");
                 }
 
-                // CONCURRENCY FIX: Store current version for optimistic concurrency control
-                var currentVersion = twoFactorAuth.Version;
-
                 var success = await _disableTwoFactorAuthService.DisableTwoFactorAuthAsync(twoFactorAuth);
                 
                 if (success)
                 {
-                    // CONCURRENCY FIX: Increment version for optimistic concurrency control
-                    twoFactorAuth.Version = currentVersion + 1;
-                    
-                    // Update with version check
-                    await _disableTwoFactorAuthRepository.UpdateWithVersionAsync(twoFactorAuth, currentVersion);
-                    
-                    // Commit the transaction
-                    await transaction.CommitAsync(cancellationToken);
+                    twoFactorAuth.Version++;
+                    await _disableTwoFactorAuthRepository.UpdateAsync(twoFactorAuth);
                     
                     _logger.LogInformation("2FA disabled successfully for user {UserId}", command.UserId);
                     
@@ -78,9 +67,6 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
                 }
                 else
                 {
-                    // Rollback the transaction on failure
-                    await transaction.RollbackAsync(cancellationToken);
-                    
                     _logger.LogWarning("Failed to disable 2FA for user {UserId}", command.UserId);
                     
                     return new DisableTwoFactorAuthResponse
@@ -90,10 +76,10 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
                     };
                 }
             }
-            catch (Exception)
+            catch (DbUpdateConcurrencyException ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
+                _logger.LogWarning(ex, "DisableTwoFactorAuthCommandHandler.Handle: Concurrent modification detected for user {UserId}", command.UserId);
+                throw new InvalidOperationException("The 2FA configuration was modified by another operation. Please try again.");
             }
         }
     }

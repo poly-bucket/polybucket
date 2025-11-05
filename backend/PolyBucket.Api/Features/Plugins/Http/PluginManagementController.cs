@@ -153,64 +153,6 @@ namespace PolyBucket.Api.Features.Plugins.Http
         }
 
         /// <summary>
-        /// Get marketplace plugins (placeholder for future implementation)
-        /// </summary>
-        /// <returns>List of marketplace plugins</returns>
-        [HttpGet("marketplace")]
-        [ProducesResponseType(typeof(List<PolyBucket.Api.Features.Plugins.Domain.MarketplacePlugin>), 200)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(500)]
-        public async Task<ActionResult<List<PolyBucket.Api.Features.Plugins.Domain.MarketplacePlugin>>> GetMarketplacePlugins()
-        {
-            try
-            {
-                // TODO: Implement marketplace integration
-                var plugins = new List<PolyBucket.Api.Features.Plugins.Domain.MarketplacePlugin>
-                {
-                    new PolyBucket.Api.Features.Plugins.Domain.MarketplacePlugin
-                    {
-                        Id = "dark-theme-plugin",
-                        Name = "Dark Theme",
-                        Version = "1.2.0",
-                        Author = "PolyBucket Community",
-                        Description = "Dark theme with customizable accent colors",
-                        Type = "theme",
-                        License = "MIT",
-                        Keywords = new() { "theme", "dark", "ui", "customization" },
-                        DownloadCount = 1250,
-                        Rating = 4.8,
-                        RepositoryUrl = "https://github.com/polybucket/dark-theme-plugin",
-                        LastUpdated = DateTime.UtcNow.AddDays(-7),
-                        IsInstalled = false
-                    },
-                    new PolyBucket.Api.Features.Plugins.Domain.MarketplacePlugin
-                    {
-                        Id = "discord-oauth-plugin",
-                        Name = "Discord OAuth",
-                        Version = "1.0.0",
-                        Author = "PolyBucket Community",
-                        Description = "Discord account integration and community features",
-                        Type = "oauth",
-                        License = "MIT",
-                        Keywords = new() { "oauth", "discord", "social", "integration" },
-                        DownloadCount = 890,
-                        Rating = 4.6,
-                        RepositoryUrl = "https://github.com/polybucket/discord-oauth-plugin",
-                        LastUpdated = DateTime.UtcNow.AddDays(-14),
-                        IsInstalled = false
-                    }
-                };
-
-                return Ok(plugins);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting marketplace plugins");
-                return StatusCode(500, new { message = "Error retrieving marketplace plugins" });
-            }
-        }
-
-        /// <summary>
         /// Get plugin health status
         /// </summary>
         /// <returns>Plugin health information</returns>
