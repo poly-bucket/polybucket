@@ -204,4 +204,34 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+
+
+    private static string GetJwtIssuer(IConfiguration configuration)
+    {
+        var jwtIssuer = configuration["AppSettings:Security:JwtIssuer"] 
+            ?? configuration["JWT_ISSUER"]
+            ?? Environment.GetEnvironmentVariable("JWT_ISSUER")
+            ?? throw new InvalidOperationException(
+                "JWT Issuer must be configured via AppSettings:Security:JwtIssuer, JWT_ISSUER environment variable, or appsettings.json");
+
+        if (string.IsNullOrWhiteSpace(jwtIssuer))
+        {
+            throw new InvalidOperationException(
+                "JWT Issuer must be configured via AppSettings:Security:JwtIssuer, JWT_ISSUER environment variable, or appsettings.json");
+        }
+
+        return jwtIssuer;
+    }
+
+    private static string GetJwtAudience(IConfiguration configuration)
+    {
+        var jwtAudience = configuration["AppSettings:Security:JwtAudience"] 
+            ?? configuration["JWT_AUDIENCE"]
+            ?? Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+            ?? throw new InvalidOperationException(
+                "JWT Audience must be configured via AppSettings:Security:JwtAudience, JWT_AUDIENCE environment variable, or appsettings.json");
+
+        return jwtAudience;
+    }
 } 
