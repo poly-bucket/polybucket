@@ -15,10 +15,15 @@ services:
       - Admin__Username=${Admin__Username:-admin}
       - Admin__Email=${Admin__Email:-admin@polybucket.com}
       - Admin__Password=${Admin__Password:-}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
+      - OTEL_SERVICE_NAME=polybucket-api
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=polybucket-api,service.version=1.0.0,deployment.environment=Development
     depends_on:
       db:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      lgtm:
         condition: service_healthy
     volumes:
       - ./backend:/app/backend
@@ -88,6 +93,30 @@ services:
       timeout: 20s
       retries: 3
 
+  lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: polybucket-lgtm
+    ports:
+      - "3100:3000"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - ENABLE_LOGS_GRAFANA=true
+      - ENABLE_LOGS_LOKI=true
+      - ENABLE_LOGS_PROMETHEUS=true
+      - ENABLE_LOGS_TEMPO=true
+      - ENABLE_LOGS_OTELCOL=true
+    volumes:
+      - lgtm-data:/data
+    restart: unless-stopped
+    networks:
+      - polybucket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 networks:
   polybucket-network:
     name: polybucket-network
@@ -96,3 +125,4 @@ networks:
 volumes:
   postgres-data:
   minio-data:
+  lgtm-data:

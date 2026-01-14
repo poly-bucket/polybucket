@@ -50,7 +50,8 @@ public class Program
                 .AddPolyBucketAuthentication(builder.Configuration)
                 .AddPolyBucketCors(builder.Configuration)
                 .AddPolyBucketHealthChecks(builder.Configuration)
-                .AddPolyBucketOpenApi();
+                .AddPolyBucketOpenApi()
+                .AddPolyBucketOpenTelemetry(builder.Configuration);
 
             // Add object storage
             builder.Services.AddObjectStorage(builder.Configuration);
