@@ -6,6 +6,7 @@ using PolyBucket.Marketplace.Api.Data;
 using PolyBucket.Marketplace.Api.Models;
 using PolyBucket.Marketplace.Api.Services;
 using Serilog;
+using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -144,27 +145,46 @@ builder.Services.AddAuthorization(options =>
 });
 
 // CORS
+var environment = builder.Configuration["ASPNETCORE_ENVIRONMENT"] ?? builder.Environment.EnvironmentName ?? "Development";
+var isDevelopment = environment.Equals("Development", StringComparison.OrdinalIgnoreCase);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins(
-                          "http://localhost:3001", 
-                          "http://localhost:3002", 
-                          "http://localhost:32768",
-                          "http://host.docker.internal:32768",
-                          "http://polybucket-client-1:3000",
-                          "http://127.0.0.1:32768",
-                          "http://localhost:10101",
-                          "http://localhost:10110",
-                          "http://localhost:11666",
-                          "http://127.0.0.1:10110"
-                      )
-                      .AllowAnyMethod()
-                      .AllowAnyHeader()
-                      .AllowCredentials();
-            });
-        });
+        if (isDevelopment)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                              "http://localhost:3001", 
+                              "http://localhost:3002", 
+                              "http://localhost:3000",
+                              "http://127.0.0.1:3000",
+                              "http://localhost:32768",
+                              "http://host.docker.internal:32768",
+                              "http://polybucket-client-1:3000",
+                              "http://polybucket-frontend:3000",
+                              "http://polybucket-frontend:32768",
+                              "http://127.0.0.1:32768",
+                              "http://localhost:10101",
+                              "http://localhost:10110",
+                              "http://127.0.0.1:10110",
+                              "http://localhost:11666",
+                              "http://client:3000",
+                              "http://marketplace-frontend:3000"
+                          )
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
+        }
+    });
+});
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>

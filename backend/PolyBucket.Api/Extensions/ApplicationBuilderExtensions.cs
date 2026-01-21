@@ -68,6 +68,8 @@ public static class ApplicationBuilderExtensions
     {
         app.UseGlobalExceptionHandler();
         
+        app.UseCors();
+        
         app.UseRequestLogging();
         
         app.UseSecurityHeaders();
@@ -95,8 +97,6 @@ public static class ApplicationBuilderExtensions
             FileProvider = new PhysicalFileProvider(filesPath),
             RequestPath = "/files"
         });
-
-        app.UseCors();
         
         app.UseRouting();
         

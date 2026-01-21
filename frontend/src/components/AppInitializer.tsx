@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { setInitialized, resetAuthState, setUser } from '../store/slices/authSlice';
+import { setInitialized, resetAuthState, setUser, clearUser } from '../store/slices/authSlice';
 import { isAuthenticated, handleAuthFailure } from '../utils/axiosConfig';
 import { extractUserFromJWT, isTokenExpired } from '../utils/jwtUtils';
 
@@ -9,9 +9,23 @@ interface AppInitializerProps {
   children: React.ReactNode;
 }
 
+const TOKEN_CHECK_INTERVAL = 30000;
+
 const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
   const dispatch = useDispatch();
   const { isInitialized, user } = useSelector((state: RootState) => state.auth);
+
+  const checkTokenValidity = useCallback(() => {
+    if (!user || !user.accessToken) {
+      return;
+    }
+
+    if (isTokenExpired(user.accessToken)) {
+      console.log('Token expired in AppInitializer, clearing authentication state');
+      dispatch(clearUser());
+      handleAuthFailure();
+    }
+  }, [user, dispatch]);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -74,6 +88,22 @@ const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
       initializeApp();
     }
   }, [dispatch, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized || !user) {
+      return;
+    }
+
+    checkTokenValidity();
+
+    const intervalId = setInterval(() => {
+      checkTokenValidity();
+    }, TOKEN_CHECK_INTERVAL);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isInitialized, user, checkTokenValidity]);
 
   if (!isInitialized) {
     return <div>Loading...</div>;

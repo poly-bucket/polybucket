@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logoutUser } from '../store/thunks/authThunks';
+import { clearUser } from '../store/slices/authSlice';
 import { useSimplePermissions } from '../hooks/useSimplePermissions';
+import { isTokenExpired } from '../utils/jwtUtils';
 import UserAvatar from '../ucp/UserAvatar';
 
 interface UserMenuProps {
@@ -184,6 +186,7 @@ const LogoutMenuItem: React.FC<{ onLogout: () => void }> = ({ onLogout }) => (
 const UserMenu: React.FC<UserMenuProps> = ({ isOpen, onClose, anchorEl }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -202,10 +205,30 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpen, onClose, anchorEl }) => {
     };
   }, [isOpen, onClose, anchorEl]);
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
-    navigate('/login');
+  const handleLogout = async () => {
     onClose();
+    
+    const tokenExpired = user?.accessToken ? isTokenExpired(user.accessToken) : true;
+    
+    if (tokenExpired) {
+      dispatch(clearUser());
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      navigate('/login');
+    } else {
+      try {
+        await dispatch(logoutUser());
+      } catch (error) {
+        console.warn('Logout API call failed, performing local logout:', error);
+      } finally {
+        dispatch(clearUser());
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate('/login');
+      }
+    }
   };
 
   const handleNavigate = (path: string) => {

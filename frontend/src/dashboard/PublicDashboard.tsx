@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTokenValidation } from '../hooks/useTokenValidation';
 import ModelGrid from '../models/ModelGrid';
 import NavigationBar from '../components/common/NavigationBar';
 import CollectionsBar from '../collections/CollectionsBar';
@@ -15,6 +16,7 @@ const MODELS_PER_PAGE = 50;
 
 const PublicDashboard: React.FC = () => {
   const navigate = useNavigate();
+  useTokenValidation();
   
   // Model state
   const [models, setModels] = useState<ExtendedModel[]>([]);

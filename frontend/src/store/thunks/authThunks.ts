@@ -199,7 +199,25 @@ export const registerUser = createAsyncThunk(
       
       throw new Error('Registration failed: Invalid response format');
     } catch (error: any) {
-      const errorMessage = error.result?.message || error.result?.detail || error.message || 'Registration failed';
+      let errorMessage = 'Registration failed';
+      
+      if (error.message) {
+        if (error.message.includes('Network Error') || error.message.includes('Failed to fetch') || error.message.includes('ERR_NETWORK')) {
+          errorMessage = 'Network Error: Unable to connect to the server. Please check your connection and ensure the API is running.';
+        } else if (error.message.includes('CORS')) {
+          errorMessage = 'CORS Error: Cross-origin request blocked. Please check server configuration.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      if (error.result?.message) {
+        errorMessage = error.result.message;
+      } else if (error.result?.detail) {
+        errorMessage = error.result.detail;
+      }
+      
+      console.error('Registration error:', error);
       return rejectWithValue(errorMessage);
     }
   }

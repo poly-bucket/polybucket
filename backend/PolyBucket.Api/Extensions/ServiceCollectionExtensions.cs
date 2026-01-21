@@ -128,18 +128,7 @@ public static class ServiceCollectionExtensions
             {
                 if (isDevelopment)
                 {
-                    policy.WithOrigins(
-                              "http://localhost:3001", 
-                              "http://localhost:3002", 
-                              "http://localhost:32768",
-                              "http://polybucket-frontend:32768",
-                              "http://polybucket-frontend:3000",
-                              "http://127.0.0.1:32768",
-                              "http://localhost:3000",
-                              "http://localhost:10110",
-                              "http://127.0.0.1:10110",
-                              "http://marketplace-frontend:3000"
-                          )
+                    policy.SetIsOriginAllowed(_ => true)
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials();

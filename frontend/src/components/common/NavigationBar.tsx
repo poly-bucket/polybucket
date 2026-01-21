@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../utils/hooks';
+import { useTokenValidation } from '../../hooks/useTokenValidation';
+import { isTokenExpired } from '../../utils/jwtUtils';
 import UserAvatar from '../../ucp/UserAvatar';
 import UserMenu from '../UserMenu';
 import SearchBar, { SearchType } from './SearchBar';
@@ -43,6 +45,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onSearchTypeChange
 }) => {
   const { user } = useAppSelector((state) => state.auth);
+  useTokenValidation();
+  
+  const isTokenValid = user?.accessToken && !isTokenExpired(user.accessToken);
+  const shouldShowUserMenu = user && isTokenValid;
   
   // User menu state
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -118,59 +124,51 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
             {/* User Menu or Auth Buttons */}
             <div className="flex items-center space-x-1.5 h-full">
-              {user ? (
-                <>
-                  {showUploadButton && (
-                    <Link
-                      to="/upload-model"
-                      className="lg-button lg-button flex items-center space-x-1 px-2 py-0.5 text-xs h-7"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      <span>Upload Model</span>
-                    </Link>
-                  )}
-                  
-                  <button
-                    onClick={handleUserMenuOpen}
-                    className="flex items-center space-x-1 hover:bg-white/10 rounded p-0.5 transition-colors duration-200 h-full"
-                  >
-                    <UserAvatar 
-                      userId={user.id}
-                      username={user.username} 
-                      avatar={user.avatar}
-                      profilePictureUrl={user.profilePictureUrl}
-                      size="sm"
-                    />
-                    <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Link
-                    to="/login"
-                    className="lg-button lg-button-secondary flex items-center space-x-1 px-3 py-1.5 text-xs h-7"
-                  >
-                    <span>Login</span>
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="lg-button lg-button flex items-center space-x-1 px-3 py-1.5 text-xs h-7"
-                  >
-                    <span>Register</span>
-                  </Link>
-                </div>
+              {showUploadButton && shouldShowUserMenu && (
+                <Link
+                  to="/upload-model"
+                  className="lg-button lg-button flex items-center space-x-1 px-2 py-0.5 text-xs h-7"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Upload Model</span>
+                </Link>
+              )}
+              
+              {shouldShowUserMenu && (
+                <button
+                  onClick={handleUserMenuOpen}
+                  className="flex items-center space-x-1 hover:bg-white/10 rounded p-0.5 transition-colors duration-200 h-full"
+                >
+                  <UserAvatar 
+                    userId={user?.id || ''}
+                    username={user?.username || ''} 
+                    avatar={user?.avatar}
+                    profilePictureUrl={user?.profilePictureUrl}
+                    size="sm"
+                  />
+                  <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
+              
+              {!shouldShowUserMenu && (
+                <Link
+                  to="/login"
+                  className="lg-button lg-button flex items-center space-x-1 px-2 py-0.5 text-xs h-7"
+                >
+                  <span>Sign In</span>
+                </Link>
               )}
             </div>
           </div>
         </div>
       </header>
 
-      {/* User Menu Dropdown - Only show when user is logged in */}
-      {user && (
+      {/* User Menu Dropdown */}
+      {shouldShowUserMenu && (
         <UserMenu
           isOpen={isUserMenuOpen}
           onClose={handleUserMenuClose}
