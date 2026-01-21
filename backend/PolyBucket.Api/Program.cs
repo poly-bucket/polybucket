@@ -1,3 +1,4 @@
+using System;
 using Serilog;
 using Serilog.Events;
 using PolyBucket.Api.Extensions.Serilog;
@@ -39,6 +40,24 @@ public class Program
         try
         {
             Log.Information("Starting PolyBucket API");
+            
+            var envAdminUsername = Environment.GetEnvironmentVariable("Admin__Username");
+            var envAdminEmail = Environment.GetEnvironmentVariable("Admin__Email");
+            var envAdminPassword = Environment.GetEnvironmentVariable("Admin__Password");
+            
+            Log.Information("Environment variables at startup - Admin__Username: {Username}, Admin__Email: {Email}, Admin__Password: {PasswordSet}",
+                envAdminUsername ?? "(not set)",
+                envAdminEmail ?? "(not set)",
+                string.IsNullOrWhiteSpace(envAdminPassword) ? "(not set)" : $"(set, length: {envAdminPassword.Length})");
+            
+            var configAdminUsername = builder.Configuration["Admin:Username"];
+            var configAdminEmail = builder.Configuration["Admin:Email"];
+            var configAdminPassword = builder.Configuration["Admin:Password"];
+            
+            Log.Information("IConfiguration at startup - Admin:Username: {Username}, Admin:Email: {Email}, Admin:Password: {PasswordSet}",
+                configAdminUsername ?? "(null)",
+                configAdminEmail ?? "(null)",
+                string.IsNullOrWhiteSpace(configAdminPassword) ? "(null)" : $"(set, length: {configAdminPassword.Length})");
             
             builder.Host.UseSerilog();
 

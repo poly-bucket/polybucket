@@ -40,6 +40,9 @@ const App: React.FC = () => {
                 <AppInitializer>
                   <Router>
               <Routes>
+                {/* Root route - redirect to dashboard */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                
                 {/* Auth routes */}
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
@@ -156,7 +159,7 @@ const App: React.FC = () => {
                 />
                 
                 {/* Fallback route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Router>
                 </AppInitializer>

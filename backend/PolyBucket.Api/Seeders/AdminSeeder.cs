@@ -46,31 +46,44 @@ namespace PolyBucket.Api.Data.Seeders
                 return;
             }
 
-            // Read admin configuration from IConfiguration
-            // IConfiguration already has the correct priority: Environment Variables > appsettings.{Environment}.json > appsettings.json
-            var adminUsername = _configuration["Admin:Username"];
-            var adminEmail = _configuration["Admin:Email"];
-            var adminPassword = _configuration["Admin:Password"];
-
-            // Log what values are being read from configuration (Information level for visibility in containers)
-            _logger.LogInformation(
-                "Reading Admin configuration from IConfiguration - Username: {Username}, Email: {Email}, Password: {HasPassword}",
-                adminUsername ?? "(null)",
-                adminEmail ?? "(null)",
-                string.IsNullOrWhiteSpace(adminPassword) ? "(not set - will generate)" : "(provided)");
-
-            // Also log raw environment variables for debugging (if they exist)
+            _logger.LogInformation("=== AdminSeeder: Starting configuration read ===");
+            
             var envUsername = Environment.GetEnvironmentVariable("Admin__Username");
             var envEmail = Environment.GetEnvironmentVariable("Admin__Email");
             var envPassword = Environment.GetEnvironmentVariable("Admin__Password");
             
-            if (!string.IsNullOrWhiteSpace(envUsername) || !string.IsNullOrWhiteSpace(envEmail) || !string.IsNullOrWhiteSpace(envPassword))
+            _logger.LogInformation(
+                "Raw environment variables - Admin__Username: {EnvUsername}, Admin__Email: {EnvEmail}, Admin__Password: {EnvPasswordInfo}",
+                envUsername ?? "(not set)",
+                envEmail ?? "(not set)",
+                string.IsNullOrWhiteSpace(envPassword) ? "(not set)" : $"(set, length: {envPassword.Length})");
+
+            var configUsername = _configuration["Admin:Username"];
+            var configEmail = _configuration["Admin:Email"];
+            var configPassword = _configuration["Admin:Password"];
+            
+            _logger.LogInformation(
+                "IConfiguration values - Admin:Username: {ConfigUsername}, Admin:Email: {ConfigEmail}, Admin:Password: {ConfigPasswordInfo}",
+                configUsername ?? "(null)",
+                configEmail ?? "(null)",
+                string.IsNullOrWhiteSpace(configPassword) ? "(null)" : $"(set, length: {configPassword.Length})");
+
+            var adminUsername = configUsername;
+            var adminEmail = configEmail;
+            var adminPassword = configPassword;
+
+            if (!string.IsNullOrWhiteSpace(envUsername) && envUsername != configUsername)
             {
-                _logger.LogInformation(
-                    "Environment variables detected - Admin__Username: {EnvUsername}, Admin__Email: {EnvEmail}, Admin__Password: {EnvPasswordSet}",
-                    envUsername ?? "(not set)",
-                    envEmail ?? "(not set)",
-                    string.IsNullOrWhiteSpace(envPassword) ? "(not set)" : "(set)");
+                _logger.LogWarning("Mismatch: Environment variable Admin__Username='{Env}' but IConfiguration Admin:Username='{Config}'", envUsername, configUsername);
+            }
+            if (!string.IsNullOrWhiteSpace(envEmail) && envEmail != configEmail)
+            {
+                _logger.LogWarning("Mismatch: Environment variable Admin__Email='{Env}' but IConfiguration Admin:Email='{Config}'", envEmail, configEmail);
+            }
+            if (!string.IsNullOrWhiteSpace(envPassword) && envPassword != configPassword)
+            {
+                _logger.LogWarning("Mismatch: Environment variable Admin__Password length={EnvLen} but IConfiguration Admin:Password length={ConfigLen}", 
+                    envPassword.Length, configPassword?.Length ?? 0);
             }
 
             // Use defaults if not provided
@@ -94,7 +107,6 @@ namespace PolyBucket.Api.Data.Seeders
                 _logger.LogInformation("Admin email configured: {Email}", adminEmail);
             }
 
-            // Password is optional - if not provided, will be generated
             if (string.IsNullOrWhiteSpace(adminPassword))
             {
                 adminPassword = null;
@@ -102,7 +114,12 @@ namespace PolyBucket.Api.Data.Seeders
             }
             else
             {
-                _logger.LogInformation("Admin password configured from IConfiguration (password value not logged for security)");
+                var maskedPassword = adminPassword.Length > 2 
+                    ? $"{adminPassword[0]}{new string('*', adminPassword.Length - 2)}{adminPassword[adminPassword.Length - 1]}"
+                    : "**";
+                _logger.LogInformation(
+                    "Admin password configured from IConfiguration - Length: {Length}, Masked: {MaskedPassword}, First char: '{FirstChar}', Last char: '{LastChar}'",
+                    adminPassword.Length, maskedPassword, adminPassword[0], adminPassword[adminPassword.Length - 1]);
             }
 
             await CreateAdminAccount(adminUsername, adminEmail, adminPassword, adminRole);
@@ -134,9 +151,22 @@ namespace PolyBucket.Api.Data.Seeders
                 _logger.LogInformation("Admin account created with password from configuration. Username: {Username}, Email: {Email}", username, email);
             }
 
-            // Hash the password
+            _logger.LogInformation("Hashing password - Password length: {PasswordLength}", adminPassword.Length);
+            
             var salt = _passwordHasher.GenerateSalt();
+            _logger.LogInformation("Generated salt: {Salt} (length: {SaltLength})", salt, salt.Length);
+            
             var passwordHash = _passwordHasher.HashPassword(adminPassword, salt);
+            _logger.LogInformation("Generated password hash: {HashPrefix}... (length: {HashLength})", 
+                passwordHash.Substring(0, Math.Min(20, passwordHash.Length)), passwordHash.Length);
+
+            var verifyTest = _passwordHasher.VerifyPassword(adminPassword, passwordHash);
+            _logger.LogInformation("Password hash verification test: {VerifyResult}", verifyTest ? "SUCCESS" : "FAILED");
+            
+            if (!verifyTest)
+            {
+                _logger.LogError("CRITICAL: Password hash verification failed immediately after creation! This indicates a problem with password hashing.");
+            }
 
             var admin = new User
             {

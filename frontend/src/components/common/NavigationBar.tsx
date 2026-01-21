@@ -116,46 +116,67 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               </div>
             )}
 
-            {/* User Menu */}
+            {/* User Menu or Auth Buttons */}
             <div className="flex items-center space-x-1.5 h-full">
-              {showUploadButton && (
-                <Link
-                  to="/upload-model"
-                  className="lg-button lg-button flex items-center space-x-1 px-2 py-0.5 text-xs h-7"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>Upload Model</span>
-                </Link>
+              {user ? (
+                <>
+                  {showUploadButton && (
+                    <Link
+                      to="/upload-model"
+                      className="lg-button lg-button flex items-center space-x-1 px-2 py-0.5 text-xs h-7"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span>Upload Model</span>
+                    </Link>
+                  )}
+                  
+                  <button
+                    onClick={handleUserMenuOpen}
+                    className="flex items-center space-x-1 hover:bg-white/10 rounded p-0.5 transition-colors duration-200 h-full"
+                  >
+                    <UserAvatar 
+                      userId={user.id}
+                      username={user.username} 
+                      avatar={user.avatar}
+                      profilePictureUrl={user.profilePictureUrl}
+                      size="sm"
+                    />
+                    <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link
+                    to="/login"
+                    className="lg-button lg-button-secondary flex items-center space-x-1 px-3 py-1.5 text-xs h-7"
+                  >
+                    <span>Login</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="lg-button lg-button flex items-center space-x-1 px-3 py-1.5 text-xs h-7"
+                  >
+                    <span>Register</span>
+                  </Link>
+                </div>
               )}
-              
-              <button
-                onClick={handleUserMenuOpen}
-                className="flex items-center space-x-1 hover:bg-white/10 rounded p-0.5 transition-colors duration-200 h-full"
-              >
-                <UserAvatar 
-                  userId={user?.id || ''}
-                  username={user?.username || ''} 
-                  avatar={user?.avatar}
-                  profilePictureUrl={user?.profilePictureUrl}
-                  size="sm"
-                />
-                <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* User Menu Dropdown */}
-      <UserMenu
-        isOpen={isUserMenuOpen}
-        onClose={handleUserMenuClose}
-        anchorEl={userMenuAnchorEl}
-      />
+      {/* User Menu Dropdown - Only show when user is logged in */}
+      {user && (
+        <UserMenu
+          isOpen={isUserMenuOpen}
+          onClose={handleUserMenuClose}
+          anchorEl={userMenuAnchorEl}
+        />
+      )}
     </>
   );
 };

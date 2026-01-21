@@ -13,6 +13,23 @@ export const isAuthenticated = (): boolean => {
   return !!(user && user.accessToken && user.refreshToken);
 };
 
+// Utility function to check if a request URL is an authentication endpoint
+const isAuthenticationEndpoint = (url: string | undefined): boolean => {
+  if (!url) return false;
+  
+  const authEndpoints = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/logout',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/verify-email'
+  ];
+  
+  return authEndpoints.some(endpoint => url.includes(endpoint));
+};
+
 // Utility function to handle authentication failure
 export const handleAuthFailure = (): void => {
   console.log('Authentication failed, logging out user');
@@ -69,6 +86,13 @@ api.interceptors.response.use(
     if (error.response?.status === 403) {
       console.warn('Permission denied (403 Forbidden)', error.config.url);
       // Just reject the promise without logging out
+      return Promise.reject(error);
+    }
+    
+    // Skip token refresh logic for authentication endpoints
+    // These endpoints handle their own 401 errors (e.g., invalid credentials)
+    if (isAuthenticationEndpoint(error.config.url || '')) {
+      console.log('Authentication endpoint detected, skipping token refresh logic');
       return Promise.reject(error);
     }
     
