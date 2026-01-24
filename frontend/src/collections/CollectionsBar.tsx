@@ -5,6 +5,7 @@ import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import UserAvatar from '../ucp/UserAvatar';
 import CollectionAvatar from './CollectionAvatar';
 import collectionsService, { Collection } from '../services/collectionsService';
+import { useAppSelector } from '../utils/hooks';
 
 interface CollectionsBarProps {
   isCollapsed: boolean;
@@ -19,6 +20,7 @@ interface DragData {
 }
 
 const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }) => {
+  const { user } = useAppSelector((state) => state.auth);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,13 +31,21 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadCollections();
-    // Add a small delay for the entrance animation
-    const timer = setTimeout(() => setIsMounted(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
+    if (user) {
+      loadCollections();
+      // Add a small delay for the entrance animation
+      const timer = setTimeout(() => setIsMounted(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   const loadCollections = async () => {
+    if (!user) {
+      setCollections([]);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       const favoriteCollections = await collectionsService.getFavoriteCollections();
@@ -181,6 +191,11 @@ const CollectionsBar: React.FC<CollectionsBarProps> = ({ isCollapsed, onToggle }
       // You could add a toast notification here
     }
   };
+
+  if (!user) {
+    console.log('No user found, returning null');
+    return null;
+  }
 
   const baseClasses = "lg-sidebar flex-shrink-0 flex flex-col transition-all duration-300 ease-out z-40";
   const mountAnimation = isMounted ? "translate-x-0" : "-translate-x-full";
