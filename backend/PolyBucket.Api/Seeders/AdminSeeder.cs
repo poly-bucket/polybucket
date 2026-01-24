@@ -68,9 +68,10 @@ namespace PolyBucket.Api.Data.Seeders
                 configEmail ?? "(null)",
                 string.IsNullOrWhiteSpace(configPassword) ? "(null)" : $"(set, length: {configPassword.Length})");
 
-            var adminUsername = configUsername;
-            var adminEmail = configEmail;
-            var adminPassword = configPassword;
+            // Prioritize environment variables over configuration (environment variables take precedence)
+            var adminUsername = envUsername ?? configUsername;
+            var adminEmail = envEmail ?? configEmail;
+            var adminPassword = envPassword ?? configPassword;
 
             if (!string.IsNullOrWhiteSpace(envUsername) && envUsername != configUsername)
             {

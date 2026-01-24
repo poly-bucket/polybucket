@@ -77,6 +77,11 @@ const ModelCard: React.FC<ModelCardProps> = ({
   };
 
   const handleDragStart = (e: React.DragEvent) => {
+    if (!user) {
+      e.preventDefault();
+      return;
+    }
+    
     e.stopPropagation();
     
     // Set drag data
@@ -117,6 +122,10 @@ const ModelCard: React.FC<ModelCardProps> = ({
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
+    if (!user) {
+      return;
+    }
+    
     // Remove visual feedback and add end animation
     e.currentTarget.classList.remove('drag-start');
     e.currentTarget.classList.add('drag-end');
@@ -148,17 +157,19 @@ const ModelCard: React.FC<ModelCardProps> = ({
   // Get author name
   const authorName = model.author?.username || 'Unknown';
 
+  const isAuthenticated = !!user;
+  
   return (
     <div 
       className={`lg-card cursor-pointer overflow-hidden group w-full ${getCardDimensions()} flex flex-col transition-all duration-200 ${
         isSelected ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''
       } ${className}`}
       onClick={handleClick}
-      draggable={true}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      draggable={isAuthenticated}
+      onDragStart={isAuthenticated ? handleDragStart : undefined}
+      onDragEnd={isAuthenticated ? handleDragEnd : undefined}
       data-testid="model-card"
-      title={`Drag to add to collection • ${model.name}`}
+      title={isAuthenticated ? `Drag to add to collection • ${model.name}` : model.name}
     >
       {/* Thumbnail Container - Dynamic height based on card size */}
       <div className={`relative ${getThumbnailDimensions()} bg-white/10 overflow-hidden flex-shrink-0`}>
@@ -238,14 +249,16 @@ const ModelCard: React.FC<ModelCardProps> = ({
           )}
         </div>
 
-        {/* Drag Handle - Subtle indicator */}
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-full">
-            <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-            </svg>
+        {/* Drag Handle - Subtle indicator (only for authenticated users) */}
+        {isAuthenticated && (
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-full">
+              <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+              </svg>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Like Button Overlay */}
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

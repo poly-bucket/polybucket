@@ -15,7 +15,6 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
         [StringLength(500, ErrorMessage = "Site description cannot exceed 500 characters")]
         public string SiteDescription { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Contact email is required")]
         [EmailAddress(ErrorMessage = "Contact email must be a valid email address")]
         public string ContactEmail { get; set; } = string.Empty;
         
@@ -23,6 +22,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
         public bool RequireLoginForUpload { get; set; } = true;
         public bool AllowUserRegistration { get; set; } = true;
         public bool RequireEmailVerification { get; set; } = false;
+        public bool DisableEmailSettings { get; set; } = false;
         
         // File Upload Settings
         public long MaxFileSizeBytes { get; set; } = 100L * 1024 * 1024; // 100MB
@@ -77,6 +77,23 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
         {
             validationResults = new List<ValidationResult>();
             var context = new ValidationContext(this);
+            
+            // Validate ContactEmail only if email settings are not disabled
+            if (!DisableEmailSettings)
+            {
+                if (string.IsNullOrWhiteSpace(ContactEmail))
+                {
+                    validationResults.Add(new ValidationResult("Contact email is required when email settings are enabled", new[] { nameof(ContactEmail) }));
+                }
+                else
+                {
+                    var emailAttribute = new EmailAddressAttribute();
+                    if (!emailAttribute.IsValid(ContactEmail))
+                    {
+                        validationResults.Add(new ValidationResult("Contact email must be a valid email address", new[] { nameof(ContactEmail) }));
+                    }
+                }
+            }
             
             // Validate MaxFileSizeBytes
             var minSize = 1L * 1024 * 1024; // 1MB in bytes

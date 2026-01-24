@@ -10,6 +10,7 @@ using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.SystemSettings.Services;
 
 using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
 
@@ -23,7 +24,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         ILogger<LoginCommandHandler> logger,
         PolyBucketDbContext context,
         ILoginTwoFactorAuthService loginTwoFactorAuthService,
-        ILoginTwoFactorAuthRepository loginTwoFactorAuthRepository)
+        ILoginTwoFactorAuthRepository loginTwoFactorAuthRepository,
+        IAuthenticationSettingsService authenticationSettingsService)
     {
         private readonly IAuthenticationRepository _authRepository = authRepository;
         private readonly ITokenService _tokenService = tokenService;
@@ -33,6 +35,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         private readonly PolyBucketDbContext _context = context;
         private readonly ILoginTwoFactorAuthService _loginTwoFactorAuthService = loginTwoFactorAuthService;
         private readonly ILoginTwoFactorAuthRepository _loginTwoFactorAuthRepository = loginTwoFactorAuthRepository;
+        private readonly IAuthenticationSettingsService _authenticationSettingsService = authenticationSettingsService;
 
 
         public async Task<LoginCommandResponse> Handle(LoginCommand command, CancellationToken cancellationToken)
@@ -53,16 +56,11 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
-            // Get authentication settings - temporarily disabled to fix DI issue
-            _logger.LogInformation("Auth settings validation temporarily disabled");
-            
             // Determine if the identifier is an email or username
             var isEmail = IsEmailAddress(loginIdentifier);
             _logger.LogInformation("Identifier type - IsEmail: {IsEmail}, Identifier: {Identifier}", isEmail, loginIdentifier);
             
-            // Validate login method based on settings - temporarily bypassed
-            _logger.LogInformation("Skipping login method validation temporarily");
-            /*
+            // Validate login method based on settings
             var authSettings = await _authenticationSettingsService.GetAuthenticationSettingsAsync();
             _logger.LogInformation("Retrieved authentication settings: AllowEmailLogin={AllowEmailLogin}, AllowUsernameLogin={AllowUsernameLogin}", 
                 authSettings.AllowEmailLogin, authSettings.AllowUsernameLogin);
@@ -78,7 +76,6 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 _logger.LogWarning("Username login attempted but not enabled for {Username}", loginIdentifier);
                 throw new UnauthorizedAccessException("Username login is not enabled");
             }
-            */
 
             // Find user based on identifier type
             User? user = null;

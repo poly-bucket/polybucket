@@ -57,6 +57,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
                 systemSetup.RequireLoginForUpload = request.RequireLoginForUpload;
                 systemSetup.AllowUserRegistration = request.AllowUserRegistration;
                 systemSetup.RequireEmailVerification = request.RequireEmailVerification;
+                systemSetup.DisableEmailSettings = request.DisableEmailSettings;
                 
                 // File upload settings
                 systemSetup.MaxFileSizeBytes = request.MaxFileSizeBytes;

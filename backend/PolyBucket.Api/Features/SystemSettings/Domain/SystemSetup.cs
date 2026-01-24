@@ -20,6 +20,7 @@ namespace PolyBucket.Api.Features.SystemSettings.Domain
         public bool RequireLoginForUpload { get; set; } = true;
         public bool AllowUserRegistration { get; set; } = true;
         public bool RequireEmailVerification { get; set; } = false;
+        public bool DisableEmailSettings { get; set; } = false;
         
         // File Upload Settings
         public long MaxFileSizeBytes { get; set; } = 100L * 1024 * 1024; // 100MB

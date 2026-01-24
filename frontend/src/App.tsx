@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from '@mui/material';
 import { Provider } from 'react-redux';
@@ -9,24 +9,34 @@ import AppInitializer from './components/AppInitializer';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ProtectedRoute from './components/ProtectedRoute';
-
-import AdminControlPanel from './acp/AdminControlPanel';
-import ModelModeration from './mcp/ModelModeration';
-import { ModerationDashboard } from './mcp/ModerationDashboard';
-
-import ModelUpload from './models/ModelUpload';
-import ModelDetails from './models/ModelDetails';
-import { UserControlPanel } from './ucp';
-import Collections from './collections/Collections';
-import FirstTimeSetup from './setup/FirstTimeSetup';
-import PublicDashboard from './dashboard/PublicDashboard';
 import ThemeProvider from './context/ThemeContext';
 import { UserSettingsProvider } from './context/UserSettingsContext';
-import CreateCollection from './collections/CreateCollection';
-import CollectionDetails from './collections/CollectionDetails';
-import EditCollection from './collections/EditCollection';
-import UserProfile from './ucp/UserProfile';
-import MyModels from './ucp/MyModels';
+
+// Lazy load route components for code splitting
+const AdminControlPanel = lazy(() => import('./acp/AdminControlPanel'));
+const ModelModeration = lazy(() => import('./mcp/ModelModeration'));
+const ModerationDashboard = lazy(() => import('./mcp/ModerationDashboard').then(module => ({ default: module.ModerationDashboard })));
+const ModelUpload = lazy(() => import('./models/ModelUpload'));
+const ModelDetails = lazy(() => import('./models/ModelDetails'));
+const UserControlPanel = lazy(() => import('./ucp').then(module => ({ default: module.UserControlPanel })));
+const Collections = lazy(() => import('./collections/Collections'));
+const FirstTimeSetup = lazy(() => import('./setup/FirstTimeSetup'));
+const PublicDashboard = lazy(() => import('./dashboard/PublicDashboard'));
+const CreateCollection = lazy(() => import('./collections/CreateCollection'));
+const CollectionDetails = lazy(() => import('./collections/CollectionDetails'));
+const EditCollection = lazy(() => import('./collections/EditCollection'));
+const UserProfile = lazy(() => import('./ucp/UserProfile'));
+const MyModels = lazy(() => import('./ucp/MyModels'));
+
+// Loading component for Suspense fallback
+const RouteLoadingFallback: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="text-center">
+      <div className="lg-spinner h-12 w-12 mx-auto mb-4"></div>
+      <p className="text-white/60">Loading...</p>
+    </div>
+  </div>
+);
 
 const App: React.FC = () => {
   return (
@@ -46,22 +56,42 @@ const App: React.FC = () => {
                 {/* Auth routes */}
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
-                <Route path="/setup" element={<FirstTimeSetup />} />
+                <Route 
+                  path="/setup" 
+                  element={
+                    <Suspense fallback={<RouteLoadingFallback />}>
+                      <FirstTimeSetup />
+                    </Suspense>
+                  } 
+                />
                 
                 {/* Public routes */}
-                <Route path="/profile/:id" element={<UserProfile />} />
+                <Route 
+                  path="/profile/:id" 
+                  element={
+                    <Suspense fallback={<RouteLoadingFallback />}>
+                      <UserProfile />
+                    </Suspense>
+                  } 
+                />
                 
                 {/* Protected routes */}
                 <Route 
                   path="/dashboard" 
-                  element={<PublicDashboard />}
+                  element={
+                    <Suspense fallback={<RouteLoadingFallback />}>
+                      <PublicDashboard />
+                    </Suspense>
+                  }
                 />
                 
                 <Route 
                   path="/upload-model" 
                   element={
                     <ProtectedRoute>
-                      <ModelUpload />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <ModelUpload />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -70,7 +100,9 @@ const App: React.FC = () => {
                   path="/models/:id" 
                   element={
                     <ProtectedRoute>
-                      <ModelDetails />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <ModelDetails />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -79,7 +111,9 @@ const App: React.FC = () => {
                   path="/settings" 
                   element={
                     <ProtectedRoute>
-                      <UserControlPanel />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <UserControlPanel />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -88,7 +122,9 @@ const App: React.FC = () => {
                   path="/my-collections" 
                   element={
                     <ProtectedRoute>
-                      <Collections />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <Collections />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -97,7 +133,9 @@ const App: React.FC = () => {
                   path="/my-models" 
                   element={
                     <ProtectedRoute>
-                      <MyModels />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <MyModels />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -106,7 +144,9 @@ const App: React.FC = () => {
                   path="/my-collections/create" 
                   element={
                     <ProtectedRoute>
-                      <CreateCollection />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <CreateCollection />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -115,7 +155,9 @@ const App: React.FC = () => {
                   path="/my-collections/:id" 
                   element={
                     <ProtectedRoute>
-                      <CollectionDetails />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <CollectionDetails />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -124,7 +166,9 @@ const App: React.FC = () => {
                   path="/my-collections/:id/edit" 
                   element={
                     <ProtectedRoute>
-                      <EditCollection />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <EditCollection />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -134,7 +178,9 @@ const App: React.FC = () => {
                   path="/admin" 
                   element={
                     <ProtectedRoute requiredRole="admin">
-                      <AdminControlPanel />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <AdminControlPanel />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -144,7 +190,9 @@ const App: React.FC = () => {
                   path="/moderation" 
                   element={
                     <ProtectedRoute>
-                      <ModelModeration />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <ModelModeration />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />
@@ -153,7 +201,9 @@ const App: React.FC = () => {
                   path="/moderation-dashboard" 
                   element={
                     <ProtectedRoute>
-                      <ModerationDashboard />
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <ModerationDashboard />
+                      </Suspense>
                     </ProtectedRoute>
                   } 
                 />

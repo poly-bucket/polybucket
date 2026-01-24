@@ -28,6 +28,7 @@ const SiteSettingsStep: React.FC<SiteSettingsStepProps> = ({
     requireLoginForUpload: data.requireLoginForUpload !== false,
     allowUserRegistration: data.allowUserRegistration !== false,
     requireEmailVerification: data.requireEmailVerification || false,
+    disableEmailSettings: data.disableEmailSettings || false,
     maxFileSizeBytes: data.maxFileSizeBytes || 100 * 1024 * 1024,
     allowedFileTypes: data.allowedFileTypes || '.stl,.obj,.fbx,.3ds,.glb,.gltf,.ply,.step,.stp,.iges,.igs,.brep,.png,.jpg,.jpeg,.gif',
     maxFilesPerUpload: data.maxFilesPerUpload || 5,
@@ -66,10 +67,12 @@ const SiteSettingsStep: React.FC<SiteSettingsStepProps> = ({
       newErrors.siteName = 'Site name is required';
     }
 
-    if (!formData.contactEmail.trim()) {
-      newErrors.contactEmail = 'Contact email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
-      newErrors.contactEmail = 'Please enter a valid email address';
+    if (!formData.disableEmailSettings) {
+      if (!formData.contactEmail.trim()) {
+        newErrors.contactEmail = 'Contact email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
+        newErrors.contactEmail = 'Please enter a valid email address';
+      }
     }
 
     if (formData.maxFileSizeBytes < 1 * 1024 * 1024 || formData.maxFileSizeBytes > 1024 * 1024 * 1024) {
@@ -112,6 +115,7 @@ const SiteSettingsStep: React.FC<SiteSettingsStepProps> = ({
       RequireLoginForUpload: formData.requireLoginForUpload,
       AllowUserRegistration: formData.allowUserRegistration,
       RequireEmailVerification: formData.requireEmailVerification,
+      DisableEmailSettings: formData.disableEmailSettings,
       MaxFileSizeBytes: formData.maxFileSizeBytes,
       AllowedFileTypes: formData.allowedFileTypes,
       MaxFilesPerUpload: formData.maxFilesPerUpload,
@@ -184,16 +188,17 @@ const SiteSettingsStep: React.FC<SiteSettingsStepProps> = ({
 
         <div>
           <label htmlFor="contactEmail" className="block text-sm font-medium text-white mb-2">
-            Contact Email *
+            Contact Email {!formData.disableEmailSettings && '*'}
           </label>
           <input
             type="email"
             id="contactEmail"
             value={formData.contactEmail}
             onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+            disabled={formData.disableEmailSettings}
             className={`lg-input ${
               errors.contactEmail ? 'border-red-400' : ''
-            }`}
+            } ${formData.disableEmailSettings ? 'opacity-50 cursor-not-allowed' : ''}`}
             placeholder="admin@example.com"
           />
           {errors.contactEmail && <p className="mt-1 text-sm text-red-400">{errors.contactEmail}</p>}
@@ -267,6 +272,19 @@ const SiteSettingsStep: React.FC<SiteSettingsStepProps> = ({
           />
           <label htmlFor="requireEmailVerification" className="ml-2 block text-sm text-white">
             Require email verification
+          </label>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="disableEmailSettings"
+            checked={formData.disableEmailSettings}
+            onChange={(e) => handleInputChange('disableEmailSettings', e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700"
+          />
+          <label htmlFor="disableEmailSettings" className="ml-2 block text-sm text-white">
+            Disable email settings (for locally hosted instances)
           </label>
         </div>
 

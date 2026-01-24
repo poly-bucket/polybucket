@@ -19,7 +19,7 @@ const UserInfoHeader: React.FC = () => {
   const { isAdmin, isModerator } = useSimplePermissions();
 
   return (
-    <div className="px-4 py-3 border-b border-gray-100">
+    <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--lg-glass-border)' }}>
       <div className="flex items-center">
         <UserAvatar 
           userId={user?.id || ''}
@@ -30,25 +30,25 @@ const UserInfoHeader: React.FC = () => {
           className="mr-3"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-sm font-medium truncate" style={{ color: 'var(--lg-text-primary)' }}>
             {user?.username}
           </p>
-          <p className="text-xs text-gray-500 truncate">
+          <p className="text-xs truncate" style={{ color: 'var(--lg-text-tertiary)' }}>
             {user?.email}
           </p>
           <div className="flex items-center mt-1">
             {isAdmin() && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+              <span className="lg-badge lg-badge-error">
                 Admin
               </span>
             )}
             {isModerator() && !isAdmin() && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+              <span className="lg-badge lg-badge-warning">
                 Moderator
               </span>
             )}
             {!isModerator() && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="lg-badge lg-badge-info">
                 User
               </span>
             )}
@@ -69,16 +69,29 @@ interface MenuItemProps {
 
 const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onClick, variant = 'default' }) => {
   const baseClasses = "w-full text-left px-4 py-2 text-sm flex items-center transition-colors duration-150";
-  const variantClasses = variant === 'danger' 
-    ? "text-red-600 hover:bg-red-50" 
-    : "text-gray-700 hover:bg-gray-50";
+  const textColor = variant === 'danger' 
+    ? 'var(--lg-error)' 
+    : 'var(--lg-text-primary)';
+  const hoverBg = 'var(--lg-button-hover)';
+  const iconColor = variant === 'danger' 
+    ? 'var(--lg-error)' 
+    : 'var(--lg-text-secondary)';
 
   return (
     <button
       onClick={onClick}
-      className={`${baseClasses} ${variantClasses}`}
+      className={baseClasses}
+      style={{
+        color: textColor,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = hoverBg;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent';
+      }}
     >
-      <span className={`w-4 h-4 mr-3 ${variant === 'danger' ? 'text-red-400' : 'text-gray-400'}`}>
+      <span className="w-4 h-4 mr-3" style={{ color: iconColor }}>
         {icon}
       </span>
       {label}
@@ -242,18 +255,24 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpen, onClose, anchorEl }) => {
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black" 
-        style={{ opacity: 0.59 }}
+        className="absolute inset-0"
+        style={{ 
+          background: 'var(--lg-bg-overlay)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)'
+        }}
         onClick={onClose} 
       />
       
       {/* Menu Container */}
       <div 
         ref={menuRef}
-        className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+        className="lg-card absolute right-0 mt-2 w-64 py-2 z-50"
         style={{
           top: anchorEl ? anchorEl.getBoundingClientRect().bottom + 8 : 0,
-          right: anchorEl ? window.innerWidth - anchorEl.getBoundingClientRect().right : 16
+          right: anchorEl ? window.innerWidth - anchorEl.getBoundingClientRect().right : 16,
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)'
         }}
       >
         {/* User Info Header */}
@@ -264,7 +283,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpen, onClose, anchorEl }) => {
           <UserSettingsMenuItems onNavigate={handleNavigate} />
           
           {/* Page Break Divider */}
-          <div className="border-t border-gray-200 my-2 mx-4" />
+          <div className="border-t my-2 mx-4" style={{ borderColor: 'var(--lg-glass-border)' }} />
           
           {/* Logout */}
           <LogoutMenuItem onLogout={handleLogout} />

@@ -4,7 +4,7 @@ import { refreshUserToken } from '../store/thunks/authThunks';
 import { clearUser } from '../store/slices/authSlice';
 import { extractUserFromJWT } from './jwtUtils';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:11666/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}` : 'http://localhost:11666/';
 
 // Utility function to check if user is authenticated
 export const isAuthenticated = (): boolean => {

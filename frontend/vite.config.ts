@@ -21,7 +21,43 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
-      outDir: 'build'
-    }
+      outDir: 'build',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunks
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'redux-vendor': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
+            'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+            'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
+            // Large API client gets its own chunk
+            'api-client': ['./src/api/client.ts'],
+            // Feature chunks
+            'admin': ['./src/acp'],
+            'moderation': ['./src/mcp'],
+            'models': ['./src/models'],
+            'collections': ['./src/collections'],
+            'ucp': ['./src/ucp'],
+          },
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        },
+      },
+      chunkSizeWarningLimit: 1000,
+      minify: 'esbuild',
+      sourcemap: false,
+      target: 'esnext',
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@reduxjs/toolkit',
+        'react-redux',
+      ],
+      exclude: ['@react-three/fiber', '@react-three/drei'],
+    },
   }
 }) 
