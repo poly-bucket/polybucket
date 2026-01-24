@@ -1,4 +1,5 @@
 # PolyBucket - Self-Hosted 3D File Sharing Platform
+![Discord](https://img.shields.io/discord/785605975621107743)
 
 PolyBucket is a self-hosted alternative to platforms like Thingiverse, Makerworld, Printables, and Cults3D. It allows users to share, discover, and download 3D files, including models for 3D printing, CNC machines, laser cutters, and more.
 
