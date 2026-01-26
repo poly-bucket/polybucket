@@ -1,5 +1,5 @@
 import { ApiClientFactory } from '../api/clientFactory';
-import { SearchResponse, SearchResultItem, SearchType } from './api.client';
+import { SearchResponse, SearchResultItem, SearchType } from '../api/client';
 
 export interface SearchParams {
   query: string;
@@ -43,13 +43,12 @@ export interface SearchResults {
 export class SearchService {
   static async search(params: SearchParams): Promise<SearchResults> {
     try {
-      const client = ApiClientFactory.getSearchClient();
-      const response = await client.search(
+      const response = await ApiClientFactory.getApiClient().search_Search(
         params.query,
         params.page || 1,
         params.pageSize || 20,
-        params.type || SearchType.All,
-        params.category,
+        params.type ?? SearchType.All,
+        params.category ?? null,
         params.sortBy || 'relevance',
         params.sortDescending || false
       );

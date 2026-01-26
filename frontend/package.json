@@ -68,7 +68,7 @@
     "serve": "vite preview",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "generate-client": "nswag openapi2tsclient /input:http://localhost:5166/swagger/v1/swagger.json /output:src/services/api.client.ts"
+    "generate-client": "nswag run nswag.json"
   },
   "eslintConfig": {
     "extends": [

@@ -3,6 +3,24 @@
 
 PolyBucket is a self-hosted alternative to platforms like Thingiverse, Makerworld, Printables, and Cults3D. It allows users to share, discover, and download 3D files, including models for 3D printing, CNC machines, laser cutters, and more.
 
+
+# 2026 Status:
+Polybucket has been in development for many years. I've been working on this project entirely alone. This is my largest personal project that continues to grow in scope. I will be the first to say that I find many issues in the repo. Mostly due to the heavy usage of AI related tooling that has helped me scale the project to the size and feature set it is today. There is much work ahead of me. I'm very open to pull requests, suggestions and community help. 
+
+# FAQ
+
+## Does it work?
+Yes. Expect bugs.
+
+## Minio
+At the time of writing this, Minio decided to pull out of the community supported Docker image. The stack does work with the latest Minio container. I do still plan to support it as a default. There are plans for supporting other, more commerical object storage solutions.
+
+## Roadmap?
+I am the roadmap.
+
+## How can I help?
+Contact me on Discord.
+
 ## Features
 
 - **Support for Multiple File Types**: STL, 3MF, OBJ, GCODE, and more
@@ -23,137 +41,6 @@ PolyBucket is a self-hosted alternative to platforms like Thingiverse, Makerworl
 - **Database**: PostgreSQL
 - **Storage**: MinIO (default), AWS S3, and others
 - **Deployment**: Docker
-
-## Quick Start with Docker
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/polybucket.git
-   cd polybucket
-   ```
-
-2. Start the services:
-   ```bash
-   docker-compose up -d
-   ```
-
-3. Access the application:
-   - Frontend: http://localhost:3000
-   - API: http://localhost:5000
-   - MinIO Console: http://localhost:9001 (minioadmin/minioadmin)
-
-## Local Development
-
-### Backend (API)
-
-1. Navigate to the API project:
-   ```bash
-   cd src/PolyBucket.Api/PolyBucket.Api
-   ```
-
-2. Update the database:
-   ```bash
-   dotnet ef database update
-   ```
-
-3. Run the API:
-   ```bash
-   dotnet run
-   ```
-
-### Frontend
-
-1. Navigate to the frontend project:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run the development server:
-   ```bash
-   npm start
-   ```
-
-### Using MinIO Across Different Machines
-
-PolyBucket uses MinIO for object storage, which allows you to work across different machines with minimal configuration:
-
-1. **Exposing MinIO to other machines**:
-   - By default, MinIO runs on ports 9000 (API) and 9001 (Console)
-   - Make sure these ports are allowed in your firewall
-
-2. **Accessing MinIO from another machine**:
-   - If your host machine IP is `192.168.1.100`, you can access:
-     - MinIO Console: `http://192.168.1.100:9001` (username: minioadmin, password: minioadmin)
-     - MinIO API: `http://192.168.1.100:9000`
-
-3. **Using MinIO for development on another machine**:
-   Update your appsettings.json to point to the remote MinIO instance:
-   ```json
-   "Storage": {
-     "Endpoint": "192.168.1.100",
-     "Port": 9000,
-     "AccessKey": "minioadmin",
-     "SecretKey": "minioadmin",
-     "BucketName": "polybucket-uploads",
-     "UseSSL": false
-   }
-   ```
-
-4. **Sharing data between machines**:
-   - Since MinIO stores data in a Docker volume, the data persists across restarts
-   - To share the same storage between machines, consider using a network file system or MinIO's distributed mode
-
-## Development
-
-### Backend
-
-The backend is organized following Clean Architecture principles with these projects:
-
-- **PolyBucket.Api**: ASP.NET Core Web API
-- **PolyBucket.Core**: Domain models and interfaces
-- **PolyBucket.Infrastructure**: Implementation of interfaces, data access, etc.
-
-To run tests:
-```
-dotnet test tests/PolyBucket.Tests
-```
-
-### Frontend
-
-The frontend is built with React, TypeScript, and Redux:
-
-```
-cd frontend/client
-npm install
-npm run dev
-```
-
-To run tests:
-```
-npm run test
-```
-
-### Database Migrations
-
-To create a new migration:
-```
-cd src/PolyBucket.Api/PolyBucket.Api
-dotnet ef migrations add MigrationName
-```
-
-To apply migrations:
-```
-dotnet ef database update
-```
-
-## Documentation
-
-- [MinIO Integration Guide](docs/minio-guide.md) - Detailed guide on MinIO configuration and usage across different machines
 
 ## License
 

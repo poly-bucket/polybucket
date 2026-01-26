@@ -1,9 +1,7 @@
-import {
-    LoginClient,
-    // ... import other clients as needed
-} from './api.client';
+import { ApiClientFactory } from '../api/clientFactory';
+import { LoginCommand, LoginCommandResponse } from '../api/client';
 
-const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:11666";
-
-export const loginClient = new LoginClient(baseUrl);
-// ... export other clients as needed 
+export const loginClient = {
+  login: (command: LoginCommand): Promise<LoginCommandResponse> =>
+    ApiClientFactory.getApiClient().login_Login(command)
+};

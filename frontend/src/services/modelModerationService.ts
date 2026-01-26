@@ -1,5 +1,4 @@
-import { ApiClient } from '../api/client';
-import { API_CONFIG } from '../api/config';
+import { ApiClientFactory } from '../api/clientFactory';
 
 export interface ModelModerationAction {
   modelId: string;
@@ -32,10 +31,8 @@ export interface ModerationQueueResponse {
 }
 
 class ModelModerationService {
-  private apiClient: ApiClient;
-
-  constructor() {
-    this.apiClient = new ApiClient(API_CONFIG.baseUrl);
+  private get apiClient() {
+    return ApiClientFactory.getApiClient();
   }
 
   /**

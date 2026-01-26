@@ -1,16 +1,13 @@
-import { UserSettings, UpdateUserSettingsRequest } from './api.client';
-import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
-import { GetUserSettingsClient, UpdateUserSettingsClient } from './api.client';
+import { ApiClientFactory } from '../api/clientFactory';
+import { UserSettings, UpdateUserSettingsRequest } from '../api/client';
 
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+const api = () => ApiClientFactory.getApiClient();
 
 class UserSettingsService {
   async getUserSettings(accessToken: string): Promise<UserSettings | null> {
     try {
-      const client = new GetUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
-      const response = await client.getUserSettings();
-      return response || null;
+      const response = await api().getUserSettings_GetUserSettings();
+      return (response as any) || null;
     } catch (error) {
       console.error('Error fetching user settings:', error);
       return null;
@@ -18,14 +15,12 @@ class UserSettingsService {
   }
 
   async updateUserSettings(
-    userId: string, 
-    settings: Partial<UserSettings>, 
+    userId: string,
+    settings: Partial<UserSettings>,
     accessToken: string
   ): Promise<boolean> {
     try {
-      const client = new UpdateUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
       const request = new UpdateUserSettingsRequest({
-        userId,
         language: settings.language,
         theme: settings.theme,
         emailNotifications: settings.emailNotifications,
@@ -39,8 +34,7 @@ class UserSettingsService {
         gridColumns: settings.gridColumns,
         customSettings: settings.customSettings
       });
-
-      await client.updateUserSettings(request);
+      await api().updateUserSettings_UpdateUserSettings(request);
       return true;
     } catch (error) {
       console.error('Error updating user settings:', error);
@@ -50,13 +44,8 @@ class UserSettingsService {
 
   async updateAutoRotateSetting(userId: string, autoRotate: boolean, accessToken: string): Promise<boolean> {
     try {
-      const client = new UpdateUserSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
-      const request = new UpdateUserSettingsRequest({
-        userId,
-        autoRotateModels: autoRotate
-      });
-
-      await client.updateUserSettings(request);
+      const request = new UpdateUserSettingsRequest({ autoRotateModels: autoRotate });
+      await api().updateUserSettings_UpdateUserSettings(request);
       return true;
     } catch (error) {
       console.error('Error updating auto-rotate setting:', error);

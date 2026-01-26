@@ -14,7 +14,7 @@ services:
       - AppSettings__Security__JwtSecret=development-jwt-secret-key-change-in-production-minimum-32-characters-long
       - Admin__Username=admin
       - Admin__Email=admin@polybucket.com
-      - Admin__Password=Polybucket123!
+      - Admin__Password=Polybucket123
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
       - OTEL_SERVICE_NAME=polybucket-api
       - OTEL_RESOURCE_ATTRIBUTES=service.name=polybucket-api,service.version=1.0.0,deployment.environment=Development
@@ -45,6 +45,8 @@ services:
       target: development
     ports:
       - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:11666
     depends_on:
       - api
     volumes:

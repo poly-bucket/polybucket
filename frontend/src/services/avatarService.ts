@@ -1,9 +1,8 @@
-import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
-import { RegenerateAvatarClient, RegenerateAvatarRequest } from './api.client';
+import { ApiClientFactory } from '../api/clientFactory';
+import { RegenerateAvatarRequest } from '../api/client';
 import { minidenticon } from 'minidenticons';
 
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+const api = () => ApiClientFactory.getApiClient();
 
 export interface RegenerateAvatarResponse {
   avatar: string;
@@ -13,11 +12,8 @@ export interface RegenerateAvatarResponse {
 
 const avatarService = {
   async regenerateAvatar(salt?: string): Promise<RegenerateAvatarResponse> {
-    const client = new RegenerateAvatarClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const request = new RegenerateAvatarRequest({
-      salt: salt
-    });
-    const response = await client.regenerateAvatar(request);
+    const request = new RegenerateAvatarRequest({ salt });
+    const response = await api().regenerateAvatar_RegenerateAvatar(request);
     return response as any as RegenerateAvatarResponse;
   },
 

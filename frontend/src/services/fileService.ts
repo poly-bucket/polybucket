@@ -1,12 +1,6 @@
-import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
-import {
-  GetSupportedExtensionsClient,
-  GetSupportedExtensionsByTypeClient,
-  GetFileConfigClient
-} from './api.client';
+import { ApiClientFactory } from '../api/clientFactory';
 
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+const api = () => ApiClientFactory.getApiClient();
 
 export interface FileExtensionInfo {
   id: number;
@@ -31,20 +25,17 @@ export interface FileUploadConfiguration {
 }
 
 const getSupportedExtensions = async (): Promise<string[]> => {
-  const client = new GetSupportedExtensionsClient(API_CONFIG.baseUrl, sharedHttpClient);
-  const response = await client.getSupportedExtensions();
+  const response = await api().getSupportedExtensions_GetSupportedExtensions();
   return response as any as string[];
 };
 
 const getSupportedExtensionsForType = async (fileType: number | string): Promise<string[]> => {
-  const client = new GetSupportedExtensionsByTypeClient(API_CONFIG.baseUrl, sharedHttpClient);
-  const response = await client.getSupportedExtensionsByType(fileType.toString());
+  const response = await api().getSupportedExtensionsByType_GetSupportedExtensionsForType(fileType.toString());
   return response as any as string[];
 };
 
 const getFileConfiguration = async (): Promise<FileUploadConfiguration> => {
-  const client = new GetFileConfigClient(API_CONFIG.baseUrl, sharedHttpClient);
-  const response = await client.getFileConfig();
+  const response = await api().getFileConfig_GetFileConfig();
   return response as any as FileUploadConfiguration;
 };
 

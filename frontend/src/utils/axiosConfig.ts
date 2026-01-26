@@ -2,9 +2,9 @@ import axios, { InternalAxiosRequestConfig, AxiosError, AxiosResponse } from 'ax
 import store from '../store';
 import { refreshUserToken } from '../store/thunks/authThunks';
 import { clearUser } from '../store/slices/authSlice';
-import { extractUserFromJWT } from './jwtUtils';
+import { getApiConfig } from '../api/config';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}` : 'http://localhost:11666/';
+const API_BASE_URL = getApiConfig().baseUrl;
 
 // Utility function to check if user is authenticated
 export const isAuthenticated = (): boolean => {

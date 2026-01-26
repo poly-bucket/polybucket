@@ -12,13 +12,10 @@ export const getApiConfig = (): ApiConfig => {
   // which handles CORS and routing automatically
   const getDevelopmentBaseUrl = (): string => {
     const viteApiUrl = import.meta.env.VITE_API_URL;
-    // If VITE_API_URL is explicitly set, use it (for Docker/production-like setups)
-    // Otherwise, use empty string to use Vite proxy
     if (viteApiUrl && viteApiUrl !== '') {
       return viteApiUrl;
     }
-    // Use empty string to leverage Vite proxy in development
-    return '';
+    return 'http://localhost:11666';
   };
   
   switch (env) {

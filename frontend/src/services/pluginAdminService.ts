@@ -1,15 +1,7 @@
-import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
-import {
-  GetPluginsClient,
-  GetPluginDetailsClient,
-  ReloadPluginsClient,
-  UpdatePluginSettingsClient,
-  UpdatePluginSettingsRequest
-} from './api.client';
-import api from '../utils/axiosConfig';
+import { ApiClientFactory } from '../api/clientFactory';
+import { UpdatePluginSettingsRequest, UpdatePluginStatusRequest } from '../api/client';
 
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+const api = () => ApiClientFactory.getApiClient();
 
 export interface PluginSummary {
   id: string;
@@ -122,20 +114,12 @@ export interface PluginSettingsResponse {
   schema: Record<string, PluginSettingSchema>;
 }
 
-export interface UpdatePluginSettingsRequest {
-  settings: Record<string, any>;
-}
-
 export interface UpdatePluginSettingsResponse {
   success: boolean;
   message: string;
   updatedSettings: Record<string, any>;
   validationErrors: string[];
   updatedAt: string;
-}
-
-export interface UpdatePluginStatusRequest {
-  enabled: boolean;
 }
 
 export interface PluginStatusResponse {
@@ -146,61 +130,47 @@ export interface PluginStatusResponse {
 }
 
 class PluginAdminService {
-  // SKIPPED: /api/plugins/overview endpoint not found in generated client
   async getPluginsOverview(): Promise<PluginOverview> {
-    const response = await api.get('/api/plugins/overview');
-    return response.data;
+    const response = await api().getPluginDetails_GetPluginsOverview();
+    return response as any as PluginOverview;
   }
 
   async getPluginDetails(pluginId: string): Promise<PluginDetails> {
-    const client = new GetPluginDetailsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getPluginDetails(pluginId);
+    const response = await api().getPluginDetails_GetPluginDetails(pluginId);
     return response as any as PluginDetails;
   }
 
-  // SKIPPED: /api/plugins/hooks endpoint not found in generated client
   async getPluginHooks(): Promise<PluginHooksResponse> {
-    const response = await api.get('/api/plugins/hooks');
-    return response.data;
+    const response = await api().getPluginDetails_GetPluginHooks();
+    return response as any as PluginHooksResponse;
   }
 
-  // SKIPPED: GET /api/plugins/{pluginId}/settings endpoint not found in generated client
   async getPluginSettings(pluginId: string): Promise<PluginSettingsResponse> {
-    const response = await api.get(`/api/plugins/${pluginId}/settings`);
-    return response.data;
+    const response = await api().updatePluginSettings_GetPluginSettings(pluginId);
+    return response as any as PluginSettingsResponse;
   }
 
   async updatePluginSettings(
     pluginId: string,
     settings: Record<string, any>
   ): Promise<UpdatePluginSettingsResponse> {
-    const client = new UpdatePluginSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const request = new UpdatePluginSettingsRequest({
-      settings: settings
-    });
-    const response = await client.updatePluginSettings(pluginId, request);
-    return response;
+    const request = new UpdatePluginSettingsRequest({ settings });
+    const response = await api().updatePluginSettings_UpdatePluginSettings(pluginId, request);
+    return response as any as UpdatePluginSettingsResponse;
   }
 
-  // SKIPPED: /api/plugins/{pluginId}/status endpoint not found in generated client
-  async updatePluginStatus(
-    pluginId: string,
-    enabled: boolean
-  ): Promise<PluginStatusResponse> {
-    const response = await api.put(`/api/plugins/${pluginId}/status`, {
-      enabled
-    });
-    return response.data;
+  async updatePluginStatus(pluginId: string, enabled: boolean): Promise<PluginStatusResponse> {
+    const request = new UpdatePluginStatusRequest({ enabled });
+    const response = await api().updatePluginSettings_UpdatePluginStatus(pluginId, request);
+    return response as any as PluginStatusResponse;
   }
 
   async reloadPlugins(): Promise<void> {
-    const client = new ReloadPluginsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    await client.reloadPlugins();
+    await api().reloadPlugins_ReloadPlugins();
   }
 
   async getPlugins(): Promise<any[]> {
-    const client = new GetPluginsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getPlugins();
+    const response = await api().getPlugins_GetPlugins();
     return response as any as any[];
   }
 }

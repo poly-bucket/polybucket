@@ -1,40 +1,29 @@
-import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
+import { ApiClientFactory } from '../api/clientFactory';
 import {
-  RoleManagementClient,
   CreateRoleRequest,
   UpdateRoleRequest,
   RoleDto
-} from './api.client';
+} from '../api/client';
 
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+export type { RoleDto, CreateRoleRequest, UpdateRoleRequest };
 
-export interface RoleDto {
-  id: string;
-  name: string;
-  description: string;
-  isSystemRole: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateRoleRequest {
+export interface CreateRoleInput {
   name: string;
   description: string;
   color?: string;
 }
 
-export interface UpdateRoleRequest {
+export interface UpdateRoleInput {
   name: string;
   description: string;
   color?: string;
 }
+
+const api = () => ApiClientFactory.getApiClient();
 
 const getAllRoles = async (): Promise<RoleDto[]> => {
   try {
-    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getAllRolesUnpaginated();
-    return response;
+    return await api().roleManagement_GetAllRolesUnpaginated();
   } catch (error) {
     console.error('Error fetching roles:', error);
     throw error;
@@ -43,41 +32,35 @@ const getAllRoles = async (): Promise<RoleDto[]> => {
 
 const getRoleById = async (id: string): Promise<RoleDto> => {
   try {
-    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getRole(id);
-    return response;
+    return await api().roleManagement_GetRole(id);
   } catch (error) {
     console.error(`Error fetching role with id ${id}:`, error);
     throw error;
   }
 };
 
-const createRole = async (role: CreateRoleRequest): Promise<RoleDto> => {
+const createRole = async (role: CreateRoleInput): Promise<RoleDto> => {
   try {
-    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
     const request = new CreateRoleRequest({
       name: role.name,
       description: role.description,
       color: role.color
     });
-    const response = await client.createRole(request);
-    return response;
+    return await api().roleManagement_CreateRole(request);
   } catch (error) {
     console.error('Error creating role:', error);
     throw error;
   }
 };
 
-const updateRole = async (id: string, role: UpdateRoleRequest): Promise<RoleDto> => {
+const updateRole = async (id: string, role: UpdateRoleInput): Promise<RoleDto> => {
   try {
-    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
     const request = new UpdateRoleRequest({
       name: role.name,
       description: role.description,
       color: role.color
     });
-    const response = await client.updateRole(id, request);
-    return response;
+    return await api().roleManagement_UpdateRole(id, request);
   } catch (error) {
     console.error(`Error updating role with id ${id}:`, error);
     throw error;
@@ -86,8 +69,7 @@ const updateRole = async (id: string, role: UpdateRoleRequest): Promise<RoleDto>
 
 const deleteRole = async (id: string): Promise<void> => {
   try {
-    const client = new RoleManagementClient(API_CONFIG.baseUrl, sharedHttpClient);
-    await client.deleteRole(id);
+    await api().roleManagement_DeleteRole(id);
   } catch (error) {
     console.error(`Error deleting role with id ${id}:`, error);
     throw error;

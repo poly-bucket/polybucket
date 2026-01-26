@@ -1,15 +1,11 @@
-import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
+import { ApiClientFactory } from '../api/clientFactory';
 import {
-  GetTwoFactorAuthStatusClient,
-  InitializeTwoFactorAuthClient,
-  EnableTwoFactorAuthClient,
-  DisableTwoFactorAuthClient,
   EnableTwoFactorAuthCommand,
-  InitializeTwoFactorAuthCommand
-} from './api.client';
+  InitializeTwoFactorAuthCommand,
+  DisableTwoFactorAuthCommand
+} from '../api/client';
 
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+const api = () => ApiClientFactory.getApiClient();
 
 export interface TwoFactorAuthStatus {
   isEnabled: boolean;
@@ -41,30 +37,25 @@ export interface DisableTwoFactorAuthResponse {
 
 class TwoFactorAuthService {
   async getStatus(): Promise<TwoFactorAuthStatus> {
-    const client = new GetTwoFactorAuthStatusClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getTwoFactorAuthStatus();
+    const response = await api().getTwoFactorAuthStatus_GetStatus();
     return response as any as TwoFactorAuthStatus;
   }
 
   async initialize(): Promise<InitializeTwoFactorAuthResponse> {
-    const client = new InitializeTwoFactorAuthClient(API_CONFIG.baseUrl, sharedHttpClient);
     const command = new InitializeTwoFactorAuthCommand({});
-    const response = await client.initialize(command);
+    const response = await api().initializeTwoFactorAuth_Initialize(command);
     return response as any as InitializeTwoFactorAuthResponse;
   }
 
   async enable(token: string): Promise<EnableTwoFactorAuthResponse> {
-    const client = new EnableTwoFactorAuthClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const command = new EnableTwoFactorAuthCommand({
-      token: token
-    });
-    const response = await client.enable(command);
+    const command = new EnableTwoFactorAuthCommand({ token });
+    const response = await api().enableTwoFactorAuth_Enable(command);
     return response as any as EnableTwoFactorAuthResponse;
   }
 
   async disable(): Promise<DisableTwoFactorAuthResponse> {
-    const client = new DisableTwoFactorAuthClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.disableTwoFactorAuth();
+    const command = new DisableTwoFactorAuthCommand({});
+    const response = await api().disableTwoFactorAuth_Disable(command);
     return response as any as DisableTwoFactorAuthResponse;
   }
 }

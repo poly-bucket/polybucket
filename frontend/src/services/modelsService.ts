@@ -1,25 +1,13 @@
 import store from '../store';
-import { PrivacySettings } from './api.client';
 import { ApiClientFactory } from '../api/clientFactory';
 import SearchService from './searchService';
 import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
-import {
-  CreateModelClient,
-  GetModelsClient,
-  GetModelByIdClient,
-  DeleteModelClient,
-  UpdateModelClient,
-  CreateModelVersionClient,
-  GetModelVersionsClient
-} from './api.client';
+import { PrivacySettings, UpdateModelRequest } from '../api/client';
 
 export interface FileParameter {
   data: File;
   fileName: string;
 }
-
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface ModelUploadData {
   name: string;
@@ -162,8 +150,7 @@ export class ModelsService {
   }
 
   static async getModels(page?: number, take?: number): Promise<GetModelsResponse> {
-    const client = ApiClientFactory.getModelsClient();
-    const response = await client.getModels(page || 1, take || 20);
+    const response = await ApiClientFactory.getApiClient().getModels_GetModels(page || 1, take || 20);
     return {
       models: response.models || [],
       totalCount: response.totalCount || 0,
@@ -173,63 +160,59 @@ export class ModelsService {
   }
 
   static async getModelById(id: string): Promise<GetModelByIdResponse> {
-    const client = ApiClientFactory.getModelByIdClient();
-    const response = await client.getModelById(id);
+    const response = await ApiClientFactory.getApiClient().getModelById_GetModel(id);
     return {
       model: response as any as Model
     };
   }
 
   static async deleteModel(id: string): Promise<void> {
-    const client = ApiClientFactory.getDeleteModelClient();
-    await client.deleteModel(id);
+    await ApiClientFactory.getApiClient().deleteModel_DeleteModel(id);
   }
 
   static async updateModel(id: string, modelData: Partial<Model>): Promise<void> {
-    const client = ApiClientFactory.getUpdateModelClient();
-    // SKIPPED: UpdateModelClient requires UpdateModelCommand which needs to be checked
-    // Using direct fetch for now - UpdateModelCommand structure needs verification
-    const token = store.getState().auth.user?.accessToken;
-    if (!token) {
-      throw new Error('Authentication token not found');
-    }
-
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/models/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(modelData)
+    const request = new UpdateModelRequest({
+      name: modelData.name,
+      description: modelData.description,
+      license: modelData.license as any,
+      privacy: modelData.privacy as any,
+      aiGenerated: modelData.aiGenerated,
+      wip: modelData.wip,
+      nsfw: modelData.nsfw,
+      isRemix: modelData.isRemix,
+      remixUrl: modelData.remixUrl,
+      isFeatured: modelData.isFeatured
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Update failed: ${response.status} ${response.statusText} - ${errorText}`);
-    }
+    await ApiClientFactory.getApiClient().updateModel_UpdateModel(id, request);
   }
 
   static async createModelVersion(modelId: string, versionData: { name: string; files: File[] }): Promise<void> {
-    const client = ApiClientFactory.getCreateModelVersionClient();
     const fileParameters: FileParameter[] = versionData.files.map(file => ({
       data: file,
       fileName: file.name
     }));
-    await client.createModelVersion(modelId, versionData.name, fileParameters);
+    await ApiClientFactory.getApiClient().createModelVersion_CreateModelVersion(
+      modelId,
+      fileParameters,
+      versionData.name,
+      null,
+      undefined
+    );
   }
 
   static async getModelVersions(modelId: string): Promise<any> {
-    const client = ApiClientFactory.getModelVersionsClient();
-    const response = await client.getModelVersions(modelId);
+    const response = await ApiClientFactory.getApiClient().getModelVersions_GetModelVersions(modelId);
+    if (response && (response as any).data instanceof Blob) {
+      const text = await (response as any).data.text();
+      return text ? JSON.parse(text) : response;
+    }
     return response;
   }
 
   // Dashboard methods for different model categories
   static async getFeaturedModels(): Promise<ExtendedModel[]> {
     try {
-      // Use the generated API client instead of direct fetch
-      const client = ApiClientFactory.getModelsClient();
-      const response = await client.getModels(1, 50);
+      const response = await ApiClientFactory.getApiClient().getModels_GetModels(1, 50);
       
       // Filter for featured models
       const featuredModels = response.models?.filter((model: any) => model.isFeatured) || [];
@@ -250,9 +233,7 @@ export class ModelsService {
 
   static async getPopularModels(): Promise<ExtendedModel[]> {
     try {
-      // Use the generated API client instead of direct fetch
-      const client = ApiClientFactory.getModelsClient();
-      const response = await client.getModels(1, 50);
+      const response = await ApiClientFactory.getApiClient().getModels_GetModels(1, 50);
       
       // Sort by downloads + likes (popularity score)
       const popularModels = (response.models || [])
@@ -279,9 +260,7 @@ export class ModelsService {
 
   static async getRecentModels(): Promise<ExtendedModel[]> {
     try {
-      // Use the generated API client instead of direct fetch
-      const client = ApiClientFactory.getModelsClient();
-      const response = await client.getModels(1, 50);
+      const response = await ApiClientFactory.getApiClient().getModels_GetModels(1, 50);
       
       // Sort by creation date (most recent first)
       const recentModels = (response.models || [])

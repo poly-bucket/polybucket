@@ -1,19 +1,9 @@
-import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
+import { ApiClientFactory } from '../api/clientFactory';
 import {
-  GetAllReportsClient,
-  GetUnresolvedReportsClient,
-  GetReportsAnalyticsClient,
-  GetReportClient,
-  ResolveReportClient,
-  BanUserClient,
-  GetModerationAuditLogsClient,
   ResolveReportRequest,
-  BanUserRequest
-} from './api.client';
-import api from '../utils/axiosConfig';
-
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+  BanUserRequest,
+  FileResponse
+} from '../api/client';
 
 export interface Report {
   id: string;
@@ -56,10 +46,20 @@ export interface BannedUsersResponse {
   totalPages: number;
 }
 
-export interface BanUserRequest {
+export interface BanUserInput {
   reason: string;
   expiresAt?: string;
 }
+
+async function parseFileResponseAsJson<T>(r: FileResponse): Promise<T> {
+  if ((r as any).data instanceof Blob) {
+    const text = await (r as any).data.text();
+    return JSON.parse(text || 'null');
+  }
+  return r as any;
+}
+
+const api = () => ApiClientFactory.getApiClient();
 
 export class ModerationService {
   async getAllReports(
@@ -68,109 +68,66 @@ export class ModerationService {
     isResolved?: boolean,
     type?: string
   ): Promise<ReportsResponse> {
-    const client = new GetAllReportsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getAllReports(
-      page,
-      pageSize,
-      isResolved,
-      type || null
-    );
+    const response = await api().getAllReports_GetAllReports(page, pageSize, isResolved ?? null, type || null);
     return response as any as ReportsResponse;
   }
 
   async getUnresolvedReports(): Promise<Report[]> {
-    const client = new GetUnresolvedReportsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getUnresolvedReports();
-    return response as any as Report[];
+    const response = await api().getUnresolvedReports_GetUnresolvedReports();
+    const parsed = await parseFileResponseAsJson<{ reports?: Report[] } | Report[]>(response);
+    if (Array.isArray(parsed)) return parsed;
+    return parsed?.reports ?? [];
   }
 
   async getReportsAnalytics(fromDate?: Date, toDate?: Date): Promise<any> {
-    const client = new GetReportsAnalyticsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getReportsAnalytics(
-      fromDate?.toISOString() || null,
-      toDate?.toISOString() || null
-    );
-    return response;
+    return api().getReportsAnalytics_GetReportsAnalytics(fromDate ?? null, toDate ?? null);
   }
 
-  // SKIPPED: /api/reports/analytics/top-models endpoint not found in generated client
   async getTopReportedModels(limit: number = 10): Promise<any[]> {
-    const response = await api.get(`/api/reports/analytics/top-models?limit=${limit}`);
-    return response.data;
+    return api().getReportsAnalytics_GetTopReportedModels(limit);
   }
 
-  // SKIPPED: /api/reports/analytics/top-users endpoint not found in generated client
   async getTopReportedUsers(limit: number = 10): Promise<any[]> {
-    const response = await api.get(`/api/reports/analytics/top-users?limit=${limit}`);
-    return response.data;
+    return api().getReportsAnalytics_GetTopReportedUsers(limit);
   }
 
-  // SKIPPED: /api/reports/analytics/top-comments endpoint not found in generated client
   async getTopReportedComments(limit: number = 10): Promise<any[]> {
-    const response = await api.get(`/api/reports/analytics/top-comments?limit=${limit}`);
-    return response.data;
+    return api().getReportsAnalytics_GetTopReportedComments(limit);
   }
 
-  // SKIPPED: /api/reports/analytics/trends endpoint not found in generated client
   async getReportTrends(period: string = 'daily', days: number = 30): Promise<any[]> {
-    const response = await api.get(`/api/reports/analytics/trends?period=${period}&days=${days}`);
-    return response.data;
+    return api().getReportsAnalytics_GetReportTrends(period, days);
   }
 
-  // SKIPPED: /api/reports/analytics/moderator-activity endpoint not found in generated client
   async getModeratorActivity(fromDate?: Date, toDate?: Date): Promise<any[]> {
-    const params = new URLSearchParams();
-    if (fromDate) {
-      params.append('fromDate', fromDate.toISOString());
-    }
-    if (toDate) {
-      params.append('toDate', toDate.toISOString());
-    }
-
-    const response = await api.get(`/api/reports/analytics/moderator-activity?${params}`);
-    return response.data;
+    return api().getReportsAnalytics_GetModeratorActivity(fromDate ?? null, toDate ?? null);
   }
 
   async getReportById(reportId: string): Promise<Report> {
-    const client = new GetReportClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getReport(reportId);
-    return response as any as Report;
+    const response = await api().getReport_GetReport(reportId);
+    const parsed = await parseFileResponseAsJson<Report>(response);
+    return parsed as Report;
   }
 
   async resolveReport(reportId: string, resolution: string): Promise<void> {
-    const client = new ResolveReportClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const request = new ResolveReportRequest({
-      resolution: resolution
-    });
-    await client.resolveReport(reportId, request);
+    const request = new ResolveReportRequest({ resolution });
+    await api().resolveReport_ResolveReport(reportId, request);
   }
 
-  // SKIPPED: /api/admin/users/banned endpoint not found in generated client
-  async getBannedUsers(
-    page: number = 1,
-    pageSize: number = 20
-  ): Promise<BannedUsersResponse> {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      pageSize: pageSize.toString(),
-    });
-
-    const response = await api.get(`/api/admin/users/banned?${params}`);
-    return response.data;
+  async getBannedUsers(page: number = 1, pageSize: number = 20): Promise<BannedUsersResponse> {
+    return api().banUser_GetBannedUsers(page, pageSize);
   }
 
-  async banUser(userId: string, banRequest: BanUserRequest): Promise<void> {
-    const client = new BanUserClient(API_CONFIG.baseUrl, sharedHttpClient);
+  async banUser(userId: string, banRequest: BanUserInput): Promise<void> {
     const request = new BanUserRequest({
       reason: banRequest.reason,
       expiresAt: banRequest.expiresAt
     });
-    await client.banUser(userId, request);
+    await api().banUser_BanUser(userId, request);
   }
 
-  // SKIPPED: /api/admin/users/{userId}/unban endpoint not found in generated client
   async unbanUser(userId: string): Promise<void> {
-    await api.post(`/api/admin/users/${userId}/unban`);
+    await api().banUser_UnbanUser(userId);
   }
 
   async getModerationAuditLogs(
@@ -180,15 +137,7 @@ export class ModerationService {
     userId?: string,
     modelId?: string
   ): Promise<any> {
-    const client = new GetModerationAuditLogsClient(API_CONFIG.baseUrl, sharedHttpClient);
-    const response = await client.getModerationAuditLogs(
-      page,
-      pageSize,
-      action || null,
-      userId || null,
-      modelId || null
-    );
-    return response;
+    return api().getModerationAuditLogs_GetAuditLogs(page, pageSize, action ?? null, userId ?? null, modelId ?? null);
   }
 }
 
