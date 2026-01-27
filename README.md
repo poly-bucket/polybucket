@@ -352,16 +352,6 @@ We welcome contributions! PolyBucket is an open-source project and thrives on co
 - 🐛 Report bugs via [GitHub Issues](https://github.com/poly-bucket/polybucket/issues)
 - 💡 Suggest features via [GitHub Discussions](https://github.com/poly-bucket/polybucket/discussions)
 
-## License
-
-This project is licensed under the PolyForm Noncommercial License 1.0.0.
-
-**Copyright © Cody Fraker**
-
-**Original Repository:** https://github.com/poly-bucket/polybucket
-
-This software is the original work of Cody Fraker. Any distribution, fork, or derivative work must include proper attribution as specified in the [LICENSE](LICENSE) file.
-
 ---
 
 ## Star History
@@ -374,3 +364,15 @@ If you find PolyBucket useful, please consider giving it a ⭐ on GitHub! Your s
 - 📖 [Documentation](https://github.com/poly-bucket/polybucket/wiki) - Comprehensive guides and API docs
 - 🐛 [Report Issues](https://github.com/poly-bucket/polybucket/issues) - Found a bug? Let us know!
 - 💡 [Feature Requests](https://github.com/poly-bucket/polybucket/discussions) - Have an idea? Share it with us!
+
+---
+
+## License
+
+This project is licensed under the PolyForm Noncommercial License 1.0.0.
+
+**Copyright © Cody Fraker**
+
+**Original Repository:** https://github.com/poly-bucket/polybucket
+
+This software is the original work of Cody Fraker. Any distribution, fork, or derivative work must include proper attribution as specified in the [LICENSE](LICENSE) file.
