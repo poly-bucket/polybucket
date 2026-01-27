@@ -345,13 +345,6 @@ We welcome contributions! PolyBucket is an open-source project and thrives on co
 - ⚡ **Performance**: Optimize queries, improve caching, reduce load times
 - 🧪 **Testing**: Write tests, improve test coverage
 
-### Getting Help
-
-- 💬 [Join our Discord](https://discord.gg/EX94hH5RYt) for real-time discussions
-- 📖 Check the [documentation](https://github.com/poly-bucket/polybucket/wiki)
-- 🐛 Report bugs via [GitHub Issues](https://github.com/poly-bucket/polybucket/issues)
-- 💡 Suggest features via [GitHub Discussions](https://github.com/poly-bucket/polybucket/discussions)
-
 ---
 
 ## Star History
@@ -361,7 +354,6 @@ If you find PolyBucket useful, please consider giving it a ⭐ on GitHub! Your s
 ## Support
 
 - 💬 [Discord Community](https://discord.gg/EX94hH5RYt) - Join our community for support and discussions
-- 📖 [Documentation](https://github.com/poly-bucket/polybucket/wiki) - Comprehensive guides and API docs
 - 🐛 [Report Issues](https://github.com/poly-bucket/polybucket/issues) - Found a bug? Let us know!
 - 💡 [Feature Requests](https://github.com/poly-bucket/polybucket/discussions) - Have an idea? Share it with us!
 
