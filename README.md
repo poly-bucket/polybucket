@@ -279,13 +279,13 @@ PolyBucket is perfect for:
 |---------|-----------|-------------|------------|---------|
 | Self-Hosted | ✅ Yes | ❌ No | ❌ No | ❌ No |
 | Open Source | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| Plugin System | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| Federation | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Plugin System | ✅ Yes (coming soon) | ❌ No | ❌ No | ❌ No |
+| Federation | ✅ Yes (coming soon) | ❌ No | ❌ No | ❌ No |
 | Full Data Control | ✅ Yes | ❌ No | ❌ No | ❌ No |
 | Custom Branding | ✅ Yes | ❌ No | ❌ No | ❌ No |
 | API Access | ✅ Full REST API | ⚠️ Limited | ⚠️ Limited | ⚠️ Limited |
-| Moderation Tools | ✅ Advanced | ✅ Basic | ✅ Basic | ✅ Basic |
-| Printer Management | ✅ Yes | ❌ No | ⚠️ Limited | ❌ No |
+| Moderation Tools | ✅ Advanced (Partial) | ✅ Basic | ✅ Basic | ✅ Basic |
+| Printer Management | ✅ Yes (Planned) | ❌ No | ⚠️ Limited | ❌ No |
 | Free & Open | ✅ Yes | ✅ Free | ✅ Free | ⚠️ Freemium |
 
 ## Requirements
@@ -330,17 +330,18 @@ We welcome contributions! PolyBucket is an open-source project and thrives on co
 ### How to Contribute
 
 1. **Fork the repository** and create your feature branch
-2. **Make your changes** following our coding standards
+2. **Make your changes** following our coding standards (where applicable)
 3. **Write tests** for new features (if applicable)
 4. **Submit a pull request** with a clear description of your changes
+5. **Pretend you didn't see the frontend code** it's the worst i've ever seen in my life. I'm so sorry.
 
 ### Areas Where We Need Help
 
 - 🐛 **Bug Fixes**: Help us squash bugs and improve stability
 - 📚 **Documentation**: Improve docs, add examples, write tutorials
 - 🎨 **UI/UX Improvements**: Enhance the user interface and experience
-- 🔌 **Plugins**: Create and share plugins with the community
-- 🌐 **Translations**: Help translate PolyBucket to other languages
+- 🔌 **Plugins**: Create and share plugins with the community. This will be through a hosted marketplace which is also open source.
+- 🌐 **Translations**: Help translate PolyBucket to other languages. This can be delayed.
 - ⚡ **Performance**: Optimize queries, improve caching, reduce load times
 - 🧪 **Testing**: Write tests, improve test coverage
 
@@ -350,12 +351,6 @@ We welcome contributions! PolyBucket is an open-source project and thrives on co
 - 📖 Check the [documentation](https://github.com/poly-bucket/polybucket/wiki)
 - 🐛 Report bugs via [GitHub Issues](https://github.com/poly-bucket/polybucket/issues)
 - 💡 Suggest features via [GitHub Discussions](https://github.com/poly-bucket/polybucket/discussions)
-
-## Related Projects
-
-- **[PolyBucket Marketplace](marketplace/README.md)**: Plugin marketplace for discovering and installing plugins
-- **[PolyBucket Starter Template](examples/polybucket-starter-template/README.md)**: Template for creating new plugins
-- **[Dark Theme Plugin](examples/plugins/dark-theme-plugin/)**: Example plugin demonstrating theme customization
 
 ## License
 
@@ -379,8 +374,3 @@ If you find PolyBucket useful, please consider giving it a ⭐ on GitHub! Your s
 - 📖 [Documentation](https://github.com/poly-bucket/polybucket/wiki) - Comprehensive guides and API docs
 - 🐛 [Report Issues](https://github.com/poly-bucket/polybucket/issues) - Found a bug? Let us know!
 - 💡 [Feature Requests](https://github.com/poly-bucket/polybucket/discussions) - Have an idea? Share it with us!
-
-## Acknowledgments
-
-Special thanks to all contributors, testers, and community members who help make PolyBucket better every day.
- 
