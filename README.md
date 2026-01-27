@@ -5,12 +5,12 @@ PolyBucket is a self-hosted alternative to platforms like Thingiverse, Makerworl
 
 
 # 2026 Status:
-Polybucket has been in development for many years. I've been working on this project entirely alone. This is my largest personal project that continues to grow in scope. I will be the first to say that I find many issues in the repo. Mostly due to the heavy usage of AI related tooling that has helped me scale the project to the size and feature set it is today. There is much work ahead of me. I'm very open to pull requests, suggestions and community help. 
+Polybucket has been in development for many years. I've been working on this project entirely alone. This is my largest personal project that continues to grow in scope. I will be the first to say that I find many issues in the repo. Mostly due to the heavy usage of AI related tooling that has helped me scale the project to the size and feature set it is today. There is much work ahead of me. I'm very open to pull requests, suggestions and community help. [Join the Discord](https://discord.gg/EX94hH5RYt).
 
 # FAQ
 
 ## Does it work?
-Yes. Expect bugs.
+Yes. Expect bugs. 
 
 ## Minio
 At the time of writing this, Minio decided to pull out of the community supported Docker image. The stack does work with the latest Minio container. I do still plan to support it as a default. There are plans for supporting other, more commerical object storage solutions.
@@ -44,4 +44,11 @@ Contact me on Discord.
 
 ## License
 
-This project is licensed under the terms of the MIT license. 
+This project is licensed under the PolyForm Noncommercial License 1.0.0.
+
+**Copyright © John Smith**
+
+**Original Repository:** https://github.com/poly-bucket/polybucket
+
+This software is the original work of Cody Fraker. Any distribution, fork, or derivative work must include proper attribution as specified in the [LICENSE](LICENSE) file.
+ 
