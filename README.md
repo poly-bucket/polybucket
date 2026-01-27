@@ -153,7 +153,7 @@ Contact me on Discord.
 
 This project is licensed under the PolyForm Noncommercial License 1.0.0.
 
-**Copyright © John Smith**
+**Copyright © Cody Fraker**
 
 **Original Repository:** https://github.com/poly-bucket/polybucket
 
