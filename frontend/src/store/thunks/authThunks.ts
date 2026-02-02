@@ -3,8 +3,8 @@ import api from '../../utils/axiosConfig';
 import { ApiClient, LoginCommand, LoginCommandResponse } from '../../api/client';
 import { extractUserFromJWT } from '../../utils/jwtUtils';
 import { API_CONFIG } from '../../api/config';
-import { AxiosHttpClient } from '../../api/axiosAdapter';
-import { RegisterClient, RefreshTokenClient, RegisterCommand, RefreshTokenCommand, RegisterCommandResponse, RefreshTokenCommandResponse } from '../../services/api.client';
+import {  } from '../../api/client';
+import { RegisterCommand, RefreshTokenCommand, RegisterCommandResponse, RefreshTokenCommandResponse } from '../../api/client';
 
 export interface LoginRequest {
   email: string;

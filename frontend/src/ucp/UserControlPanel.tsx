@@ -14,7 +14,7 @@ import {
 import UserAvatar from './UserAvatar';
 import NavigationBar from '../components/common/NavigationBar';
 import AvatarRegeneration from './AvatarRegeneration';
-import { PrivacySettings } from '../services/api.client';
+import { PrivacySettings } from '../api/client';
 import { useUserSettings } from '../context/UserSettingsContext';
 import { updateUserDetails } from '../store/slices/authSlice';
 import TwoFactorAuth from '../components/auth/TwoFactorAuth';

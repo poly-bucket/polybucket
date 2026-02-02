@@ -24,20 +24,40 @@ export default defineConfig(({ mode }) => {
       outDir: 'build',
       rollupOptions: {
         output: {
-          manualChunks: {
-            // Vendor chunks
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'redux-vendor': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
-            'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-            'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
-            // Large API client gets its own chunk
-            'api-client': ['./src/api/client.ts'],
-            // Feature chunks
-            'admin': ['./src/acp'],
-            'moderation': ['./src/mcp'],
-            'models': ['./src/models'],
-            'collections': ['./src/collections'],
-            'ucp': ['./src/ucp'],
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+                return 'react-vendor';
+              }
+              if (id.includes('@reduxjs/toolkit') || id.includes('react-redux') || id.includes('redux-persist')) {
+                return 'redux-vendor';
+              }
+              if (id.includes('@mui/material') || id.includes('@mui/icons-material') || id.includes('@emotion/react') || id.includes('@emotion/styled')) {
+                return 'mui-vendor';
+              }
+              if (id.includes('three') || id.includes('@react-three/fiber') || id.includes('@react-three/drei')) {
+                return 'three-vendor';
+              }
+              return 'vendor';
+            }
+            if (id.includes('/src/api/client.ts')) {
+              return 'api-client';
+            }
+            if (id.includes('/src/acp/')) {
+              return 'admin';
+            }
+            if (id.includes('/src/mcp/')) {
+              return 'moderation';
+            }
+            if (id.includes('/src/models/')) {
+              return 'models';
+            }
+            if (id.includes('/src/collections/')) {
+              return 'collections';
+            }
+            if (id.includes('/src/ucp/')) {
+              return 'ucp';
+            }
           },
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',

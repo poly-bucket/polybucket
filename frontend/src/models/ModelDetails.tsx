@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiClientFactory } from '../api/clientFactory';
 import { ExtendedModel } from '../services/modelsService';
-import { PrivacySettings } from '../services/api.client';
+import { PrivacySettings } from '../api/client';
 import { API_CONFIG } from '../api/config';
 import NavigationBar from '../components/common/NavigationBar';
 import UserAvatar from '../ucp/UserAvatar';
@@ -132,8 +132,8 @@ const ModelDetails: React.FC = () => {
       }
 
       try {
-        const client = ApiClientFactory.getModelByIdClient();
-        const response = await client.getModel(id);
+        const client = ApiClientFactory.getApiClient();
+        const response = await client.getModelById_GetModel(id);
         
         if (response && response.model && response.model.id && response.model.name) {
           const extendedModel: ExtendedModel = {
@@ -283,8 +283,8 @@ const ModelDetails: React.FC = () => {
     if (model) {
       try {
         console.log('Starting download for model:', model.id);
-        const client = ApiClientFactory.getDownloadModelClient();
-        const response = await client.downloadModel(model.id!);
+        const client = ApiClientFactory.getApiClient();
+        const response = await client.downloadModel_DownloadModel(model.id!);
         
         if (response && response.data) {
           // Validate that we received a blob

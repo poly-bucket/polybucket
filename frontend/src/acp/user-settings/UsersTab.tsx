@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../utils/axiosConfig';
-import { GetUsersClient } from '../../services/api.client';
-import { defaultAxiosClient } from '../../api/axiosAdapter';
+import { ApiClientFactory } from '../../api/clientFactory';
 import {
   Add as AddIcon,
   Visibility,
@@ -81,8 +79,8 @@ const UsersTab: React.FC = () => {
       setError(null);
       
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-      const client = new GetUsersClient(baseUrl, defaultAxiosClient);
-      const response = await client.getUsers(
+      const client = ApiClientFactory.getApiClient();
+      const response = await client.getUsers_GetUsers(
         pagination.page,
         pagination.pageSize,
         searchQuery || undefined,

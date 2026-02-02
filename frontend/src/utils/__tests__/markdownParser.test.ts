@@ -1,5 +1,5 @@
 import { parseModelMarkdown, isMarkdownFile, generateMarkdownTemplate } from '../markdownParser';
-import { PrivacySettings } from '../../services/api.client';
+import { PrivacySettings } from '../api/client';
 
 describe('markdownParser', () => {
   describe('isMarkdownFile', () => {

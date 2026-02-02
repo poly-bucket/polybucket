@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ExtendedModel } from '../../services/modelsService';
-import { ModelVersion } from '../../services/api.client';
+import { ExtendedModel } from "../services/modelsService";
+import { ModelVersion } from '../api/client';
 import BillOfMaterialsManager, { BillOfMaterial } from './BillOfMaterialsManager';
 import PrintSettingsEditor, { PrintSettings } from './PrintSettingsEditor';
 

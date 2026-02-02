@@ -76,4 +76,4 @@ export enum ModelCategories {
 }
 
 // Re-export types from the generated API client
-export type { LoginCommand, LoginCommandResponse } from '../services/api.client';
+export type { LoginCommand, LoginCommandResponse } from '../api/client';

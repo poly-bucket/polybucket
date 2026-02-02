@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { SearchResult } from '../services/searchService';
 import ModelGrid from '../models/ModelGrid';
 import { ExtendedModel } from '../services/modelsService';
+import { LicenseTypes, PrivacySettings } from '../api/client';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -70,7 +71,20 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         id: result.id,
         name: result.title,
         description: result.description || '',
+        userId: result.authorId || '',
+        privacy: PrivacySettings.Public,
+        license: LicenseTypes.MIT,
+        authorId: result.authorId || '',
         thumbnailUrl: result.thumbnailUrl,
+        aiGenerated: false,
+        wip: false,
+        nsfw: false,
+        isRemix: false,
+        isPublic: true,
+        isFeatured: false,
+        isModerated: false,
+        moderationStatus: 'approved' as const,
+        moderationNotes: '',
         author: result.author ? { username: result.author } : undefined,
         likes: result.likes ? [{ id: '1', userId: '1' }] : [],
         comments: [],
@@ -81,11 +95,6 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         categories: [],
         tags: [],
         collections: [],
-        isPublic: true,
-        isFeatured: false,
-        isModerated: false,
-        moderationStatus: 'approved' as const,
-        moderationNotes: '',
         fileSize: 0,
         printTime: 0,
         filamentLength: 0,
@@ -103,7 +112,6 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         retractionDistance: 0,
         retractionSpeed: 0,
         buildPlateAdhesion: '',
-        printSettings: '',
         notes: '',
         billOfMaterials: [],
         printSettings: {

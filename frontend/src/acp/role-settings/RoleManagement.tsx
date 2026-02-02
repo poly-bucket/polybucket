@@ -26,9 +26,8 @@ import {
   Api as ApiIcon,
 
 } from '@mui/icons-material';
-import { RoleDto, CreateRoleRequest, UpdateRoleRequest, PermissionDto } from '../../services/api.client';
-import { RoleManagementClient } from '../../services/api.client';
-import { defaultAxiosClient } from '../../api/axiosAdapter';
+import { RoleDto, CreateRoleRequest, UpdateRoleRequest, PermissionDto } from '../../api/client';
+import { ApiClientFactory } from '../../api/clientFactory';
 
 interface PaginationInfo {
   page: number;
@@ -112,7 +111,7 @@ const RoleManagement: React.FC = () => {
   const [editFormColor, setEditFormColor] = useState<string>('#3B82F6');
 
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-  const roleManagementClient = new RoleManagementClient(baseUrl, defaultAxiosClient);
+  const roleManagementClient = ApiClientFactory.getApiClient();
 
   useEffect(() => {
     fetchData();
@@ -128,12 +127,12 @@ const RoleManagement: React.FC = () => {
       setLoading(true);
       
       // Fetch roles with pagination
-      const response = await roleManagementClient.getAllRoles(
+      const response = await roleManagementClient.roleManagement_GetAllRoles(
         pagination.page,
         pagination.pageSize,
         searchTerm || undefined,
         sortBy || undefined,
-        sortDescending
+        sortDescending ? true : false
       );
       
       console.log('Fetched roles:', response.roles);
@@ -160,7 +159,7 @@ const RoleManagement: React.FC = () => {
   const fetchPermissions = async () => {
     try {
       // Fetch all available permissions
-      const permissionsResponse = await roleManagementClient.getAllPermissions();
+      const permissionsResponse = await roleManagementClient.roleManagement_GetAllPermissions();
       setPermissions(permissionsResponse || []);
     } catch (error) {
       console.error('Failed to fetch permissions:', error);
@@ -229,7 +228,7 @@ const RoleManagement: React.FC = () => {
       createRoleRequest.initialPermissions = createForm.initialPermissions;
       createRoleRequest.color = createForm.color;
       
-      const newRole = await roleManagementClient.createRole(createRoleRequest);
+      const newRole = await roleManagementClient.roleManagement_CreateRole(createRoleRequest);
       setAllRoles([newRole, ...allRoles]);
       setIsCreateModalOpen(false);
       resetCreateForm();
@@ -247,7 +246,7 @@ const RoleManagement: React.FC = () => {
       // Include the color in the update request
       editForm.color = editFormColor;
       
-      const updatedRole = await roleManagementClient.updateRole(selectedRole.id, editForm);
+      const updatedRole = await roleManagementClient.roleManagement_UpdateRole(selectedRole.id, editForm);
       
       // Update the role with the new color
       const roleWithUpdatedColor = new RoleDto(updatedRole);
@@ -267,7 +266,7 @@ const RoleManagement: React.FC = () => {
     if (!confirm('Are you sure you want to delete this role?')) return;
     
     try {
-      await roleManagementClient.deleteRole(roleId);
+      await roleManagementClient.roleManagement_DeleteRole(roleId);
       setAllRoles(roles => roles.filter(r => r.id !== roleId));
       showSnackbar('Role deleted successfully', 'success');
     } catch (error) {

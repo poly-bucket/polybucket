@@ -20,7 +20,7 @@ import {
   Alert,
   FormControlLabel
 } from '@mui/material';
-import { Model, LicenseTypes, PrivacySettings } from '../services/api.client';
+import { Model, LicenseTypes, PrivacySettings } from '../api/client';
 import { ModelCategories } from '../types/api.types';
 
 interface ModeratorEditFormProps {

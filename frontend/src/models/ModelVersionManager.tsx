@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { ExtendedModel } from '../../services/modelsService';
-import { ModelVersion } from '../../services/api.client';
+import { ExtendedModel } from "../services/modelsService";
+import { ModelVersion } from '../api/client';
 
 interface UploadedFile {
   id: string;

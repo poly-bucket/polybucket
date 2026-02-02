@@ -1,4 +1,4 @@
-import { PrivacySettings } from '../services/api.client';
+import { PrivacySettings } from '../api/client';
 
 export interface ParsedModelData {
   title?: string;

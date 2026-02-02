@@ -1,8 +1,6 @@
+import { UpdateFileSettingsCommand } from '../api';
+import { ApiClientFactory } from '../api/clientFactory';
 import { API_CONFIG } from '../api/config';
-import { AxiosHttpClient } from '../api/axiosAdapter';
-import { GetFileSettingsClient, UpdateFileSettingsClient, UpdateFileSettingsCommand } from './api.client';
-
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
 
 export interface FileTypeSettingsData {
   id: string;
@@ -50,8 +48,8 @@ export interface UpdateFileSettingsResponse {
 class FileTypeSettingsService {
   async getFileSettings(): Promise<GetFileSettingsResponse> {
     try {
-      const client = new GetFileSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
-      const response = await client.getFileSettings();
+      const client = ApiClientFactory.getApiClient();
+      const response = await client.getFileSettings_GetFileSettings();
       return response as any as GetFileSettingsResponse;
     } catch (error) {
       console.error('Error fetching file type settings:', error);
@@ -61,23 +59,9 @@ class FileTypeSettingsService {
 
   async updateFileSettings(request: UpdateFileSettingsRequest): Promise<UpdateFileSettingsResponse> {
     try {
-      const client = new UpdateFileSettingsClient(API_CONFIG.baseUrl, sharedHttpClient);
-      const updateCommand = new UpdateFileSettingsCommand({
-        id: request.id,
-        fileExtension: request.fileExtension,
-        enabled: request.enabled,
-        maxFileSizeBytes: request.maxFileSizeBytes,
-        maxPerUpload: request.maxPerUpload,
-        displayName: request.displayName,
-        description: request.description,
-        mimeType: request.mimeType,
-        requiresPreview: request.requiresPreview,
-        isCompressible: request.isCompressible,
-        category: request.category,
-        priority: request.priority,
-        isDefault: request.isDefault
-      });
-      const response = await client.updateFileSettings(updateCommand);
+      const client = ApiClientFactory.getApiClient();
+      const updateCommand = new UpdateFileSettingsCommand(request);
+      const response = await client.updateFileSettings_UpdateFileSettings(updateCommand);
       return response as any as UpdateFileSettingsResponse;
     } catch (error) {
       console.error('Error updating file type settings:', error);

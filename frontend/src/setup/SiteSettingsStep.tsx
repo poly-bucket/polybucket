@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppSelector } from '../utils/hooks';
-import { PrivacySettings } from '../services/api.client';
+import { PrivacySettings } from '../api/client';
 
 interface SiteSettingsStepProps {
   onComplete: (data: any) => void;

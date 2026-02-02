@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ExtendedModel } from '../services/modelsService';
-import { Model } from '../services/api.client';
+import { Model } from '../api/client';
 import ModelEditForm from './ModelEditForm';
 import ModelVersionManager from './ModelVersionManager';
 import VersionEditor, { ExtendedModelVersion } from './VersionEditor';

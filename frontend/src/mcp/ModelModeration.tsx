@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import ModeratorEditForm, { ModeratorEditRequest } from './ModeratorEditForm';
-import { Model } from '../services/api.client';
+import { Model } from '../api/client';
 
 interface PendingModel {
   id: string;

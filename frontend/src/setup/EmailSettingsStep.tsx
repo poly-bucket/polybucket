@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAppSelector } from '../utils/hooks';
-import { Box, TextField, Button, Typography, Alert, Paper } from '@mui/material';
 
 interface EmailSettingsStepProps {
   onComplete: (data: any) => void;

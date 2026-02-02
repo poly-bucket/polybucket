@@ -1,5 +1,5 @@
 import { loginClient } from './api.provider';
-import { LoginRequest, LoginResponse } from './api.client';
+import { LoginRequest, LoginResponse } from '../api/client';
 
 const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
   try {

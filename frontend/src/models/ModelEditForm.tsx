@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Model, LicenseTypes, PrivacySettings, Tag, Category } from '../services/api.client';
+import { Model, LicenseTypes, PrivacySettings, Tag, Category } from '../api/client';
 import { ExtendedModel } from '../services/modelsService';
 
 interface ModelEditFormProps {

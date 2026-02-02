@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationBar from '../components/common/NavigationBar';
 import { useAppSelector, useAppDispatch } from '../store';
-import { PrivacySettings } from '../services/api.client';
+import { PrivacySettings } from '../api/client';
 import ThumbnailGenerator from './ThumbnailGenerator';
 import ModelViewer, { ViewMode } from './ModelViewer';
 import PDFViewer from '../components/common/PDFViewer';

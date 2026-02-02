@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { useAppSelector } from '../../utils/hooks';
 import themeService from '../../services/themeService';
-import { ThemeDto } from '../../services/api.client';
+import { ThemeDto } from '../../api/client';
 
 interface ColorPickerProps {
   label: string;
@@ -274,7 +274,7 @@ const ThemeCustomization: React.FC = () => {
       setSuccess('');
       
       // Import the required classes
-      const { CreateThemeRequest, ThemeColorsDto } = await import('../../services/api.client');
+      const { CreateThemeRequest, ThemeColorsDto } = await import('../../api/client');
       
       // Create a proper ThemeColorsDto instance
       const themeColorsDto = new ThemeColorsDto();

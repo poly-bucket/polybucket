@@ -6,6 +6,7 @@ import ModelGrid from '../models/ModelGrid';
 import LayoutControls from '../components/common/LayoutControls';
 import { DeleteModelService } from '../services/deleteModelService';
 import { ApiClientFactory } from '../api/clientFactory';
+import { GetModelByUserIdResponse } from '../api/client';
 import { ExtendedModel } from '../services/modelsService';
 import { 
   Delete as DeleteIcon,
@@ -33,8 +34,8 @@ const MyModels: React.FC = () => {
       setLoading(true);
       setError('');
       
-      const client = ApiClientFactory.getModelsByUserClient();
-      const response = await client.getModelsByUserId(user.id, 1, 50, false, true);
+      const client = ApiClientFactory.getApiClient();
+      const response = await client.getModelByUserId_GetModelsByUserId(user.id, 1, 50, false, true);
       
       if (response && response.models) {
         const extendedModels: ExtendedModel[] = response.models.map((model: any) => ({
