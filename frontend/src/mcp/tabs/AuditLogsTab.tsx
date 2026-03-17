@@ -80,8 +80,8 @@ export const AuditLogsTab: React.FC = () => {
         modelId
       );
       
-      setAuditLogs(response.auditLogs);
-      setTotalCount(response.totalCount);
+      setAuditLogs(response.auditLogs || []);
+      setTotalCount(response.totalCount || 0);
     } catch (err) {
       setError('Failed to fetch audit logs');
       console.error('Error fetching audit logs:', err);
@@ -128,7 +128,7 @@ export const AuditLogsTab: React.FC = () => {
     return action.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
 
-  if (loading && auditLogs.length === 0) {
+  if (loading && (!auditLogs || auditLogs.length === 0)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
         <CircularProgress />
@@ -200,7 +200,7 @@ export const AuditLogsTab: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {auditLogs.map((log) => (
+            {(auditLogs || []).map((log) => (
               <TableRow key={log.id}>
                 <TableCell>
                   <Typography variant="body2">
@@ -245,7 +245,7 @@ export const AuditLogsTab: React.FC = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {auditLogs.length === 0 && !loading && (
+            {(!auditLogs || auditLogs.length === 0) && !loading && (
               <TableRow>
                 <TableCell colSpan={6} align="center">
                   <Box sx={{ py: 4 }}>

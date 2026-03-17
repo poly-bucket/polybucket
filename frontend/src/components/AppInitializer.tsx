@@ -1,8 +1,9 @@
 import React, { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { setInitialized, resetAuthState, setUser, clearUser } from '../store/slices/authSlice';
-import { isAuthenticated, handleAuthFailure } from '../utils/axiosConfig';
+import { setInitialized, setUser, clearUser } from '../store/slices/authSlice';
+import { refreshUserToken } from '../store/thunks/authThunks';
+import { handleAuthFailure } from '../utils/axiosConfig';
 import { extractUserFromJWT, isTokenExpired } from '../utils/jwtUtils';
 
 interface AppInitializerProps {
@@ -15,15 +16,20 @@ const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
   const dispatch = useDispatch();
   const { isInitialized, user } = useSelector((state: RootState) => state.auth);
 
-  const checkTokenValidity = useCallback(() => {
+  const checkTokenValidity = useCallback(async () => {
     if (!user || !user.accessToken) {
       return;
     }
 
     if (isTokenExpired(user.accessToken)) {
-      console.log('Token expired in AppInitializer, clearing authentication state');
-      dispatch(clearUser());
-      handleAuthFailure();
+      if (user.refreshToken) {
+        const result = await dispatch(refreshUserToken(user.refreshToken));
+        if (!refreshUserToken.fulfilled.match(result)) {
+          handleAuthFailure();
+        }
+      } else {
+        handleAuthFailure();
+      }
     }
   }, [user, dispatch]);
 

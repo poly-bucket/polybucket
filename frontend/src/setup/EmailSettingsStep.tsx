@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAppSelector } from '../utils/hooks';
+import { ApiClientFactory } from '../api/clientFactory';
+import { UpdateEmailSettingsCommand } from '../api/client';
 
 interface EmailSettingsStepProps {
   onComplete: (data: any) => void;
@@ -25,24 +27,25 @@ const EmailSettingsStep: React.FC<EmailSettingsStepProps> = ({ onComplete, onBac
     setError(null);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-      const response = await fetch(`${apiUrl}/api/SystemSetup/email-settings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailSettings)
+      const client = ApiClientFactory.getApiClient();
+      const command = new UpdateEmailSettingsCommand({
+        smtpServer: emailSettings.smtpServer,
+        smtpPort: emailSettings.smtpPort,
+        smtpUsername: emailSettings.smtpUsername,
+        smtpPassword: emailSettings.smtpPassword,
+        fromAddress: emailSettings.fromEmail,
+        fromName: emailSettings.fromName
       });
 
-      if (response.ok) {
+      const response = await client.updateEmailSettings_UpdateEmailSettings(command);
+
+      if (response && response.success) {
         onComplete({ emailSettings });
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to save email settings');
+        setError(response?.message || 'Failed to save email settings');
       }
-    } catch (error) {
-      setError('Failed to save email settings');
+    } catch (error: any) {
+      setError(error?.message || 'Failed to save email settings');
     } finally {
       setIsLoading(false);
     }

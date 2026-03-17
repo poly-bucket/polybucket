@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../utils/hooks';
-import { clearUser } from '../store/slices/authSlice';
+import { refreshUserToken } from '../store/thunks/authThunks';
 import { isTokenExpired } from '../utils/jwtUtils';
 import { handleAuthFailure } from '../utils/axiosConfig';
 
@@ -12,15 +12,20 @@ export const useTokenValidation = () => {
   const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
 
-  const checkTokenValidity = useCallback(() => {
+  const checkTokenValidity = useCallback(async () => {
     if (!user || !user.accessToken) {
       return;
     }
 
     if (isTokenExpired(user.accessToken)) {
-      console.log('Token expired, clearing authentication state');
-      dispatch(clearUser());
-      handleAuthFailure();
+      if (user.refreshToken) {
+        const result = await dispatch(refreshUserToken(user.refreshToken));
+        if (!refreshUserToken.fulfilled.match(result)) {
+          handleAuthFailure();
+        }
+      } else {
+        handleAuthFailure();
+      }
     }
   }, [user, dispatch]);
 

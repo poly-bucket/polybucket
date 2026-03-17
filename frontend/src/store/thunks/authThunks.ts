@@ -3,8 +3,8 @@ import api from '../../utils/axiosConfig';
 import { ApiClient, LoginCommand, LoginCommandResponse } from '../../api/client';
 import { extractUserFromJWT } from '../../utils/jwtUtils';
 import { API_CONFIG } from '../../api/config';
-import {  } from '../../api/client';
 import { RegisterCommand, RefreshTokenCommand, RegisterCommandResponse, RefreshTokenCommandResponse } from '../../api/client';
+import { ApiClientFactory } from '../../api/clientFactory';
 
 export interface LoginRequest {
   email: string;
@@ -41,7 +41,7 @@ export interface RegisterRequest {
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/auth` : 'http://localhost:11666/api/auth';
 
-const sharedHttpClient = new AxiosHttpClient(API_CONFIG.baseUrl);
+const apiClient = ApiClientFactory.getApiClient();
 
 export const loginUser = createAsyncThunk(
   'auth/login',
@@ -171,7 +171,7 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData: RegisterRequest, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
     try {
-      const registerClient = new RegisterClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const registerClient = apiClient;
       const registerCommand = new RegisterCommand({
         email: userData.email,
         username: userData.username,
@@ -182,7 +182,7 @@ export const registerUser = createAsyncThunk(
         country: userData.country
       });
 
-      const response: RegisterCommandResponse = await registerClient.register(registerCommand);
+      const response: RegisterCommandResponse = await registerClient.register_Register(registerCommand);
       
       if (response.authentication) {
         const decodedUser = extractUserFromJWT(response.authentication.accessToken || '');
@@ -227,12 +227,12 @@ export const refreshUserToken = createAsyncThunk(
   'auth/refreshToken',
   async (refreshToken: string, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
     try {
-      const refreshTokenClient = new RefreshTokenClient(API_CONFIG.baseUrl, sharedHttpClient);
+      const refreshTokenClient = apiClient;
       const refreshTokenCommand = new RefreshTokenCommand({
         refreshToken: refreshToken
       });
 
-      const response: RefreshTokenCommandResponse = await refreshTokenClient.refreshToken(refreshTokenCommand);
+      const response: RefreshTokenCommandResponse = await refreshTokenClient.refreshToken_RefreshToken(refreshTokenCommand);
       
       if (response.authentication) {
         return {

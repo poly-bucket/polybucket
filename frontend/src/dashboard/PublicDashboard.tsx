@@ -95,8 +95,8 @@ const PublicDashboard: React.FC = () => {
       setError('');
       isLoadingRef.current = true;
       
-      const client = ApiClientFactory.getModelsClient();
-      const response = await client.getModels(page, MODELS_PER_PAGE);
+      const client = ApiClientFactory.getApiClient();
+      const response = await client.getModels_GetModels(page || 1, MODELS_PER_PAGE || 50);
       
       let modelData: ExtendedModel[] = [];
       

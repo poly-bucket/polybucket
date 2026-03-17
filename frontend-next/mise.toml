@@ -1,0 +1,5 @@
+[tools]
+node = "lts"
+
+[env]
+_.path = ["./node_modules/.bin"]

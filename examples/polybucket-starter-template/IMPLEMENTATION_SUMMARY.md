@@ -4,6 +4,13 @@
 
 The **PolyBucket Starter Template** is a comprehensive development toolkit and example plugin that demonstrates how to create PolyBucket plugins. It serves as both a learning resource and a practical tool for developers.
 
+## Architecture Decisions and Contract
+
+Architecture decisions for the plugin system are recorded for accountability. CLI tools (`validate-plugin`, `create-plugin`) should align with this contract.
+
+- **[PLUGIN_ARCHITECTURE_DECISIONS.md](docs/PLUGIN_ARCHITECTURE_DECISIONS.md)** - Recorded decisions (v1 scope, build-time only, layoutProviders, deferred items)
+- **[PLUGIN_MANIFEST_CONTRACT.md](docs/PLUGIN_MANIFEST_CONTRACT.md)** - Manifest to `PluginDefinition` mapping for CLI and marketplace
+
 ## 📁 Project Structure
 
 ```

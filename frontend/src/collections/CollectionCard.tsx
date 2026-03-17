@@ -89,7 +89,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
   };
 
   return (
-    <div className="lg-card cursor-pointer overflow-hidden group w-full h-72 sm:h-80 flex flex-col" data-testid="collection-card">
+    <div className="lg-card cursor-pointer overflow-hidden group w-full h-80 sm:h-96 flex flex-col" data-testid="collection-card">
       {/* Thumbnail Container - Fixed height */}
       <div className="relative h-40 sm:h-48 bg-gradient-to-br from-gray-700 to-gray-900 overflow-hidden flex-shrink-0">
         <Link to={`/my-collections/${collection.id}`} className="block w-full h-full">
@@ -227,7 +227,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
         </div>
 
         {/* Visibility Bar - Fixed height at bottom */}
-        <div className="mt-auto pt-2 sm:pt-3">
+        <div className="mt-auto flex-shrink-0 pt-2 sm:pt-3">
           <div className="bg-white/20 rounded-full h-1">
             <div 
               className={`h-1 rounded-full transition-all duration-300 ${

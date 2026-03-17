@@ -1,6 +1,5 @@
 import { UpdateFileSettingsCommand } from '../api';
 import { ApiClientFactory } from '../api/clientFactory';
-import { API_CONFIG } from '../api/config';
 
 export interface FileTypeSettingsData {
   id: string;

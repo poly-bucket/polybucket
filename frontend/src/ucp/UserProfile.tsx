@@ -10,11 +10,6 @@ import {
   Person, 
   Settings, 
   Collections, 
-  Print, 
-  Palette, 
-  ThumbUp, 
-  Comment, 
-  Download, 
   CalendarToday, 
   LocationOn, 
   Language, 
@@ -22,9 +17,9 @@ import {
   Lock,
   ErrorOutline
 } from '@mui/icons-material';
-import api from '../utils/axiosConfig';
 import { CircularProgress, Typography, TextField, InputAdornment, IconButton } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon, NavigateBefore as NavigateBeforeIcon, NavigateNext as NavigateNextIcon } from '@mui/icons-material';
+import { ApiClientFactory } from '../api/clientFactory';
 
 interface UserProfile {
   id: string;
@@ -157,29 +152,22 @@ const UserProfile: React.FC = () => {
 
   const [comments, setComments] = useState<any[]>([]);
 
+  const apiClient = ApiClientFactory.getApiClient();
+
   // Fetch functions
-  const fetchUserModels = async (userId: string, page: number = 1, search: string = '') => {
+  const fetchUserModels = async (username: string, page: number = 1, search: string = '') => {
     try {
       setModelsLoading(true);
-      const response = await api.get(`/models/user/${userId}/public`, {
-        params: {
-          page,
-          pageSize: 12,
-          searchQuery: search || undefined
-        }
-      });
-      if (response.data) {
-        // Handle both cases: wrapped in models property or direct array
-        const modelsData = response.data.models || response.data;
-        if (Array.isArray(modelsData)) {
-          setModels(modelsData);
-          setModelsTotalCount(response.data.totalCount || modelsData.length);
-          setModelsTotalPages(response.data.totalPages || 1);
-        } else {
-          setModels([]);
-          setModelsTotalCount(0);
-          setModelsTotalPages(1);
-        }
+      const response = await apiClient.getUserModels_GetUserPublicModels(
+        username,
+        page,
+        12
+      );
+      if (response) {
+        const modelsData = response.models || [];
+        setModels(modelsData as any);
+        setModelsTotalCount(response.totalCount || 0);
+        setModelsTotalPages(response.totalPages || 1);
       }
     } catch (error) {
       console.error('Error fetching user models:', error);
@@ -191,24 +179,19 @@ const UserProfile: React.FC = () => {
   const fetchUserCollections = async (userId: string, page: number = 1, search: string = '') => {
     try {
       setCollectionsLoading(true);
-      const response = await api.get(`/collections/user/${userId}`, {
-        params: {
-          page,
-          pageSize: 12,
-          searchQuery: search || undefined
-        }
-      });
-      if (response.data) {
-        const collectionsData = response.data.collections || response.data;
-        if (Array.isArray(collectionsData)) {
-          setCollections(collectionsData);
-          setCollectionsTotalCount(response.data.totalCount || collectionsData.length);
-          setCollectionsTotalPages(response.data.totalPages || 1);
-        } else {
-          setCollections([]);
-          setCollectionsTotalCount(0);
-          setCollectionsTotalPages(1);
-        }
+      const response = await apiClient.getPublicUserCollections_GetPublicUserCollections(
+        userId,
+        page,
+        12,
+        search || undefined,
+        undefined,
+        undefined
+      );
+      if (response) {
+        const collectionsData = response.collections || [];
+        setCollections(collectionsData as any);
+        setCollectionsTotalCount(response.totalCount || 0);
+        setCollectionsTotalPages(response.totalPages || 1);
       }
     } catch (error) {
       console.error('Error fetching user collections:', error);
@@ -240,34 +223,34 @@ const UserProfile: React.FC = () => {
       setError(null);
       
       try {
-        const response = await api.get(`/users/profile/${id}`);
+        const response = await apiClient.getUserProfile_GetUserProfileById(id);
         
-        if (response?.data) {
+        if (response) {
           // Check if this is a private profile response
-          if (response.data.message === "This profile is private") {
+          if (response.message === "This profile is private" || !response.isProfilePublic) {
             setProfile({
-              id: response.data.id,
-              username: response.data.username,
+              id: response.id || id,
+              username: response.username || '',
               isProfilePublic: false,
-              message: response.data.message
+              message: response.message
             } as any);
             setLoading(false);
             return;
           }
           
-          setProfile(response.data);
+          setProfile(response as any);
           
           // Fetch additional data only if profile is public
-          if (response.data.isProfilePublic) {
+          if (response.isProfilePublic && response.username) {
             await Promise.all([
-              fetchUserModels(response.data.id),
-              fetchUserCollections(response.data.id)
+              fetchUserModels(response.username),
+              fetchUserCollections(response.id || id)
             ]);
           }
         }
       } catch (error: any) {
         console.error('Error fetching profile:', error);
-        if (error.response?.status === 404) {
+        if (error.response?.status === 404 || error.status === 404) {
           setError('User profile not found');
         } else {
           setError('Failed to load user profile');
@@ -286,8 +269,8 @@ const UserProfile: React.FC = () => {
     try {
       switch (tab) {
         case 'models':
-          if (profile && models.length === 0) {
-            await fetchUserModels(profile.id);
+          if (profile && models.length === 0 && profile.username) {
+            await fetchUserModels(profile.username);
           }
           break;
         case 'collections':
@@ -340,8 +323,8 @@ const UserProfile: React.FC = () => {
     setModelsPage(1);
     // Debounce the search to avoid too many API calls
     const timeoutId = setTimeout(() => {
-      if (profile) {
-        fetchUserModels(profile.id, 1, search);
+      if (profile && profile.username) {
+        fetchUserModels(profile.username, 1, search);
       }
     }, 300);
     return () => clearTimeout(timeoutId);
@@ -361,8 +344,8 @@ const UserProfile: React.FC = () => {
 
   const handleModelsPageChange = async (page: number) => {
     setModelsPage(page);
-    if (profile) {
-      await fetchUserModels(profile.id, page, modelsSearch);
+    if (profile && profile.username) {
+      await fetchUserModels(profile.username, page, modelsSearch);
     }
   };
 

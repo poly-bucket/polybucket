@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAppSelector } from '../utils/hooks';
+import { ApiClientFactory } from '../api/clientFactory';
+import { ChangePasswordCommand } from '../api/client';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 interface PasswordChangeStepProps {
@@ -96,55 +98,42 @@ const PasswordChangeStep: React.FC<PasswordChangeStepProps> = ({
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-      const response = await fetch(`${apiUrl}/api/ChangePassword/change`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword
-        })
+      const client = ApiClientFactory.getApiClient();
+      const command = new ChangePasswordCommand({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
       });
 
-      if (response.ok) {
+      const response = await client.changePassword_ChangePassword(command);
+
+      if (response && response.success) {
         onComplete({ 
           passwordChanged: true
         });
       } else {
-        const errorData = await response.json();
-        setErrors({ submit: errorData.message || 'Failed to change password' });
+        setErrors({ submit: response?.message || 'Failed to change password' });
       }
-    } catch (error) {
-      setErrors({ submit: 'An error occurred while changing password' });
+    } catch (error: any) {
+      setErrors({ submit: error?.message || 'An error occurred while changing password' });
     }
   };
 
   const handleSkip = async () => {
     setIsSkipping(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-      const response = await fetch(`${apiUrl}/api/ChangePassword/skip`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const client = ApiClientFactory.getApiClient();
+      const response = await client.changePassword_SkipPasswordChange();
 
-      if (response.ok) {
+      if (response && response.success) {
         onComplete({ 
           passwordSkipped: true
         });
       } else {
-        const errorData = await response.json();
-        setErrors({ submit: errorData.message || 'Failed to skip password change' });
+        setErrors({ submit: response?.message || 'Failed to skip password change' });
       }
-    } catch (error) {
-      setErrors({ submit: 'An error occurred while skipping password change' });
+    } catch (error: any) {
+      setErrors({ submit: error?.message || 'An error occurred while skipping password change' });
     } finally {
       setIsSkipping(false);
     }

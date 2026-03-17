@@ -16,7 +16,7 @@ import { UserSettingsProvider } from './context/UserSettingsContext';
 const AdminControlPanel = lazy(() => import('./acp/AdminControlPanel'));
 const ModelModeration = lazy(() => import('./mcp/ModelModeration'));
 const ModerationDashboard = lazy(() => import('./mcp/ModerationDashboard').then(module => ({ default: module.ModerationDashboard })));
-const ModelUpload = lazy(() => import('./models/ModelUpload'));
+import ModelUpload from './models/ModelUpload';
 const ModelDetails = lazy(() => import('./models/ModelDetails'));
 const UserControlPanel = lazy(() => import('./ucp').then(module => ({ default: module.UserControlPanel })));
 const Collections = lazy(() => import('./collections/Collections'));
@@ -89,9 +89,7 @@ const App: React.FC = () => {
                   path="/upload-model" 
                   element={
                     <ProtectedRoute>
-                      <Suspense fallback={<RouteLoadingFallback />}>
-                        <ModelUpload />
-                      </Suspense>
+                      <ModelUpload />
                     </ProtectedRoute>
                   } 
                 />

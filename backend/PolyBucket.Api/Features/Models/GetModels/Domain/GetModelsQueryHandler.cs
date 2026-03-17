@@ -19,7 +19,7 @@ namespace PolyBucket.Api.Features.Models.GetModels.Domain
         {
             try
             {
-                var (models, totalCount) = await _repository.GetModelsAsync(request.Page, request.Take);
+                var (models, totalCount) = await _repository.GetModelsAsync(request.Page, request.Take, request.SortBy);
                 var totalPages = (int)Math.Ceiling(totalCount / (double)request.Take);
 
                 // Generate fresh presigned URLs for all models

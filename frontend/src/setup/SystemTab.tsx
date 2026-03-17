@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '../utils/hooks';
-import api from '../utils/axiosConfig';
+import { ApiClientFactory } from '../api/clientFactory';
 
 const SystemTab: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -26,10 +26,10 @@ const SystemTab: React.FC = () => {
   const fetchSetupStatus = async () => {
     setIsLoadingSetup(true);
     try {
-      const response = await api.get('/SystemSetup/status');
+      const client = ApiClientFactory.getApiClient();
+      const status = await client.systemSetup_GetSetupStatus();
 
-      if (response.status === 200) {
-        const status = response.data;
+      if (status) {
         setSetupStatus(status);
       }
     } catch (error) {

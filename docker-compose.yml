@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile.frontend
       target: development
     ports:
-      - "3000:3000"
+      - "12666:12666"
     environment:
       - VITE_API_URL=http://localhost:11666
     depends_on:

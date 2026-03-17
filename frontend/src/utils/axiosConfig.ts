@@ -34,11 +34,10 @@ const isAuthenticationEndpoint = (url: string | undefined): boolean => {
 export const handleAuthFailure = (): void => {
   console.log('Authentication failed, logging out user');
   store.dispatch(clearUser());
-  // Clear localStorage
   localStorage.removeItem('user');
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
-  // Redirect to login page
+  localStorage.removeItem('persist:auth');
   window.location.href = '/login';
 };
 
@@ -123,10 +122,7 @@ api.interceptors.response.use(
             }
           } else {
             console.log('Token refresh failed, logging out user');
-            // Refresh failed, logout user
-            store.dispatch(clearUser());
-            // Redirect to login page or show login modal
-            window.location.href = '/login';
+            handleAuthFailure();
           }
         } else {
           console.log('No refresh token available, logging out user');

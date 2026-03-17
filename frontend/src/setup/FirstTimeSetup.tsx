@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../utils/hooks';
-import api from '../utils/axiosConfig';
+import { ApiClientFactory } from '../api/clientFactory';
 import PasswordChangeStep from './PasswordChangeStep';
 import TwoFactorAuthStep from './TwoFactorAuthStep';
 import SiteSettingsStep from './SiteSettingsStep';
@@ -68,10 +68,10 @@ const FirstTimeSetup: React.FC = () => {
     // Check current setup status
     const checkSetupStatus = async () => {
       try {
-        const response = await api.get('/SystemSetup/status');
+        const client = ApiClientFactory.getApiClient();
+        const status = await client.systemSetup_GetSetupStatus();
 
-        if (response.status === 200) {
-          const status = response.data;
+        if (status) {
           setSetupStatus(status);
           
           // Determine starting step based on completed steps
@@ -79,14 +79,14 @@ const FirstTimeSetup: React.FC = () => {
           if (status.isAdminConfigured) {
             startingStep = 1; // Start at 2FA setup
           }
-          if (status.isTwoFactorConfigured) {
+          if (status.isSiteConfigured) {
             startingStep = 2; // Start at site configuration
           }
           if (status.isSiteConfigured) {
-            startingStep = 3; // Start at email configuration
+            startingStep = 3; // Start at site configuration
           }
           if (status.isEmailConfigured) {
-            startingStep = 4; // Start at moderation settings
+            startingStep = 4; // Start at email settings
           }
           if (status.isModerationConfigured) {
             // All steps completed, redirect to dashboard
@@ -125,12 +125,13 @@ const FirstTimeSetup: React.FC = () => {
   const handleSetupComplete = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post('/SystemSetup/complete', setupData);
+      const client = ApiClientFactory.getApiClient();
+      const response = await client.systemSetup_CompleteSetup();
 
-      if (response.status === 200) {
+      if (response && response.success) {
         setIsComplete(true);
       } else {
-        console.error('Failed to complete setup');
+        console.error('Failed to complete setup', response?.message);
       }
     } catch (error) {
       console.error('Error completing setup:', error);

@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,7 +11,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
-      port: 3000,
+      port: 12666,
       host: '0.0.0.0', // Listen on all interfaces
       proxy: {
         '/api': {
@@ -76,8 +77,24 @@ export default defineConfig(({ mode }) => {
         'react-router-dom',
         '@reduxjs/toolkit',
         'react-redux',
+        './src/utils/use-sync-external-store-shim.ts',
       ],
-      exclude: ['@react-three/fiber', '@react-three/drei'],
+      exclude: [
+        '@react-three/fiber', 
+        '@react-three/drei',
+      ],
+      esbuildOptions: {
+        target: 'esnext',
+      },
     },
-  }
+    resolve: {
+      dedupe: ['react', 'react-dom', 'react-redux'],
+      alias: {
+        'use-sync-external-store/with-selector': resolve(__dirname, 'src/utils/use-sync-external-store-shim.ts'),
+        'use-sync-external-store/with-selector.js': resolve(__dirname, 'src/utils/use-sync-external-store-shim.ts'),
+        'use-sync-external-store/shim/with-selector': resolve(__dirname, 'src/utils/use-sync-external-store-shim.ts'),
+        'use-sync-external-store/shim/with-selector.js': resolve(__dirname, 'src/utils/use-sync-external-store-shim.ts'),
+      },
+    },
+  } as any
 }) 

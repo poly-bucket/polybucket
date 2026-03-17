@@ -67,9 +67,9 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   return (
     <>
       <header className="lg-nav fixed top-0 left-0 right-0 z-50 h-20 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+        <div className=" mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="flex justify-between items-center w-full h-full">
-            <div className="flex items-center gap-1.5 h-full">
+            <div className="flex items-center gap-1.5 h-full flex-shrink-0">
               {showHomeLink && (
                 <Link
                   to="/dashboard"
@@ -92,7 +92,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                     {icon}
                   </div>
                 )}
-                <h1 className="text-2xl font-semibold text-white leading-tight ">
+                <h1 className="text-2xl font-semibold text-white leading-tight">
                   {title}
                 </h1>
               </div>
@@ -123,7 +123,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
             )}
 
             {/* User Menu or Auth Buttons */}
-            <div className="flex items-center space-x-1.5 h-full">
+            <div className="flex justify-end space-x-1.5 h-full">
               {showUploadButton && shouldShowUserMenu && (
                 <Link
                   to="/upload-model"

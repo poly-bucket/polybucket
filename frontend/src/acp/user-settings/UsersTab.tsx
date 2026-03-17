@@ -129,11 +129,11 @@ const UsersTab: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header Section */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+      <div className="lg-card p-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-2">User Management</h2>
-            <p className="text-gray-300">Manage system users, roles, and permissions</p>
+            <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--lg-text-primary)' }}>User Management</h2>
+            <p style={{ color: 'var(--lg-text-secondary)' }}>Manage system users, roles, and permissions</p>
           </div>
           <div className="flex space-x-3">
             <button
@@ -155,7 +155,7 @@ const UsersTab: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+      <div className="lg-card p-6">
         <div className="flex gap-4">
           <div className="flex-1 relative">
             <input
@@ -168,7 +168,10 @@ const UsersTab: React.FC = () => {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                style={{ color: 'var(--lg-text-tertiary)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--lg-text-primary)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--lg-text-tertiary)'}
               >
                 ×
               </button>
@@ -217,15 +220,15 @@ const UsersTab: React.FC = () => {
 
       {/* Loading and Error States */}
       {loading && (
-        <div className="lg-card p-12 text-center border border-white/10">
+        <div className="lg-card p-12 text-center">
           <div className="lg-spinner h-12 w-12 mx-auto mb-6"></div>
-          <div className="text-2xl text-white/60">Loading users...</div>
+          <div className="text-2xl" style={{ color: 'var(--lg-text-tertiary)' }}>Loading users...</div>
         </div>
       )}
 
       {error && (
-        <div className="lg-card p-6 border border-red-500/30">
-          <div className="text-red-400 text-center text-lg">{error}</div>
+        <div className="lg-card p-6" style={{ borderColor: 'var(--lg-error)' }}>
+          <div className="text-center text-lg" style={{ color: 'var(--lg-error)' }}>{error}</div>
           <button 
             onClick={fetchUsers}
             className="mt-4 lg-button lg-button-secondary mx-auto block"
@@ -237,37 +240,37 @@ const UsersTab: React.FC = () => {
 
       {/* Users Table */}
       {!loading && !error && (
-        <div className="lg-card border border-white/10 overflow-hidden">
+        <div className="lg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="lg-table w-full">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Last Login</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Actions</th>
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--lg-text-secondary)' }}>User</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--lg-text-secondary)' }}>Role</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--lg-text-secondary)' }}>Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--lg-text-secondary)' }}>Last Login</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--lg-text-secondary)' }}>Created</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--lg-text-secondary)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-white/60 text-lg">
+                    <td colSpan={6} className="px-6 py-12 text-center text-lg" style={{ color: 'var(--lg-text-tertiary)' }}>
                       No users found
                     </td>
                   </tr>
                 ) : (
                   users.map((user) => (
-                    <tr key={user.id} className="cursor-pointer hover:bg-white/5 border-b border-white/5 transition-colors duration-150">
+                    <tr key={user.id} className="cursor-pointer transition-colors duration-150">
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium" style={{ background: 'var(--lg-primary)', color: 'var(--lg-text-primary)' }}>
                             {user.username?.charAt(0)?.toUpperCase() || '?'}
                           </div>
                           <div>
-                            <div className="font-medium text-white text-lg">{user.username || 'Unknown'}</div>
-                            <div className="text-sm text-white/60">{user.email || 'No email'}</div>
+                            <div className="font-medium text-lg" style={{ color: 'var(--lg-text-primary)' }}>{user.username || 'Unknown'}</div>
+                            <div className="text-sm" style={{ color: 'var(--lg-text-tertiary)' }}>{user.email || 'No email'}</div>
                           </div>
                         </div>
                       </td>
@@ -287,10 +290,10 @@ const UsersTab: React.FC = () => {
                           {user.isBanned ? 'Banned' : 'Active'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-white/60">
+                      <td className="px-6 py-4" style={{ color: 'var(--lg-text-tertiary)' }}>
                         {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
                       </td>
-                      <td className="px-6 py-4 text-white/60">
+                      <td className="px-6 py-4" style={{ color: 'var(--lg-text-tertiary)' }}>
                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
                       </td>
                       <td className="px-6 py-4">
@@ -318,20 +321,20 @@ const UsersTab: React.FC = () => {
           
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-700 bg-gray-750">
+            <div className="px-6 py-4" style={{ borderTop: '1px solid var(--lg-glass-border)', background: 'var(--lg-bg-secondary)' }}>
               <div className="flex justify-between items-center">
-                <div className="text-gray-300 text-sm">
+                <div className="text-sm" style={{ color: 'var(--lg-text-secondary)' }}>
                   Showing {((pagination.page - 1) * pagination.pageSize) + 1} to {Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount} users
                 </div>
                 <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-3">
-                    <span className="text-gray-300 text-sm font-medium">Page size:</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--lg-text-secondary)' }}>Page size:</span>
                     <select
                       value={pagination.pageSize}
                       onChange={(e) => {
                         setPagination(prev => ({ ...prev, pageSize: parseInt(e.target.value), page: 1 }));
                       }}
-                      className="lg-input w-24 text-sm bg-gray-700 border-gray-600 text-white"
+                      className="lg-input w-24 text-sm"
                     >
                       <option value={10}>10</option>
                       <option value={20}>20</option>
@@ -347,7 +350,7 @@ const UsersTab: React.FC = () => {
                     >
                       Previous
                     </button>
-                    <span className="text-gray-300 px-4 py-2 font-medium">
+                    <span className="px-4 py-2 font-medium" style={{ color: 'var(--lg-text-secondary)' }}>
                       Page {pagination.page} of {pagination.totalPages}
                     </span>
                     <button
@@ -369,11 +372,11 @@ const UsersTab: React.FC = () => {
       {createUserOpen && (
         <div className="lg-modal-overlay">
           <div className="lg-modal p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-white mb-4">Create New User</h3>
+            <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--lg-text-primary)' }}>Create New User</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Email</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--lg-text-secondary)' }}>Email</label>
                 <input
                   type="email"
                   value={newUserForm.email}
@@ -384,7 +387,7 @@ const UsersTab: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Username</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--lg-text-secondary)' }}>Username</label>
                 <input
                   type="text"
                   value={newUserForm.username}
@@ -395,7 +398,7 @@ const UsersTab: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Password</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--lg-text-secondary)' }}>Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -407,21 +410,27 @@ const UsersTab: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    style={{ color: 'var(--lg-text-tertiary)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--lg-text-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--lg-text-tertiary)'}
                   >
                     {showPassword ? <VisibilityOff className="w-5 h-5" /> : <Visibility className="w-5 h-5" />}
                   </button>
                 </div>
                 <button
                   onClick={() => handleFormChange('password', Math.random().toString(36).slice(-8))}
-                  className="text-sm text-indigo-400 hover:text-indigo-300 mt-1"
+                  className="text-sm mt-1"
+                  style={{ color: 'var(--lg-primary-light)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--lg-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--lg-primary-light)'}
                 >
                   Generate Password
                 </button>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Role</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--lg-text-secondary)' }}>Role</label>
                 <select
                   value={newUserForm.role}
                   onChange={(e) => handleFormChange('role', e.target.value)}
@@ -455,14 +464,21 @@ const UsersTab: React.FC = () => {
 
       {/* Snackbar */}
       {snackbar.open && (
-        <div className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-          snackbar.severity === 'success' ? 'bg-green-600' : 'bg-red-600'
-        } text-white`}>
+        <div 
+          className="fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50"
+          style={{
+            background: snackbar.severity === 'success' ? 'var(--lg-success)' : 'var(--lg-error)',
+            color: 'var(--lg-text-primary)'
+          }}
+        >
           <div className="flex items-center space-x-2">
             <span>{snackbar.message}</span>
             <button
               onClick={() => setSnackbar(prev => ({ ...prev, open: false }))}
-              className="ml-2 text-white/80 hover:text-white"
+              className="ml-2"
+              style={{ color: 'var(--lg-text-secondary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--lg-text-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--lg-text-secondary)'}
             >
               ×
             </button>

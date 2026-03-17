@@ -1,17 +1,45 @@
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:1',message:'ModelUpload module loading - starting imports',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import NavigationBar from '../components/common/NavigationBar';
-import { useAppSelector, useAppDispatch } from '../store';
-import { PrivacySettings } from '../api/client';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:2',message:'ModelUpload - React imported',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
+import { useNavigate, Link } from 'react-router-dom';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:3',message:'ModelUpload - react-router-dom imported',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
+// import NavigationBar from '../components/common/NavigationBar'; // Commented out to avoid Redux import
+// import { useAppSelector, useAppDispatch } from '../store';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:5',message:'ModelUpload - about to import PrivacySettings',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
+// import { PrivacySettings } from '../api/client';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:6',message:'ModelUpload - about to import ThumbnailGenerator',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
 import ThumbnailGenerator from './ThumbnailGenerator';
-import ModelViewer, { ViewMode } from './ModelViewer';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:7',message:'ModelUpload - about to import ModelViewer',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
+import ModelViewer from './ModelViewer';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:8',message:'ModelUpload - about to import PDFViewer',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
 import PDFViewer from '../components/common/PDFViewer';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:9',message:'ModelUpload - about to import MarkdownViewer',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
 import MarkdownViewer from '../components/common/MarkdownViewer';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fbd6cafe-c55d-4c1d-9edb-12a6a38267bf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ModelUpload.tsx:10',message:'ModelUpload - all imports completed',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
 import { parseModelMarkdown, isMarkdownFile, generateMarkdownTemplate } from '../utils/markdownParser';
 import { extractZipFile, isValidZipFile, convertToFiles } from '../utils/zipExtractor';
 import { FileTypeSettingsData } from '../services/fileTypeSettingsService';
-import { fetchFileSettings } from '../store/thunks/fileTypeSettingsThunks';
+// import { fetchFileSettings } from '../store/thunks/fileTypeSettingsThunks';
 import modelConfigurationSettingsService, { ModelConfigurationSettings } from '../services/modelConfigurationSettingsService';
+import fileTypeSettingsService from '../services/fileTypeSettingsService';
 
 interface UploadedFile {
   id: string;
@@ -39,9 +67,11 @@ const MAX_FILES_PER_UPLOAD = 20;
 
 const ModelUpload: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { user } = useAppSelector(state => state.auth);
-  const { fileTypes: fileTypeSettings, isLoading: fileTypeSettingsLoading } = useAppSelector(state => state.fileTypeSettings);
+  // const dispatch = useAppDispatch();
+  // const { user } = useAppSelector(state => state.auth);
+  // const { fileTypes: fileTypeSettings, isLoading: fileTypeSettingsLoading } = useAppSelector(state => state.fileTypeSettings);
+  const [fileTypeSettings, setFileTypeSettings] = useState<FileTypeSettingsData[]>([]);
+  const [fileTypeSettingsLoading, setFileTypeSettingsLoading] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [modelData, setModelData] = useState<ModelData>({
     title: '',
@@ -90,12 +120,24 @@ const ModelUpload: React.FC = () => {
     'MIT', 'GPL', 'Creative Commons', 'Commercial', 'Custom'
   ];
 
-  // Fetch file type settings from Redux store if not already loaded
+  // Fetch file type settings directly from service (Redux commented out)
   useEffect(() => {
-    if (fileTypeSettings.length === 0 && !fileTypeSettingsLoading) {
-      dispatch(fetchFileSettings());
-    }
-  }, [dispatch, fileTypeSettings.length, fileTypeSettingsLoading]);
+    const fetchSettings = async () => {
+      try {
+        setFileTypeSettingsLoading(true);
+        const response = await fileTypeSettingsService.getFileSettings();
+        if (response.success && response.fileTypes) {
+          setFileTypeSettings(response.fileTypes);
+        }
+      } catch (error) {
+        console.error('Error fetching file type settings:', error);
+      } finally {
+        setFileTypeSettingsLoading(false);
+      }
+    };
+    
+    fetchSettings();
+  }, []);
 
   // Fetch model configuration settings on component mount
   useEffect(() => {
@@ -652,13 +694,28 @@ const ModelUpload: React.FC = () => {
         }
       `}</style>
       
-      {/* Navigation Bar */}
-      <NavigationBar
-        title="Upload New Model"
-        showSearch={false}
-        showUploadButton={false}
-        showHomeLink={true}
-      />
+      {/* Navigation Bar - Simple version without Redux */}
+      <header className="lg-nav fixed top-0 left-0 right-0 z-50 h-20 overflow-hidden">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+          <div className="flex justify-between items-center w-full h-full">
+            <div className="flex items-center gap-1.5 h-full flex-shrink-0">
+              <Link
+                to="/dashboard"
+                className="flex items-center text-white/60 hover:text-white transition-colors duration-200 h-full"
+              >
+                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span className="text-xs">Dashboard</span>
+              </Link>
+              <div className="w-px h-4 bg-white/20 mx-1"></div>
+              <h1 className="text-2xl font-semibold text-white leading-tight">
+                Upload New Model
+              </h1>
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content - Padding for fixed navbar */}
       <div className="flex-1 pt-20">

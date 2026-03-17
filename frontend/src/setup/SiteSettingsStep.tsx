@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppSelector } from '../utils/hooks';
-import { PrivacySettings } from '../api/client';
+import { ApiClientFactory } from '../api/clientFactory';
+import { PrivacySettings, UpdateSiteSettingsCommand } from '../api/client';
 
 interface SiteSettingsStepProps {
   onComplete: (data: any) => void;
@@ -106,58 +107,48 @@ const SiteSettingsStep: React.FC<SiteSettingsStepProps> = ({
       return;
     }
 
-    // Transform the data to match backend expectations
-    const transformedData = {
-      SiteName: formData.siteName,
-      SiteDescription: formData.siteDescription,
-      ContactEmail: formData.contactEmail,
-      AllowPublicBrowsing: formData.allowPublicBrowsing,
-      RequireLoginForUpload: formData.requireLoginForUpload,
-      AllowUserRegistration: formData.allowUserRegistration,
-      RequireEmailVerification: formData.requireEmailVerification,
-      DisableEmailSettings: formData.disableEmailSettings,
-      MaxFileSizeBytes: formData.maxFileSizeBytes,
-      AllowedFileTypes: formData.allowedFileTypes,
-      MaxFilesPerUpload: formData.maxFilesPerUpload,
-      EnableFileCompression: formData.enableFileCompression,
-      AutoGeneratePreviews: formData.autoGeneratePreviews,
-      DefaultModelPrivacy: formData.defaultModelPrivacy,
-      AutoApproveModels: formData.autoApproveModels,
-      RequireModeration: formData.requireModeration,
-      DefaultUserRole: formData.defaultUserRole,
-      AllowCustomRoles: formData.allowCustomRoles,
-      MaxFailedLoginAttempts: formData.maxFailedLoginAttempts,
-      LockoutDurationMinutes: formData.lockoutDurationMinutes,
-      RequireStrongPasswords: formData.requireStrongPasswords,
-      PasswordMinLength: formData.passwordMinLength,
-      DefaultTheme: formData.defaultTheme,
-      DefaultLanguage: formData.defaultLanguage,
-      ShowAdvancedOptions: formData.showAdvancedOptions,
-      EnableFederation: formData.enableFederation,
-      InstanceName: formData.instanceName,
-      InstanceDescription: formData.instanceDescription,
-      AdminContact: formData.adminContact || null
-    };
-
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:11666';
-      const response = await fetch(`${apiUrl}/api/SystemSetup/site-settings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(transformedData)
+      const client = ApiClientFactory.getApiClient();
+      const command = new UpdateSiteSettingsCommand({
+        siteName: formData.siteName,
+        siteDescription: formData.siteDescription,
+        contactEmail: formData.contactEmail,
+        allowPublicBrowsing: formData.allowPublicBrowsing,
+        requireLoginForUpload: formData.requireLoginForUpload,
+        allowUserRegistration: formData.allowUserRegistration,
+        requireEmailVerification: formData.requireEmailVerification,
+        maxFileSizeBytes: formData.maxFileSizeBytes,
+        allowedFileTypes: formData.allowedFileTypes,
+        maxFilesPerUpload: formData.maxFilesPerUpload,
+        enableFileCompression: formData.enableFileCompression,
+        autoGeneratePreviews: formData.autoGeneratePreviews,
+        defaultModelPrivacy: formData.defaultModelPrivacy,
+        autoApproveModels: formData.autoApproveModels,
+        requireModeration: formData.requireModeration,
+        defaultUserRole: formData.defaultUserRole,
+        allowCustomRoles: formData.allowCustomRoles,
+        maxFailedLoginAttempts: formData.maxFailedLoginAttempts,
+        lockoutDurationMinutes: formData.lockoutDurationMinutes,
+        requireStrongPasswords: formData.requireStrongPasswords,
+        passwordMinLength: formData.passwordMinLength,
+        defaultTheme: formData.defaultTheme,
+        defaultLanguage: formData.defaultLanguage,
+        showAdvancedOptions: formData.showAdvancedOptions,
+        enableFederation: formData.enableFederation,
+        instanceName: formData.instanceName,
+        instanceDescription: formData.instanceDescription,
+        adminContact: formData.adminContact || undefined
       });
 
-      if (response.ok) {
+      const response = await client.systemSetup_UpdateSiteSettings(command);
+
+      if (response && response.success) {
         onComplete(formData);
       } else {
-        const errorData = await response.json();
-        setErrors({ submit: errorData.message || 'Failed to save site settings' });
+        setErrors({ submit: response?.message || 'Failed to save site settings' });
       }
-    } catch (error) {
-      setErrors({ submit: 'An error occurred while saving site settings' });
+    } catch (error: any) {
+      setErrors({ submit: error?.message || 'An error occurred while saving site settings' });
     }
   };
 

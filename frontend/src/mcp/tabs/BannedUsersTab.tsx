@@ -31,7 +31,8 @@ import {
   UserIcon,
   UserMinusIcon
 } from '@heroicons/react/24/outline';
-import { moderationService, BannedUser, BannedUsersResponse, BanUserRequest } from '../../services/moderationService';
+import { moderationService, BannedUser, BannedUsersResponse } from '../../services/moderationService';
+import { ApiClientFactory } from '../../api/clientFactory';
 
 export const BannedUsersTab: React.FC = () => {
   const [bannedUsers, setBannedUsers] = useState<BannedUser[]>([]);
@@ -94,7 +95,8 @@ export const BannedUsersTab: React.FC = () => {
 
     try {
       setUnbanning(true);
-      await moderationService.unbanUser(selectedUser.id);
+      const client = ApiClientFactory.getApiClient();
+      await client.banUser_UnbanUser(selectedUser.id);
       closeUnbanDialog();
       fetchBannedUsers(); // Refresh the list
     } catch (err) {

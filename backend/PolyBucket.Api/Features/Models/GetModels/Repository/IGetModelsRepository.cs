@@ -7,6 +7,6 @@ namespace PolyBucket.Api.Features.Models.GetModels.Repository
 {
     public interface IGetModelsRepository
     {
-        Task<(IEnumerable<Model> Models, int TotalCount)> GetModelsAsync(int page, int take);
+        Task<(IEnumerable<Model> Models, int TotalCount)> GetModelsAsync(int page, int take, string? sortBy);
     }
 }

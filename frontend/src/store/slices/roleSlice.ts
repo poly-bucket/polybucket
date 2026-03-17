@@ -61,7 +61,14 @@ export const updateRole = createAsyncThunk(
   'roles/update',
   async ({ id, role }: { id: string, role: UpdateRoleRequest }, { rejectWithValue }: { rejectWithValue: (value: string) => any }) => {
     try {
-      return await roleService.updateRole(id, role);
+      if (!role.name || !role.description) {
+        return rejectWithValue('Name and description are required');
+      }
+      return await roleService.updateRole(id, {
+        name: role.name,
+        description: role.description,
+        color: role.color
+      });
     } catch (error: any) {
       const message = error.response?.data?.message || error.message || 'Failed to update role';
       return rejectWithValue(message);
