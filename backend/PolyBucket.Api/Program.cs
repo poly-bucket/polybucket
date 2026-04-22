@@ -68,7 +68,7 @@ public class Program
                 .AddPolyBucketFeatures()
                 .AddPolyBucketAuthentication(builder.Configuration)
                 .AddPolyBucketCors(builder.Configuration)
-                .AddPolyBucketHealthChecks(builder.Configuration)
+                .AddPolyBucketHealthChecks()
                 .AddPolyBucketOpenApi()
                 .AddPolyBucketOpenTelemetry(builder.Configuration);
 

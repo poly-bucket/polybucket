@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using PolyBucket.Api.Data;
@@ -38,8 +39,13 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddPolyBucketDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<PolyBucketDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        services.AddSingleton<IValidateOptions<DatabaseSettings>, DatabaseSettingsValidator>();
+        services.AddOptions<DatabaseSettings>()
+            .BindConfiguration("Database")
+            .ValidateOnStart();
+        services.AddDbContext<PolyBucketDbContext>((sp, options) =>
+            options.UseNpgsql(
+                sp.GetRequiredService<IOptions<DatabaseSettings>>().Value.BuildConnectionString()));
 
         return services;
     }
@@ -167,16 +173,10 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddPolyBucketHealthChecks(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddPolyBucketHealthChecks(this IServiceCollection services)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            throw new InvalidOperationException("DefaultConnection connection string is missing");
-        }
-
         services.AddHealthChecks()
-            .AddNpgSql(connectionString);
+            .AddNpgSql(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value.BuildConnectionString());
 
         return services;
     }

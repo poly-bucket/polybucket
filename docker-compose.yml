@@ -7,9 +7,14 @@ services:
     ports:
       - "11666:11666"
     environment:
+      # Main PolyBucket.Api uses Database__* (not ConnectionStrings__DefaultConnection)
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://*:11666
-      - ConnectionStrings__DefaultConnection=Host=db;Database=polybucket;Username=postgres;Password=postgres
+      - Database__Host=db
+      - Database__Port=5432
+      - Database__Name=polybucket
+      - Database__Username=postgres
+      - Database__Password=postgres
       - JWT_SECRET=development-jwt-secret-key-change-in-production-minimum-32-characters-long
       - AppSettings__Security__JwtSecret=development-jwt-secret-key-change-in-production-minimum-32-characters-long
       - Admin__Username=admin

@@ -1,44 +1,50 @@
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
+using PolyBucket.Api.Settings;
 
 namespace PolyBucket.Api.Data;
 
-public sealed class PostgresAppDatabaseEnsurer(IConfiguration configuration)
+public sealed class PostgresAppDatabaseEnsurer(IOptions<DatabaseSettings> databaseOptions)
 {
-    private const string DefaultConnectionName = "DefaultConnection";
     private static readonly Regex SafeIdentifier = new("^[a-z0-9_]+$", RegexOptions.Compiled);
 
     public async Task EnsureAppDatabaseExistsOrValidateForMigrationAsync(
         ILogger logger,
         CancellationToken cancellationToken = default)
     {
-        var ensureCreate = configuration.GetValue("Database:EnsureDatabaseCreated", true);
-        var connectionString = configuration.GetConnectionString(DefaultConnectionName);
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var settings = databaseOptions.Value;
+        var ensureCreate = settings.EnsureDatabaseCreated;
+        string connectionString;
+        try
+        {
+            connectionString = settings.BuildConnectionString();
+        }
+        catch (InvalidOperationException ex)
         {
             throw new InvalidOperationException(
-                "Connection string 'DefaultConnection' is not configured. Cannot prepare the application database.");
+                "Database connection could not be built from the Database section. Ensure Database:Host, Database:Name, and Database:Username are set.",
+                ex);
         }
 
         if (!TryParseAppBuilder(connectionString, out var appBuilder))
         {
             throw new InvalidOperationException(
-                "Failed to parse PostgreSQL connection string. Cannot prepare the application database.");
+                "Failed to parse PostgreSQL connection parameters from the Database section. Cannot prepare the application database.");
         }
 
         var appDatabase = appBuilder.Database;
         if (string.IsNullOrEmpty(appDatabase))
         {
             throw new InvalidOperationException(
-                "The connection string does not specify a database name. Add a Database= value.");
+                "The Database:Name (catalog) is not set. Set Database:Name in configuration.");
         }
 
         if (!SafeIdentifier.IsMatch(appDatabase))
         {
             throw new InvalidOperationException(
-                "The database name in the connection string must be a simple unquoted identifier (a-z, 0-9, _).");
+                "The database name in Database:Name must be a simple unquoted identifier (a-z, 0-9, _).");
         }
 
         logger.LogInformation(
@@ -70,7 +76,7 @@ public sealed class PostgresAppDatabaseEnsurer(IConfiguration configuration)
                 ex,
                 "The application database \"{AppDatabase}\" is not reachable while auto-create is disabled. " +
                 "Pre-create the catalog and grant access, or set Database:EnsureDatabaseCreated to true. " +
-                "If the connection string is wrong, fix the connection; this is a provisioning or configuration error, not a migration failure.",
+                "If values in the Database section are wrong, fix configuration; this is a provisioning or configuration error, not a migration failure.",
                 appDatabase);
             throw;
         }
@@ -99,7 +105,7 @@ public sealed class PostgresAppDatabaseEnsurer(IConfiguration configuration)
         string appDatabase,
         CancellationToken cancellationToken)
     {
-        var maintenanceName = configuration["Database:MaintenanceDatabase"]?.Trim() ?? "postgres";
+        var maintenanceName = databaseOptions.Value.MaintenanceDatabase?.Trim() ?? "postgres";
         if (!SafeIdentifier.IsMatch(maintenanceName))
         {
             throw new InvalidOperationException("Database:MaintenanceDatabase must be a simple identifier (a-z, 0-9, _).");

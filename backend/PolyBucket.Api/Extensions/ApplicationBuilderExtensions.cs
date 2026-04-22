@@ -1,6 +1,8 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Settings;
 using PolyBucket.Api.Data.Seeders;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Seeders;
@@ -21,15 +23,15 @@ public static class ApplicationBuilderExtensions
 
     private static async Task InitializeDatabaseAsync(WebApplication app)
     {
-        if (app.Configuration.GetValue("Database:SkipHostDatabaseInitialization", false))
+        using var scope = app.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        if (services.GetRequiredService<IOptions<DatabaseSettings>>().Value.SkipHostDatabaseInitialization)
         {
             app.Logger.LogInformation(
                 "Skipping host database initialization (Database:SkipHostDatabaseInitialization). The test pipeline owns ensure, migrate, and seed.");
             return;
         }
 
-        using var scope = app.Services.CreateScope();
-        var services = scope.ServiceProvider;
         var cancellationToken = app.Lifetime.ApplicationStopping;
         
         try
@@ -37,7 +39,8 @@ public static class ApplicationBuilderExtensions
             var db = services.GetRequiredService<PolyBucketDbContext>();
             if (!app.Environment.IsEnvironment("Test"))
             {
-                var ensurer = new PostgresAppDatabaseEnsurer(app.Configuration);
+                var ensurer = new PostgresAppDatabaseEnsurer(
+                    services.GetRequiredService<IOptions<DatabaseSettings>>());
                 await ensurer.EnsureAppDatabaseExistsOrValidateForMigrationAsync(app.Logger, cancellationToken);
                 await db.Database.MigrateAsync(cancellationToken);
                 app.Logger.LogInformation("Database migrations applied successfully");

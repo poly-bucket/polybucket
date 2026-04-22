@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Settings;
 using Testcontainers.PostgreSql;
 using Xunit;
 using LogAbstractions = Microsoft.Extensions.Logging.Abstractions;
@@ -36,7 +38,9 @@ namespace PolyBucket.Tests
             TestEnvironment.DefaultConnection = builder.ConnectionString;
 
             var configuration = BuildConfigurationForEnsurer();
-            var ensurer = new PostgresAppDatabaseEnsurer(configuration);
+            var databaseSettings = configuration.GetSection("Database").Get<DatabaseSettings>()
+                ?? throw new InvalidOperationException("Database section is missing for test ensurer.");
+            var ensurer = new PostgresAppDatabaseEnsurer(Options.Create(databaseSettings));
             var logger = LogAbstractions.NullLogger<PostgresAppDatabaseEnsurer>.Instance;
             await ensurer.EnsureAppDatabaseExistsOrValidateForMigrationAsync(logger).ConfigureAwait(false);
             await TestDatabaseManager.EnsureTestDatabaseCreatedAsync().ConfigureAwait(false);
@@ -52,16 +56,15 @@ namespace PolyBucket.Tests
 
         private static IConfiguration BuildConfigurationForEnsurer()
         {
+            var dbKeys = new Dictionary<string, string?>(TestDatabaseConfigurationHelper.GetDatabaseKeysFromConnectionString(TestEnvironment.DefaultConnection!))
+            {
+                ["Database:EnsureDatabaseCreated"] = "true",
+                ["Database:MaintenanceDatabase"] = "postgres"
+            };
             return new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.Test.json", optional: true)
-                .AddInMemoryCollection(
-                    new Dictionary<string, string?>
-                    {
-                        ["ConnectionStrings:DefaultConnection"] = TestEnvironment.DefaultConnection,
-                        ["Database:EnsureDatabaseCreated"] = "true",
-                        ["Database:MaintenanceDatabase"] = "postgres"
-                    })
+                .AddInMemoryCollection(dbKeys)
                 .Build();
         }
     }

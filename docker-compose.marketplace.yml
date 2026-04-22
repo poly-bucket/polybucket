@@ -11,7 +11,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://*:11666
-      - ConnectionStrings__DefaultConnection=Host=polybucket-db;Port=5432;Database=polybucket;Username=postgres;Password=postgres
+      - Database__Host=polybucket-db
+      - Database__Port=5432
+      - Database__Name=polybucket
+      - Database__Username=postgres
+      - Database__Password=postgres
       - MARKETPLACE_API_URL=http://localhost:10120
       - JWT_SECRET=${JWT_SECRET:-development-jwt-secret-key-change-in-production-minimum-32-characters-long}
       - AppSettings__Security__JwtSecret=${JWT_SECRET:-development-jwt-secret-key-change-in-production-minimum-32-characters-long}
@@ -91,6 +95,7 @@ services:
       retries: 3
 
   # Marketplace Services
+  # PolyBucket main API uses Database__*; marketplace backend still uses ConnectionStrings__DefaultConnection until migrated.
   marketplace-api:
     container_name: marketplace-api
     build: 

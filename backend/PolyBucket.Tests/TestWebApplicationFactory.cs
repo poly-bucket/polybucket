@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,6 +7,7 @@ using PolyBucket.Api;
 using PolyBucket.Api.Data;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using PolyBucket.Api.Settings;
 
 namespace PolyBucket.Tests
 {
@@ -24,16 +26,18 @@ namespace PolyBucket.Tests
                 }
                 else
                 {
-                    config.AddInMemoryCollection(new Dictionary<string, string?>
+                    var fromConn = TestDatabaseConfigurationHelper.GetDatabaseKeysFromConnectionString(
+                        "Host=127.0.0.1;Port=5432;Database=polybucket_test;Username=postgres;Password=postgres;SSL Mode=Disable");
+                    var inline = new Dictionary<string, string?>(fromConn)
                     {
-                        ["ConnectionStrings:DefaultConnection"] = "Host=127.0.0.1;Port=5432;Database=polybucket_test;Username=postgres;Password=postgres;SSL Mode=Disable",
                         ["AppSettings:Security:JwtSecret"] = "test-jwt-secret-key-for-testing-purposes-only-32-chars",
                         ["AppSettings:Security:JwtIssuer"] = "polybucket-test-api",
                         ["AppSettings:Security:JwtAudience"] = "polybucket-test-client",
                         ["AppSettings:Security:AccessTokenExpiryMinutes"] = "60",
                         ["AppSettings:Security:RefreshTokenExpiryDays"] = "7",
                         ["Database:SkipHostDatabaseInitialization"] = "true"
-                    });
+                    };
+                    config.AddInMemoryCollection(inline);
                 }
 
                 if (string.IsNullOrEmpty(TestEnvironment.DefaultConnection))
@@ -42,12 +46,11 @@ namespace PolyBucket.Tests
                         "TestEnvironment.DefaultConnection is not set. The Test collection fixture must start PostgreSQL and assign the connection string first.");
                 }
 
-                config.AddInMemoryCollection(
-                    new Dictionary<string, string?>
-                    {
-                        ["ConnectionStrings:DefaultConnection"] = TestEnvironment.DefaultConnection,
-                        ["Database:SkipHostDatabaseInitialization"] = "true"
-                    });
+                var dbFromContainer = new Dictionary<string, string?>(TestDatabaseConfigurationHelper.GetDatabaseKeysFromConnectionString(TestEnvironment.DefaultConnection))
+                {
+                    ["Database:SkipHostDatabaseInitialization"] = "true"
+                };
+                config.AddInMemoryCollection(dbFromContainer);
             });
             
             builder.ConfigureServices(services =>
@@ -60,11 +63,9 @@ namespace PolyBucket.Tests
                 }
 
                 var configuration = TestDatabaseManager.GetTestConfiguration();
-                var connectionString = configuration.GetConnectionString("DefaultConnection");
-                if (string.IsNullOrEmpty(connectionString))
-                {
-                    throw new InvalidOperationException("Test DefaultConnection is missing. Ensure the Test collection fixture ran.");
-                }
+                var settings = configuration.GetSection("Database").Get<DatabaseSettings>()
+                    ?? throw new InvalidOperationException("Database section is missing. Ensure the Test collection fixture ran.");
+                var connectionString = settings.BuildConnectionString();
                 
                 services.AddDbContext<PolyBucketDbContext>(options =>
                     options.UseNpgsql(connectionString, b => b.MigrationsAssembly("PolyBucket.Api")));
@@ -74,4 +75,4 @@ namespace PolyBucket.Tests
             });
         }
     }
-} 
+}
