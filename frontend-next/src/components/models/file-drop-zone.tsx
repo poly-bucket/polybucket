@@ -59,9 +59,10 @@ export default function FileDropZone({
       role="region"
       aria-label="File upload area"
       className={cn(
-        "cursor-pointer border-2 border-dashed transition-colors",
+        "cursor-pointer border border-dashed transition-colors gap-0 py-0 shadow-none",
+        !isCompact && "w-full max-w-lg mx-auto",
         canAddMore && !disabled
-          ? "border-white/20 hover:border-white/40"
+          ? "border-white/20 hover:border-white/35"
           : "border-white/10 opacity-60 cursor-not-allowed"
       )}
       onDragOver={handleDragOver}
@@ -70,18 +71,19 @@ export default function FileDropZone({
     >
       <CardContent
         className={cn(
-          "flex flex-col items-center justify-center text-center",
-          isCompact ? "py-6" : "py-16"
+          "flex flex-col items-center justify-center gap-3 text-center px-4 sm:px-6 sm:gap-4",
+          isCompact ? "py-6 sm:py-7" : "py-8 sm:py-9"
         )}
       >
         <svg
           className={cn(
-            "text-white/40",
+            "h-9 w-9 shrink-0 sm:h-10 sm:w-10 text-white/40",
             canAddMore && !disabled ? "text-white/50" : "text-white/30"
           )}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden
         >
           <path
             strokeLinecap="round"
@@ -92,8 +94,8 @@ export default function FileDropZone({
         </svg>
         <p
           className={cn(
-            "text-foreground",
-            isCompact ? "text-sm mt-2" : "text-xl mt-6"
+            "text-foreground font-medium",
+            isCompact ? "text-sm" : "text-base sm:text-lg"
           )}
         >
           {canAddMore
@@ -103,13 +105,14 @@ export default function FileDropZone({
             : `Maximum files reached (${maxFiles})`}
         </p>
         {!isCompact && canAddMore && (
-          <p className="text-muted-foreground text-sm mt-2">or</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">or</p>
         )}
         {(canAddMore && !disabled) && (
           <Button
             type="button"
-            size={isCompact ? "sm" : "default"}
-            className="mt-4"
+            size="sm"
+            variant="outline"
+            className="mt-1"
             onClick={(e) => {
               e.stopPropagation();
               handleClick();
@@ -119,7 +122,7 @@ export default function FileDropZone({
           </Button>
         )}
         {!isCompact && (
-          <p className="text-muted-foreground text-xs mt-4">
+          <p className="text-muted-foreground text-[11px] sm:text-xs max-w-sm leading-relaxed">
             Supported: {acceptFormats.slice(0, 8).join(", ")}
             {acceptFormats.length > 8 ? "..." : ""}
           </p>

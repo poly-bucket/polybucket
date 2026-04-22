@@ -41,19 +41,27 @@ services:
   client:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile.frontend-next
       target: development
     ports:
-      - "12666:12666"
+      - "12001:3000"
     environment:
-      - VITE_API_URL=http://localhost:11666
+      - NEXT_PUBLIC_API_URL=http://localhost:11666
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     volumes:
-      - ./frontend:/app
+      - ./frontend-next:/app
       - /app/node_modules
+      - /app/.next
     networks:
       - polybucket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
   db:
     image: postgres:latest

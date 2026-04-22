@@ -45,6 +45,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/primitives/card";
+import { cn } from "@/lib/utils";
 
 const MAX_FILES_PER_UPLOAD = 20;
 
@@ -395,15 +396,22 @@ export default function ModelUploadView() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
-      <h1 className="text-2xl font-semibold text-white">Upload New Model</h1>
-      <div className="flex gap-2 text-sm">
+    <div
+      className={cn(
+        "mx-auto w-full px-4 py-6 sm:py-8 space-y-6 sm:space-y-8",
+        currentStep === 1 ? "max-w-xl lg:max-w-2xl" : "max-w-4xl"
+      )}
+    >
+      <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
+        Upload New Model
+      </h1>
+      <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
           {[1, 2, 3].map((step) => (
             <button
               key={step}
               type="button"
               onClick={() => setCurrentStep(step)}
-              className={`px-3 py-1 rounded-full border ${
+              className={`px-2.5 py-1 rounded-full border transition-colors ${
                 currentStep === step
                   ? "bg-primary border-primary text-primary-foreground"
                   : "border-white/20 text-muted-foreground hover:border-white/40"
