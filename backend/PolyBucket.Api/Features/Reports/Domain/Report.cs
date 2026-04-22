@@ -16,4 +16,4 @@ namespace PolyBucket.Api.Features.Reports.Domain
         public DateTime? ResolvedAt { get; set; }
         public Guid? ResolvedById { get; set; }
     }
-} 
+}

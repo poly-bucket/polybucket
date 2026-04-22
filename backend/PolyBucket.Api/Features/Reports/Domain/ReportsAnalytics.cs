@@ -66,6 +66,6 @@ namespace PolyBucket.Api.Features.Reports.Domain
         public int ReportsDismissed { get; set; }
         public int ReportsArchived { get; set; }
         public DateTime LastActivity { get; set; }
-        public double AverageResolutionTime { get; set; } // in hours
+        public double AverageResolutionTime { get; set; }
     }
-} 
+}

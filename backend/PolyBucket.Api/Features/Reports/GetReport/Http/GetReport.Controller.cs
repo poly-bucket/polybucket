@@ -1,25 +1,26 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 using System.Threading.Tasks;
 using System;
-using PolyBucket.Api.Features.Reports.Domain;
+using PolyBucket.Api.Features.Reports.GetReport.Domain;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 
-namespace PolyBucket.Api.Features.Reports.Queries
+namespace PolyBucket.Api.Features.Reports.GetReport.Http
 {
     [ApiController]
     [Route("api/reports")]
     [Authorize]
     [RequirePermission(PermissionConstants.MODERATION_VIEW_REPORTS)]
-    public class GetReportController(IReportingPlugin reportingPlugin) : ControllerBase
+    public class GetReportController(IGetReportService getReportService) : ControllerBase
     {
-        private readonly IReportingPlugin _reportingPlugin = reportingPlugin;
+        private readonly IGetReportService _getReportService = getReportService;
 
         [HttpGet("{reportId}")]
-        public async Task<IActionResult> GetReport(Guid reportId)
+        public async Task<IActionResult> GetReport(Guid reportId, CancellationToken cancellationToken = default)
         {
-            var report = await _reportingPlugin.GetReportByIdAsync(reportId);
+            var report = await _getReportService.GetReportByIdAsync(reportId, cancellationToken);
             if (report == null)
             {
                 return NotFound();
@@ -27,4 +28,4 @@ namespace PolyBucket.Api.Features.Reports.Queries
             return Ok(report);
         }
     }
-} 
+}

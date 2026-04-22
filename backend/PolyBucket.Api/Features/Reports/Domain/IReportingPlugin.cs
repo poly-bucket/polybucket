@@ -36,8 +36,6 @@ namespace PolyBucket.Api.Features.Reports.Domain
         Task<ReportsResponse> GetAllReportsAsync(int page = 1, int pageSize = 20, bool? isResolved = null, ReportType? type = null);
         Task ResolveReportAsync(Guid reportId, Guid resolverId, string resolution);
         Task<Report?> GetReportByIdAsync(Guid reportId);
-        
-        // Analytics methods
         Task<ReportsAnalytics> GetReportsAnalyticsAsync(DateTime? fromDate = null, DateTime? toDate = null);
         Task<List<TopReportedItem>> GetTopReportedModelsAsync(int limit = 10);
         Task<List<TopReportedItem>> GetTopReportedUsersAsync(int limit = 10);
@@ -45,4 +43,4 @@ namespace PolyBucket.Api.Features.Reports.Domain
         Task<List<ReportTrend>> GetReportTrendsAsync(string period = "daily", int days = 30);
         Task<List<ModeratorActivity>> GetModeratorActivityAsync(DateTime? fromDate = null, DateTime? toDate = null);
     }
-} 
+}

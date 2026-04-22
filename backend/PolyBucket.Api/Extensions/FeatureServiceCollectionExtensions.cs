@@ -165,8 +165,21 @@ public static class FeatureServiceCollectionExtensions
 
         // Register default plugins
         services.AddScoped<Features.Comments.Domain.ICommentsPlugin, Features.Comments.Plugins.DefaultCommentsPlugin>();
+        services.AddScoped<Features.Reports.GetAllReports.Domain.IGetAllReportsService, Features.Reports.GetAllReports.Domain.GetAllReportsService>();
+        services.AddTransient<Features.Reports.GetAllReports.Repository.IGetAllReportsRepository, Features.Reports.GetAllReports.Repository.GetAllReportsRepository>();
+        services.AddScoped<Features.Reports.GetReport.Domain.IGetReportService, Features.Reports.GetReport.Domain.GetReportService>();
+        services.AddTransient<Features.Reports.GetReport.Repository.IGetReportRepository, Features.Reports.GetReport.Repository.GetReportRepository>();
+        services.AddScoped<Features.Reports.GetReportAnalytics.Domain.IGetReportAnalyticsService, Features.Reports.GetReportAnalytics.Domain.GetReportAnalyticsService>();
+        services.AddTransient<Features.Reports.GetReportAnalytics.Repository.IGetReportAnalyticsRepository, Features.Reports.GetReportAnalytics.Repository.GetReportAnalyticsRepository>();
+        services.AddScoped<Features.Reports.GetReportsForTarget.Domain.IGetReportsForTargetService, Features.Reports.GetReportsForTarget.Domain.GetReportsForTargetService>();
+        services.AddTransient<Features.Reports.GetReportsForTarget.Repository.IGetReportsForTargetRepository, Features.Reports.GetReportsForTarget.Repository.GetReportsForTargetRepository>();
+        services.AddScoped<Features.Reports.GetUnresolvedReports.Domain.IGetUnresolvedReportsService, Features.Reports.GetUnresolvedReports.Domain.GetUnresolvedReportsService>();
+        services.AddTransient<Features.Reports.GetUnresolvedReports.Repository.IGetUnresolvedReportsRepository, Features.Reports.GetUnresolvedReports.Repository.GetUnresolvedReportsRepository>();
+        services.AddScoped<Features.Reports.SubmitReport.Domain.ISubmitReportService, Features.Reports.SubmitReport.Domain.SubmitReportService>();
+        services.AddTransient<Features.Reports.SubmitReport.Repository.ISubmitReportRepository, Features.Reports.SubmitReport.Repository.SubmitReportRepository>();
+        services.AddScoped<Features.Reports.ResolveReport.Domain.IResolveReportService, Features.Reports.ResolveReport.Domain.ResolveReportService>();
+        services.AddTransient<Features.Reports.ResolveReport.Repository.IResolveReportRepository, Features.Reports.ResolveReport.Repository.ResolveReportRepository>();
         services.AddScoped<IReportingPlugin, DefaultReportingPlugin>();
-        services.AddTransient<Features.Reports.Repository.IReportsRepository, Features.Reports.Repository.ReportsRepository>();
         
         // Theme System
         services.AddScoped<Common.Plugins.IThemePlugin, LiquidGlassThemePlugin>();
