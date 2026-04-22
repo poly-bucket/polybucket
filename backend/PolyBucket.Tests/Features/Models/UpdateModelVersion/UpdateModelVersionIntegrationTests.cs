@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
 using PolyBucket.Tests.Factories;
 using Shouldly;
 using System.Net;

@@ -9,6 +9,7 @@ using PolyBucket.Api.Features.Authentication.Login.Domain;
 using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Api.Common.Models;
 using Shouldly;
 using Xunit;
@@ -24,6 +25,7 @@ public class LoginCommandHandlerTests
     private readonly Mock<ILogger<LoginCommandHandler>> _mockLogger;
     private readonly Mock<ILoginTwoFactorAuthService> _mockLoginTwoFactorAuthService;
     private readonly Mock<ILoginTwoFactorAuthRepository> _mockLoginTwoFactorAuthRepository;
+    private readonly Mock<IAuthenticationSettingsService> _mockAuthenticationSettingsService;
     private readonly LoginCommandHandler _handler;
 
     public LoginCommandHandlerTests()
@@ -35,6 +37,7 @@ public class LoginCommandHandlerTests
         _mockLogger = new Mock<ILogger<LoginCommandHandler>>();
         _mockLoginTwoFactorAuthService = new Mock<ILoginTwoFactorAuthService>();
         _mockLoginTwoFactorAuthRepository = new Mock<ILoginTwoFactorAuthRepository>();
+        _mockAuthenticationSettingsService = new Mock<IAuthenticationSettingsService>();
 
         _handler = new LoginCommandHandler(
             _mockAuthRepository.Object,
@@ -44,7 +47,8 @@ public class LoginCommandHandlerTests
             _mockLogger.Object,
             null, // Context is not needed for this test
             _mockLoginTwoFactorAuthService.Object,
-            _mockLoginTwoFactorAuthRepository.Object
+            _mockLoginTwoFactorAuthRepository.Object,
+            _mockAuthenticationSettingsService.Object
         );
     }
 

@@ -10,7 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.CreateModel.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
 using PolyBucket.Tests.Factories;
 using Xunit;
 
@@ -27,7 +28,7 @@ namespace PolyBucket.Tests.Features.Models
         public async Task DeleteModel_ByOwner_ShouldSoftDeleteModel()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await UserFactory.CreateTestUser();
             var model = await ModelFactory.CreateTestModel(user.Id);
             await DbContext.SaveChangesAsync();
@@ -56,7 +57,7 @@ namespace PolyBucket.Tests.Features.Models
         public async Task DeleteModel_WithoutAuthentication_ShouldReturnUnauthorized()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await UserFactory.CreateTestUser();
             var model = await ModelFactory.CreateTestModel(user.Id);
             await DbContext.SaveChangesAsync();
@@ -74,7 +75,7 @@ namespace PolyBucket.Tests.Features.Models
         public async Task DeleteModel_ByNonOwner_ShouldReturnForbidden()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var owner = await UserFactory.CreateTestUser("owner@test.com");
             var nonOwner = await UserFactory.CreateTestUser("nonowner@test.com");
             var model = await ModelFactory.CreateTestModel(owner.Id);
@@ -95,7 +96,7 @@ namespace PolyBucket.Tests.Features.Models
         public async Task DeleteModel_NonExistentModel_ShouldReturnNotFound()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await UserFactory.CreateTestUser();
             var nonExistentId = Guid.NewGuid();
 
@@ -114,7 +115,7 @@ namespace PolyBucket.Tests.Features.Models
         public async Task DeleteModel_AlreadyDeletedModel_ShouldReturnBadRequest()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await UserFactory.CreateTestUser();
             var model = await ModelFactory.CreateTestModel(user.Id);
             model.DeletedAt = DateTime.UtcNow;
@@ -136,7 +137,7 @@ namespace PolyBucket.Tests.Features.Models
         public async Task DeleteModel_WithFiles_ShouldSoftDeleteModelAndFiles()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await UserFactory.CreateTestUser();
             var model = await ModelFactory.CreateTestModel(user.Id);
             
@@ -184,7 +185,7 @@ namespace PolyBucket.Tests.Features.Models
         public async Task DeleteModel_WithAdminPermission_ShouldAllowDeletion()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var admin = await UserFactory.CreateTestUser("admin@test.com");
             var regularUser = await UserFactory.CreateTestUser("user@test.com");
             var model = await ModelFactory.CreateTestModel(regularUser.Id);

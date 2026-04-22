@@ -16,6 +16,7 @@ using Xunit;
 
 namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
 {
+    [Collection("TestCollection")]
     public class RegenerateBackupCodesTests : BaseIntegrationTest
     {
         private readonly PolyBucketDbContext _context;
@@ -27,16 +28,11 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             _repository = ServiceScope.ServiceProvider.GetRequiredService<IRegenerateBackupCodesRepository>();
         }
 
-        protected override async Task InitializeAsync()
-        {
-            await base.InitializeAsync();
-        }
-
         [Fact]
         public async Task Regenerate_WithEnabledTwoFactorAuth_ShouldRegenerateSuccessfully()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await CreateTestUser();
             var token = await GetAuthToken(user.Email, "TestPassword123!");
             
@@ -96,7 +92,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
         public async Task Regenerate_WithDisabledTwoFactorAuth_ShouldReturnBadRequest()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await CreateTestUser();
             var token = await GetAuthToken(user.Email, "TestPassword123!");
             
@@ -132,7 +128,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
         public async Task Regenerate_WithNonExistentTwoFactorAuth_ShouldReturnBadRequest()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await CreateTestUser();
             var token = await GetAuthToken(user.Email, "TestPassword123!");
             var command = new RegenerateBackupCodesCommand { UserId = user.Id };
@@ -151,7 +147,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
         public async Task Regenerate_WithUnauthenticatedUser_ShouldReturnUnauthorized()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var command = new RegenerateBackupCodesCommand { UserId = Guid.NewGuid() };
 
             // Act
@@ -165,7 +161,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
         public async Task Regenerate_WithDifferentUserInToken_ShouldReturnUnauthorized()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user1 = await CreateTestUser("user1@test.com");
             var user2 = await CreateTestUser("user2@test.com");
             var token = await GetAuthToken(user1.Email, "TestPassword123!");
@@ -183,7 +179,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
         public async Task Regenerate_ShouldIncrementVersion()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var user = await CreateTestUser();
             var token = await GetAuthToken(user.Email, "TestPassword123!");
             

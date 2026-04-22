@@ -29,6 +29,7 @@ using PolyBucket.Api.Features.Authentication.Login.Repository;
 
 namespace PolyBucket.Tests.Features.Authentication.Http
 {
+    [Collection("TestCollection")]
     public class LoginCommandControllerTests : BaseIntegrationTest
     {
         private readonly IAuthenticationRepository _authRepository;

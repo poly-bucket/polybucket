@@ -22,6 +22,7 @@ using Xunit;
 
 namespace PolyBucket.Tests.Features.Collections
 {
+    [Collection("TestCollection")]
     public class GetFavoriteCollectionsTests : BaseIntegrationTest
 {
     public GetFavoriteCollectionsTests(TestCollectionFixture testFixture) : base(testFixture)
@@ -45,7 +46,7 @@ namespace PolyBucket.Tests.Features.Collections
         public async Task GetFavoriteCollections_WithoutAuthentication_ShouldReturnUnauthorized()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             
             // Act
             var response = await Client.GetAsync("/api/collections/favorites");
@@ -58,7 +59,7 @@ namespace PolyBucket.Tests.Features.Collections
         public async Task GetFavoriteCollections_WithValidUser_ShouldReturnFavoriteCollections()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             
             var user = await CreateTestUser();
             
@@ -177,7 +178,7 @@ namespace PolyBucket.Tests.Features.Collections
         public async Task GetFavoriteCollections_WithNoFavoriteCollections_ShouldReturnEmptyArray()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             
             var user = await CreateTestUser();
 
@@ -221,7 +222,7 @@ namespace PolyBucket.Tests.Features.Collections
         public async Task GetFavoriteCollections_WithInvalidToken_ShouldReturnUnauthorized()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             
             Client.DefaultRequestHeaders.Add("Authorization", "Bearer invalid-token");
 

@@ -18,6 +18,7 @@ using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
 namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
 {
+    [Collection("TestCollection")]
     public class ConcurrentTwoFactorAuthTests : BaseIntegrationTest
     {
         private readonly PolyBucketDbContext _context;

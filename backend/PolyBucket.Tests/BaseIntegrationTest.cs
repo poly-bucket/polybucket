@@ -8,83 +8,129 @@ using PolyBucket.Tests.Factories;
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
-using Xunit;
-using PolyBucket.Api.Common.Models;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
+using PolyBucket.Api.Common.Models;
+using System.Net.Http.Headers;
+using Xunit;
 
 namespace PolyBucket.Tests
 {
-    [Collection("TestCollection")]
     public abstract class BaseIntegrationTest : IAsyncDisposable
     {
-        protected readonly TestWebApplicationFactory Factory;
-        protected readonly TestCollectionFixture TestFixture;
-        protected readonly TestUserFactory UserFactory;
-        protected readonly TestModelFactory ModelFactory;
-        protected readonly IServiceScope ServiceScope;
-        protected readonly PolyBucketDbContext DbContext;
-        protected readonly HttpClient Client;
+        protected TestWebApplicationFactory Factory { get; }
+        protected TestCollectionFixture TestFixture { get; }
+        private IServiceScope? _serviceScope;
+        private bool _hostInitialized;
+        private PolyBucketDbContext? _dbContext;
+        private HttpClient? _httpClient;
+        private TestUserFactory? _userFactory;
+        private TestModelFactory? _modelFactory;
+
+        private void EnsureTestHost()
+        {
+            if (_hostInitialized) return;
+            _hostInitialized = true;
+            _serviceScope = Factory.Services.CreateScope();
+            _dbContext = _serviceScope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
+            _userFactory = new TestUserFactory(_dbContext);
+            _modelFactory = new TestModelFactory(_dbContext);
+            _httpClient = Factory.CreateClient();
+        }
+
+        protected IServiceScope ServiceScope
+        {
+            get
+            {
+                EnsureTestHost();
+                return _serviceScope!;
+            }
+        }
+
+        protected HttpClient Client
+        {
+            get
+            {
+                EnsureTestHost();
+                return _httpClient!;
+            }
+        }
+
+        protected PolyBucketDbContext DbContext
+        {
+            get
+            {
+                EnsureTestHost();
+                return _dbContext!;
+            }
+        }
+
+        protected TestUserFactory UserFactory
+        {
+            get
+            {
+                EnsureTestHost();
+                return _userFactory!;
+            }
+        }
+
+        protected TestModelFactory ModelFactory
+        {
+            get
+            {
+                EnsureTestHost();
+                return _modelFactory!;
+            }
+        }
 
         protected BaseIntegrationTest(TestCollectionFixture testFixture)
         {
             TestFixture = testFixture;
             Factory = new TestWebApplicationFactory();
-            ServiceScope = Factory.Services.CreateScope();
-            DbContext = ServiceScope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-            UserFactory = new TestUserFactory(DbContext);
-            ModelFactory = new TestModelFactory(DbContext);
-            Client = Factory.CreateClient();
         }
 
-        protected virtual async Task InitializeAsync()
+        protected virtual async Task ResetStateAsync()
         {
-            await TestFixture.InitializeAsync();
             await CleanupDatabaseAsync();
-            await TestDatabaseManager.EnsureTestDatabaseCreatedAsync();
         }
 
         private async Task CleanupDatabaseAsync()
         {
-            // Clear all data but keep the schema - only truncate tables that exist
             try
             {
-                // Clear all tables that might have data from seeding or previous tests
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Users\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Models\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelVersions\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelFiles\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Collections\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"CollectionModels\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Comments\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserSettings\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"SystemSettings\" CASCADE");
-                await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RolePermissions\" CASCADE");
+                EnsureTestHost();
+                var ctx = _dbContext!;
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Users\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Models\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelVersions\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelFiles\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Collections\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"CollectionModels\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Comments\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserSettings\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"SystemSettings\" CASCADE");
+                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RolePermissions\" CASCADE");
                 
-                // Only truncate tables that exist (these might not exist in all schemas)
-                try { await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Filaments\" CASCADE"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Printers\" CASCADE"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Reports\" CASCADE"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserRoles\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Filaments\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Printers\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Reports\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserRoles\" CASCADE"); } catch { }
                 
-                // Reset sequences if they exist
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Users_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Models_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"ModelVersions_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"ModelFiles_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Collections_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Comments_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Filaments_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Printers_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Reports_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"UserSettings_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await DbContext.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"SystemSettings_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Users_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Models_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"ModelVersions_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"ModelFiles_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Collections_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Comments_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Filaments_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Printers_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Reports_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"UserSettings_Id_seq\" RESTART WITH 1"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"SystemSettings_Id_seq\" RESTART WITH 1"); } catch { }
             }
             catch (Exception ex)
             {
-                // Log the error but don't fail the test
                 Console.WriteLine($"Warning: Database cleanup failed: {ex.Message}");
             }
         }
@@ -132,8 +178,19 @@ namespace PolyBucket.Tests
 
         public async ValueTask DisposeAsync()
         {
-            ServiceScope?.Dispose();
-            Factory?.Dispose();
+            if (_httpClient is not null)
+            {
+                _httpClient.Dispose();
+            }
+            _serviceScope?.Dispose();
+            if (Factory is IAsyncDisposable ad)
+            {
+                await ad.DisposeAsync();
+            }
+            else
+            {
+                Factory?.Dispose();
+            }
         }
     }
-} 
+}

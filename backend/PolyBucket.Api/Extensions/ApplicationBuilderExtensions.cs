@@ -1,6 +1,5 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Data.Seeders;
 using PolyBucket.Api.Features.ACL.Services;
@@ -22,17 +21,26 @@ public static class ApplicationBuilderExtensions
 
     private static async Task InitializeDatabaseAsync(WebApplication app)
     {
+        if (app.Configuration.GetValue("Database:SkipHostDatabaseInitialization", false))
+        {
+            app.Logger.LogInformation(
+                "Skipping host database initialization (Database:SkipHostDatabaseInitialization). The test pipeline owns ensure, migrate, and seed.");
+            return;
+        }
+
         using var scope = app.Services.CreateScope();
         var services = scope.ServiceProvider;
+        var cancellationToken = app.Lifetime.ApplicationStopping;
         
         try
         {
             var db = services.GetRequiredService<PolyBucketDbContext>();
-            
-            // Skip migrations in test environment
             if (!app.Environment.IsEnvironment("Test"))
             {
-                db.Database.Migrate();
+                var ensurer = new PostgresAppDatabaseEnsurer(app.Configuration);
+                await ensurer.EnsureAppDatabaseExistsOrValidateForMigrationAsync(app.Logger, cancellationToken);
+                await db.Database.MigrateAsync(cancellationToken);
+                app.Logger.LogInformation("Database migrations applied successfully");
             }
             
             // Initialize default permissions and roles first
@@ -60,7 +68,8 @@ public static class ApplicationBuilderExtensions
         }
         catch (Exception ex)
         {
-            app.Logger.LogError(ex, "An error occurred while applying migrations or seeding data");
+            app.Logger.LogError(ex, "An error occurred while applying migrations or seeding data. Startup is aborted.");
+            throw;
         }
     }
 

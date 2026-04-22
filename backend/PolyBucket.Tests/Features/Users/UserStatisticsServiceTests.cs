@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.CreateModel.Domain;
+using PolyBucket.Api.Features.Models.LikeModel.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Users.Services;
 using PolyBucket.Api.Common.Models;

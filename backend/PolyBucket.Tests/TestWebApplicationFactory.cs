@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,6 @@ namespace PolyBucket.Tests
             {
                 context.HostingEnvironment.EnvironmentName = "Test";
                 
-                // Add test configuration from the correct path
                 var testConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.Test.json");
                 if (File.Exists(testConfigPath))
                 {
@@ -25,22 +24,34 @@ namespace PolyBucket.Tests
                 }
                 else
                 {
-                    // Fallback to default test configuration
-                    config.AddInMemoryCollection(new Dictionary<string, string>
+                    config.AddInMemoryCollection(new Dictionary<string, string?>
                     {
-                        ["ConnectionStrings:DefaultConnection"] = "Host=localhost;Port=5433;Database=polybucket_test;Username=postgres;Password=postgres;",
+                        ["ConnectionStrings:DefaultConnection"] = "Host=127.0.0.1;Port=5432;Database=polybucket_test;Username=postgres;Password=postgres;SSL Mode=Disable",
                         ["AppSettings:Security:JwtSecret"] = "test-jwt-secret-key-for-testing-purposes-only-32-chars",
                         ["AppSettings:Security:JwtIssuer"] = "polybucket-test-api",
                         ["AppSettings:Security:JwtAudience"] = "polybucket-test-client",
                         ["AppSettings:Security:AccessTokenExpiryMinutes"] = "60",
-                        ["AppSettings:Security:RefreshTokenExpiryDays"] = "7"
+                        ["AppSettings:Security:RefreshTokenExpiryDays"] = "7",
+                        ["Database:SkipHostDatabaseInitialization"] = "true"
                     });
                 }
+
+                if (string.IsNullOrEmpty(TestEnvironment.DefaultConnection))
+                {
+                    throw new InvalidOperationException(
+                        "TestEnvironment.DefaultConnection is not set. The Test collection fixture must start PostgreSQL and assign the connection string first.");
+                }
+
+                config.AddInMemoryCollection(
+                    new Dictionary<string, string?>
+                    {
+                        ["ConnectionStrings:DefaultConnection"] = TestEnvironment.DefaultConnection,
+                        ["Database:SkipHostDatabaseInitialization"] = "true"
+                    });
             });
             
             builder.ConfigureServices(services =>
             {
-                // Remove the existing DbContext registration
                 var descriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<PolyBucketDbContext>));
                 if (descriptor != null)
@@ -48,27 +59,16 @@ namespace PolyBucket.Tests
                     services.Remove(descriptor);
                 }
 
-                // Add test database context without migrations
-                var configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.Test.json", optional: true)
-                    .AddInMemoryCollection(new Dictionary<string, string>
-                    {
-                        ["ConnectionStrings:DefaultConnection"] = "Host=localhost;Port=5433;Database=polybucket_test;Username=postgres;Password=postgres;",
-                        ["AppSettings:Security:JwtSecret"] = "test-jwt-secret-key-for-testing-purposes-only-32-chars",
-                        ["AppSettings:Security:JwtIssuer"] = "polybucket-test-api",
-                        ["AppSettings:Security:JwtAudience"] = "polybucket-test-client",
-                        ["AppSettings:Security:AccessTokenExpiryMinutes"] = "60",
-                        ["AppSettings:Security:RefreshTokenExpiryDays"] = "7"
-                    })
-                    .Build();
-
+                var configuration = TestDatabaseManager.GetTestConfiguration();
                 var connectionString = configuration.GetConnectionString("DefaultConnection");
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException("Test DefaultConnection is missing. Ensure the Test collection fixture ran.");
+                }
                 
                 services.AddDbContext<PolyBucketDbContext>(options =>
                     options.UseNpgsql(connectionString, b => b.MigrationsAssembly("PolyBucket.Api")));
 
-                // Add other services as needed for testing
                 services.AddLogging();
                 services.AddHttpClient();
             });

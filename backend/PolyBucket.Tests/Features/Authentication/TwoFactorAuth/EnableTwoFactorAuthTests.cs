@@ -17,6 +17,7 @@ using System.Linq;
 
 namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
 {
+    [Collection("TestCollection")]
     public class EnableTwoFactorAuthTests : BaseIntegrationTest
     {
         private readonly PolyBucketDbContext _context;

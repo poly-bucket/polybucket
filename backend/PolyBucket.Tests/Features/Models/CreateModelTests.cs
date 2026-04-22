@@ -11,8 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using PolyBucket.Tests.Factories;
 using Xunit;
 

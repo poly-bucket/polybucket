@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using PolyBucket.Api.Data;
 using System;
 using System.IO;
@@ -15,19 +17,43 @@ namespace PolyBucket.Tests
 {
     public static class TestDatabaseManager
     {
+        public static IConfiguration GetTestConfiguration()
+        {
+            return BuildTestConfiguration();
+        }
 
+        private static IConfiguration BuildTestConfiguration()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.Test.json", optional: true);
+            if (!string.IsNullOrEmpty(TestEnvironment.DefaultConnection))
+            {
+                builder.AddInMemoryCollection(
+                    new Dictionary<string, string?>
+                    {
+                        ["ConnectionStrings:DefaultConnection"] = TestEnvironment.DefaultConnection
+                    });
+            }
+
+            return builder.Build();
+        }
 
         public static async Task EnsureTestDatabaseCreatedAsync()
         {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.Test.json", optional: false)
-                .Build();
+            var configuration = BuildTestConfiguration();
 
+            var ensurer = new PostgresAppDatabaseEnsurer(configuration);
+            await ensurer.EnsureAppDatabaseExistsOrValidateForMigrationAsync(NullLogger<PostgresAppDatabaseEnsurer>.Instance);
+            
             var connectionString = configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Test connection string is not set. The test collection must start the PostgreSQL container and set TestEnvironment.DefaultConnection.");
+            }
             
             var optionsBuilder = new DbContextOptionsBuilder<PolyBucketDbContext>();
-            optionsBuilder.UseNpgsql(connectionString);
+            optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly("PolyBucket.Api"));
 
             using var context = new PolyBucketDbContext(optionsBuilder.Options);
             
@@ -234,10 +260,7 @@ namespace PolyBucket.Tests
 
         public static async Task CleanupTestDatabaseAsync()
         {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.Test.json", optional: false)
-                .Build();
+            var configuration = BuildTestConfiguration();
 
             var connectionString = configuration.GetConnectionString("DefaultConnection");
             
@@ -279,10 +302,7 @@ namespace PolyBucket.Tests
 
         public static void ConfigureTestServices(IServiceCollection services)
         {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.Test.json", optional: false)
-                .Build();
+            var configuration = BuildTestConfiguration();
 
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 

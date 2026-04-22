@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Domain;
-using PolyBucket.Api.Features.Models.Domain.Enums;
+using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
 using PolyBucket.Tests.Factories;
 using Shouldly;
 using System.Net;
@@ -25,7 +25,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
     public async Task CreateModel_WithValidRequest_ReturnsCreated()
     {
         // Arrange
-        await InitializeAsync();
+        await ResetStateAsync();
         var client = Factory.CreateClient();
         var user = await UserFactory.CreateTestUser();
         
@@ -67,7 +67,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
     public async Task CreateModel_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Arrange
-        await InitializeAsync();
+        await ResetStateAsync();
         var client = Factory.CreateClient();
         var content = new MultipartFormDataContent();
         content.Add(new StringContent("Test Model"), "Name");
@@ -83,7 +83,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
     public async Task CreateModel_WithEmptyName_ReturnsBadRequest()
     {
         // Arrange
-        await InitializeAsync();
+        await ResetStateAsync();
         var client = Factory.CreateClient();
         var user = await UserFactory.CreateTestUser();
         
@@ -105,7 +105,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
     public async Task CreateModel_WithoutFiles_ReturnsBadRequest()
     {
         // Arrange
-        await InitializeAsync();
+        await ResetStateAsync();
         var client = Factory.CreateClient();
         var user = await UserFactory.CreateTestUser();
         
@@ -127,7 +127,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
     public async Task CreateModel_WithInvalidFileType_ReturnsBadRequest()
     {
         // Arrange
-        await InitializeAsync();
+        await ResetStateAsync();
         var client = Factory.CreateClient();
         var user = await UserFactory.CreateTestUser();
         

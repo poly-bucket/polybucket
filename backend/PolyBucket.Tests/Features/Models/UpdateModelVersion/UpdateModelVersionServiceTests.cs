@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.ACL.Services;
-using PolyBucket.Api.Features.Models.Domain;
+using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
+using PolyBucket.Api.Features.Models.Shared.Domain;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Domain;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Http;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Repository;
@@ -104,7 +105,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
                 .ReturnsAsync(modelVersion);
 
             // Act & Assert
-            await Should.ThrowAsync<ValidationException>(async () =>
+            await Should.ThrowAsync<PolyBucket.Api.Features.Models.UpdateModelVersion.Domain.ValidationException>(async () =>
                 await _service.UpdateModelVersionAsync(wrongModelId, versionId, request, user, cancellationToken));
         }
 

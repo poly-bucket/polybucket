@@ -25,7 +25,7 @@ namespace PolyBucket.Tests.Features.Categories
         public async Task CreateCategory_WithValidName_ShouldCreateCategory()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var adminUser = await CreateTestUser("admin@test.com", "AdminPassword123!");
             await AssignAdminRole(adminUser);
             var token = await GetAuthToken("admin@test.com", "AdminPassword123!");
@@ -51,7 +51,7 @@ namespace PolyBucket.Tests.Features.Categories
         public async Task GetCategories_AsAdmin_ShouldReturnCategories()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var adminUser = await CreateTestUser("admin@test.com", "AdminPassword123!");
             await AssignAdminRole(adminUser);
             var token = await GetAuthToken("admin@test.com", "AdminPassword123!");
@@ -71,7 +71,7 @@ namespace PolyBucket.Tests.Features.Categories
         public async Task UpdateCategory_WithValidData_ShouldUpdateCategory()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var adminUser = await CreateTestUser("admin@test.com", "AdminPassword123!");
             await AssignAdminRole(adminUser);
             var token = await GetAuthToken("admin@test.com", "AdminPassword123!");
@@ -103,7 +103,7 @@ namespace PolyBucket.Tests.Features.Categories
         public async Task DeleteCategory_WithValidId_ShouldDeleteCategory()
         {
             // Arrange
-            await InitializeAsync();
+            await ResetStateAsync();
             var adminUser = await CreateTestUser("admin@test.com", "AdminPassword123!");
             await AssignAdminRole(adminUser);
             var token = await GetAuthToken("admin@test.com", "AdminPassword123!");

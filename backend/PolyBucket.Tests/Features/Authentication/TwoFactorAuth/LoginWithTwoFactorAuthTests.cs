@@ -17,6 +17,7 @@ using Xunit;
 
 namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
 {
+    [Collection("TestCollection")]
     public class LoginWithTwoFactorAuthTests : BaseIntegrationTest
     {
         private readonly PolyBucketDbContext _context;
