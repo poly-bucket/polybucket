@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Settings;
 
@@ -15,24 +16,19 @@ public static class StorageServiceCollectionExtensions
             storageSection = configuration.GetSection("AppSettings:Storage");
         }
 
-        services.Configure<StorageSettings>(storageSection);
-        var provider = storageSection.GetValue<string>("Provider")?.ToLowerInvariant() ?? "minio";
+        services.AddSingleton<IValidateOptions<StorageSettings>, StorageSettingsValidator>();
+        services.AddOptions<StorageSettings>()
+            .Bind(storageSection)
+            .ValidateOnStart();
 
-        switch (provider)
+        var provider = storageSection.GetValue<string>("Provider")?.ToLowerInvariant() ?? "minio";
+        if (provider != "minio")
         {
-            case "s3":
-            case "aws":
-                services.AddSingleton<IStorageService, AwsS3StorageService>();
-                break;
-            case "azureblob":
-            case "azure":
-            case "blob":
-                services.AddSingleton<IStorageService, AzureBlobStorageService>();
-                break;
-            default:
-                services.AddSingleton<IStorageService, MinioStorageService>();
-                break;
+            throw new InvalidOperationException($"Storage provider '{provider}' is not supported. Only 'minio' is currently supported.");
         }
+
+        services.AddSingleton<IStorageService, MinioStorageService>();
+        services.AddHostedService<MinioStartupConnectivityCheck>();
 
         return services;
     }
