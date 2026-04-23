@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using PolyBucket.Api.Features.Models.Shared.Domain;
-using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
+using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Common.Models.Enums;
 
 namespace PolyBucket.Api.Features.Users.GetUserModels.Domain;
 

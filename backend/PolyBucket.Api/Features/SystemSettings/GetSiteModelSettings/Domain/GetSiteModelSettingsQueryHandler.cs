@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.SystemSettings.GetSiteModelSettings.Domain;
-using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
+using PolyBucket.Api.Common.Models.Enums;
 
 namespace PolyBucket.Api.Features.SystemSettings.GetSiteModelSettings.Domain
 {

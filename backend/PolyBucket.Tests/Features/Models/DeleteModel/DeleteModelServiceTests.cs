@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.ACL.Services;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.DeleteModel.Domain;
 using PolyBucket.Api.Features.Models.DeleteModel.Repository;
 using Shouldly;

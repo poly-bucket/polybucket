@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 
 namespace PolyBucket.Api.Features.Models.GetModels.Repository
 {

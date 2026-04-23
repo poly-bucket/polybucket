@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Storage;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PuppeteerSharp;
 using SixLabors.ImageSharp;

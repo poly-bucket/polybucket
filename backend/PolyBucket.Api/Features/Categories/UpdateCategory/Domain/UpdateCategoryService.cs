@@ -1,5 +1,5 @@
 using PolyBucket.Api.Features.Categories.UpdateCategory.Repository;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;

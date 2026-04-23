@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Shared.Domain;
-using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
+using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Common.Models.Enums;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
-using PolyBucket.Api.Common.Models;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;

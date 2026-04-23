@@ -1,5 +1,5 @@
 using PolyBucket.Api.Common.Entities;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using System;
 using System.Collections.Generic;
 

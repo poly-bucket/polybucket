@@ -1,4 +1,4 @@
-using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
+using PolyBucket.Api.Common.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

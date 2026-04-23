@@ -1,4 +1,5 @@
 using MediatR;
+using PolyBucket.Api.Features.Models;
 using PolyBucket.Api.Features.Users;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Reports.Domain;
@@ -16,47 +17,7 @@ public static class FeatureServiceCollectionExtensions
     {
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
-        // Models
-        services.AddTransient<Features.Models.GetModels.Repository.IGetModelsRepository, Features.Models.GetModels.Repository.GetModelsRepository>();
-        services.AddTransient<Features.Models.GetModelById.Repository.IGetModelByIdRepository, Features.Models.GetModelById.Repository.GetModelByIdRepository>();
-        services.AddTransient<Features.Models.GetModelById.Services.IGetModelByIdService, Features.Models.GetModelById.Services.GetModelByIdService>();
-        
-        // CreateModel
-        services.AddScoped<Features.Models.CreateModel.Domain.CreateModelService>();
-        services.AddTransient<Features.Models.CreateModel.Repository.ICreateModelRepository, Features.Models.CreateModel.Repository.CreateModelRepository>();
-        
-        // DeleteAllModels
-        services.AddTransient<Features.Models.DeleteAllModels.Domain.IDeleteAllModelsService, Features.Models.DeleteAllModels.Domain.DeleteAllModelsService>();
-        services.AddTransient<Features.Models.DeleteAllModels.Repository.IDeleteAllModelsUserRepository, Features.Models.DeleteAllModels.Repository.DeleteAllModelsUserRepository>();
-        
-        // CreateModelVersion
-        services.AddTransient<Features.Models.CreateModelVersion.Domain.ICreateModelVersionService, Features.Models.CreateModelVersion.Domain.CreateModelVersionService>();
-        services.AddTransient<Features.Models.CreateModelVersion.Repository.ICreateModelVersionRepository, Features.Models.CreateModelVersion.Repository.CreateModelVersionRepository>();
-        
-        // UpdateModel
-        services.AddTransient<Features.Models.UpdateModel.Domain.IUpdateModelService, Features.Models.UpdateModel.Domain.UpdateModelService>();
-        services.AddTransient<Features.Models.UpdateModel.Repository.IUpdateModelRepository, Features.Models.UpdateModel.Repository.UpdateModelRepository>();
-        
-        // UpdateModelVersion
-        services.AddTransient<Features.Models.UpdateModelVersion.Domain.IUpdateModelVersionService, Features.Models.UpdateModelVersion.Domain.UpdateModelVersionService>();
-        services.AddTransient<Features.Models.UpdateModelVersion.Repository.IUpdateModelVersionRepository, Features.Models.UpdateModelVersion.Repository.UpdateModelVersionRepository>();
-        
-        // DeleteModel
-        services.AddTransient<Features.Models.DeleteModel.Domain.IDeleteModelService, Features.Models.DeleteModel.Domain.DeleteModelService>();
-        services.AddTransient<Features.Models.DeleteModel.Repository.IDeleteModelRepository, Features.Models.DeleteModel.Repository.DeleteModelRepository>();
-        
-        // DeleteModelVersion
-        services.AddTransient<Features.Models.DeleteModelVersion.Domain.IDeleteModelVersionService, Features.Models.DeleteModelVersion.Domain.DeleteModelVersionService>();
-        services.AddTransient<Features.Models.DeleteModelVersion.Repository.IDeleteModelVersionRepository, Features.Models.DeleteModelVersion.Repository.DeleteModelVersionRepository>();
-        
-        // GetModelByUserId
-        services.AddTransient<Features.Models.GetModelByUserId.Domain.IGetModelByUserIdService, Features.Models.GetModelByUserId.Domain.GetModelByUserIdService>();
-        services.AddTransient<Features.Models.GetModelByUserId.Repository.IGetModelByUserIdRepository, Features.Models.GetModelByUserId.Repository.GetModelByUserIdRepository>();
-        
-        // Model Previews
-        services.AddTransient<Features.Models.GetModelPreview.Repository.IModelPreviewRepository, Features.Models.GetModelPreview.Repository.ModelPreviewRepository>();
-        services.AddTransient<Features.Models.GenerateModelPreview.Repository.IGenerateModelPreviewRepository, Features.Models.GenerateModelPreview.Repository.GenerateModelPreviewRepository>();
-        services.AddTransient<Features.Models.GenerateModelPreview.Services.IModelPreviewGenerationService, Features.Models.GenerateModelPreview.Services.ModelPreviewGenerationService>();
+        services.AddModelsFeature();
 
         // Collections
         services.AddTransient<Features.Collections.CreateCollection.Repository.ICollectionRepository, Features.Collections.CreateCollection.Repository.CollectionRepository>();

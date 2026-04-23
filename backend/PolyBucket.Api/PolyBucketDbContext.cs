@@ -3,7 +3,6 @@ using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Users.Domain;
 using PolyBucket.Api.Features.Printers.Domain;
 using CommentDomain = PolyBucket.Api.Features.Comments.Domain;
-using PolyBucket.Api.Features.Models.Shared.Domain;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.LikeModel.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;

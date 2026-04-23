@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.GetModelById.Repository;
 
 namespace PolyBucket.Api.Features.Models.GetModelById.Services

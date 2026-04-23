@@ -5,9 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.GetModelByUserId.Repository;
-using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
+using PolyBucket.Api.Common.Models.Enums;
 using Shouldly;
 using Xunit;
 

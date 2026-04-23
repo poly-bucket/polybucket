@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Tests.Factories;
 using Xunit;
 

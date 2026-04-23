@@ -1655,7 +1655,7 @@ namespace Api.Migrations
                     b.ToTable("Likes");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Shared.Domain.Model", b =>
+            modelBuilder.Entity("PolyBucket.Api.Common.Models.Model", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2669,7 +2669,7 @@ namespace Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", null)
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", null)
                         .WithMany()
                         .HasForeignKey("ModelsId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2678,7 +2678,7 @@ namespace Api.Migrations
 
             modelBuilder.Entity("ModelTag", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", null)
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", null)
                         .WithMany()
                         .HasForeignKey("ModelsId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2839,7 +2839,7 @@ namespace Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
                         .WithMany()
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2858,7 +2858,7 @@ namespace Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
                         .WithMany("Comments")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2877,7 +2877,7 @@ namespace Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "LocalModel")
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "LocalModel")
                         .WithMany()
                         .HasForeignKey("LocalModelId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -2934,7 +2934,7 @@ namespace Api.Migrations
 
             modelBuilder.Entity("PolyBucket.Api.Features.Models.CreateModel.Domain.ModelFile", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
                         .WithMany("Files")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2949,7 +2949,7 @@ namespace Api.Migrations
 
             modelBuilder.Entity("PolyBucket.Api.Features.Models.CreateModelVersion.Domain.ModelVersion", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
                         .WithMany("Versions")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2960,7 +2960,7 @@ namespace Api.Migrations
 
             modelBuilder.Entity("PolyBucket.Api.Features.Models.GenerateModelPreview.Domain.ModelPreview", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
                         .WithMany()
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2971,7 +2971,7 @@ namespace Api.Migrations
 
             modelBuilder.Entity("PolyBucket.Api.Features.Models.LikeModel.Domain.Like", b =>
                 {
-                    b.HasOne("PolyBucket.Api.Features.Models.Shared.Domain.Model", "Model")
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
                         .WithMany("LikeCollection")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2988,7 +2988,7 @@ namespace Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Shared.Domain.Model", b =>
+            modelBuilder.Entity("PolyBucket.Api.Common.Models.Model", b =>
                 {
                     b.HasOne("PolyBucket.Api.Common.Models.User", "Author")
                         .WithMany()
@@ -3073,7 +3073,7 @@ namespace Api.Migrations
                     b.Navigation("Files");
                 });
 
-            modelBuilder.Entity("PolyBucket.Api.Features.Models.Shared.Domain.Model", b =>
+            modelBuilder.Entity("PolyBucket.Api.Common.Models.Model", b =>
                 {
                     b.Navigation("Comments");
 

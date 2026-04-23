@@ -74,7 +74,7 @@ namespace PolyBucket.Api.Features.Search.Repository
                 .Include(m => m.Author)
                 .Include(m => m.Categories)
                 .Include(m => m.Tags)
-                .Where(m => m.DeletedAt == null && m.Privacy == PolyBucket.Api.Features.Models.Shared.Domain.Enums.PrivacySettings.Public)
+                .Where(m => m.DeletedAt == null && m.Privacy == PolyBucket.Api.Common.Models.Enums.PrivacySettings.Public)
                 .ToListAsync();
 
             var results = models

@@ -1,4 +1,4 @@
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 using PolyBucket.Api.Features.Categories.GetCategories.Domain;
 using System.Collections.Generic;

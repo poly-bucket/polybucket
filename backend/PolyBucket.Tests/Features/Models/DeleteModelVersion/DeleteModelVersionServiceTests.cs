@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.DeleteModelVersion.Domain;
 using PolyBucket.Api.Features.Models.DeleteModelVersion.Repository;
 using Shouldly;

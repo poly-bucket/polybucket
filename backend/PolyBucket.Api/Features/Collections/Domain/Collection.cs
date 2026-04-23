@@ -1,7 +1,7 @@
 using PolyBucket.Api.Common.Entities;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
-using PolyBucket.Api.Features.Models.Shared.Domain;
+using PolyBucket.Api.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

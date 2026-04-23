@@ -1,5 +1,5 @@
 using PolyBucket.Api.Common.Entities;
-using PolyBucket.Api.Features.Models.Shared.Domain.Enums;
+using PolyBucket.Api.Common.Models.Enums;
 using System;
 
 namespace PolyBucket.Api.Features.SystemSettings.Domain
