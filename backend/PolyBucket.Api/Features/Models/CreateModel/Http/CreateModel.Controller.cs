@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.ACL.Authorization;
@@ -31,10 +32,34 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Http
         [ProducesResponseType(typeof(CreateModelResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<CreateModelResponse>> CreateModel([FromForm] CreateModelRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<CreateModelResponse>> CreateModel(
+            [FromForm] string name,
+            [FromForm] string? description,
+            [FromForm] IFormFile[] files,
+            [FromForm] string? thumbnailFileId,
+            [FromForm] string? privacy,
+            [FromForm] string? license,
+            [FromForm] bool aiGenerated,
+            [FromForm] bool workInProgress,
+            [FromForm] bool nSFW,
+            [FromForm] bool remix,
+            CancellationToken cancellationToken)
         {
             try
             {
+                var request = new CreateModelRequest
+                {
+                    Name = name,
+                    Description = description,
+                    Files = files,
+                    ThumbnailFileId = thumbnailFileId,
+                    Privacy = privacy,
+                    License = license,
+                    AIGenerated = aiGenerated,
+                    WorkInProgress = workInProgress,
+                    NSFW = nSFW,
+                    Remix = remix
+                };
                 var response = await _createModelService.CreateModelAsync(request, User, cancellationToken);
                 return CreatedAtAction(nameof(CreateModel), new { id = response.Model.Id }, response);
             }

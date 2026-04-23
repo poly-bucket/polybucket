@@ -3,12 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Common.Services
 {
     public class FileSignatureValidator
     {
+        private const int BinaryStlHeaderLength = 80;
+        private const int BinaryStlTriangleCountLength = 4;
+        private const int BinaryStlMinimumLength = BinaryStlHeaderLength + BinaryStlTriangleCountLength;
+        private const int BinaryStlFacetLength = 50;
+
         private static readonly Dictionary<string, byte[][]> FileSignatures = new()
         {
             { ".jpg", new[] { new byte[] { 0xFF, 0xD8, 0xFF } } },
@@ -34,6 +40,15 @@ namespace PolyBucket.Api.Common.Services
             }
 
             var extension = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(extension) && !string.IsNullOrWhiteSpace(expectedExtension))
+            {
+                extension = expectedExtension.ToLowerInvariant();
+            }
+
+            if (extension == ".stl")
+            {
+                return await ValidateStlSignatureAsync(file);
+            }
             
             if (!FileSignatures.ContainsKey(extension))
             {
@@ -63,6 +78,52 @@ namespace PolyBucket.Api.Common.Services
                 }
 
                 return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static async Task<bool> ValidateStlSignatureAsync(IFormFile file)
+        {
+            try
+            {
+                await using var stream = file.OpenReadStream();
+
+                var asciiSignature = FileSignatures[".stl"][0];
+                var asciiBuffer = new byte[asciiSignature.Length];
+                var asciiBytesRead = await stream.ReadAsync(asciiBuffer, 0, asciiBuffer.Length);
+                if (asciiBytesRead == asciiSignature.Length && asciiBuffer.SequenceEqual(asciiSignature))
+                {
+                    return true;
+                }
+
+                if (file.Length < BinaryStlMinimumLength)
+                {
+                    return false;
+                }
+
+                stream.Position = BinaryStlHeaderLength;
+                var triangleCountBuffer = new byte[BinaryStlTriangleCountLength];
+                var triangleCountBytesRead = await stream.ReadAsync(triangleCountBuffer, 0, triangleCountBuffer.Length);
+                if (triangleCountBytesRead != BinaryStlTriangleCountLength)
+                {
+                    return false;
+                }
+
+                var triangleCount = BitConverter.ToUInt32(triangleCountBuffer, 0);
+                var expectedLength = BinaryStlMinimumLength + ((long)triangleCount * BinaryStlFacetLength);
+
+                if (expectedLength == file.Length)
+                {
+                    return true;
+                }
+
+                stream.Position = 0;
+                using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 256, leaveOpen: true);
+                var headerText = await reader.ReadLineAsync();
+                return headerText != null && headerText.TrimStart().StartsWith("solid", StringComparison.OrdinalIgnoreCase);
             }
             catch
             {

@@ -8,37 +8,30 @@
 // ReSharper disable InconsistentNaming
 
 import axios, { AxiosError } from 'axios';
-import type { AxiosHeaderValue, AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
-
-function toBlobContentType(value: AxiosHeaderValue | undefined): string | undefined {
-    if (value == null) return undefined;
-    if (typeof value === "string") return value;
-    if (Array.isArray(value)) return value[0] ?? undefined;
-    return String(value);
-}
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
 
 export interface IApiClient {
     updateUserSettings_UpdateUserSettings(request: UpdateUserSettingsRequest,  cancelToken?: CancelToken): Promise<void>;
-    getUserSettings_GetUserSettings( cancelToken?: CancelToken): Promise<GetUserSettingsResponse>;
+    getUserSettings_GetUserSettings( cancelToken?: CancelToken): Promise<GetUserSettingsResult>;
     updateUserProfile_UpdateUserProfile(request: UpdateUserProfileRequest,  cancelToken?: CancelToken): Promise<void>;
+    unbanUser_UnbanUser(userId: string,  cancelToken?: CancelToken): Promise<void>;
     regenerateAvatar_RegenerateAvatar(request: RegenerateAvatarRequest,  cancelToken?: CancelToken): Promise<RegenerateAvatarResponse>;
-    getUserById_GetUserById(id: string,  cancelToken?: CancelToken): Promise<GetUserByIdResponse>;
-    getUsers_GetUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUsersResponse>;
+    getUsers_GetUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUsersResult>;
     createUser_CreateUser(command: CreateUserCommand,  cancelToken?: CancelToken): Promise<CreateUserCommandResponse>;
     getUserProfile_GetUserProfileById(id: string,  cancelToken?: CancelToken): Promise<PrivateProfileResponse>;
     getUserProfile_GetUserProfileByUsername(username: string,  cancelToken?: CancelToken): Promise<PrivateProfileResponse>;
-    getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserPrintersResponse>;
-    getUserPrinters_GetUserPrintersByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserPrintersResponse>;
-    getUserModels_GetUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined,  cancelToken?: CancelToken): Promise<GetUserModelsResponse>;
-    getUserLikedModels_GetUserLikedModels(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserLikedModelsResponse>;
-    getUserLikedModels_GetUserLikedModelsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserLikedModelsResponse>;
-    getUserComments_GetUserComments(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserCommentsResponse>;
-    getUserComments_GetUserCommentsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserCommentsResponse>;
-    getPublicUserCollections_GetPublicUserCollections(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResponse>;
-    getPublicUserCollections_GetPublicUserCollectionsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResponse>;
+    getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserPrintersResult>;
+    getUserPrinters_GetUserPrintersByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserPrintersResult>;
+    getUserModels_GetUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined,  cancelToken?: CancelToken): Promise<GetUserModelsResult>;
+    getUserLikedModels_GetUserLikedModels(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserLikedModelsResult>;
+    getUserLikedModels_GetUserLikedModelsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserLikedModelsResult>;
+    getUserComments_GetUserComments(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserCommentsResult>;
+    getUserComments_GetUserCommentsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserCommentsResult>;
+    getUserById_GetUserById(id: string,  cancelToken?: CancelToken): Promise<GetUserByIdResult>;
+    getPublicUserCollections_GetPublicUserCollections(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResult>;
+    getPublicUserCollections_GetPublicUserCollectionsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResult>;
+    getBannedUsers_GetBannedUsers(page: number | undefined, pageSize: number | undefined,  cancelToken?: CancelToken): Promise<BannedUsersListResponse>;
     banUser_BanUser(userId: string, request: BanUserRequest,  cancelToken?: CancelToken): Promise<void>;
-    banUser_UnbanUser(userId: string,  cancelToken?: CancelToken): Promise<void>;
-    banUser_GetBannedUsers(page: number | undefined, pageSize: number | undefined,  cancelToken?: CancelToken): Promise<BannedUsersResponse>;
     setActiveTheme_SetActiveTheme(themeId: number,  cancelToken?: CancelToken): Promise<SetActiveThemeResponse>;
     getThemes_GetThemes( cancelToken?: CancelToken): Promise<ThemeListResponse>;
     createTheme_CreateTheme(request: CreateThemeRequest,  cancelToken?: CancelToken): Promise<ThemeResponse>;
@@ -76,18 +69,18 @@ export interface IApiClient {
     tokenSettings_GetTokenSettings( cancelToken?: CancelToken): Promise<TokenSettings>;
     tokenSettings_UpdateTokenSettings(settings: TokenSettings,  cancelToken?: CancelToken): Promise<any>;
     search_Search(query: string | undefined, page: number | undefined, pageSize: number | undefined, type: SearchType | undefined, category: string | null | undefined, sortBy: string | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<SearchResponse>;
-    getAllReports_GetAllReports(page: number | undefined, pageSize: number | undefined, isResolved: boolean | null | undefined, type: ReportType | null | undefined,  cancelToken?: CancelToken): Promise<ReportsResponse>;
     submitReport_SubmitReport(request: SubmitReportRequest,  cancelToken?: CancelToken): Promise<FileResponse>;
-    getReport_GetReport(reportId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    getReportsAnalytics_GetReportsAnalytics(fromDate: Date | null | undefined, toDate: Date | null | undefined,  cancelToken?: CancelToken): Promise<ReportsAnalytics>;
-    getReportsAnalytics_GetTopReportedModels(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
-    getReportsAnalytics_GetTopReportedUsers(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
-    getReportsAnalytics_GetTopReportedComments(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
-    getReportsAnalytics_GetReportTrends(period: string | undefined, days: number | undefined,  cancelToken?: CancelToken): Promise<ReportTrend[]>;
-    getReportsAnalytics_GetModeratorActivity(fromDate: Date | null | undefined, toDate: Date | null | undefined,  cancelToken?: CancelToken): Promise<ModeratorActivity[]>;
-    getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined,  cancelToken?: CancelToken): Promise<FileResponse>;
-    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<FileResponse>;
+    getAllReports_GetAllReports(page: number | undefined, pageSize: number | undefined, isResolved: boolean | null | undefined, type: ReportType | null | undefined,  cancelToken?: CancelToken): Promise<ReportsResponse>;
     resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest,  cancelToken?: CancelToken): Promise<FileResponse>;
+    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<FileResponse>;
+    getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined,  cancelToken?: CancelToken): Promise<FileResponse>;
+    getReportAnalytics_GetReportsAnalytics(fromDate: Date | null | undefined, toDate: Date | null | undefined,  cancelToken?: CancelToken): Promise<ReportsAnalytics>;
+    getReportAnalytics_GetTopReportedModels(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
+    getReportAnalytics_GetTopReportedUsers(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
+    getReportAnalytics_GetTopReportedComments(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
+    getReportAnalytics_GetReportTrends(period: string | undefined, days: number | undefined,  cancelToken?: CancelToken): Promise<ReportTrend[]>;
+    getReportAnalytics_GetModeratorActivity(fromDate: Date | null | undefined, toDate: Date | null | undefined,  cancelToken?: CancelToken): Promise<ModeratorActivity[]>;
+    getReport_GetReport(reportId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
     getPrinters_GetPrinters( cancelToken?: CancelToken): Promise<FileResponse>;
     getPluginDetails_GetPluginDetails(pluginId: string,  cancelToken?: CancelToken): Promise<PluginDetailsResponse>;
     getPluginDetails_GetPluginsOverview( cancelToken?: CancelToken): Promise<PluginOverviewResponse>;
@@ -130,9 +123,9 @@ export interface IApiClient {
     addCategoryToModel_AddCategoryToModel(id: string, categoryId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
     likeModel_LikeModel(id: string,  cancelToken?: CancelToken): Promise<FileResponse>;
     getModelVersions_GetModelVersions(id: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    createModelVersion_CreateModelVersion(id: string, files: FileParameter[] | undefined, name: string | null | undefined, notes: string | null | undefined, thumbnailFileId: string | null | undefined,  cancelToken?: CancelToken): Promise<CreateModelVersionResponse>;
+    createModelVersion_CreateModelVersion(id: string, name: string | null | undefined, notes: string | null | undefined, thumbnailFileId: string | null | undefined, files: FileParameter[] | null | undefined,  cancelToken?: CancelToken): Promise<CreateModelVersionResponse>;
     getModels_GetModels(page: number | undefined, take: number | undefined, sortBy: string | null | undefined,  cancelToken?: CancelToken): Promise<GetModelsResponse>;
-    createModel_CreateModel(files: FileParameter[] | undefined, name: string | undefined, description: string | null | undefined, thumbnailFileId: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, aIGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined,  cancelToken?: CancelToken): Promise<CreateModelResponse>;
+    createModel_CreateModel(name: string | undefined, description: string | null | undefined, files: FileParameter[] | undefined, thumbnailFileId: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, aiGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined,  cancelToken?: CancelToken): Promise<CreateModelResponse>;
     getModelPreview_GetModelPreview(modelId: string, size: string,  cancelToken?: CancelToken): Promise<GetModelPreviewResponse>;
     getModelByUserId_GetModelsByUserId(userId: string, page: number | undefined, take: number | undefined, includeDeleted: boolean | undefined, includePrivate: boolean | undefined,  cancelToken?: CancelToken): Promise<GetModelByUserIdResponse>;
     getModelByUserId_GetPublicModelsByUserId(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined,  cancelToken?: CancelToken): Promise<void>;
@@ -326,7 +319,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<void>(null as any);
     }
 
-    getUserSettings_GetUserSettings( cancelToken?: CancelToken): Promise<GetUserSettingsResponse> {
+    getUserSettings_GetUserSettings( cancelToken?: CancelToken): Promise<GetUserSettingsResult> {
         let url_ = this.baseUrl + "/api/users/settings";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -350,7 +343,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserSettings_GetUserSettings(response: AxiosResponse): Promise<GetUserSettingsResponse> {
+    protected processGetUserSettings_GetUserSettings(response: AxiosResponse): Promise<GetUserSettingsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -364,14 +357,28 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserSettingsResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserSettingsResponse>(result200);
+            result200 = GetUserSettingsResult.fromJS(resultData200);
+            return Promise.resolve<GetUserSettingsResult>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserSettingsResponse>(null as any);
+        return Promise.resolve<GetUserSettingsResult>(null as any);
     }
 
     updateUserProfile_UpdateUserProfile(request: UpdateUserProfileRequest, cancelToken?: CancelToken): Promise<void> {
@@ -432,6 +439,67 @@ export class ApiClient implements IApiClient {
         } else if (status === 500) {
             const _responseText = response.data;
             return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    unbanUser_UnbanUser(userId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/admin/users/{userId}/unban";
+        if (userId === undefined || userId === null)
+            throw new globalThis.Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUnbanUser_UnbanUser(_response);
+        });
+    }
+
+    protected processUnbanUser_UnbanUser(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -510,69 +578,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<RegenerateAvatarResponse>(null as any);
     }
 
-    getUserById_GetUserById(id: string, cancelToken?: CancelToken): Promise<GetUserByIdResponse> {
-        let url_ = this.baseUrl + "/api/users/{id}";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetUserById_GetUserById(_response);
-        });
-    }
-
-    protected processGetUserById_GetUserById(response: AxiosResponse): Promise<GetUserByIdResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            result200 = GetUserByIdResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserByIdResponse>(result200);
-
-        } else if (status === 404) {
-            const _responseText = response.data;
-            let result404: any = null;
-            let resultData404  = _responseText;
-            result404 = ProblemDetails.fromJS(resultData404);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
-
-        } else if (status === 500) {
-            const _responseText = response.data;
-            return throwException("A server side error occurred.", status, _responseText, _headers);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<GetUserByIdResponse>(null as any);
-    }
-
-    getUsers_GetUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUsersResponse> {
+    getUsers_GetUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUsersResult> {
         let url_ = this.baseUrl + "/api/admin/users?";
         if (page === null)
             throw new globalThis.Error("The parameter 'page' cannot be null.");
@@ -616,7 +622,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUsers_GetUsers(response: AxiosResponse): Promise<GetUsersResponse> {
+    protected processGetUsers_GetUsers(response: AxiosResponse): Promise<GetUsersResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -630,8 +636,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUsersResponse.fromJS(resultData200);
-            return Promise.resolve<GetUsersResponse>(result200);
+            result200 = GetUsersResult.fromJS(resultData200);
+            return Promise.resolve<GetUsersResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -655,7 +661,7 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUsersResponse>(null as any);
+        return Promise.resolve<GetUsersResult>(null as any);
     }
 
     createUser_CreateUser(command: CreateUserCommand, cancelToken?: CancelToken): Promise<CreateUserCommandResponse> {
@@ -855,7 +861,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<PrivateProfileResponse>(null as any);
     }
 
-    getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserPrintersResponse> {
+    getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserPrintersResult> {
         let url_ = this.baseUrl + "/api/users/{userId}/printers?";
         if (userId === undefined || userId === null)
             throw new globalThis.Error("The parameter 'userId' must be defined.");
@@ -898,7 +904,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserPrinters_GetUserPrinters(response: AxiosResponse): Promise<GetUserPrintersResponse> {
+    protected processGetUserPrinters_GetUserPrinters(response: AxiosResponse): Promise<GetUserPrintersResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -912,8 +918,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserPrintersResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserPrintersResponse>(result200);
+            result200 = GetUserPrintersResult.fromJS(resultData200);
+            return Promise.resolve<GetUserPrintersResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -930,10 +936,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserPrintersResponse>(null as any);
+        return Promise.resolve<GetUserPrintersResult>(null as any);
     }
 
-    getUserPrinters_GetUserPrintersByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserPrintersResponse> {
+    getUserPrinters_GetUserPrintersByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserPrintersResult> {
         let url_ = this.baseUrl + "/api/users/profile/{username}/printers?";
         if (username === undefined || username === null)
             throw new globalThis.Error("The parameter 'username' must be defined.");
@@ -976,7 +982,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserPrinters_GetUserPrintersByUsername(response: AxiosResponse): Promise<GetUserPrintersResponse> {
+    protected processGetUserPrinters_GetUserPrintersByUsername(response: AxiosResponse): Promise<GetUserPrintersResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -990,8 +996,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserPrintersResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserPrintersResponse>(result200);
+            result200 = GetUserPrintersResult.fromJS(resultData200);
+            return Promise.resolve<GetUserPrintersResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -1008,10 +1014,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserPrintersResponse>(null as any);
+        return Promise.resolve<GetUserPrintersResult>(null as any);
     }
 
-    getUserModels_GetUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined, cancelToken?: CancelToken): Promise<GetUserModelsResponse> {
+    getUserModels_GetUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined, cancelToken?: CancelToken): Promise<GetUserModelsResult> {
         let url_ = this.baseUrl + "/api/users/models/{username}/models/public?";
         if (username === undefined || username === null)
             throw new globalThis.Error("The parameter 'username' must be defined.");
@@ -1046,7 +1052,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserModels_GetUserPublicModels(response: AxiosResponse): Promise<GetUserModelsResponse> {
+    protected processGetUserModels_GetUserPublicModels(response: AxiosResponse): Promise<GetUserModelsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1060,8 +1066,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserModelsResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserModelsResponse>(result200);
+            result200 = GetUserModelsResult.fromJS(resultData200);
+            return Promise.resolve<GetUserModelsResult>(result200);
 
         } else if (status === 404) {
             const _responseText = response.data;
@@ -1078,10 +1084,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserModelsResponse>(null as any);
+        return Promise.resolve<GetUserModelsResult>(null as any);
     }
 
-    getUserLikedModels_GetUserLikedModels(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserLikedModelsResponse> {
+    getUserLikedModels_GetUserLikedModels(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserLikedModelsResult> {
         let url_ = this.baseUrl + "/api/users/{userId}/liked-models?";
         if (userId === undefined || userId === null)
             throw new globalThis.Error("The parameter 'userId' must be defined.");
@@ -1124,7 +1130,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserLikedModels_GetUserLikedModels(response: AxiosResponse): Promise<GetUserLikedModelsResponse> {
+    protected processGetUserLikedModels_GetUserLikedModels(response: AxiosResponse): Promise<GetUserLikedModelsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1138,8 +1144,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserLikedModelsResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserLikedModelsResponse>(result200);
+            result200 = GetUserLikedModelsResult.fromJS(resultData200);
+            return Promise.resolve<GetUserLikedModelsResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -1156,10 +1162,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserLikedModelsResponse>(null as any);
+        return Promise.resolve<GetUserLikedModelsResult>(null as any);
     }
 
-    getUserLikedModels_GetUserLikedModelsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserLikedModelsResponse> {
+    getUserLikedModels_GetUserLikedModelsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserLikedModelsResult> {
         let url_ = this.baseUrl + "/api/users/profile/{username}/liked-models?";
         if (username === undefined || username === null)
             throw new globalThis.Error("The parameter 'username' must be defined.");
@@ -1202,7 +1208,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserLikedModels_GetUserLikedModelsByUsername(response: AxiosResponse): Promise<GetUserLikedModelsResponse> {
+    protected processGetUserLikedModels_GetUserLikedModelsByUsername(response: AxiosResponse): Promise<GetUserLikedModelsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1216,8 +1222,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserLikedModelsResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserLikedModelsResponse>(result200);
+            result200 = GetUserLikedModelsResult.fromJS(resultData200);
+            return Promise.resolve<GetUserLikedModelsResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -1234,10 +1240,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserLikedModelsResponse>(null as any);
+        return Promise.resolve<GetUserLikedModelsResult>(null as any);
     }
 
-    getUserComments_GetUserComments(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserCommentsResponse> {
+    getUserComments_GetUserComments(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserCommentsResult> {
         let url_ = this.baseUrl + "/api/users/{userId}/comments?";
         if (userId === undefined || userId === null)
             throw new globalThis.Error("The parameter 'userId' must be defined.");
@@ -1280,7 +1286,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserComments_GetUserComments(response: AxiosResponse): Promise<GetUserCommentsResponse> {
+    protected processGetUserComments_GetUserComments(response: AxiosResponse): Promise<GetUserCommentsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1294,8 +1300,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserCommentsResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserCommentsResponse>(result200);
+            result200 = GetUserCommentsResult.fromJS(resultData200);
+            return Promise.resolve<GetUserCommentsResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -1312,10 +1318,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserCommentsResponse>(null as any);
+        return Promise.resolve<GetUserCommentsResult>(null as any);
     }
 
-    getUserComments_GetUserCommentsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserCommentsResponse> {
+    getUserComments_GetUserCommentsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserCommentsResult> {
         let url_ = this.baseUrl + "/api/users/profile/{username}/comments?";
         if (username === undefined || username === null)
             throw new globalThis.Error("The parameter 'username' must be defined.");
@@ -1358,7 +1364,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserComments_GetUserCommentsByUsername(response: AxiosResponse): Promise<GetUserCommentsResponse> {
+    protected processGetUserComments_GetUserCommentsByUsername(response: AxiosResponse): Promise<GetUserCommentsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1372,8 +1378,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetUserCommentsResponse.fromJS(resultData200);
-            return Promise.resolve<GetUserCommentsResponse>(result200);
+            result200 = GetUserCommentsResult.fromJS(resultData200);
+            return Promise.resolve<GetUserCommentsResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -1390,10 +1396,72 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetUserCommentsResponse>(null as any);
+        return Promise.resolve<GetUserCommentsResult>(null as any);
     }
 
-    getPublicUserCollections_GetPublicUserCollections(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResponse> {
+    getUserById_GetUserById(id: string, cancelToken?: CancelToken): Promise<GetUserByIdResult> {
+        let url_ = this.baseUrl + "/api/users/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetUserById_GetUserById(_response);
+        });
+    }
+
+    protected processGetUserById_GetUserById(response: AxiosResponse): Promise<GetUserByIdResult> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = GetUserByIdResult.fromJS(resultData200);
+            return Promise.resolve<GetUserByIdResult>(result200);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetUserByIdResult>(null as any);
+    }
+
+    getPublicUserCollections_GetPublicUserCollections(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResult> {
         let url_ = this.baseUrl + "/api/users/{userId}/collections/public?";
         if (userId === undefined || userId === null)
             throw new globalThis.Error("The parameter 'userId' must be defined.");
@@ -1436,7 +1504,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetPublicUserCollections_GetPublicUserCollections(response: AxiosResponse): Promise<GetPublicUserCollectionsResponse> {
+    protected processGetPublicUserCollections_GetPublicUserCollections(response: AxiosResponse): Promise<GetPublicUserCollectionsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1450,8 +1518,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetPublicUserCollectionsResponse.fromJS(resultData200);
-            return Promise.resolve<GetPublicUserCollectionsResponse>(result200);
+            result200 = GetPublicUserCollectionsResult.fromJS(resultData200);
+            return Promise.resolve<GetPublicUserCollectionsResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -1468,10 +1536,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetPublicUserCollectionsResponse>(null as any);
+        return Promise.resolve<GetPublicUserCollectionsResult>(null as any);
     }
 
-    getPublicUserCollections_GetPublicUserCollectionsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResponse> {
+    getPublicUserCollections_GetPublicUserCollectionsByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetPublicUserCollectionsResult> {
         let url_ = this.baseUrl + "/api/users/profile/{username}/collections/public?";
         if (username === undefined || username === null)
             throw new globalThis.Error("The parameter 'username' must be defined.");
@@ -1514,7 +1582,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetPublicUserCollections_GetPublicUserCollectionsByUsername(response: AxiosResponse): Promise<GetPublicUserCollectionsResponse> {
+    protected processGetPublicUserCollections_GetPublicUserCollectionsByUsername(response: AxiosResponse): Promise<GetPublicUserCollectionsResult> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1528,8 +1596,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = GetPublicUserCollectionsResponse.fromJS(resultData200);
-            return Promise.resolve<GetPublicUserCollectionsResponse>(result200);
+            result200 = GetPublicUserCollectionsResult.fromJS(resultData200);
+            return Promise.resolve<GetPublicUserCollectionsResult>(result200);
 
         } else if (status === 400) {
             const _responseText = response.data;
@@ -1546,7 +1614,70 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetPublicUserCollectionsResponse>(null as any);
+        return Promise.resolve<GetPublicUserCollectionsResult>(null as any);
+    }
+
+    getBannedUsers_GetBannedUsers(page: number | undefined, pageSize: number | undefined, cancelToken?: CancelToken): Promise<BannedUsersListResponse> {
+        let url_ = this.baseUrl + "/api/admin/users/banned?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetBannedUsers_GetBannedUsers(_response);
+        });
+    }
+
+    protected processGetBannedUsers_GetBannedUsers(response: AxiosResponse): Promise<BannedUsersListResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = BannedUsersListResponse.fromJS(resultData200);
+            return Promise.resolve<BannedUsersListResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BannedUsersListResponse>(null as any);
     }
 
     banUser_BanUser(userId: string, request: BanUserRequest, cancelToken?: CancelToken): Promise<void> {
@@ -1619,130 +1750,6 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<void>(null as any);
-    }
-
-    banUser_UnbanUser(userId: string, cancelToken?: CancelToken): Promise<void> {
-        let url_ = this.baseUrl + "/api/admin/users/{userId}/unban";
-        if (userId === undefined || userId === null)
-            throw new globalThis.Error("The parameter 'userId' must be defined.");
-        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "POST",
-            url: url_,
-            headers: {
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processBanUser_UnbanUser(_response);
-        });
-    }
-
-    protected processBanUser_UnbanUser(response: AxiosResponse): Promise<void> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            return Promise.resolve<void>(null as any);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 404) {
-            const _responseText = response.data;
-            let result404: any = null;
-            let resultData404  = _responseText;
-            result404 = ProblemDetails.fromJS(resultData404);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    banUser_GetBannedUsers(page: number | undefined, pageSize: number | undefined, cancelToken?: CancelToken): Promise<BannedUsersResponse> {
-        let url_ = this.baseUrl + "/api/admin/users/banned?";
-        if (page === null)
-            throw new globalThis.Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "page=" + encodeURIComponent("" + page) + "&";
-        if (pageSize === null)
-            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
-        else if (pageSize !== undefined)
-            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processBanUser_GetBannedUsers(_response);
-        });
-    }
-
-    protected processBanUser_GetBannedUsers(response: AxiosResponse): Promise<BannedUsersResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            result200 = BannedUsersResponse.fromJS(resultData200);
-            return Promise.resolve<BannedUsersResponse>(result200);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<BannedUsersResponse>(null as any);
     }
 
     setActiveTheme_SetActiveTheme(themeId: number, cancelToken?: CancelToken): Promise<SetActiveThemeResponse> {
@@ -4119,6 +4126,63 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<SearchResponse>(null as any);
     }
 
+    submitReport_SubmitReport(request: SubmitReportRequest, cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/reports";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            responseType: "blob",
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/octet-stream"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processSubmitReport_SubmitReport(_response);
+        });
+    }
+
+    protected processSubmitReport_SubmitReport(response: AxiosResponse): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+
     getAllReports_GetAllReports(page: number | undefined, pageSize: number | undefined, isResolved: boolean | null | undefined, type: ReportType | null | undefined, cancelToken?: CancelToken): Promise<ReportsResponse> {
         let url_ = this.baseUrl + "/api/reports?";
         if (page === null)
@@ -4193,8 +4257,11 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<ReportsResponse>(null as any);
     }
 
-    submitReport_SubmitReport(request: SubmitReportRequest, cancelToken?: CancelToken): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/reports";
+    resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest, cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/reports/{reportId}/resolve";
+        if (reportId === undefined || reportId === null)
+            throw new globalThis.Error("The parameter 'reportId' must be defined.");
+        url_ = url_.replace("{reportId}", encodeURIComponent("" + reportId));
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(request);
@@ -4218,11 +4285,11 @@ export class ApiClient implements IApiClient {
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processSubmitReport_SubmitReport(_response);
+            return this.processResolveReport_ResolveReport(_response);
         });
     }
 
-    protected processSubmitReport_SubmitReport(response: AxiosResponse): Promise<FileResponse> {
+    protected processResolveReport_ResolveReport(response: AxiosResponse): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4242,7 +4309,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4250,11 +4317,8 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    getReport_GetReport(reportId: string, cancelToken?: CancelToken): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/reports/{reportId}";
-        if (reportId === undefined || reportId === null)
-            throw new globalThis.Error("The parameter 'reportId' must be defined.");
-        url_ = url_.replace("{reportId}", encodeURIComponent("" + reportId));
+    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/reports/unresolved";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -4274,11 +4338,11 @@ export class ApiClient implements IApiClient {
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processGetReport_GetReport(_response);
+            return this.processGetUnresolvedReports_GetUnresolvedReports(_response);
         });
     }
 
-    protected processGetReport_GetReport(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetUnresolvedReports_GetUnresolvedReports(response: AxiosResponse): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4298,447 +4362,12 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<FileResponse>(null as any);
-    }
-
-    getReportsAnalytics_GetReportsAnalytics(fromDate: Date | null | undefined, toDate: Date | null | undefined, cancelToken?: CancelToken): Promise<ReportsAnalytics> {
-        let url_ = this.baseUrl + "/api/reports/analytics?";
-        if (fromDate !== undefined && fromDate !== null)
-            url_ += "fromDate=" + encodeURIComponent(fromDate ? "" + fromDate.toISOString() : "") + "&";
-        if (toDate !== undefined && toDate !== null)
-            url_ += "toDate=" + encodeURIComponent(toDate ? "" + toDate.toISOString() : "") + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetReportsAnalytics_GetReportsAnalytics(_response);
-        });
-    }
-
-    protected processGetReportsAnalytics_GetReportsAnalytics(response: AxiosResponse): Promise<ReportsAnalytics> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            result200 = ReportsAnalytics.fromJS(resultData200);
-            return Promise.resolve<ReportsAnalytics>(result200);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = response.data;
-            let result403: any = null;
-            let resultData403  = _responseText;
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<ReportsAnalytics>(null as any);
-    }
-
-    getReportsAnalytics_GetTopReportedModels(limit: number | undefined, cancelToken?: CancelToken): Promise<TopReportedItem[]> {
-        let url_ = this.baseUrl + "/api/reports/analytics/top-models?";
-        if (limit === null)
-            throw new globalThis.Error("The parameter 'limit' cannot be null.");
-        else if (limit !== undefined)
-            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetReportsAnalytics_GetTopReportedModels(_response);
-        });
-    }
-
-    protected processGetReportsAnalytics_GetTopReportedModels(response: AxiosResponse): Promise<TopReportedItem[]> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TopReportedItem.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
-            return Promise.resolve<TopReportedItem[]>(result200);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = response.data;
-            let result403: any = null;
-            let resultData403  = _responseText;
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<TopReportedItem[]>(null as any);
-    }
-
-    getReportsAnalytics_GetTopReportedUsers(limit: number | undefined, cancelToken?: CancelToken): Promise<TopReportedItem[]> {
-        let url_ = this.baseUrl + "/api/reports/analytics/top-users?";
-        if (limit === null)
-            throw new globalThis.Error("The parameter 'limit' cannot be null.");
-        else if (limit !== undefined)
-            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetReportsAnalytics_GetTopReportedUsers(_response);
-        });
-    }
-
-    protected processGetReportsAnalytics_GetTopReportedUsers(response: AxiosResponse): Promise<TopReportedItem[]> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TopReportedItem.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
-            return Promise.resolve<TopReportedItem[]>(result200);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = response.data;
-            let result403: any = null;
-            let resultData403  = _responseText;
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<TopReportedItem[]>(null as any);
-    }
-
-    getReportsAnalytics_GetTopReportedComments(limit: number | undefined, cancelToken?: CancelToken): Promise<TopReportedItem[]> {
-        let url_ = this.baseUrl + "/api/reports/analytics/top-comments?";
-        if (limit === null)
-            throw new globalThis.Error("The parameter 'limit' cannot be null.");
-        else if (limit !== undefined)
-            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetReportsAnalytics_GetTopReportedComments(_response);
-        });
-    }
-
-    protected processGetReportsAnalytics_GetTopReportedComments(response: AxiosResponse): Promise<TopReportedItem[]> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TopReportedItem.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
-            return Promise.resolve<TopReportedItem[]>(result200);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = response.data;
-            let result403: any = null;
-            let resultData403  = _responseText;
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<TopReportedItem[]>(null as any);
-    }
-
-    getReportsAnalytics_GetReportTrends(period: string | undefined, days: number | undefined, cancelToken?: CancelToken): Promise<ReportTrend[]> {
-        let url_ = this.baseUrl + "/api/reports/analytics/trends?";
-        if (period === null)
-            throw new globalThis.Error("The parameter 'period' cannot be null.");
-        else if (period !== undefined)
-            url_ += "period=" + encodeURIComponent("" + period) + "&";
-        if (days === null)
-            throw new globalThis.Error("The parameter 'days' cannot be null.");
-        else if (days !== undefined)
-            url_ += "days=" + encodeURIComponent("" + days) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetReportsAnalytics_GetReportTrends(_response);
-        });
-    }
-
-    protected processGetReportsAnalytics_GetReportTrends(response: AxiosResponse): Promise<ReportTrend[]> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ReportTrend.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
-            return Promise.resolve<ReportTrend[]>(result200);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = response.data;
-            let result403: any = null;
-            let resultData403  = _responseText;
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<ReportTrend[]>(null as any);
-    }
-
-    getReportsAnalytics_GetModeratorActivity(fromDate: Date | null | undefined, toDate: Date | null | undefined, cancelToken?: CancelToken): Promise<ModeratorActivity[]> {
-        let url_ = this.baseUrl + "/api/reports/analytics/moderator-activity?";
-        if (fromDate !== undefined && fromDate !== null)
-            url_ += "fromDate=" + encodeURIComponent(fromDate ? "" + fromDate.toISOString() : "") + "&";
-        if (toDate !== undefined && toDate !== null)
-            url_ += "toDate=" + encodeURIComponent(toDate ? "" + toDate.toISOString() : "") + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                "Accept": "application/json"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetReportsAnalytics_GetModeratorActivity(_response);
-        });
-    }
-
-    protected processGetReportsAnalytics_GetModeratorActivity(response: AxiosResponse): Promise<ModeratorActivity[]> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200  = _responseText;
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ModeratorActivity.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
-            return Promise.resolve<ModeratorActivity[]>(result200);
-
-        } else if (status === 400) {
-            const _responseText = response.data;
-            let result400: any = null;
-            let resultData400  = _responseText;
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = response.data;
-            let result403: any = null;
-            let resultData403  = _responseText;
-            result403 = ProblemDetails.fromJS(resultData403);
-            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<ModeratorActivity[]>(null as any);
     }
 
     getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined, cancelToken?: CancelToken): Promise<FileResponse> {
@@ -4793,7 +4422,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4801,8 +4430,446 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/reports/unresolved";
+    getReportAnalytics_GetReportsAnalytics(fromDate: Date | null | undefined, toDate: Date | null | undefined, cancelToken?: CancelToken): Promise<ReportsAnalytics> {
+        let url_ = this.baseUrl + "/api/reports/analytics?";
+        if (fromDate !== undefined && fromDate !== null)
+            url_ += "fromDate=" + encodeURIComponent(fromDate ? "" + fromDate.toISOString() : "") + "&";
+        if (toDate !== undefined && toDate !== null)
+            url_ += "toDate=" + encodeURIComponent(toDate ? "" + toDate.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetReportAnalytics_GetReportsAnalytics(_response);
+        });
+    }
+
+    protected processGetReportAnalytics_GetReportsAnalytics(response: AxiosResponse): Promise<ReportsAnalytics> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = ReportsAnalytics.fromJS(resultData200);
+            return Promise.resolve<ReportsAnalytics>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<ReportsAnalytics>(null as any);
+    }
+
+    getReportAnalytics_GetTopReportedModels(limit: number | undefined, cancelToken?: CancelToken): Promise<TopReportedItem[]> {
+        let url_ = this.baseUrl + "/api/reports/analytics/top-models?";
+        if (limit === null)
+            throw new globalThis.Error("The parameter 'limit' cannot be null.");
+        else if (limit !== undefined)
+            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetReportAnalytics_GetTopReportedModels(_response);
+        });
+    }
+
+    protected processGetReportAnalytics_GetTopReportedModels(response: AxiosResponse): Promise<TopReportedItem[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TopReportedItem.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return Promise.resolve<TopReportedItem[]>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<TopReportedItem[]>(null as any);
+    }
+
+    getReportAnalytics_GetTopReportedUsers(limit: number | undefined, cancelToken?: CancelToken): Promise<TopReportedItem[]> {
+        let url_ = this.baseUrl + "/api/reports/analytics/top-users?";
+        if (limit === null)
+            throw new globalThis.Error("The parameter 'limit' cannot be null.");
+        else if (limit !== undefined)
+            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetReportAnalytics_GetTopReportedUsers(_response);
+        });
+    }
+
+    protected processGetReportAnalytics_GetTopReportedUsers(response: AxiosResponse): Promise<TopReportedItem[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TopReportedItem.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return Promise.resolve<TopReportedItem[]>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<TopReportedItem[]>(null as any);
+    }
+
+    getReportAnalytics_GetTopReportedComments(limit: number | undefined, cancelToken?: CancelToken): Promise<TopReportedItem[]> {
+        let url_ = this.baseUrl + "/api/reports/analytics/top-comments?";
+        if (limit === null)
+            throw new globalThis.Error("The parameter 'limit' cannot be null.");
+        else if (limit !== undefined)
+            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetReportAnalytics_GetTopReportedComments(_response);
+        });
+    }
+
+    protected processGetReportAnalytics_GetTopReportedComments(response: AxiosResponse): Promise<TopReportedItem[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TopReportedItem.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return Promise.resolve<TopReportedItem[]>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<TopReportedItem[]>(null as any);
+    }
+
+    getReportAnalytics_GetReportTrends(period: string | undefined, days: number | undefined, cancelToken?: CancelToken): Promise<ReportTrend[]> {
+        let url_ = this.baseUrl + "/api/reports/analytics/trends?";
+        if (period === null)
+            throw new globalThis.Error("The parameter 'period' cannot be null.");
+        else if (period !== undefined)
+            url_ += "period=" + encodeURIComponent("" + period) + "&";
+        if (days === null)
+            throw new globalThis.Error("The parameter 'days' cannot be null.");
+        else if (days !== undefined)
+            url_ += "days=" + encodeURIComponent("" + days) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetReportAnalytics_GetReportTrends(_response);
+        });
+    }
+
+    protected processGetReportAnalytics_GetReportTrends(response: AxiosResponse): Promise<ReportTrend[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ReportTrend.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return Promise.resolve<ReportTrend[]>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<ReportTrend[]>(null as any);
+    }
+
+    getReportAnalytics_GetModeratorActivity(fromDate: Date | null | undefined, toDate: Date | null | undefined, cancelToken?: CancelToken): Promise<ModeratorActivity[]> {
+        let url_ = this.baseUrl + "/api/reports/analytics/moderator-activity?";
+        if (fromDate !== undefined && fromDate !== null)
+            url_ += "fromDate=" + encodeURIComponent(fromDate ? "" + fromDate.toISOString() : "") + "&";
+        if (toDate !== undefined && toDate !== null)
+            url_ += "toDate=" + encodeURIComponent(toDate ? "" + toDate.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetReportAnalytics_GetModeratorActivity(_response);
+        });
+    }
+
+    protected processGetReportAnalytics_GetModeratorActivity(response: AxiosResponse): Promise<ModeratorActivity[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ModeratorActivity.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return Promise.resolve<ModeratorActivity[]>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<ModeratorActivity[]>(null as any);
+    }
+
+    getReport_GetReport(reportId: string, cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/reports/{reportId}";
+        if (reportId === undefined || reportId === null)
+            throw new globalThis.Error("The parameter 'reportId' must be defined.");
+        url_ = url_.replace("{reportId}", encodeURIComponent("" + reportId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -4822,11 +4889,11 @@ export class ApiClient implements IApiClient {
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processGetUnresolvedReports_GetUnresolvedReports(_response);
+            return this.processGetReport_GetReport(_response);
         });
     }
 
-    protected processGetUnresolvedReports_GetUnresolvedReports(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetReport_GetReport(response: AxiosResponse): Promise<FileResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4846,67 +4913,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<FileResponse>(null as any);
-    }
-
-    resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest, cancelToken?: CancelToken): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/reports/{reportId}/resolve";
-        if (reportId === undefined || reportId === null)
-            throw new globalThis.Error("The parameter 'reportId' must be defined.");
-        url_ = url_.replace("{reportId}", encodeURIComponent("" + reportId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(request);
-
-        let options_: AxiosRequestConfig = {
-            data: content_,
-            responseType: "blob",
-            method: "POST",
-            url: url_,
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
-            },
-            cancelToken
-        };
-
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processResolveReport_ResolveReport(_response);
-        });
-    }
-
-    protected processResolveReport_ResolveReport(response: AxiosResponse): Promise<FileResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (const k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4959,7 +4966,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -6738,7 +6745,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7338,7 +7345,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7397,7 +7404,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7456,7 +7463,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7515,7 +7522,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7574,7 +7581,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7630,7 +7637,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7686,7 +7693,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -7694,24 +7701,22 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    createModelVersion_CreateModelVersion(id: string, files: FileParameter[] | undefined, name: string | null | undefined, notes: string | null | undefined, thumbnailFileId: string | null | undefined, cancelToken?: CancelToken): Promise<CreateModelVersionResponse> {
-        let url_ = this.baseUrl + "/api/models/{id}/versions?";
+    createModelVersion_CreateModelVersion(id: string, name: string | null | undefined, notes: string | null | undefined, thumbnailFileId: string | null | undefined, files: FileParameter[] | null | undefined, cancelToken?: CancelToken): Promise<CreateModelVersionResponse> {
+        let url_ = this.baseUrl + "/api/models/{id}/versions";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (files === null)
-            throw new globalThis.Error("The parameter 'files' cannot be null.");
-        else if (files !== undefined)
-            files && files.forEach(item => { url_ += "Files=" + encodeURIComponent("" + item) + "&"; });
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = new FormData();
         if (name !== null && name !== undefined)
-            content_.append("Name", name.toString());
+            content_.append("name", name.toString());
         if (notes !== null && notes !== undefined)
-            content_.append("Notes", notes.toString());
+            content_.append("notes", notes.toString());
         if (thumbnailFileId !== null && thumbnailFileId !== undefined)
-            content_.append("ThumbnailFileId", thumbnailFileId.toString());
+            content_.append("thumbnailFileId", thumbnailFileId.toString());
+        if (files !== null && files !== undefined)
+            files.forEach(item_ => content_.append("files", item_.data, item_.fileName ? item_.fileName : "files") );
 
         let options_: AxiosRequestConfig = {
             data: content_,
@@ -7837,43 +7842,43 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<GetModelsResponse>(null as any);
     }
 
-    createModel_CreateModel(files: FileParameter[] | undefined, name: string | undefined, description: string | null | undefined, thumbnailFileId: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, aIGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined, cancelToken?: CancelToken): Promise<CreateModelResponse> {
-        let url_ = this.baseUrl + "/api/models?";
-        if (files === null)
-            throw new globalThis.Error("The parameter 'files' cannot be null.");
-        else if (files !== undefined)
-            files && files.forEach(item => { url_ += "Files=" + encodeURIComponent("" + item) + "&"; });
+    createModel_CreateModel(name: string | undefined, description: string | null | undefined, files: FileParameter[] | undefined, thumbnailFileId: string | null | undefined, privacy: string | null | undefined, license: string | null | undefined, aiGenerated: boolean | undefined, workInProgress: boolean | undefined, nSFW: boolean | undefined, remix: boolean | undefined, cancelToken?: CancelToken): Promise<CreateModelResponse> {
+        let url_ = this.baseUrl + "/api/models";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = new FormData();
         if (name === null || name === undefined)
             throw new globalThis.Error("The parameter 'name' cannot be null.");
         else
-            content_.append("Name", name.toString());
+            content_.append("name", name.toString());
         if (description !== null && description !== undefined)
-            content_.append("Description", description.toString());
-        if (thumbnailFileId !== null && thumbnailFileId !== undefined)
-            content_.append("ThumbnailFileId", thumbnailFileId.toString());
-        if (privacy !== null && privacy !== undefined)
-            content_.append("Privacy", privacy.toString());
-        if (license !== null && license !== undefined)
-            content_.append("License", license.toString());
-        if (aIGenerated === null || aIGenerated === undefined)
-            throw new globalThis.Error("The parameter 'aIGenerated' cannot be null.");
+            content_.append("description", description.toString());
+        if (files === null || files === undefined)
+            throw new globalThis.Error("The parameter 'files' cannot be null.");
         else
-            content_.append("AIGenerated", aIGenerated.toString());
+            files.forEach(item_ => content_.append("files", item_.data, item_.fileName ? item_.fileName : "files") );
+        if (thumbnailFileId !== null && thumbnailFileId !== undefined)
+            content_.append("thumbnailFileId", thumbnailFileId.toString());
+        if (privacy !== null && privacy !== undefined)
+            content_.append("privacy", privacy.toString());
+        if (license !== null && license !== undefined)
+            content_.append("license", license.toString());
+        if (aiGenerated === null || aiGenerated === undefined)
+            throw new globalThis.Error("The parameter 'aiGenerated' cannot be null.");
+        else
+            content_.append("aiGenerated", aiGenerated.toString());
         if (workInProgress === null || workInProgress === undefined)
             throw new globalThis.Error("The parameter 'workInProgress' cannot be null.");
         else
-            content_.append("WorkInProgress", workInProgress.toString());
+            content_.append("workInProgress", workInProgress.toString());
         if (nSFW === null || nSFW === undefined)
             throw new globalThis.Error("The parameter 'nSFW' cannot be null.");
         else
-            content_.append("NSFW", nSFW.toString());
+            content_.append("nSFW", nSFW.toString());
         if (remix === null || remix === undefined)
             throw new globalThis.Error("The parameter 'remix' cannot be null.");
         else
-            content_.append("Remix", remix.toString());
+            content_.append("remix", remix.toString());
 
         let options_: AxiosRequestConfig = {
             data: content_,
@@ -8327,7 +8332,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -8464,7 +8469,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -8520,7 +8525,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -8581,7 +8586,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -8634,7 +8639,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -8687,7 +8692,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -8884,7 +8889,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9120,7 +9125,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9179,7 +9184,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9236,7 +9241,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9289,7 +9294,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9345,7 +9350,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9401,7 +9406,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9461,7 +9466,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9517,7 +9522,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9577,7 +9582,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9634,7 +9639,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9705,7 +9710,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9764,7 +9769,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9820,7 +9825,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9880,7 +9885,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9936,7 +9941,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9992,7 +9997,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10048,7 +10053,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10104,7 +10109,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10160,7 +10165,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10220,7 +10225,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10279,7 +10284,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10335,7 +10340,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10395,7 +10400,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10451,7 +10456,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10512,7 +10517,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10572,7 +10577,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10632,7 +10637,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10688,7 +10693,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10744,7 +10749,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10803,7 +10808,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10862,7 +10867,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10925,7 +10930,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -10991,7 +10996,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -11044,7 +11049,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -11104,7 +11109,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -11161,7 +11166,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -11221,7 +11226,7 @@ export class ApiClient implements IApiClient {
                 fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: toBlobContentType(response.headers["content-type"]) }), headers: _headers });
+            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -15273,58 +15278,10 @@ export interface IRegenerateAvatarRequest {
     salt?: string | undefined;
 }
 
-export class GetUserByIdResponse implements IGetUserByIdResponse {
-    email?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    username?: string;
-
-    constructor(data?: IGetUserByIdResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.email = _data["email"];
-            this.firstName = _data["firstName"];
-            this.lastName = _data["lastName"];
-            this.username = _data["username"];
-        }
-    }
-
-    static fromJS(data: any): GetUserByIdResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new GetUserByIdResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["email"] = this.email;
-        data["firstName"] = this.firstName;
-        data["lastName"] = this.lastName;
-        data["username"] = this.username;
-        return data;
-    }
-}
-
-export interface IGetUserByIdResponse {
-    email?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    username?: string;
-}
-
-export class GetUserSettingsResponse implements IGetUserSettingsResponse {
+export class GetUserSettingsResult implements IGetUserSettingsResult {
     settings?: UserSettings;
 
-    constructor(data?: IGetUserSettingsResponse) {
+    constructor(data?: IGetUserSettingsResult) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -15339,9 +15296,9 @@ export class GetUserSettingsResponse implements IGetUserSettingsResponse {
         }
     }
 
-    static fromJS(data: any): GetUserSettingsResponse {
+    static fromJS(data: any): GetUserSettingsResult {
         data = typeof data === 'object' ? data : {};
-        let result = new GetUserSettingsResponse();
+        let result = new GetUserSettingsResult();
         result.init(data);
         return result;
     }
@@ -15353,7 +15310,7 @@ export class GetUserSettingsResponse implements IGetUserSettingsResponse {
     }
 }
 
-export interface IGetUserSettingsResponse {
+export interface IGetUserSettingsResult {
     settings?: UserSettings;
 }
 
@@ -16255,14 +16212,14 @@ export interface IBackupCode extends IAuditable {
     version?: number;
 }
 
-export class GetUsersResponse implements IGetUsersResponse {
-    users?: UserDto[];
+export class GetUsersResult implements IGetUsersResult {
+    users?: UserListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 
-    constructor(data?: IGetUsersResponse) {
+    constructor(data?: IGetUsersResult) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16276,7 +16233,7 @@ export class GetUsersResponse implements IGetUsersResponse {
             if (Array.isArray(_data["users"])) {
                 this.users = [] as any;
                 for (let item of _data["users"])
-                    this.users!.push(UserDto.fromJS(item));
+                    this.users!.push(UserListItemDto.fromJS(item));
             }
             this.totalCount = _data["totalCount"];
             this.page = _data["page"];
@@ -16285,9 +16242,9 @@ export class GetUsersResponse implements IGetUsersResponse {
         }
     }
 
-    static fromJS(data: any): GetUsersResponse {
+    static fromJS(data: any): GetUsersResult {
         data = typeof data === 'object' ? data : {};
-        let result = new GetUsersResponse();
+        let result = new GetUsersResult();
         result.init(data);
         return result;
     }
@@ -16307,15 +16264,15 @@ export class GetUsersResponse implements IGetUsersResponse {
     }
 }
 
-export interface IGetUsersResponse {
-    users?: UserDto[];
+export interface IGetUsersResult {
+    users?: UserListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 }
 
-export class UserDto implements IUserDto {
+export class UserListItemDto implements IUserListItemDto {
     id?: string;
     username?: string;
     email?: string;
@@ -16335,7 +16292,7 @@ export class UserDto implements IUserDto {
     createdAt?: Date;
     updatedAt?: Date;
 
-    constructor(data?: IUserDto) {
+    constructor(data?: IUserListItemDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16367,9 +16324,9 @@ export class UserDto implements IUserDto {
         }
     }
 
-    static fromJS(data: any): UserDto {
+    static fromJS(data: any): UserListItemDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserDto();
+        let result = new UserListItemDto();
         result.init(data);
         return result;
     }
@@ -16398,7 +16355,7 @@ export class UserDto implements IUserDto {
     }
 }
 
-export interface IUserDto {
+export interface IUserListItemDto {
     id?: string;
     username?: string;
     email?: string;
@@ -16467,16 +16424,16 @@ export interface IPrivateProfileResponse {
     message?: string;
 }
 
-export class GetUserPrintersResponse implements IGetUserPrintersResponse {
-    printers?: UserPrinterDto[];
-    filaments?: UserFilamentDto[];
+export class GetUserPrintersResult implements IGetUserPrintersResult {
+    printers?: UserPrinterListItemDto[];
+    filaments?: UserFilamentListItemDto[];
     totalPrinterCount?: number;
     totalFilamentCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 
-    constructor(data?: IGetUserPrintersResponse) {
+    constructor(data?: IGetUserPrintersResult) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16490,12 +16447,12 @@ export class GetUserPrintersResponse implements IGetUserPrintersResponse {
             if (Array.isArray(_data["printers"])) {
                 this.printers = [] as any;
                 for (let item of _data["printers"])
-                    this.printers!.push(UserPrinterDto.fromJS(item));
+                    this.printers!.push(UserPrinterListItemDto.fromJS(item));
             }
             if (Array.isArray(_data["filaments"])) {
                 this.filaments = [] as any;
                 for (let item of _data["filaments"])
-                    this.filaments!.push(UserFilamentDto.fromJS(item));
+                    this.filaments!.push(UserFilamentListItemDto.fromJS(item));
             }
             this.totalPrinterCount = _data["totalPrinterCount"];
             this.totalFilamentCount = _data["totalFilamentCount"];
@@ -16505,9 +16462,9 @@ export class GetUserPrintersResponse implements IGetUserPrintersResponse {
         }
     }
 
-    static fromJS(data: any): GetUserPrintersResponse {
+    static fromJS(data: any): GetUserPrintersResult {
         data = typeof data === 'object' ? data : {};
-        let result = new GetUserPrintersResponse();
+        let result = new GetUserPrintersResult();
         result.init(data);
         return result;
     }
@@ -16533,9 +16490,9 @@ export class GetUserPrintersResponse implements IGetUserPrintersResponse {
     }
 }
 
-export interface IGetUserPrintersResponse {
-    printers?: UserPrinterDto[];
-    filaments?: UserFilamentDto[];
+export interface IGetUserPrintersResult {
+    printers?: UserPrinterListItemDto[];
+    filaments?: UserFilamentListItemDto[];
     totalPrinterCount?: number;
     totalFilamentCount?: number;
     page?: number;
@@ -16543,7 +16500,7 @@ export interface IGetUserPrintersResponse {
     totalPages?: number;
 }
 
-export class UserPrinterDto implements IUserPrinterDto {
+export class UserPrinterListItemDto implements IUserPrinterListItemDto {
     id?: string;
     name?: string;
     manufacturer?: string;
@@ -16555,7 +16512,7 @@ export class UserPrinterDto implements IUserPrinterDto {
     isDefault?: boolean;
     isActive?: boolean;
 
-    constructor(data?: IUserPrinterDto) {
+    constructor(data?: IUserPrinterListItemDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16579,9 +16536,9 @@ export class UserPrinterDto implements IUserPrinterDto {
         }
     }
 
-    static fromJS(data: any): UserPrinterDto {
+    static fromJS(data: any): UserPrinterListItemDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserPrinterDto();
+        let result = new UserPrinterListItemDto();
         result.init(data);
         return result;
     }
@@ -16602,7 +16559,7 @@ export class UserPrinterDto implements IUserPrinterDto {
     }
 }
 
-export interface IUserPrinterDto {
+export interface IUserPrinterListItemDto {
     id?: string;
     name?: string;
     manufacturer?: string;
@@ -16615,7 +16572,7 @@ export interface IUserPrinterDto {
     isActive?: boolean;
 }
 
-export class UserFilamentDto implements IUserFilamentDto {
+export class UserFilamentListItemDto implements IUserFilamentListItemDto {
     id?: string;
     name?: string;
     manufacturer?: string;
@@ -16626,7 +16583,7 @@ export class UserFilamentDto implements IUserFilamentDto {
     updatedAt?: Date;
     isActive?: boolean;
 
-    constructor(data?: IUserFilamentDto) {
+    constructor(data?: IUserFilamentListItemDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16649,9 +16606,9 @@ export class UserFilamentDto implements IUserFilamentDto {
         }
     }
 
-    static fromJS(data: any): UserFilamentDto {
+    static fromJS(data: any): UserFilamentListItemDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserFilamentDto();
+        let result = new UserFilamentListItemDto();
         result.init(data);
         return result;
     }
@@ -16671,7 +16628,7 @@ export class UserFilamentDto implements IUserFilamentDto {
     }
 }
 
-export interface IUserFilamentDto {
+export interface IUserFilamentListItemDto {
     id?: string;
     name?: string;
     manufacturer?: string;
@@ -16683,14 +16640,14 @@ export interface IUserFilamentDto {
     isActive?: boolean;
 }
 
-export class GetUserModelsResponse implements IGetUserModelsResponse {
-    models?: UserModelDto[];
+export class GetUserModelsResult implements IGetUserModelsResult {
+    models?: UserModelListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 
-    constructor(data?: IGetUserModelsResponse) {
+    constructor(data?: IGetUserModelsResult) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16704,7 +16661,7 @@ export class GetUserModelsResponse implements IGetUserModelsResponse {
             if (Array.isArray(_data["models"])) {
                 this.models = [] as any;
                 for (let item of _data["models"])
-                    this.models!.push(UserModelDto.fromJS(item));
+                    this.models!.push(UserModelListItemDto.fromJS(item));
             }
             this.totalCount = _data["totalCount"];
             this.page = _data["page"];
@@ -16713,9 +16670,9 @@ export class GetUserModelsResponse implements IGetUserModelsResponse {
         }
     }
 
-    static fromJS(data: any): GetUserModelsResponse {
+    static fromJS(data: any): GetUserModelsResult {
         data = typeof data === 'object' ? data : {};
-        let result = new GetUserModelsResponse();
+        let result = new GetUserModelsResult();
         result.init(data);
         return result;
     }
@@ -16735,15 +16692,15 @@ export class GetUserModelsResponse implements IGetUserModelsResponse {
     }
 }
 
-export interface IGetUserModelsResponse {
-    models?: UserModelDto[];
+export interface IGetUserModelsResult {
+    models?: UserModelListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 }
 
-export class UserModelDto implements IUserModelDto {
+export class UserModelListItemDto implements IUserModelListItemDto {
     id?: string;
     name?: string;
     description?: string;
@@ -16759,7 +16716,7 @@ export class UserModelDto implements IUserModelDto {
     isRemix?: boolean;
     privacy?: PrivacySettings;
 
-    constructor(data?: IUserModelDto) {
+    constructor(data?: IUserModelListItemDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16787,9 +16744,9 @@ export class UserModelDto implements IUserModelDto {
         }
     }
 
-    static fromJS(data: any): UserModelDto {
+    static fromJS(data: any): UserModelListItemDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserModelDto();
+        let result = new UserModelListItemDto();
         result.init(data);
         return result;
     }
@@ -16814,7 +16771,7 @@ export class UserModelDto implements IUserModelDto {
     }
 }
 
-export interface IUserModelDto {
+export interface IUserModelListItemDto {
     id?: string;
     name?: string;
     description?: string;
@@ -16837,14 +16794,14 @@ export enum PrivacySettings {
     Unlisted = "Unlisted",
 }
 
-export class GetUserLikedModelsResponse implements IGetUserLikedModelsResponse {
-    models?: UserLikedModelDto[];
+export class GetUserLikedModelsResult implements IGetUserLikedModelsResult {
+    models?: UserLikedModelListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 
-    constructor(data?: IGetUserLikedModelsResponse) {
+    constructor(data?: IGetUserLikedModelsResult) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16858,7 +16815,7 @@ export class GetUserLikedModelsResponse implements IGetUserLikedModelsResponse {
             if (Array.isArray(_data["models"])) {
                 this.models = [] as any;
                 for (let item of _data["models"])
-                    this.models!.push(UserLikedModelDto.fromJS(item));
+                    this.models!.push(UserLikedModelListItemDto.fromJS(item));
             }
             this.totalCount = _data["totalCount"];
             this.page = _data["page"];
@@ -16867,9 +16824,9 @@ export class GetUserLikedModelsResponse implements IGetUserLikedModelsResponse {
         }
     }
 
-    static fromJS(data: any): GetUserLikedModelsResponse {
+    static fromJS(data: any): GetUserLikedModelsResult {
         data = typeof data === 'object' ? data : {};
-        let result = new GetUserLikedModelsResponse();
+        let result = new GetUserLikedModelsResult();
         result.init(data);
         return result;
     }
@@ -16889,15 +16846,15 @@ export class GetUserLikedModelsResponse implements IGetUserLikedModelsResponse {
     }
 }
 
-export interface IGetUserLikedModelsResponse {
-    models?: UserLikedModelDto[];
+export interface IGetUserLikedModelsResult {
+    models?: UserLikedModelListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 }
 
-export class UserLikedModelDto implements IUserLikedModelDto {
+export class UserLikedModelListItemDto implements IUserLikedModelListItemDto {
     id?: string;
     name?: string;
     description?: string;
@@ -16911,9 +16868,9 @@ export class UserLikedModelDto implements IUserLikedModelDto {
     aiGenerated?: boolean;
     wip?: boolean;
     nsfw?: boolean;
-    author?: UserDto2;
+    author?: LikedModelAuthorDto;
 
-    constructor(data?: IUserLikedModelDto) {
+    constructor(data?: IUserLikedModelListItemDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -16937,13 +16894,13 @@ export class UserLikedModelDto implements IUserLikedModelDto {
             this.aiGenerated = _data["aiGenerated"];
             this.wip = _data["wip"];
             this.nsfw = _data["nsfw"];
-            this.author = _data["author"] ? UserDto2.fromJS(_data["author"]) : undefined as any;
+            this.author = _data["author"] ? LikedModelAuthorDto.fromJS(_data["author"]) : undefined as any;
         }
     }
 
-    static fromJS(data: any): UserLikedModelDto {
+    static fromJS(data: any): UserLikedModelListItemDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserLikedModelDto();
+        let result = new UserLikedModelListItemDto();
         result.init(data);
         return result;
     }
@@ -16968,7 +16925,7 @@ export class UserLikedModelDto implements IUserLikedModelDto {
     }
 }
 
-export interface IUserLikedModelDto {
+export interface IUserLikedModelListItemDto {
     id?: string;
     name?: string;
     description?: string;
@@ -16982,15 +16939,15 @@ export interface IUserLikedModelDto {
     aiGenerated?: boolean;
     wip?: boolean;
     nsfw?: boolean;
-    author?: UserDto2;
+    author?: LikedModelAuthorDto;
 }
 
-export class UserDto2 implements IUserDto2 {
+export class LikedModelAuthorDto implements ILikedModelAuthorDto {
     id?: string;
     username?: string;
     avatar?: string | undefined;
 
-    constructor(data?: IUserDto2) {
+    constructor(data?: ILikedModelAuthorDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -17007,9 +16964,9 @@ export class UserDto2 implements IUserDto2 {
         }
     }
 
-    static fromJS(data: any): UserDto2 {
+    static fromJS(data: any): LikedModelAuthorDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserDto2();
+        let result = new LikedModelAuthorDto();
         result.init(data);
         return result;
     }
@@ -17023,20 +16980,20 @@ export class UserDto2 implements IUserDto2 {
     }
 }
 
-export interface IUserDto2 {
+export interface ILikedModelAuthorDto {
     id?: string;
     username?: string;
     avatar?: string | undefined;
 }
 
-export class GetUserCommentsResponse implements IGetUserCommentsResponse {
-    comments?: UserCommentDto[];
+export class GetUserCommentsResult implements IGetUserCommentsResult {
+    comments?: UserCommentListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 
-    constructor(data?: IGetUserCommentsResponse) {
+    constructor(data?: IGetUserCommentsResult) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -17050,7 +17007,7 @@ export class GetUserCommentsResponse implements IGetUserCommentsResponse {
             if (Array.isArray(_data["comments"])) {
                 this.comments = [] as any;
                 for (let item of _data["comments"])
-                    this.comments!.push(UserCommentDto.fromJS(item));
+                    this.comments!.push(UserCommentListItemDto.fromJS(item));
             }
             this.totalCount = _data["totalCount"];
             this.page = _data["page"];
@@ -17059,9 +17016,9 @@ export class GetUserCommentsResponse implements IGetUserCommentsResponse {
         }
     }
 
-    static fromJS(data: any): GetUserCommentsResponse {
+    static fromJS(data: any): GetUserCommentsResult {
         data = typeof data === 'object' ? data : {};
-        let result = new GetUserCommentsResponse();
+        let result = new GetUserCommentsResult();
         result.init(data);
         return result;
     }
@@ -17081,25 +17038,25 @@ export class GetUserCommentsResponse implements IGetUserCommentsResponse {
     }
 }
 
-export interface IGetUserCommentsResponse {
-    comments?: UserCommentDto[];
+export interface IGetUserCommentsResult {
+    comments?: UserCommentListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 }
 
-export class UserCommentDto implements IUserCommentDto {
+export class UserCommentListItemDto implements IUserCommentListItemDto {
     id?: string;
     content?: string;
     createdAt?: Date;
     updatedAt?: Date;
     isEdited?: boolean;
     isDeleted?: boolean;
-    model?: ModelDto;
-    user?: UserDto3;
+    model?: UserCommentModelDto;
+    user?: UserCommentUserDto;
 
-    constructor(data?: IUserCommentDto) {
+    constructor(data?: IUserCommentListItemDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -17116,14 +17073,14 @@ export class UserCommentDto implements IUserCommentDto {
             this.updatedAt = _data["updatedAt"] ? new Date(_data["updatedAt"].toString()) : undefined as any;
             this.isEdited = _data["isEdited"];
             this.isDeleted = _data["isDeleted"];
-            this.model = _data["model"] ? ModelDto.fromJS(_data["model"]) : undefined as any;
-            this.user = _data["user"] ? UserDto3.fromJS(_data["user"]) : undefined as any;
+            this.model = _data["model"] ? UserCommentModelDto.fromJS(_data["model"]) : undefined as any;
+            this.user = _data["user"] ? UserCommentUserDto.fromJS(_data["user"]) : undefined as any;
         }
     }
 
-    static fromJS(data: any): UserCommentDto {
+    static fromJS(data: any): UserCommentListItemDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserCommentDto();
+        let result = new UserCommentListItemDto();
         result.init(data);
         return result;
     }
@@ -17142,23 +17099,23 @@ export class UserCommentDto implements IUserCommentDto {
     }
 }
 
-export interface IUserCommentDto {
+export interface IUserCommentListItemDto {
     id?: string;
     content?: string;
     createdAt?: Date;
     updatedAt?: Date;
     isEdited?: boolean;
     isDeleted?: boolean;
-    model?: ModelDto;
-    user?: UserDto3;
+    model?: UserCommentModelDto;
+    user?: UserCommentUserDto;
 }
 
-export class ModelDto implements IModelDto {
+export class UserCommentModelDto implements IUserCommentModelDto {
     id?: string;
     name?: string;
     thumbnailUrl?: string | undefined;
 
-    constructor(data?: IModelDto) {
+    constructor(data?: IUserCommentModelDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -17175,9 +17132,9 @@ export class ModelDto implements IModelDto {
         }
     }
 
-    static fromJS(data: any): ModelDto {
+    static fromJS(data: any): UserCommentModelDto {
         data = typeof data === 'object' ? data : {};
-        let result = new ModelDto();
+        let result = new UserCommentModelDto();
         result.init(data);
         return result;
     }
@@ -17191,18 +17148,18 @@ export class ModelDto implements IModelDto {
     }
 }
 
-export interface IModelDto {
+export interface IUserCommentModelDto {
     id?: string;
     name?: string;
     thumbnailUrl?: string | undefined;
 }
 
-export class UserDto3 implements IUserDto3 {
+export class UserCommentUserDto implements IUserCommentUserDto {
     id?: string;
     username?: string;
     avatar?: string | undefined;
 
-    constructor(data?: IUserDto3) {
+    constructor(data?: IUserCommentUserDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -17219,9 +17176,9 @@ export class UserDto3 implements IUserDto3 {
         }
     }
 
-    static fromJS(data: any): UserDto3 {
+    static fromJS(data: any): UserCommentUserDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UserDto3();
+        let result = new UserCommentUserDto();
         result.init(data);
         return result;
     }
@@ -17235,20 +17192,68 @@ export class UserDto3 implements IUserDto3 {
     }
 }
 
-export interface IUserDto3 {
+export interface IUserCommentUserDto {
     id?: string;
     username?: string;
     avatar?: string | undefined;
 }
 
-export class GetPublicUserCollectionsResponse implements IGetPublicUserCollectionsResponse {
-    collections?: PublicUserCollectionDto[];
+export class GetUserByIdResult implements IGetUserByIdResult {
+    email?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    username?: string;
+
+    constructor(data?: IGetUserByIdResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.username = _data["username"];
+        }
+    }
+
+    static fromJS(data: any): GetUserByIdResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetUserByIdResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["username"] = this.username;
+        return data;
+    }
+}
+
+export interface IGetUserByIdResult {
+    email?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    username?: string;
+}
+
+export class GetPublicUserCollectionsResult implements IGetPublicUserCollectionsResult {
+    collections?: PublicUserCollectionListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 
-    constructor(data?: IGetPublicUserCollectionsResponse) {
+    constructor(data?: IGetPublicUserCollectionsResult) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -17262,7 +17267,7 @@ export class GetPublicUserCollectionsResponse implements IGetPublicUserCollectio
             if (Array.isArray(_data["collections"])) {
                 this.collections = [] as any;
                 for (let item of _data["collections"])
-                    this.collections!.push(PublicUserCollectionDto.fromJS(item));
+                    this.collections!.push(PublicUserCollectionListItemDto.fromJS(item));
             }
             this.totalCount = _data["totalCount"];
             this.page = _data["page"];
@@ -17271,9 +17276,9 @@ export class GetPublicUserCollectionsResponse implements IGetPublicUserCollectio
         }
     }
 
-    static fromJS(data: any): GetPublicUserCollectionsResponse {
+    static fromJS(data: any): GetPublicUserCollectionsResult {
         data = typeof data === 'object' ? data : {};
-        let result = new GetPublicUserCollectionsResponse();
+        let result = new GetPublicUserCollectionsResult();
         result.init(data);
         return result;
     }
@@ -17293,15 +17298,15 @@ export class GetPublicUserCollectionsResponse implements IGetPublicUserCollectio
     }
 }
 
-export interface IGetPublicUserCollectionsResponse {
-    collections?: PublicUserCollectionDto[];
+export interface IGetPublicUserCollectionsResult {
+    collections?: PublicUserCollectionListItemDto[];
     totalCount?: number;
     page?: number;
     pageSize?: number;
     totalPages?: number;
 }
 
-export class PublicUserCollectionDto implements IPublicUserCollectionDto {
+export class PublicUserCollectionListItemDto implements IPublicUserCollectionListItemDto {
     id?: string;
     name?: string;
     description?: string | undefined;
@@ -17312,7 +17317,7 @@ export class PublicUserCollectionDto implements IPublicUserCollectionDto {
     modelCount?: number;
     isPasswordProtected?: boolean;
 
-    constructor(data?: IPublicUserCollectionDto) {
+    constructor(data?: IPublicUserCollectionListItemDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -17335,9 +17340,9 @@ export class PublicUserCollectionDto implements IPublicUserCollectionDto {
         }
     }
 
-    static fromJS(data: any): PublicUserCollectionDto {
+    static fromJS(data: any): PublicUserCollectionListItemDto {
         data = typeof data === 'object' ? data : {};
-        let result = new PublicUserCollectionDto();
+        let result = new PublicUserCollectionListItemDto();
         result.init(data);
         return result;
     }
@@ -17357,7 +17362,7 @@ export class PublicUserCollectionDto implements IPublicUserCollectionDto {
     }
 }
 
-export interface IPublicUserCollectionDto {
+export interface IPublicUserCollectionListItemDto {
     id?: string;
     name?: string;
     description?: string | undefined;
@@ -17367,6 +17372,130 @@ export interface IPublicUserCollectionDto {
     updatedAt?: Date;
     modelCount?: number;
     isPasswordProtected?: boolean;
+}
+
+export class BannedUsersListResponse implements IBannedUsersListResponse {
+    users?: BannedUserListItemDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+
+    constructor(data?: IBannedUsersListResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["users"])) {
+                this.users = [] as any;
+                for (let item of _data["users"])
+                    this.users!.push(BannedUserListItemDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): BannedUsersListResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new BannedUsersListResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.users)) {
+            data["users"] = [];
+            for (let item of this.users)
+                data["users"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IBannedUsersListResponse {
+    users?: BannedUserListItemDto[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+}
+
+export class BannedUserListItemDto implements IBannedUserListItemDto {
+    id?: string;
+    username?: string;
+    email?: string;
+    bannedAt?: Date | undefined;
+    bannedByUsername?: string | undefined;
+    banReason?: string | undefined;
+    banExpiresAt?: Date | undefined;
+    roleName?: string;
+
+    constructor(data?: IBannedUserListItemDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.username = _data["username"];
+            this.email = _data["email"];
+            this.bannedAt = _data["bannedAt"] ? new Date(_data["bannedAt"].toString()) : undefined as any;
+            this.bannedByUsername = _data["bannedByUsername"];
+            this.banReason = _data["banReason"];
+            this.banExpiresAt = _data["banExpiresAt"] ? new Date(_data["banExpiresAt"].toString()) : undefined as any;
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): BannedUserListItemDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new BannedUserListItemDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["username"] = this.username;
+        data["email"] = this.email;
+        data["bannedAt"] = this.bannedAt ? this.bannedAt.toISOString() : undefined as any;
+        data["bannedByUsername"] = this.bannedByUsername;
+        data["banReason"] = this.banReason;
+        data["banExpiresAt"] = this.banExpiresAt ? this.banExpiresAt.toISOString() : undefined as any;
+        data["roleName"] = this.roleName;
+        return data;
+    }
+}
+
+export interface IBannedUserListItemDto {
+    id?: string;
+    username?: string;
+    email?: string;
+    bannedAt?: Date | undefined;
+    bannedByUsername?: string | undefined;
+    banReason?: string | undefined;
+    banExpiresAt?: Date | undefined;
+    roleName?: string;
 }
 
 export class CreateUserCommandResponse implements ICreateUserCommandResponse {
@@ -17547,130 +17676,6 @@ export class BanUserRequest implements IBanUserRequest {
 export interface IBanUserRequest {
     reason: string;
     expiresAt?: Date | undefined;
-}
-
-export class BannedUsersResponse implements IBannedUsersResponse {
-    users?: BannedUserDto[];
-    totalCount?: number;
-    page?: number;
-    pageSize?: number;
-    totalPages?: number;
-
-    constructor(data?: IBannedUsersResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["users"])) {
-                this.users = [] as any;
-                for (let item of _data["users"])
-                    this.users!.push(BannedUserDto.fromJS(item));
-            }
-            this.totalCount = _data["totalCount"];
-            this.page = _data["page"];
-            this.pageSize = _data["pageSize"];
-            this.totalPages = _data["totalPages"];
-        }
-    }
-
-    static fromJS(data: any): BannedUsersResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new BannedUsersResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.users)) {
-            data["users"] = [];
-            for (let item of this.users)
-                data["users"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["totalCount"] = this.totalCount;
-        data["page"] = this.page;
-        data["pageSize"] = this.pageSize;
-        data["totalPages"] = this.totalPages;
-        return data;
-    }
-}
-
-export interface IBannedUsersResponse {
-    users?: BannedUserDto[];
-    totalCount?: number;
-    page?: number;
-    pageSize?: number;
-    totalPages?: number;
-}
-
-export class BannedUserDto implements IBannedUserDto {
-    id?: string;
-    username?: string;
-    email?: string;
-    bannedAt?: Date | undefined;
-    bannedByUsername?: string | undefined;
-    banReason?: string | undefined;
-    banExpiresAt?: Date | undefined;
-    roleName?: string;
-
-    constructor(data?: IBannedUserDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.username = _data["username"];
-            this.email = _data["email"];
-            this.bannedAt = _data["bannedAt"] ? new Date(_data["bannedAt"].toString()) : undefined as any;
-            this.bannedByUsername = _data["bannedByUsername"];
-            this.banReason = _data["banReason"];
-            this.banExpiresAt = _data["banExpiresAt"] ? new Date(_data["banExpiresAt"].toString()) : undefined as any;
-            this.roleName = _data["roleName"];
-        }
-    }
-
-    static fromJS(data: any): BannedUserDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new BannedUserDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["username"] = this.username;
-        data["email"] = this.email;
-        data["bannedAt"] = this.bannedAt ? this.bannedAt.toISOString() : undefined as any;
-        data["bannedByUsername"] = this.bannedByUsername;
-        data["banReason"] = this.banReason;
-        data["banExpiresAt"] = this.banExpiresAt ? this.banExpiresAt.toISOString() : undefined as any;
-        data["roleName"] = this.roleName;
-        return data;
-    }
-}
-
-export interface IBannedUserDto {
-    id?: string;
-    username?: string;
-    email?: string;
-    bannedAt?: Date | undefined;
-    bannedByUsername?: string | undefined;
-    banReason?: string | undefined;
-    banExpiresAt?: Date | undefined;
-    roleName?: string;
 }
 
 export class SetActiveThemeResponse implements ISetActiveThemeResponse {
@@ -20974,14 +20979,13 @@ export enum SearchType {
     Collections = "Collections",
 }
 
-export class ReportsResponse implements IReportsResponse {
-    reports?: Report[];
-    totalCount?: number;
-    page?: number;
-    pageSize?: number;
-    totalPages?: number;
+export class SubmitReportRequest implements ISubmitReportRequest {
+    type?: ReportType;
+    targetId?: string;
+    reason?: ReportReason;
+    description?: string;
 
-    constructor(data?: IReportsResponse) {
+    constructor(data?: ISubmitReportRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -20992,111 +20996,35 @@ export class ReportsResponse implements IReportsResponse {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["reports"])) {
-                this.reports = [] as any;
-                for (let item of _data["reports"])
-                    this.reports!.push(Report.fromJS(item));
-            }
-            this.totalCount = _data["totalCount"];
-            this.page = _data["page"];
-            this.pageSize = _data["pageSize"];
-            this.totalPages = _data["totalPages"];
+            this.type = _data["type"];
+            this.targetId = _data["targetId"];
+            this.reason = _data["reason"];
+            this.description = _data["description"];
         }
     }
 
-    static fromJS(data: any): ReportsResponse {
+    static fromJS(data: any): SubmitReportRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new ReportsResponse();
+        let result = new SubmitReportRequest();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.reports)) {
-            data["reports"] = [];
-            for (let item of this.reports)
-                data["reports"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["totalCount"] = this.totalCount;
-        data["page"] = this.page;
-        data["pageSize"] = this.pageSize;
-        data["totalPages"] = this.totalPages;
-        return data;
-    }
-}
-
-export interface IReportsResponse {
-    reports?: Report[];
-    totalCount?: number;
-    page?: number;
-    pageSize?: number;
-    totalPages?: number;
-}
-
-export class Report extends Auditable implements IReport {
-    type?: ReportType;
-    targetId?: string;
-    reporterId?: string;
-    reason?: ReportReason;
-    description?: string;
-    isResolved?: boolean;
-    resolution?: string;
-    resolvedAt?: Date | undefined;
-    resolvedById?: string | undefined;
-
-    constructor(data?: IReport) {
-        super(data);
-    }
-
-    override init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.type = _data["type"];
-            this.targetId = _data["targetId"];
-            this.reporterId = _data["reporterId"];
-            this.reason = _data["reason"];
-            this.description = _data["description"];
-            this.isResolved = _data["isResolved"];
-            this.resolution = _data["resolution"];
-            this.resolvedAt = _data["resolvedAt"] ? new Date(_data["resolvedAt"].toString()) : undefined as any;
-            this.resolvedById = _data["resolvedById"];
-        }
-    }
-
-    static override fromJS(data: any): Report {
-        data = typeof data === 'object' ? data : {};
-        let result = new Report();
-        result.init(data);
-        return result;
-    }
-
-    override toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
         data["type"] = this.type;
         data["targetId"] = this.targetId;
-        data["reporterId"] = this.reporterId;
         data["reason"] = this.reason;
         data["description"] = this.description;
-        data["isResolved"] = this.isResolved;
-        data["resolution"] = this.resolution;
-        data["resolvedAt"] = this.resolvedAt ? this.resolvedAt.toISOString() : undefined as any;
-        data["resolvedById"] = this.resolvedById;
-        super.toJSON(data);
         return data;
     }
 }
 
-export interface IReport extends IAuditable {
+export interface ISubmitReportRequest {
     type?: ReportType;
     targetId?: string;
-    reporterId?: string;
     reason?: ReportReason;
     description?: string;
-    isResolved?: boolean;
-    resolution?: string;
-    resolvedAt?: Date | undefined;
-    resolvedById?: string | undefined;
 }
 
 export enum ReportType {
@@ -21109,6 +21037,42 @@ export enum ReportReason {
     Spam = "Spam",
     Copyright = "Copyright",
     Other = "Other",
+}
+
+export class ResolveReportRequest implements IResolveReportRequest {
+    resolution?: string;
+
+    constructor(data?: IResolveReportRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.resolution = _data["resolution"];
+        }
+    }
+
+    static fromJS(data: any): ResolveReportRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResolveReportRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["resolution"] = this.resolution;
+        return data;
+    }
+}
+
+export interface IResolveReportRequest {
+    resolution?: string;
 }
 
 export class ReportsAnalytics implements IReportsAnalytics {
@@ -21527,10 +21491,14 @@ export interface IModeratorActivity {
     averageResolutionTime?: number;
 }
 
-export class ResolveReportRequest implements IResolveReportRequest {
-    resolution?: string;
+export class ReportsResponse implements IReportsResponse {
+    reports?: Report[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
 
-    constructor(data?: IResolveReportRequest) {
+    constructor(data?: IReportsResponse) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -21541,74 +21509,111 @@ export class ResolveReportRequest implements IResolveReportRequest {
 
     init(_data?: any) {
         if (_data) {
-            this.resolution = _data["resolution"];
+            if (Array.isArray(_data["reports"])) {
+                this.reports = [] as any;
+                for (let item of _data["reports"])
+                    this.reports!.push(Report.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+            this.totalPages = _data["totalPages"];
         }
     }
 
-    static fromJS(data: any): ResolveReportRequest {
+    static fromJS(data: any): ReportsResponse {
         data = typeof data === 'object' ? data : {};
-        let result = new ResolveReportRequest();
+        let result = new ReportsResponse();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["resolution"] = this.resolution;
+        if (Array.isArray(this.reports)) {
+            data["reports"] = [];
+            for (let item of this.reports)
+                data["reports"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["totalCount"] = this.totalCount;
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        data["totalPages"] = this.totalPages;
         return data;
     }
 }
 
-export interface IResolveReportRequest {
-    resolution?: string;
+export interface IReportsResponse {
+    reports?: Report[];
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
 }
 
-export class SubmitReportRequest implements ISubmitReportRequest {
+export class Report extends Auditable implements IReport {
     type?: ReportType;
     targetId?: string;
+    reporterId?: string;
     reason?: ReportReason;
     description?: string;
+    isResolved?: boolean;
+    resolution?: string;
+    resolvedAt?: Date | undefined;
+    resolvedById?: string | undefined;
 
-    constructor(data?: ISubmitReportRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
+    constructor(data?: IReport) {
+        super(data);
     }
 
-    init(_data?: any) {
+    override init(_data?: any) {
+        super.init(_data);
         if (_data) {
             this.type = _data["type"];
             this.targetId = _data["targetId"];
+            this.reporterId = _data["reporterId"];
             this.reason = _data["reason"];
             this.description = _data["description"];
+            this.isResolved = _data["isResolved"];
+            this.resolution = _data["resolution"];
+            this.resolvedAt = _data["resolvedAt"] ? new Date(_data["resolvedAt"].toString()) : undefined as any;
+            this.resolvedById = _data["resolvedById"];
         }
     }
 
-    static fromJS(data: any): SubmitReportRequest {
+    static override fromJS(data: any): Report {
         data = typeof data === 'object' ? data : {};
-        let result = new SubmitReportRequest();
+        let result = new Report();
         result.init(data);
         return result;
     }
 
-    toJSON(data?: any) {
+    override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["type"] = this.type;
         data["targetId"] = this.targetId;
+        data["reporterId"] = this.reporterId;
         data["reason"] = this.reason;
         data["description"] = this.description;
+        data["isResolved"] = this.isResolved;
+        data["resolution"] = this.resolution;
+        data["resolvedAt"] = this.resolvedAt ? this.resolvedAt.toISOString() : undefined as any;
+        data["resolvedById"] = this.resolvedById;
+        super.toJSON(data);
         return data;
     }
 }
 
-export interface ISubmitReportRequest {
+export interface IReport extends IAuditable {
     type?: ReportType;
     targetId?: string;
+    reporterId?: string;
     reason?: ReportReason;
     description?: string;
+    isResolved?: boolean;
+    resolution?: string;
+    resolvedAt?: Date | undefined;
+    resolvedById?: string | undefined;
 }
 
 export class PluginDetailsResponse implements IPluginDetailsResponse {
@@ -30680,6 +30685,11 @@ export interface IUpdateFederatedInstanceRequest {
     sharedSecret?: string | undefined;
     isEnabled?: boolean | undefined;
     status?: string | undefined;
+}
+
+export interface FileParameter {
+    data: any;
+    fileName: string;
 }
 
 export interface FileResponse {

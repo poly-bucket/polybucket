@@ -28,10 +28,23 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Http
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<CreateModelVersionResponse>> CreateModelVersion(Guid id, [FromForm] CreateModelVersionRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<CreateModelVersionResponse>> CreateModelVersion(
+            Guid id,
+            [FromForm] string name,
+            [FromForm] string? notes,
+            [FromForm] string? thumbnailFileId,
+            [FromForm] IFormFile[] files,
+            CancellationToken cancellationToken)
         {
             try
             {
+                var request = new CreateModelVersionRequest
+                {
+                    Name = name,
+                    Notes = notes,
+                    ThumbnailFileId = thumbnailFileId,
+                    Files = files
+                };
                 var response = await _createModelVersionService.CreateModelVersionAsync(id, request, User, cancellationToken);
                 return CreatedAtAction(nameof(CreateModelVersion), new { id, versionId = response.ModelVersion.Id }, response);
             }

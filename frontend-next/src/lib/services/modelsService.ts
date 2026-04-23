@@ -1,9 +1,10 @@
-import { getApiConfig } from "@/lib/api/config";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import type {
+  FileParameter,
   PrivacySettings,
   GetModelsResponse,
   GetModelByIdResponse,
+  ApiException,
 } from "@/lib/api/client";
 
 const AUTH_STORAGE_KEY = "polybucket-auth";
@@ -65,81 +66,54 @@ export async function uploadModel(request: ModelUploadRequest): Promise<Uploaded
     throw new Error("Authentication token not found");
   }
 
-  const formData = new FormData();
-  formData.append("Name", request.modelData.name);
+  const client = ApiClientFactory.getApiClient();
+  const files: FileParameter[] = request.files.map((file) => ({
+    data: file,
+    fileName: file.name,
+  }));
 
-  if (request.modelData.description) {
-    formData.append("Description", request.modelData.description);
-  }
-
-  request.files.forEach((file) => {
-    formData.append("Files", file);
-  });
-
-  if (request.modelData.thumbnailFileId) {
-    formData.append("ThumbnailFileId", request.modelData.thumbnailFileId);
-  }
-
-  if (request.modelData.privacy !== undefined) {
-    formData.append(
-      "Privacy",
-      String(request.modelData.privacy).toLowerCase()
+  try {
+    const response = await client.createModel_CreateModel(
+      request.modelData.name,
+      request.modelData.description ?? null,
+      files,
+      request.modelData.thumbnailFileId ?? null,
+      request.modelData.privacy !== undefined
+        ? String(request.modelData.privacy).toLowerCase()
+        : null,
+      request.modelData.license ?? null,
+      request.modelData.aiGenerated,
+      request.modelData.workInProgress,
+      request.modelData.nsfw,
+      request.modelData.remix
     );
-  }
 
-  if (request.modelData.license) {
-    formData.append("License", request.modelData.license);
-  }
+    const model = response.model;
+    return {
+      id: model?.id ?? "",
+      name: model?.name,
+      description: model?.description,
+    };
+  } catch (error) {
+    const apiError = error as ApiException & { response?: string; status?: number };
+    const rawResponse = typeof apiError.response === "string" ? apiError.response : "";
+    let errorMessage = apiError.message || "Upload failed";
 
-  formData.append(
-    "AIGenerated",
-    String(request.modelData.aiGenerated)
-  );
-  formData.append(
-    "WorkInProgress",
-    String(request.modelData.workInProgress)
-  );
-  formData.append("NSFW", String(request.modelData.nsfw));
-  formData.append("Remix", String(request.modelData.remix));
-
-  const { baseUrl } = getApiConfig();
-  const response = await fetch(`${baseUrl}/api/models`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    let errorMessage = `Upload failed: ${response.statusText}`;
-    try {
-      const errorText = await response.text();
-      if (errorText) {
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage =
-            errorData.message ||
-            errorData.detail ||
-            errorData.title ||
-            errorText;
-        } catch {
-          errorMessage = errorText;
-        }
+    if (rawResponse) {
+      try {
+        const parsed = JSON.parse(rawResponse) as {
+          message?: string;
+          detail?: string;
+          title?: string;
+        };
+        errorMessage = parsed.message || parsed.detail || parsed.title || rawResponse;
+      } catch {
+        errorMessage = rawResponse;
       }
-    } catch {
-      // ignore
     }
-    const error = new Error(errorMessage);
-    (error as Error & { status?: number }).status = response.status;
-    throw error;
-  }
 
-  const result = await response.json();
-  const model = result.model ?? result;
-  return {
-    id: model.id,
-    name: model.name,
-    description: model.description,
-  };
+    const normalizedError = new Error(errorMessage);
+    (normalizedError as Error & { status?: number }).status = apiError.status;
+    throw normalizedError;
+  }
 }
