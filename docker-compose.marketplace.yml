@@ -40,18 +40,18 @@ services:
       - "32768:3000"
     build:
       context: .
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile.frontend-next
       target: development
     depends_on:
       - polybucket-api
     networks:
       - polybucket-network
     environment:
-      - VITE_API_URL=http://localhost:11666
+      - NEXT_PUBLIC_API_URL=http://localhost:11666
     volumes:
-      - ./frontend:/app
-      - ./node_modules:/app/node_modules
-    command: npm start
+      - ./frontend-next:/app
+      - /app/node_modules
+      - /app/.next
 
   polybucket-db:
     image: postgres:latest

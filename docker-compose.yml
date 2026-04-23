@@ -7,7 +7,6 @@ services:
     ports:
       - "11666:11666"
     environment:
-      # Main PolyBucket.Api uses Database__* (not ConnectionStrings__DefaultConnection)
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://*:11666
       - Database__Host=db
