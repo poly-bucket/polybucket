@@ -33,6 +33,10 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddHttpClient();
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+        services.AddOptions<AdminSeedSettings>()
+            .BindConfiguration(AdminSeedSettings.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         return services;
     }
