@@ -1,13 +1,10 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Repository;
-using PolyBucket.Api.Features.Users.Repository;
 using PolyBucket.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain
 {
@@ -15,21 +12,15 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
     {
         private readonly IDisableTwoFactorAuthService _disableTwoFactorAuthService;
         private readonly IDisableTwoFactorAuthRepository _disableTwoFactorAuthRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly PolyBucketDbContext _dbContext;
         private readonly ILogger<DisableTwoFactorAuthCommandHandler> _logger;
 
         public DisableTwoFactorAuthCommandHandler(
             IDisableTwoFactorAuthService disableTwoFactorAuthService,
             IDisableTwoFactorAuthRepository disableTwoFactorAuthRepository,
-            IUserRepository userRepository,
-            PolyBucketDbContext dbContext,
             ILogger<DisableTwoFactorAuthCommandHandler> logger)
         {
             _disableTwoFactorAuthService = disableTwoFactorAuthService;
             _disableTwoFactorAuthRepository = disableTwoFactorAuthRepository;
-            _userRepository = userRepository;
-            _dbContext = dbContext;
             _logger = logger;
         }
 
@@ -83,4 +74,4 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
             }
         }
     }
-} 
+}

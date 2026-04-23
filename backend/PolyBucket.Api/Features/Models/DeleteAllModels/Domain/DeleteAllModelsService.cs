@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.ACL.Services;
-using PolyBucket.Api.Features.Users.Repository;
+using PolyBucket.Api.Features.Models.DeleteAllModels.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using System;
 using System.Linq;
@@ -15,14 +15,14 @@ namespace PolyBucket.Api.Features.Models.DeleteAllModels.Domain
     public class DeleteAllModelsService : IDeleteAllModelsService
     {
         private readonly PolyBucketDbContext _context;
-        private readonly IUserRepository _userRepository;
+        private readonly IDeleteAllModelsUserRepository _userRepository;
         private readonly IAuthenticationRepository _authRepository;
         private readonly IPermissionService _permissionService;
         private readonly ILogger<DeleteAllModelsService> _logger;
 
         public DeleteAllModelsService(
             PolyBucketDbContext context,
-            IUserRepository userRepository,
+            IDeleteAllModelsUserRepository userRepository,
             IAuthenticationRepository authRepository,
             IPermissionService permissionService,
             ILogger<DeleteAllModelsService> logger)
@@ -48,7 +48,7 @@ namespace PolyBucket.Api.Features.Models.DeleteAllModels.Domain
                     throw new UnauthorizedAccessException("User not authenticated");
                 }
 
-                var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(userId));
+                var currentUser = await _userRepository.GetByIdAsNoTrackingAsync(Guid.Parse(userId), cancellationToken);
                 if (currentUser == null)
                 {
                     throw new UnauthorizedAccessException("User not found");

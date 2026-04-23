@@ -14,15 +14,15 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
 {
     public class CreateUserControllerTests
     {
-        private readonly Mock<CreateUserCommandHandler> _handlerMock;
+        private readonly Mock<ICreateUserService> _serviceMock;
         private readonly Mock<ILogger<CreateUserController>> _loggerMock;
         private readonly CreateUserController _controller;
 
         public CreateUserControllerTests()
         {
-            _handlerMock = new Mock<CreateUserCommandHandler>();
+            _serviceMock = new Mock<ICreateUserService>();
             _loggerMock = new Mock<ILogger<CreateUserController>>();
-            _controller = new CreateUserController(_handlerMock.Object, _loggerMock.Object);
+            _controller = new CreateUserController(_serviceMock.Object, _loggerMock.Object);
 
             // Setup HttpContext with mock user claims
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
@@ -71,7 +71,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 EmailVerificationRequired = false
             };
 
-            _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
+            _serviceMock.Setup(x => x.CreateUserAsync(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expectedResponse);
 
             // Act
@@ -98,7 +98,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 RoleId = Guid.NewGuid()
             };
 
-            _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
+            _serviceMock.Setup(x => x.CreateUserAsync(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new InvalidOperationException("Email is already registered"));
 
             // Act
@@ -120,7 +120,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 RoleId = Guid.NewGuid()
             };
 
-            _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
+            _serviceMock.Setup(x => x.CreateUserAsync(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new InvalidOperationException("Username is already taken"));
 
             // Act
@@ -163,7 +163,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 RoleId = Guid.NewGuid()
             };
 
-            _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
+            _serviceMock.Setup(x => x.CreateUserAsync(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Exception("Database connection failed"));
 
             // Act
@@ -196,7 +196,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
                 EmailVerificationRequired = false
             };
 
-            _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
+            _serviceMock.Setup(x => x.CreateUserAsync(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expectedResponse);
 
             // Act
@@ -230,7 +230,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             };
 
             CreateUserCommand? capturedCommand = null;
-            _handlerMock.Setup(x => x.Handle(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
+            _serviceMock.Setup(x => x.CreateUserAsync(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
                 .Callback<CreateUserCommand, CancellationToken>((cmd, _) => capturedCommand = cmd)
                 .ReturnsAsync(expectedResponse);
 

@@ -1,10 +1,9 @@
-using MediatR;
 using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace PolyBucket.Api.Features.Users.UpdateUserProfile.Domain
 {
-    public class UpdateUserProfileCommand : IRequest
+    public class UpdateUserProfileCommand
     {
         public Guid UserId { get; set; }
         public string? Bio { get; set; }

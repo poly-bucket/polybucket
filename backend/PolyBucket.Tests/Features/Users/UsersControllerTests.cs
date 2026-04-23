@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Users.Queries;
+using PolyBucket.Api.Features.Users.GetUserById.Http;
 using Shouldly;
 using Xunit;
 

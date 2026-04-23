@@ -1,4 +1,5 @@
 using MediatR;
+using PolyBucket.Api.Features.Users;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Reports.Domain;
 using PolyBucket.Api.Features.Reports.Plugins;
@@ -26,6 +27,7 @@ public static class FeatureServiceCollectionExtensions
         
         // DeleteAllModels
         services.AddTransient<Features.Models.DeleteAllModels.Domain.IDeleteAllModelsService, Features.Models.DeleteAllModels.Domain.DeleteAllModelsService>();
+        services.AddTransient<Features.Models.DeleteAllModels.Repository.IDeleteAllModelsUserRepository, Features.Models.DeleteAllModels.Repository.DeleteAllModelsUserRepository>();
         
         // CreateModelVersion
         services.AddTransient<Features.Models.CreateModelVersion.Domain.ICreateModelVersionService, Features.Models.CreateModelVersion.Domain.CreateModelVersionService>();
@@ -78,14 +80,9 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Collections.RemoveModelFromCollection.Domain.RemoveModelFromCollectionCommandHandler>();
         services.AddTransient<Features.Collections.AccessCollection.Domain.AccessCollectionCommandHandler>();
 
-        // Users
-        services.AddTransient<Features.Users.Repository.IUserRepository, Features.Users.Repository.UserRepository>();
-        
-        // User Profile Services
-        services.AddTransient<Features.Users.Services.IUserStatisticsService, Features.Users.Services.UserStatisticsService>();
-        services.AddTransient<Features.Users.Queries.GetUserProfile.GetUserProfileQueryHandler>();
-        services.AddTransient<Features.Users.UpdateUserProfile.Handlers.UpdateUserProfileCommandHandler>();
-        services.AddTransient<Features.Users.Queries.GetUserModels.GetUserModelsQueryHandler>();
+        services.AddUsersFeature();
+        services.AddTransient<Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Repository.IInitializeTwoFactorAuthUserReadRepository, Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Repository.InitializeTwoFactorAuthUserReadRepository>();
+        services.AddTransient<Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Repository.IEnableTwoFactorAuthUserReadRepository, Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Repository.EnableTwoFactorAuthUserReadRepository>();
         
         // Authentication
         services.AddTransient<Features.Authentication.Repository.IAuthenticationRepository, Features.Authentication.Repository.AuthenticationRepository>();
@@ -140,14 +137,7 @@ public static class FeatureServiceCollectionExtensions
         // Avatar Service
         services.AddTransient<Common.Services.IAvatarService, Common.Services.AvatarService>();
         
-        // Regenerate Avatar Service
-        services.AddTransient<Features.Users.RegenerateAvatar.Repository.IRegenerateAvatarRepository, Features.Users.RegenerateAvatar.Repository.RegenerateAvatarRepository>();
-        services.AddTransient<Features.Users.RegenerateAvatar.Domain.IRegenerateAvatarService, Features.Users.RegenerateAvatar.Domain.RegenerateAvatarService>();
-        
-        // User Settings Services
-        services.AddTransient<Features.Users.UpdateUserSettings.Handlers.UpdateUserSettingsCommandHandler>();
-        services.AddTransient<Features.Users.Queries.GetUserSettingsQueryHandler>();
-        services.AddTransient<Features.Users.Queries.GetUsers.GetUsersQueryHandler>();
+        // Regenerate Avatar Service is registered in AddUsersFeature
 
         // Authorization Filters
         services.AddScoped<Features.Files.Http.PublicModelAuthorizationFilter>();
@@ -188,7 +178,6 @@ public static class FeatureServiceCollectionExtensions
         // Password Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IPasswordGenerator, PasswordGenerator>();
-        services.AddTransient<Features.Users.CreateUser.Domain.CreateUserCommandHandler>();
 
         // Email Settings
         services.AddTransient<Features.SystemSettings.Domain.UpdateEmailSettingsCommandHandler>();

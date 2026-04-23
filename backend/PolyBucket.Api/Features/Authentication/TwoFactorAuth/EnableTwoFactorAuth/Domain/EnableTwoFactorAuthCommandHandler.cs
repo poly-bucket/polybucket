@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Repository;
-using PolyBucket.Api.Features.Users.Repository;
 using PolyBucket.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -16,20 +15,20 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
     {
         private readonly IEnableTwoFactorAuthService _enableTwoFactorAuthService;
         private readonly IEnableTwoFactorAuthRepository _enableTwoFactorAuthRepository;
-        private readonly IUserRepository _userRepository;
+        private readonly IEnableTwoFactorAuthUserReadRepository _userReadRepository;
         private readonly PolyBucketDbContext _dbContext;
         private readonly ILogger<EnableTwoFactorAuthCommandHandler> _logger;
 
         public EnableTwoFactorAuthCommandHandler(
             IEnableTwoFactorAuthService enableTwoFactorAuthService,
             IEnableTwoFactorAuthRepository enableTwoFactorAuthRepository,
-            IUserRepository userRepository,
+            IEnableTwoFactorAuthUserReadRepository userReadRepository,
             PolyBucketDbContext dbContext,
             ILogger<EnableTwoFactorAuthCommandHandler> logger)
         {
             _enableTwoFactorAuthService = enableTwoFactorAuthService;
             _enableTwoFactorAuthRepository = enableTwoFactorAuthRepository;
-            _userRepository = userRepository;
+            _userReadRepository = userReadRepository;
             _dbContext = dbContext;
             _logger = logger;
         }
@@ -38,7 +37,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
         {
             _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Enabling 2FA for user {UserId}", command.UserId);
 
-            var user = await _userRepository.GetByIdAsync(command.UserId);
+            var user = await _userReadRepository.GetByIdAsync(command.UserId, cancellationToken);
             if (user == null)
             {
                 _logger.LogError("EnableTwoFactorAuthCommandHandler.Handle: User not found for user {UserId}", command.UserId);

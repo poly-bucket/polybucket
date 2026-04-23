@@ -1,27 +1,21 @@
-using PolyBucket.Api.Data;
-using Microsoft.EntityFrameworkCore;
 using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Users.Domain;
 using System.Collections.Generic;
 
-namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Domain
+namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Domain;
+
+public class UpdateUserSettingsCommand
 {
-    public class UpdateUserSettingsCommand
-    {
-        public Guid UserId { get; set; }
-        public string? Language { get; set; }
-        public string? Theme { get; set; }
-        public bool? EmailNotifications { get; set; }
-        public Guid? DefaultPrinterId { get; set; }
-        public string? MeasurementSystem { get; set; }
-        public string? TimeZone { get; set; }
-        public bool? AutoRotateModels { get; set; }
-        public string? DashboardViewType { get; set; }
-        public string? CardSize { get; set; }
-        public string? CardSpacing { get; set; }
-        public int? GridColumns { get; set; }
-        public Dictionary<string, string>? CustomSettings { get; set; }
-    }
-} 
+    public Guid UserId { get; set; }
+    public string? Language { get; set; }
+    public string? Theme { get; set; }
+    public bool? EmailNotifications { get; set; }
+    public Guid? DefaultPrinterId { get; set; }
+    public string? MeasurementSystem { get; set; }
+    public string? TimeZone { get; set; }
+    public bool? AutoRotateModels { get; set; }
+    public string? DashboardViewType { get; set; }
+    public string? CardSize { get; set; }
+    public string? CardSpacing { get; set; }
+    public int? GridColumns { get; set; }
+    public Dictionary<string, string>? CustomSettings { get; set; }
+}

@@ -1,13 +1,10 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupCodes.Repository;
-using PolyBucket.Api.Features.Users.Repository;
 using PolyBucket.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupCodes.Domain
 {
@@ -15,21 +12,15 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
     {
         private readonly IRegenerateBackupCodesService _regenerateBackupCodesService;
         private readonly IRegenerateBackupCodesRepository _regenerateBackupCodesRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly PolyBucketDbContext _dbContext;
         private readonly ILogger<RegenerateBackupCodesCommandHandler> _logger;
 
         public RegenerateBackupCodesCommandHandler(
             IRegenerateBackupCodesService regenerateBackupCodesService,
             IRegenerateBackupCodesRepository regenerateBackupCodesRepository,
-            IUserRepository userRepository,
-            PolyBucketDbContext dbContext,
             ILogger<RegenerateBackupCodesCommandHandler> logger)
         {
             _regenerateBackupCodesService = regenerateBackupCodesService;
             _regenerateBackupCodesRepository = regenerateBackupCodesRepository;
-            _userRepository = userRepository;
-            _dbContext = dbContext;
             _logger = logger;
         }
 
@@ -73,4 +64,4 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
             }
         }
     }
-} 
+}

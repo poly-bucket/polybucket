@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Repository;
-using PolyBucket.Api.Features.Users.Repository;
 using PolyBucket.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -16,20 +15,20 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
     {
         private readonly IInitializeTwoFactorAuthService _initializeTwoFactorAuthService;
         private readonly IInitializeTwoFactorAuthRepository _initializeTwoFactorAuthRepository;
-        private readonly IUserRepository _userRepository;
+        private readonly IInitializeTwoFactorAuthUserReadRepository _userReadRepository;
         private readonly PolyBucketDbContext _dbContext;
         private readonly ILogger<InitializeTwoFactorAuthCommandHandler> _logger;
 
         public InitializeTwoFactorAuthCommandHandler(
             IInitializeTwoFactorAuthService initializeTwoFactorAuthService,
             IInitializeTwoFactorAuthRepository initializeTwoFactorAuthRepository,
-            IUserRepository userRepository,
+            IInitializeTwoFactorAuthUserReadRepository userReadRepository,
             PolyBucketDbContext dbContext,
             ILogger<InitializeTwoFactorAuthCommandHandler> logger)
         {
             _initializeTwoFactorAuthService = initializeTwoFactorAuthService;
             _initializeTwoFactorAuthRepository = initializeTwoFactorAuthRepository;
-            _userRepository = userRepository;
+            _userReadRepository = userReadRepository;
             _dbContext = dbContext;
             _logger = logger;
         }
@@ -38,7 +37,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
         {
             _logger.LogInformation("Initializing 2FA for user {UserId}", command.UserId);
 
-            var user = await _userRepository.GetByIdAsync(command.UserId);
+            var user = await _userReadRepository.GetByIdAsync(command.UserId, cancellationToken);
             if (user == null)
             {
                 throw new ArgumentException("User not found");
