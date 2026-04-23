@@ -14,6 +14,8 @@ export interface AuthUser {
   roles?: string[];
   requiresFirstTimeSetup?: boolean;
   setupStep?: string;
+  avatar?: string;
+  profilePictureUrl?: string;
 }
 
 interface AuthContextValue {
@@ -22,6 +24,8 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (emailOrUsername: string, password: string) => Promise<LoginResult>;
   logout: () => void;
+  /** Re-fetch /api/auth/me and merge avatar + profilePictureUrl into the session user. */
+  refreshUserFromMe: () => Promise<void>;
 }
 
 export interface LoginResult {
@@ -74,12 +78,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refreshUserFromMe = useCallback(async () => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as AuthUser;
+      if (!parsed.accessToken?.trim()) return;
+
+      const me = await ApiClientFactory.getApiClient().me_GetCurrentUser();
+      setUser((prev) => {
+        if (!prev?.accessToken) return prev;
+        const next: AuthUser = {
+          ...prev,
+          avatar: me.avatar ?? undefined,
+          profilePictureUrl: me.profilePictureUrl ?? undefined,
+        };
+        saveUser(next);
+        return next;
+      });
+    } catch {
+      // 401: optional logout; keep existing session behavior
+    }
+  }, []);
+
   useEffect(() => {
     const stored = loadStoredUser();
     setUser(stored);
     if (stored) setSessionCookie(true);
     setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (isLoading || !user?.accessToken) return;
+    let active = true;
+    void (async () => {
+      try {
+        const me = await ApiClientFactory.getApiClient().me_GetCurrentUser();
+        if (!active) return;
+        setUser((prev) => {
+          if (!prev?.accessToken) return prev;
+          const next: AuthUser = {
+            ...prev,
+            avatar: me.avatar ?? undefined,
+            profilePictureUrl: me.profilePictureUrl ?? undefined,
+          };
+          saveUser(next);
+          return next;
+        });
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [isLoading, user?.accessToken]);
 
   const login = useCallback(async (emailOrUsername: string, password: string): Promise<LoginResult> => {
     const apiClient = ApiClientFactory.getApiClient();
@@ -145,9 +199,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextValue = {
     user,
     isLoading,
-    isAuthenticated: !!(user?.accessToken),
+    isAuthenticated: Boolean(user?.accessToken),
     login,
     logout,
+    refreshUserFromMe,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

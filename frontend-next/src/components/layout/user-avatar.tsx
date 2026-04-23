@@ -1,10 +1,20 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import {
+  minidenticonSvg,
+  resolvedImageSrcFromAvatarField,
+  svgToDataUrl,
+} from "@/lib/avatar/minidenticon";
 import { cn } from "@/lib/utils";
 
-interface UserAvatarProps {
+export interface UserAvatarProps {
+  /** User id; preferred seed for the generated identicon. Falls back to `username` when empty. */
+  userId?: string;
   username: string;
   profilePictureUrl?: string;
+  /** Stored SVG, URL, or data URL (from API). */
+  avatar?: string;
   className?: string;
   size?: "sm" | "md" | "lg";
 }
@@ -15,47 +25,79 @@ const sizeClasses = {
   lg: "h-12 w-12 text-base",
 };
 
-function getInitials(username: string): string {
-  const parts = username.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return username.slice(0, 2).toUpperCase();
+function identiconSeed(userId: string | undefined, username: string): string {
+  const u = (userId && userId.trim()) || username.trim();
+  return u || "user";
 }
 
 export function UserAvatar({
+  userId,
   username,
   profilePictureUrl,
+  avatar,
   className,
   size = "sm",
 }: UserAvatarProps) {
-  const initials = getInitials(username);
+  const [profileFailed, setProfileFailed] = useState(false);
+  const [storedFailed, setStoredFailed] = useState(false);
 
-  if (profilePictureUrl) {
+  useEffect(() => {
+    setProfileFailed(false);
+    setStoredFailed(false);
+  }, [profilePictureUrl, avatar, userId, username]);
+
+  const minidenticonSrc = useMemo(() => {
+    return svgToDataUrl(
+      minidenticonSvg(identiconSeed(userId, username), 50, 50)
+    );
+  }, [userId, username]);
+
+  const resolvedStoredSrc = useMemo(
+    () => resolvedImageSrcFromAvatarField(avatar),
+    [avatar]
+  );
+
+  const showProfile =
+    Boolean(profilePictureUrl?.trim()) && !profileFailed;
+  const showStored = Boolean(resolvedStoredSrc) && !storedFailed;
+  const title = `${username}'s avatar`;
+
+  const imgClass = cn(
+    "shrink-0 rounded-full object-cover [image-rendering:pixelated]",
+    sizeClasses[size],
+    className
+  );
+
+  if (showProfile) {
     return (
       <img
         src={profilePictureUrl}
         alt={`${username}'s profile picture`}
-        className={cn(
-          "shrink-0 rounded-full object-cover",
-          sizeClasses[size],
-          className
-        )}
-        title={`${username}'s avatar`}
+        className={imgClass}
+        title={title}
+        onError={() => setProfileFailed(true)}
+      />
+    );
+  }
+
+  if (showStored) {
+    return (
+      <img
+        src={resolvedStoredSrc!}
+        alt={`${username}'s avatar`}
+        className={imgClass}
+        title={title}
+        onError={() => setStoredFailed(true)}
       />
     );
   }
 
   return (
-    <div
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-white/20 font-medium text-white",
-        sizeClasses[size],
-        className
-      )}
-      title={`${username}'s avatar`}
-    >
-      {initials}
-    </div>
+    <img
+      src={minidenticonSrc}
+      alt={title}
+      className={imgClass}
+      title={title}
+    />
   );
 }

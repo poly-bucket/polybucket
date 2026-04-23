@@ -11,6 +11,7 @@ import type { UserProfileData } from "@/lib/services/userProfileService";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { UpdateUserProfileRequest } from "@/lib/api/client";
 import { UserAvatar } from "@/components/layout/user-avatar";
+import { AvatarRegenerateSection } from "@/components/settings/avatar-regenerate-section";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsField } from "@/components/settings/settings-field";
 import { SettingsFooter } from "@/components/settings/settings-footer";
@@ -117,19 +118,30 @@ export default function ProfileSettingsPage() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <SettingsSection title="Basic Information" description="Your public profile details">
-        <div className="flex items-center gap-4 py-4">
-          <UserAvatar
-            username={profile.username ?? user?.username ?? ""}
-            profilePictureUrl={profile.profilePictureUrl}
-            size="lg"
-            className="h-20 w-20"
-          />
-          <div>
-            <p className="text-sm font-medium text-white">Avatar</p>
-            <p className="text-xs text-white/60">
-              Avatar customization via regeneration will be available soon.
-            </p>
+        <div className="space-y-4 py-4">
+          <div className="flex items-center gap-4">
+            <UserAvatar
+              userId={profile.id ?? user?.id ?? ""}
+              username={profile.username ?? user?.username ?? ""}
+              profilePictureUrl={profile.profilePictureUrl}
+              avatar={profile.avatar}
+              size="lg"
+              className="h-20 w-20"
+            />
+            <div>
+              <p className="text-sm font-medium text-white">Avatar</p>
+              <p className="text-xs text-white/60">
+                Regenerate a unique pattern for your public profile.
+              </p>
+            </div>
           </div>
+          <AvatarRegenerateSection
+            onSaved={async () => {
+              if (!user?.id) return;
+              const data = await fetchUserProfile(user.id);
+              setProfile(data);
+            }}
+          />
         </div>
         <div className="space-y-1 py-2">
           <p className="text-sm text-white/60">Username</p>

@@ -1,8 +1,8 @@
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import type {
-  UserModelDto,
-  GetUserModelsResponse,
-  GetPublicUserCollectionsResponse,
+  UserModelListItemDto,
+  GetUserModelsResult,
+  GetPublicUserCollectionsResult,
 } from "@/lib/api/client";
 
 const UUID_REGEX = /^[a-f0-9-]{36}$/i;
@@ -57,7 +57,7 @@ export async function fetchUserModels(
   username: string,
   page: number,
   pageSize: number
-): Promise<GetUserModelsResponse> {
+): Promise<GetUserModelsResult> {
   const client = ApiClientFactory.getApiClient();
   return client.getUserModels_GetUserPublicModels(username, page, pageSize);
 }
@@ -67,7 +67,7 @@ export async function fetchUserCollections(
   page: number,
   pageSize: number,
   search?: string
-): Promise<GetPublicUserCollectionsResponse> {
+): Promise<GetPublicUserCollectionsResult> {
   const client = ApiClientFactory.getApiClient();
   return client.getPublicUserCollections_GetPublicUserCollections(
     userId,
@@ -79,4 +79,4 @@ export async function fetchUserCollections(
   );
 }
 
-export type { UserModelDto };
+export type { UserModelListItemDto };

@@ -1,7 +1,7 @@
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import type {
   GetAdminModelStatisticsResponse,
-  GetUsersResponse,
+  GetUsersResult,
   PaginatedRolesResponse,
   RoleDto,
   CreateRoleRequest,
@@ -57,7 +57,7 @@ export async function getUsers(
   statusFilter?: string | null,
   sortBy?: string | null,
   sortDescending?: boolean
-): Promise<GetUsersResponse> {
+): Promise<GetUsersResult> {
   return client().getUsers_GetUsers(
     page,
     pageSize,
@@ -78,7 +78,7 @@ export async function banUser(userId: string, request: BanUserRequest): Promise<
 }
 
 export async function unbanUser(userId: string): Promise<void> {
-  return client().banUser_UnbanUser(userId);
+  return client().unbanUser_UnbanUser(userId);
 }
 
 export async function getRoles(

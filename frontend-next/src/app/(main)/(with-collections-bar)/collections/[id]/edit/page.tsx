@@ -6,7 +6,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { collectionsService } from "@/lib/services/collectionsService";
-import { CollectionForm } from "@/components/collections/collection-form";
+import {
+  CollectionForm,
+  type CollectionFormValues,
+} from "@/components/collections/collection-form";
 import { Button } from "@/components/primitives/button";
 
 export default function EditCollectionPage() {
@@ -74,12 +77,7 @@ export default function EditCollectionPage() {
     );
   }
 
-  const handleSubmit = async (values: {
-    name: string;
-    description: string;
-    visibility: "Public" | "Private" | "Unlisted";
-    password?: string;
-  }) => {
+  const handleSubmit = async (values: CollectionFormValues) => {
     setIsSubmitting(true);
     try {
       await collectionsService.updateCollection({
@@ -111,6 +109,7 @@ export default function EditCollectionPage() {
           description: collection.description ?? "",
           visibility: collection.visibility,
           password: "",
+          avatar: collection.avatar,
         }}
         submitLabel="Save Changes"
         onSubmit={handleSubmit}

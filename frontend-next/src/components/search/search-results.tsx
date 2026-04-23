@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Box, Download, FolderOpen, Heart } from "lucide-react";
+import { Box, Download, FolderOpen, Heart, Users } from "lucide-react";
 import { Card } from "@/components/primitives/card";
 import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
 import { UserAvatar } from "@/components/layout/user-avatar";
+import { splitAvatarForDisplay } from "@/lib/avatar/minidenticon";
 import type { SearchResult } from "@/lib/services/searchService";
 import type { Model } from "@/lib/api/client";
 import { formatNumber } from "@/lib/utils/modelUtils";
@@ -30,6 +31,7 @@ function toModel(result: SearchResult): Model {
 }
 
 function UserResultCard({ result }: { result: SearchResult }) {
+  const av = splitAvatarForDisplay(result.avatar);
   return (
     <Link href={`/profile/${result.username ?? result.id}`}>
       <Card
@@ -37,8 +39,10 @@ function UserResultCard({ result }: { result: SearchResult }) {
         className="flex cursor-pointer flex-row items-center gap-4 border-white/20 px-4 py-4 transition-all duration-200 hover:scale-[1.01] hover:bg-white/10"
       >
         <UserAvatar
+          userId={result.id}
           username={result.username ?? result.title}
-          profilePictureUrl={result.avatar}
+          profilePictureUrl={av.profilePictureUrl}
+          avatar={av.storedAvatar}
           size="lg"
         />
         <div className="min-w-0 flex-1">
@@ -149,7 +153,7 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
       {users.length > 0 && (
         <section>
           <h3 className="mb-4 flex items-center gap-2 text-sm font-medium text-white/70">
-            <UserAvatar username="U" size="sm" className="h-4 w-4 text-[8px]" />
+            <Users className="h-4 w-4" />
             Users
             <span className="text-white/40">({users.length})</span>
           </h3>

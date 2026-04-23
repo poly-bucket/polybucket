@@ -28,6 +28,7 @@ import {
   type SearchResults,
 } from "@/lib/services/searchService";
 import { UserAvatar } from "@/components/layout/user-avatar";
+import { splitAvatarForDisplay } from "@/lib/avatar/minidenticon";
 import { formatNumber } from "@/lib/utils/modelUtils";
 
 interface SearchCommandProps {
@@ -221,7 +222,9 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
               heading="Users"
               className="[&_[cmdk-group-heading]]:text-white/50"
             >
-              {users.map((result) => (
+              {users.map((result) => {
+                const av = splitAvatarForDisplay(result.avatar);
+                return (
                 <CommandItem
                   key={`user-${result.id}`}
                   value={`user-${result.id}-${result.title}`}
@@ -229,8 +232,10 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                   className="gap-3 text-white/80 data-[selected=true]:bg-white/10 data-[selected=true]:text-white"
                 >
                   <UserAvatar
+                    userId={result.id}
                     username={result.username ?? result.title}
-                    profilePictureUrl={result.avatar}
+                    profilePictureUrl={av.profilePictureUrl}
+                    avatar={av.storedAvatar}
                     size="sm"
                     className="h-8 w-8"
                   />
@@ -241,7 +246,8 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                   </div>
                   <User className="h-3.5 w-3.5 shrink-0 text-white/30" />
                 </CommandItem>
-              ))}
+                );
+              })}
             </CommandGroup>
           </>
         )}

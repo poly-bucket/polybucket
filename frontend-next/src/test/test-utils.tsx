@@ -11,6 +11,7 @@ export interface MockAuthValue {
   isAuthenticated?: boolean;
   login?: (emailOrUsername: string, password: string) => Promise<LoginResult>;
   logout?: () => void;
+  refreshUserFromMe?: () => Promise<void>;
 }
 
 function createMockAuthProvider(mockValue: MockAuthValue) {
@@ -20,6 +21,7 @@ function createMockAuthProvider(mockValue: MockAuthValue) {
     isAuthenticated: mockValue.isAuthenticated ?? !!mockValue.user?.accessToken,
     login: mockValue.login ?? vi.fn().mockResolvedValue({ success: true } as LoginResult),
     logout: mockValue.logout ?? vi.fn(),
+    refreshUserFromMe: mockValue.refreshUserFromMe ?? vi.fn().mockResolvedValue(undefined),
   };
 
   return function MockAuthProvider({ children }: { children: React.ReactNode }) {

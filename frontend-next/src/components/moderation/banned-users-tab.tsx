@@ -22,14 +22,14 @@ import {
 } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/primitives/pagination";
 import { getBannedUsers, unbanUser } from "@/lib/services/moderationService";
-import type { BannedUserDto } from "@/lib/api/client";
+import type { BannedUserListItemDto } from "@/lib/api/client";
 
 function formatDate(date?: Date | string): string {
   if (!date) return "-";
   return new Date(date).toLocaleString();
 }
 
-function getBanStatusBadge(user: BannedUserDto) {
+function getBanStatusBadge(user: BannedUserListItemDto) {
   if (!user.banExpiresAt) {
     return <Badge variant="destructive" className="bg-red-500/30 text-red-300">Permanent</Badge>;
   }
@@ -62,13 +62,13 @@ function getRoleVariant(roleName?: string): "default" | "secondary" | "destructi
 }
 
 export function BannedUsersTab() {
-  const [bannedUsers, setBannedUsers] = useState<BannedUserDto[]>([]);
+  const [bannedUsers, setBannedUsers] = useState<BannedUserListItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  const [selectedUser, setSelectedUser] = useState<BannedUserDto | null>(null);
+  const [selectedUser, setSelectedUser] = useState<BannedUserListItemDto | null>(null);
   const [unbanning, setUnbanning] = useState(false);
 
   const fetchBannedUsers = useCallback(async () => {

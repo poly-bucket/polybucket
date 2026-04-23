@@ -7,7 +7,7 @@ import { Input } from "@/components/primitives/input";
 import { CollectionCard, mapPublicUserCollectionDtoToCardData } from "@/components/collections/collection-card";
 import { SimplePagination } from "@/components/collections/simple-pagination";
 import { fetchUserCollections } from "@/lib/services/userProfileService";
-import type { PublicUserCollectionDto } from "@/lib/api/client";
+import type { PublicUserCollectionListItemDto } from "@/lib/api/client";
 
 const PAGE_SIZE = 12;
 const DEBOUNCE_MS = 300;
@@ -27,7 +27,7 @@ export function ProfileCollectionsTab({
   onPageChange,
   onSearchChange,
 }: ProfileCollectionsTabProps) {
-  const [collections, setCollections] = useState<PublicUserCollectionDto[]>([]);
+  const [collections, setCollections] = useState<PublicUserCollectionListItemDto[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);

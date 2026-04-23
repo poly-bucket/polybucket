@@ -39,8 +39,10 @@ export function ProfileHeader({ profile, isOwnProfile }: ProfileHeaderProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:gap-4">
         <div className="flex-shrink-0">
           <UserAvatar
+            userId={profile.id ?? ""}
             username={profile.username ?? ""}
             profilePictureUrl={profile.profilePictureUrl}
+            avatar={profile.avatar}
             size="lg"
             className="h-20 w-20"
           />

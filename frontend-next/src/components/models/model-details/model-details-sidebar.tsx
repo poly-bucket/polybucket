@@ -70,7 +70,10 @@ export function ModelDetailsSidebar({
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
             <UserAvatar
+              userId={model.author?.id ?? model.authorId ?? ""}
               username={authorName}
+              profilePictureUrl={model.author?.profilePictureUrl}
+              avatar={model.author?.avatar}
               size="md"
             />
             <div>

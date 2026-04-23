@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/primitives/button";
+import { resolvedImageSrcFromAvatarField } from "@/lib/avatar/minidenticon";
 
 export interface CollectionCardData {
   id: string;
@@ -200,7 +201,9 @@ export function mapPublicUserCollectionDtoToCardData(
     description: dto.description,
     visibility: dto.visibility,
     modelCount: dto.modelCount,
-    thumbnailUrl: dto.avatar?.startsWith("http") ? dto.avatar : undefined,
+    thumbnailUrl: dto.avatar
+      ? resolvedImageSrcFromAvatarField(dto.avatar) ?? undefined
+      : undefined,
   };
 }
 
@@ -216,9 +219,11 @@ export function mapCollectionToCardData(
     avatar?: string;
   }
 ): CollectionCardData {
-  const thumbnailUrl =
-    collection.collectionModels?.[0]?.model?.thumbnailUrl ??
-    (collection.avatar?.startsWith("http") ? collection.avatar : undefined);
+  const fromModel = collection.collectionModels?.[0]?.model?.thumbnailUrl;
+  const fromAvatar = collection.avatar
+    ? resolvedImageSrcFromAvatarField(collection.avatar) ?? undefined
+    : undefined;
+  const thumbnailUrl = fromModel ?? fromAvatar;
   return {
     id: collection.id,
     name: collection.name,

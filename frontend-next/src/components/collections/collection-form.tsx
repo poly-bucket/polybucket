@@ -1,16 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/primitives/card";
 import { Input } from "@/components/primitives/input";
 import { Button } from "@/components/primitives/button";
 import { cn } from "@/lib/utils";
+import {
+  minidenticonSvg,
+  svgToDataUrl,
+  maxCollectionAvatarSvgLength,
+  resolvedImageSrcFromAvatarField,
+} from "@/lib/avatar/minidenticon";
+import { Shuffle } from "lucide-react";
 
 export interface CollectionFormValues {
   name: string;
   description: string;
   visibility: "Public" | "Private" | "Unlisted";
   password?: string;
+  /** Raw SVG from minidenticon, sent to API */
+  avatar?: string;
 }
 
 interface CollectionFormProps {
@@ -23,6 +32,22 @@ interface CollectionFormProps {
 
 const NAME_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 500;
+
+function randomSalt(): string {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+function initialIconMode(
+  initialAvatar: string | undefined
+): "keep" | "generate" {
+  return initialAvatar?.trim() ? "keep" : "generate";
+}
 
 export function CollectionForm({
   initialValues,
@@ -40,15 +65,61 @@ export function CollectionForm({
   >(initialValues?.visibility ?? "Private");
   const [password, setPassword] = useState(initialValues?.password ?? "");
   const [error, setError] = useState("");
+  const [iconMode, setIconMode] = useState<"keep" | "generate">(() =>
+    initialIconMode(initialValues?.avatar)
+  );
+  const [keptAvatarSvg, setKeptAvatarSvg] = useState(
+    () => initialValues?.avatar?.trim() ?? ""
+  );
+  const [collectionSalt, setCollectionSalt] = useState(() => randomSalt());
+
+  const generatedAvatarSvg = useMemo(() => {
+    if (iconMode !== "generate" || !collectionSalt || !name.trim()) {
+      return "";
+    }
+    return minidenticonSvg(`${name.trim()}-${collectionSalt}`, 50, 50);
+  }, [name, collectionSalt, iconMode]);
+
+  const generatedPreviewSrc = useMemo(
+    () => (generatedAvatarSvg ? svgToDataUrl(generatedAvatarSvg) : ""),
+    [generatedAvatarSvg]
+  );
+
+  const keptPreviewSrc = useMemo(() => {
+    if (!keptAvatarSvg) return "";
+    return (
+      resolvedImageSrcFromAvatarField(keptAvatarSvg) ?? svgToDataUrl(keptAvatarSvg)
+    );
+  }, [keptAvatarSvg]);
+
+  const showIconRow =
+    (iconMode === "keep" && keptPreviewSrc) ||
+    (iconMode === "generate" && generatedPreviewSrc);
+
+  const displayPreviewSrc =
+    iconMode === "keep" ? keptPreviewSrc : generatedPreviewSrc;
+
+  const reshuffleSalt = useCallback(() => {
+    setIconMode("generate");
+    setCollectionSalt(randomSalt());
+  }, []);
 
   useEffect(() => {
-    if (initialValues) {
-      setName(initialValues.name ?? "");
-      setDescription(initialValues.description ?? "");
-      setVisibility(initialValues.visibility ?? "Private");
-      setPassword(initialValues.password ?? "");
-    }
-  }, [initialValues]);
+    if (initialValues == null) return;
+    setName(initialValues.name ?? "");
+    setDescription(initialValues.description ?? "");
+    setVisibility(initialValues.visibility ?? "Private");
+    setPassword(initialValues.password ?? "");
+    const next = initialValues.avatar?.trim() ?? "";
+    setKeptAvatarSvg(next);
+    setIconMode(initialIconMode(initialValues.avatar));
+  }, [
+    initialValues?.name,
+    initialValues?.description,
+    initialValues?.visibility,
+    initialValues?.password,
+    initialValues?.avatar,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,12 +128,24 @@ export function CollectionForm({
       setError("Collection name is required");
       return;
     }
+    const payloadAvatar =
+      iconMode === "keep" && keptAvatarSvg
+        ? keptAvatarSvg
+        : generatedAvatarSvg || undefined;
+    if (
+      payloadAvatar &&
+      payloadAvatar.length > maxCollectionAvatarSvgLength
+    ) {
+      setError("Collection icon is too large. Try a new pattern.");
+      return;
+    }
     try {
       await onSubmit({
         name: name.trim(),
         description: description.trim(),
         visibility,
         password: visibility === "Unlisted" ? password.trim() || undefined : undefined,
+        avatar: payloadAvatar,
       });
     } catch {
       setError("Something went wrong. Please try again.");
@@ -95,6 +178,36 @@ export function CollectionForm({
                 {name.length}/{NAME_MAX_LENGTH} characters
               </p>
             </div>
+
+            {showIconRow && displayPreviewSrc && (
+              <div className="flex flex-wrap items-center gap-4 rounded-md border border-white/15 bg-white/5 p-3">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-white/10">
+                  <img
+                    src={displayPreviewSrc}
+                    alt=""
+                    className="h-full w-full [image-rendering:pixelated]"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-white">Collection icon</p>
+                  <p className="text-xs text-white/50">
+                    {iconMode === "keep"
+                      ? "Current icon. Use new pattern to replace it with a generated one."
+                      : "Generated from the name and a random seed. Use new pattern to change it."}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={reshuffleSalt}
+                  className="min-h-11 min-w-[11rem] shrink-0"
+                >
+                  <Shuffle className="mr-1.5 h-4 w-4" />
+                  New pattern
+                </Button>
+              </div>
+            )}
 
             <div className="space-y-2">
               <label htmlFor="collection-description" className="text-sm font-medium text-white">

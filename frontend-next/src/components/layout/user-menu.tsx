@@ -114,7 +114,13 @@ export function UserMenu({ isOpen, onClose, anchorRef, ...props }: UserMenuProps
       >
         <div className="border-b border-white/20 px-4 py-3">
           <div className="flex items-center gap-3">
-            <UserAvatar username={user?.username ?? ""} size="md" />
+            <UserAvatar
+              userId={user?.id ?? ""}
+              username={user?.username ?? ""}
+              profilePictureUrl={user?.profilePictureUrl}
+              avatar={user?.avatar}
+              size="md"
+            />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-white">
                 {user?.username}

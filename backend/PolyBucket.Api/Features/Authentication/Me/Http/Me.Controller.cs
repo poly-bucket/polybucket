@@ -54,6 +54,7 @@ namespace PolyBucket.Api.Features.Authentication.Me.Http
                     RequiresPasswordChange = user.RequiresPasswordChange,
                     HasCompletedFirstTimeSetup = user.HasCompletedFirstTimeSetup,
                     Avatar = user.Avatar,
+                    ProfilePictureUrl = user.ProfilePictureUrl,
                     Settings = user.Settings != null ? new UserSettingsResponse
                     {
                         Language = user.Settings.Language,
@@ -86,6 +87,7 @@ namespace PolyBucket.Api.Features.Authentication.Me.Http
         public bool RequiresPasswordChange { get; set; }
         public bool HasCompletedFirstTimeSetup { get; set; }
         public string? Avatar { get; set; }
+        public string? ProfilePictureUrl { get; set; }
         public UserSettingsResponse? Settings { get; set; }
     }
 

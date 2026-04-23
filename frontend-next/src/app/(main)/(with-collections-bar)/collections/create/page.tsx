@@ -17,6 +17,7 @@ export default function CreateCollectionPage() {
     description: string;
     visibility: "Public" | "Private" | "Unlisted";
     password?: string;
+    avatar?: string;
   }) => {
     setIsSubmitting(true);
     try {
@@ -25,6 +26,7 @@ export default function CreateCollectionPage() {
         description: values.description || undefined,
         visibility: values.visibility,
         password: values.password,
+        avatar: values.avatar,
       });
       router.push(`/collections/${collection.id}`);
     } finally {

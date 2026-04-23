@@ -99,7 +99,13 @@ export function NavigationBar() {
                   onClick={() => setIsUserMenuOpen((prev) => !prev)}
                   className="flex h-full items-center gap-1 rounded p-0.5 transition-colors duration-200 hover:bg-white/10"
                 >
-                  <UserAvatar username={user?.username ?? ""} size="sm" />
+                  <UserAvatar
+                    userId={user?.id ?? ""}
+                    username={user?.username ?? ""}
+                    profilePictureUrl={user?.profilePictureUrl}
+                    avatar={user?.avatar}
+                    size="sm"
+                  />
                   <ChevronDown className="h-3 w-3 text-white/60" strokeWidth={2} />
                 </button>
               ) : (

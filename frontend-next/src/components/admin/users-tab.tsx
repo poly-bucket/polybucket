@@ -49,11 +49,11 @@ import {
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { formatDate } from "@/lib/utils/format";
 import { toast } from "sonner";
-import type { UserDto, RoleDto } from "@/lib/api/client";
+import type { UserListItemDto, RoleDto } from "@/lib/api/client";
 import { BanUserRequest, CreateUserCommand } from "@/lib/api/client";
 
 export function UsersTab() {
-  const [users, setUsers] = useState<UserDto[]>([]);
+  const [users, setUsers] = useState<UserListItemDto[]>([]);
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export function UsersTab() {
   });
   const [banDialog, setBanDialog] = useState<{
     open: boolean;
-    user: UserDto | null;
+    user: UserListItemDto | null;
     isBan: boolean;
     reason: string;
   }>({ open: false, user: null, isBan: true, reason: "" });
@@ -217,7 +217,7 @@ export function UsersTab() {
     }
   };
 
-  const openBanDialog = (user: UserDto, isBan: boolean) => {
+  const openBanDialog = (user: UserListItemDto, isBan: boolean) => {
     setBanDialog({ open: true, user, isBan, reason: "" });
   };
 

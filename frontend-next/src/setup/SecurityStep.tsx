@@ -1,7 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { svgToDataUrl, previewUserAvatarSvg } from "@/lib/avatar/minidenticon";
+import { regenerateUserAvatar } from "@/lib/services/avatarService";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import {
   ChangePasswordCommand,
@@ -31,6 +35,34 @@ export default function SecurityStep({
   onBack,
   isFirstStep,
 }: SecurityStepProps) {
+  const { user, refreshUserFromMe } = useAuth();
+  const [setupAvatarSalt, setSetupAvatarSalt] = useState("");
+  const [setupAvatarSaving, setSetupAvatarSaving] = useState(false);
+  const setupAvatarPreview = useMemo(
+    () =>
+      user?.id
+        ? svgToDataUrl(
+            previewUserAvatarSvg(user.id, setupAvatarSalt || undefined)
+          )
+        : "",
+    [user?.id, setupAvatarSalt]
+  );
+
+  const handleSaveSetupAvatar = async () => {
+    if (!user?.id) return;
+    setSetupAvatarSaving(true);
+    try {
+      await regenerateUserAvatar(setupAvatarSalt.trim() || undefined);
+      await refreshUserFromMe();
+      toast.success("Avatar saved");
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not save avatar");
+    } finally {
+      setSetupAvatarSaving(false);
+    }
+  };
+
   const [phase, setPhase] = useState<SecurityPhase>("password");
   const [formData, setFormData] = useState({
     currentPassword: "",
@@ -430,6 +462,49 @@ export default function SecurityStep({
           enable two-factor authentication.
         </p>
       </div>
+
+      {user?.id && setupAvatarPreview && (
+        <div className="space-y-3 rounded-md border border-white/15 bg-white/5 p-4">
+          <p className="text-sm font-medium text-white">Your avatar</p>
+          <p className="text-xs text-white/50">
+            Optional: save a default pattern for your account. The stored image
+            may differ slightly from the preview.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-white/20">
+              <img
+                src={setupAvatarPreview}
+                alt=""
+                className="h-full w-full [image-rendering:pixelated]"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <label
+                htmlFor="setup-avatar-salt"
+                className="mb-1 block text-xs text-white/60"
+              >
+                Tweak the pattern (optional)
+              </label>
+              <Input
+                id="setup-avatar-salt"
+                value={setupAvatarSalt}
+                onChange={(e) => setSetupAvatarSalt(e.target.value)}
+                maxLength={50}
+                className={inputClass}
+                disabled={setupAvatarSaving}
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={handleSaveSetupAvatar}
+              disabled={setupAvatarSaving}
+              className="h-11 min-w-[8rem] shrink-0"
+            >
+              {setupAvatarSaving ? "Saving…" : "Save avatar"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         <div>

@@ -5,7 +5,7 @@ import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
 import { SimplePagination } from "@/components/collections/simple-pagination";
 import { fetchUserModels } from "@/lib/services/userProfileService";
 import type { Model } from "@/lib/api/client";
-import type { UserModelDto } from "@/lib/api/client";
+import type { UserModelListItemDto } from "@/lib/api/client";
 
 const PAGE_SIZE = 12;
 
@@ -16,7 +16,7 @@ interface ProfileModelsTabProps {
   onPageChange: (page: number) => void;
 }
 
-function mapToModel(userModel: UserModelDto, authorUsername: string): Model {
+function mapToModel(userModel: UserModelListItemDto, authorUsername: string): Model {
   return {
     ...userModel,
     author: { username: authorUsername },
@@ -30,7 +30,7 @@ export function ProfileModelsTab({
   page,
   onPageChange,
 }: ProfileModelsTabProps) {
-  const [models, setModels] = useState<UserModelDto[]>([]);
+  const [models, setModels] = useState<UserModelListItemDto[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);

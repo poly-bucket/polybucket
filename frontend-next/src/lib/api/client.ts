@@ -27484,6 +27484,7 @@ export class MeResponse implements IMeResponse {
     requiresPasswordChange?: boolean;
     hasCompletedFirstTimeSetup?: boolean;
     avatar?: string | undefined;
+    profilePictureUrl?: string | undefined;
     settings?: UserSettingsResponse | undefined;
 
     constructor(data?: IMeResponse) {
@@ -27508,6 +27509,7 @@ export class MeResponse implements IMeResponse {
             this.requiresPasswordChange = _data["requiresPasswordChange"];
             this.hasCompletedFirstTimeSetup = _data["hasCompletedFirstTimeSetup"];
             this.avatar = _data["avatar"];
+            this.profilePictureUrl = _data["profilePictureUrl"];
             this.settings = _data["settings"] ? UserSettingsResponse.fromJS(_data["settings"]) : undefined as any;
         }
     }
@@ -27532,6 +27534,7 @@ export class MeResponse implements IMeResponse {
         data["requiresPasswordChange"] = this.requiresPasswordChange;
         data["hasCompletedFirstTimeSetup"] = this.hasCompletedFirstTimeSetup;
         data["avatar"] = this.avatar;
+        data["profilePictureUrl"] = this.profilePictureUrl;
         data["settings"] = this.settings ? this.settings.toJSON() : undefined as any;
         return data;
     }
@@ -27549,6 +27552,7 @@ export interface IMeResponse {
     requiresPasswordChange?: boolean;
     hasCompletedFirstTimeSetup?: boolean;
     avatar?: string | undefined;
+    profilePictureUrl?: string | undefined;
     settings?: UserSettingsResponse | undefined;
 }
 

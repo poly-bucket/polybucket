@@ -3,7 +3,7 @@ import {
   ResolveReportRequest,
   type ReportsResponse,
   type ReportsAnalytics,
-  type BannedUsersResponse,
+  type BannedUsersListResponse,
   type ModerationAuditResponse,
   type ReportType,
   type TopReportedItem,
@@ -30,7 +30,7 @@ export async function getReportsAnalytics(
   fromDate?: Date | null,
   toDate?: Date | null
 ): Promise<ReportsAnalytics> {
-  return client().getReportsAnalytics_GetReportsAnalytics(
+  return client().getReportAnalytics_GetReportsAnalytics(
     fromDate ?? null,
     toDate ?? null
   );
@@ -39,26 +39,26 @@ export async function getReportsAnalytics(
 export async function getTopReportedModels(
   limit?: number
 ): Promise<TopReportedItem[]> {
-  return client().getReportsAnalytics_GetTopReportedModels(limit ?? 10);
+  return client().getReportAnalytics_GetTopReportedModels(limit ?? 10);
 }
 
 export async function getTopReportedUsers(
   limit?: number
 ): Promise<TopReportedItem[]> {
-  return client().getReportsAnalytics_GetTopReportedUsers(limit ?? 10);
+  return client().getReportAnalytics_GetTopReportedUsers(limit ?? 10);
 }
 
 export async function getTopReportedComments(
   limit?: number
 ): Promise<TopReportedItem[]> {
-  return client().getReportsAnalytics_GetTopReportedComments(limit ?? 10);
+  return client().getReportAnalytics_GetTopReportedComments(limit ?? 10);
 }
 
 export async function getModeratorActivity(
   fromDate?: Date | null,
   toDate?: Date | null
 ): Promise<ModeratorActivity[]> {
-  return client().getReportsAnalytics_GetModeratorActivity(
+  return client().getReportAnalytics_GetModeratorActivity(
     fromDate ?? null,
     toDate ?? null
   );
@@ -75,12 +75,12 @@ export async function resolveReport(
 export async function getBannedUsers(
   page?: number,
   pageSize?: number
-): Promise<BannedUsersResponse> {
-  return client().banUser_GetBannedUsers(page ?? 1, pageSize ?? 20);
+): Promise<BannedUsersListResponse> {
+  return client().getBannedUsers_GetBannedUsers(page ?? 1, pageSize ?? 20);
 }
 
 export async function unbanUser(userId: string): Promise<void> {
-  await client().banUser_UnbanUser(userId);
+  await client().unbanUser_UnbanUser(userId);
 }
 
 export async function getModerationAuditLogs(
