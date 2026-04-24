@@ -53,7 +53,7 @@ describe("CollectionDetailsPage", () => {
 
   it("shows loading skeleton initially then collection content", async () => {
     render(<CollectionDetailsPage />, {
-      mockAuth: { user: { id: "user-1", username: "alice", accessToken: "x" } },
+      mockAuth: { user: { id: "user-1", email: "alice@test.com", username: "alice", accessToken: "x" } },
     });
 
     await waitFor(() => {
@@ -69,7 +69,7 @@ describe("CollectionDetailsPage", () => {
     });
 
     render(<CollectionDetailsPage />, {
-      mockAuth: { user: { id: "user-1", username: "alice", accessToken: "x" } },
+      mockAuth: { user: { id: "user-1", email: "alice@test.com", username: "alice", accessToken: "x" } },
     });
 
     await waitFor(() => {
@@ -83,7 +83,7 @@ describe("CollectionDetailsPage", () => {
     );
 
     render(<CollectionDetailsPage />, {
-      mockAuth: { user: { id: "user-1", username: "alice", accessToken: "x" } },
+      mockAuth: { user: { id: "user-1", email: "alice@test.com", username: "alice", accessToken: "x" } },
     });
 
     await waitFor(() => {
@@ -93,7 +93,7 @@ describe("CollectionDetailsPage", () => {
 
   it("shows Edit and Delete for owner", async () => {
     render(<CollectionDetailsPage />, {
-      mockAuth: { user: { id: "user-1", username: "alice", accessToken: "x" } },
+      mockAuth: { user: { id: "user-1", email: "alice@test.com", username: "alice", accessToken: "x" } },
     });
 
     await waitFor(() => {
@@ -105,7 +105,7 @@ describe("CollectionDetailsPage", () => {
 
   it("does not show Edit/Delete for non-owner", async () => {
     render(<CollectionDetailsPage />, {
-      mockAuth: { user: { id: "other-user", username: "bob", accessToken: "x" } },
+      mockAuth: { user: { id: "other-user", email: "bob@test.com", username: "bob", accessToken: "x" } },
     });
 
     await waitFor(() => {
@@ -120,7 +120,7 @@ describe("CollectionDetailsPage", () => {
     vi.mocked(collectionsService.deleteCollection).mockResolvedValue(undefined);
 
     render(<CollectionDetailsPage />, {
-      mockAuth: { user: { id: "user-1", username: "alice", accessToken: "x" } },
+      mockAuth: { user: { id: "user-1", email: "alice@test.com", username: "alice", accessToken: "x" } },
     });
 
     await waitFor(() => {

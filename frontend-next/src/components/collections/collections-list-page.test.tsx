@@ -19,7 +19,7 @@ vi.mock("@/lib/services/collectionsService", () => ({
 
 import { collectionsService } from "@/lib/services/collectionsService";
 
-const mockUser = { id: "user-1", username: "alice", accessToken: "token" };
+const mockUser = { id: "user-1", email: "alice@test.com", username: "alice", accessToken: "token" };
 
 describe("CollectionsListPage", () => {
   beforeEach(() => {

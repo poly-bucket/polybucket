@@ -6,8 +6,7 @@ import type {
   GetModelByIdResponse,
   ApiException,
 } from "@/lib/api/client";
-
-const AUTH_STORAGE_KEY = "polybucket-auth";
+import { AUTH_STORAGE_KEY } from "@/lib/auth/authConstants";
 
 export const RECENT_MODELS_PAGE_SIZE = 12;
 export const RECENT_MODELS_SKELETON_COUNT = 8;

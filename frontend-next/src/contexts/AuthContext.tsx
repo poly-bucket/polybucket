@@ -1,22 +1,20 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  getOrCreateRefreshPromise,
+  getStoredUser,
+  isSessionRestorable,
+  type AuthUser,
+  persistUser,
+  subscribeAuthSession,
+} from "@/lib/auth/authSession";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
-import { extractUserFromJWT } from "@/lib/utils/jwtUtils";
+import { isAxiosError } from "axios";
+import { decodeJWT, extractUserFromJWT, isTokenExpired } from "@/lib/utils/jwtUtils";
 import { LoginCommand, type LoginCommandResponse } from "@/lib/api/client";
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  username: string;
-  accessToken: string;
-  refreshToken?: string;
-  roles?: string[];
-  requiresFirstTimeSetup?: boolean;
-  setupStep?: string;
-  avatar?: string;
-  profilePictureUrl?: string;
-}
+export type { AuthUser } from "@/lib/auth/authSession";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -36,42 +34,6 @@ export interface LoginResult {
   error?: string;
 }
 
-const AUTH_STORAGE_KEY = "polybucket-auth";
-const AUTH_SESSION_COOKIE = "polybucket-session";
-
-function setSessionCookie(present: boolean): void {
-  if (typeof document === "undefined") return;
-  if (present) {
-    document.cookie = `${AUTH_SESSION_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-  } else {
-    document.cookie = `${AUTH_SESSION_COOKIE}=; path=/; max-age=0`;
-  }
-}
-
-function loadStoredUser(): AuthUser | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!stored) return null;
-    const parsed = JSON.parse(stored) as AuthUser;
-    if (!parsed.accessToken) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function saveUser(user: AuthUser | null): void {
-  if (typeof window === "undefined") return;
-  if (user) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-    setSessionCookie(true);
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    setSessionCookie(false);
-  }
-}
-
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -79,55 +41,142 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUserFromMe = useCallback(async () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      return;
+    }
+    const u = getStoredUser();
+    if (!u?.accessToken?.trim()) {
+      return;
+    }
     try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (!stored) return;
-      const parsed = JSON.parse(stored) as AuthUser;
-      if (!parsed.accessToken?.trim()) return;
-
       const me = await ApiClientFactory.getApiClient().me_GetCurrentUser();
-      setUser((prev) => {
-        if (!prev?.accessToken) return prev;
-        const next: AuthUser = {
-          ...prev,
-          avatar: me.avatar ?? undefined,
-          profilePictureUrl: me.profilePictureUrl ?? undefined,
-        };
-        saveUser(next);
-        return next;
-      });
-    } catch {
-      // 401: optional logout; keep existing session behavior
+      const cur = getStoredUser();
+      if (!cur?.accessToken) {
+        return;
+      }
+      const next: AuthUser = {
+        ...cur,
+        avatar: me.avatar ?? cur.avatar,
+        profilePictureUrl: me.profilePictureUrl ?? cur.profilePictureUrl,
+      };
+      persistUser(next);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 401) {
+        setUser(getStoredUser());
+      }
     }
   }, []);
 
   useEffect(() => {
-    const stored = loadStoredUser();
-    setUser(stored);
-    if (stored) setSessionCookie(true);
+    const unsubscribe = subscribeAuthSession(setUser);
+    let s = getStoredUser();
+    if (s && !isSessionRestorable(s)) {
+      persistUser(null);
+      s = getStoredUser();
+    }
+    setUser(s);
     setIsLoading(false);
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
-    if (isLoading || !user?.accessToken) return;
+    if (isLoading) {
+      return;
+    }
+    if (!user) {
+      return;
+    }
+    if (!user.accessToken?.trim()) {
+      return;
+    }
+    if (isTokenExpired(user.accessToken) && user.refreshToken) {
+      void getOrCreateRefreshPromise();
+    }
+  }, [isLoading, user]);
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+    if (!user?.accessToken) {
+      return;
+    }
+    if (!user.refreshToken) {
+      return;
+    }
+    const payload = decodeJWT(user.accessToken);
+    if (!payload?.exp) {
+      return;
+    }
+    const expMs = payload.exp * 1000;
+    const runAt = expMs - 60_000;
+    const delay = runAt - Date.now();
+    if (delay < 0) {
+      return;
+    }
+    const t = setTimeout(() => {
+      if (getStoredUser()?.accessToken) {
+        void getOrCreateRefreshPromise().then(() => setUser(getStoredUser()));
+      }
+    }, delay);
+    return () => clearTimeout(t);
+  }, [isLoading, user?.accessToken, user?.refreshToken]);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || isLoading) {
+      return;
+    }
+    if (!user?.accessToken) {
+      return;
+    }
+    if (!user.refreshToken) {
+      return;
+    }
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      const s = getStoredUser();
+      if (!s?.accessToken) {
+        return;
+      }
+      if (isTokenExpired(s.accessToken)) {
+        void getOrCreateRefreshPromise().then((ok) => {
+          if (ok) {
+            setUser(getStoredUser());
+          }
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [isLoading, user?.accessToken, user?.refreshToken]);
+
+  useEffect(() => {
+    if (isLoading || !user?.accessToken) {
+      return;
+    }
     let active = true;
     void (async () => {
       try {
         const me = await ApiClientFactory.getApiClient().me_GetCurrentUser();
-        if (!active) return;
-        setUser((prev) => {
-          if (!prev?.accessToken) return prev;
-          const next: AuthUser = {
-            ...prev,
-            avatar: me.avatar ?? undefined,
-            profilePictureUrl: me.profilePictureUrl ?? undefined,
-          };
-          saveUser(next);
-          return next;
-        });
-      } catch {
-        /* ignore */
+        if (!active) {
+          return;
+        }
+        const cur = getStoredUser();
+        if (!cur?.accessToken) {
+          return;
+        }
+        const next: AuthUser = {
+          ...cur,
+          avatar: me.avatar ?? cur.avatar,
+          profilePictureUrl: me.profilePictureUrl ?? cur.profilePictureUrl,
+        };
+        persistUser(next);
+      } catch (err) {
+        if (isAxiosError(err) && err.response?.status === 401 && active) {
+          setUser(getStoredUser());
+        }
       }
     })();
     return () => {
@@ -172,8 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setupStep: response.setupStep,
         };
 
-        setUser(authUser);
-        saveUser(authUser);
+        persistUser(authUser);
 
         return {
           success: true,
@@ -192,14 +240,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    setUser(null);
-    saveUser(null);
+    persistUser(null);
   }, []);
 
   const value: AuthContextValue = {
     user,
     isLoading,
-    isAuthenticated: Boolean(user?.accessToken),
+    isAuthenticated: isSessionRestorable(user),
     login,
     logout,
     refreshUserFromMe,

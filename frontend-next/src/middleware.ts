@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { AUTH_SESSION_COOKIE } from "@/lib/auth/authConstants";
 
 const PROTECTED_PATHS = [
   "/setup",
@@ -10,7 +11,6 @@ const PROTECTED_PATHS = [
   "/admin",
   "/moderation",
 ];
-const AUTH_SESSION_COOKIE = "polybucket-session";
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PATHS.some(

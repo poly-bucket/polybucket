@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import type { Model } from "@/lib/api/client";
 import { getApiConfig } from "@/lib/api/config";
+import { getStoredUser } from "@/lib/auth/authSession";
 import FileDropZone from "../file-drop-zone";
 import FileQueue, { type UploadedFile } from "../file-queue";
 import { Input } from "@/components/primitives/input";
@@ -130,10 +131,7 @@ export function ModelVersionManager({
 
     setIsSubmitting(true);
     try {
-      const token =
-        typeof window !== "undefined"
-          ? JSON.parse(localStorage.getItem("polybucket-auth") ?? "{}")?.accessToken
-          : null;
+      const token = typeof window !== "undefined" ? getStoredUser()?.accessToken : null;
       if (!token) {
         toast.error("Authentication required");
         return;

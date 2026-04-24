@@ -55,7 +55,7 @@ describe("AddToCollectionCard", () => {
 
   it("returns null when model has no id", () => {
     const { container } = render(
-      <AddToCollectionCard model={{ ...mockModel, id: undefined } as never} isOwner={false} />
+      <AddToCollectionCard model={{ ...(mockModel as Record<string, unknown>), id: undefined } as never} isOwner={false} />
     );
     expect(container.firstChild).toBeNull();
   });
