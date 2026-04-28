@@ -23,5 +23,7 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
 
         [StringLength(100, MinimumLength = 4)]
         public string? Password { get; set; }
+
+        public string? Avatar { get; set; }
     }
 } 

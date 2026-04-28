@@ -5,9 +5,10 @@ import { previewUserAvatarSvg } from "@/lib/avatar/minidenticon";
 const api = () => ApiClientFactory.getApiClient();
 
 export async function regenerateUserAvatar(
-  salt?: string
+  salt?: string,
+  avatar?: string
 ): Promise<{ avatar: string; userId?: string }> {
-  const request = new RegenerateAvatarRequest({ salt });
+  const request = new RegenerateAvatarRequest({ salt, avatar });
   const response = await api().regenerateAvatar_RegenerateAvatar(request);
   if (!response?.avatar) {
     throw new Error("Regenerate did not return an avatar");

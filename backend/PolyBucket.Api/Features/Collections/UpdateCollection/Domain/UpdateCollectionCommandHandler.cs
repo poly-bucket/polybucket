@@ -42,6 +42,7 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
             collection.Name = request.Name ?? collection.Name;
             collection.Description = request.Description ?? collection.Description;
             collection.Visibility = request.Visibility ?? collection.Visibility;
+            collection.Avatar = request.Avatar ?? collection.Avatar;
 
             // Handle password for unlisted collections
             if (request.Visibility == CollectionVisibility.Unlisted || collection.Visibility == CollectionVisibility.Unlisted)

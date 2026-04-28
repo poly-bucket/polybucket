@@ -1,5 +1,5 @@
 import { ApiClientFactory } from "@/lib/api/clientFactory";
-import { UpdateUserSettingsRequest } from "@/lib/api/client";
+import { ApiException, type GetUserSettingsResult, UpdateUserSettingsRequest } from "@/lib/api/client";
 
 const api = () => ApiClientFactory.getApiClient();
 
@@ -34,8 +34,8 @@ export function getDefaultSettings(): UserSettingsData {
 
 export async function getUserSettings(): Promise<UserSettingsData | null> {
   try {
-    const response = await api().getUserSettings_GetUserSettings();
-    const settings = (response as { settings?: UserSettingsData })?.settings;
+    const response: GetUserSettingsResult = await api().getUserSettings_GetUserSettings();
+    const settings = response?.settings;
     if (!settings) return getDefaultSettings();
     return {
       language: settings.language ?? "en",
@@ -51,6 +51,19 @@ export async function getUserSettings(): Promise<UserSettingsData | null> {
       gridColumns: settings.gridColumns ?? 4,
     };
   } catch (error) {
+    const status = (() => {
+      if (ApiException.isApiException(error)) return error.status;
+      if (typeof error === "object" && error !== null && "status" in error) {
+        const maybeStatus = (error as { status?: unknown }).status;
+        return typeof maybeStatus === "number" ? maybeStatus : undefined;
+      }
+      return undefined;
+    })();
+
+    if (status === 401 || status === 404) {
+      return getDefaultSettings();
+    }
+
     console.error("Error fetching user settings:", error);
     return getDefaultSettings();
   }

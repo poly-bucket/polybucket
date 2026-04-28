@@ -30,10 +30,10 @@ namespace PolyBucket.Api.Features.Users.RegenerateAvatar.Http
                     return Unauthorized("Invalid authentication token");
                 }
 
-                var response = await _regenerateAvatarService.RegenerateAvatarAsync(userId, request.Salt);
+                var response = await _regenerateAvatarService.RegenerateAvatarAsync(userId, request.Salt, request.Avatar);
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "An error occurred while regenerating the avatar" });
             }

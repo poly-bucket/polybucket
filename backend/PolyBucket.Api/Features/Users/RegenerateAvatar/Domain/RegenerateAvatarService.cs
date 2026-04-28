@@ -10,7 +10,7 @@ namespace PolyBucket.Api.Features.Users.RegenerateAvatar.Domain
         private readonly IRegenerateAvatarRepository _repository = repository;
         private readonly IAvatarService _avatarService = avatarService;
 
-        public async Task<RegenerateAvatarResponse> RegenerateAvatarAsync(Guid userId, string? salt)
+        public async Task<RegenerateAvatarResponse> RegenerateAvatarAsync(Guid userId, string? salt, string? avatar)
         {
             var user = await _repository.GetUserByIdAsync(userId);
             if (user == null)
@@ -18,16 +18,17 @@ namespace PolyBucket.Api.Features.Users.RegenerateAvatar.Domain
                 throw new KeyNotFoundException($"User with ID {userId} not found");
             }
 
-            // Generate avatar using the new method
-            var avatar = _avatarService.GenerateUserAvatar(userId, salt);
+            var nextAvatar = string.IsNullOrWhiteSpace(avatar)
+                ? _avatarService.GenerateUserAvatar(userId, salt)
+                : avatar;
 
             // Update user's avatar in database
-            user.Avatar = avatar;
+            user.Avatar = nextAvatar;
             await _repository.UpdateUserAsync(user);
 
             return new RegenerateAvatarResponse
             {
-                Avatar = avatar,
+                Avatar = nextAvatar,
                 UserId = userId,
                 Salt = salt
             };

@@ -86,6 +86,7 @@ export default function EditCollectionPage() {
         description: values.description || undefined,
         visibility: values.visibility,
         password: values.password,
+        avatar: values.avatar,
       });
       router.push(`/collections/${collection.id}`);
     } finally {

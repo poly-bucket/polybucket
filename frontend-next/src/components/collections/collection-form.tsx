@@ -11,7 +11,7 @@ import {
   maxCollectionAvatarSvgLength,
   resolvedImageSrcFromAvatarField,
 } from "@/lib/avatar/minidenticon";
-import { Shuffle } from "lucide-react";
+import { Lock, LockOpen, RefreshCw } from "lucide-react";
 
 export interface CollectionFormValues {
   name: string;
@@ -45,8 +45,8 @@ function randomSalt(): string {
 
 function initialIconMode(
   initialAvatar: string | undefined
-): "keep" | "generate" {
-  return initialAvatar?.trim() ? "keep" : "generate";
+): "upload" | "generate" {
+  return initialAvatar?.trim() ? "upload" : "generate";
 }
 
 export function CollectionForm({
@@ -65,44 +65,84 @@ export function CollectionForm({
   >(initialValues?.visibility ?? "Private");
   const [password, setPassword] = useState(initialValues?.password ?? "");
   const [error, setError] = useState("");
-  const [iconMode, setIconMode] = useState<"keep" | "generate">(() =>
+  const [iconMode, setIconMode] = useState<"upload" | "generate">(() =>
     initialIconMode(initialValues?.avatar)
   );
-  const [keptAvatarSvg, setKeptAvatarSvg] = useState(
+  const [uploadedAvatar, setUploadedAvatar] = useState(
     () => initialValues?.avatar?.trim() ?? ""
   );
   const [collectionSalt, setCollectionSalt] = useState(() => randomSalt());
+  const [isSeedLocked, setIsSeedLocked] = useState(false);
+  const [lockedNameSeed, setLockedNameSeed] = useState("");
+
+  const trimmedName = name.trim();
+  const effectiveNameSeed =
+    iconMode === "generate" && isSeedLocked ? lockedNameSeed : trimmedName;
 
   const generatedAvatarSvg = useMemo(() => {
-    if (iconMode !== "generate" || !collectionSalt || !name.trim()) {
+    if (iconMode !== "generate" || !collectionSalt || !effectiveNameSeed) {
       return "";
     }
-    return minidenticonSvg(`${name.trim()}-${collectionSalt}`, 50, 50);
-  }, [name, collectionSalt, iconMode]);
+    return minidenticonSvg(`${effectiveNameSeed}-${collectionSalt}`, 50, 50);
+  }, [effectiveNameSeed, collectionSalt, iconMode]);
 
   const generatedPreviewSrc = useMemo(
     () => (generatedAvatarSvg ? svgToDataUrl(generatedAvatarSvg) : ""),
     [generatedAvatarSvg]
   );
 
-  const keptPreviewSrc = useMemo(() => {
-    if (!keptAvatarSvg) return "";
+  const uploadedPreviewSrc = useMemo(() => {
+    if (!uploadedAvatar) return "";
     return (
-      resolvedImageSrcFromAvatarField(keptAvatarSvg) ?? svgToDataUrl(keptAvatarSvg)
+      resolvedImageSrcFromAvatarField(uploadedAvatar) ?? svgToDataUrl(uploadedAvatar)
     );
-  }, [keptAvatarSvg]);
+  }, [uploadedAvatar]);
 
-  const showIconRow =
-    (iconMode === "keep" && keptPreviewSrc) ||
-    (iconMode === "generate" && generatedPreviewSrc);
-
-  const displayPreviewSrc =
-    iconMode === "keep" ? keptPreviewSrc : generatedPreviewSrc;
+  const activePreviewSrc =
+    iconMode === "upload" ? uploadedPreviewSrc : generatedPreviewSrc;
 
   const reshuffleSalt = useCallback(() => {
+    if (isSeedLocked) return;
     setIconMode("generate");
     setCollectionSalt(randomSalt());
-  }, []);
+  }, [isSeedLocked]);
+
+  const toggleSeedLock = useCallback(() => {
+    if (iconMode !== "generate") return;
+    if (isSeedLocked) {
+      setIsSeedLocked(false);
+      setLockedNameSeed("");
+      return;
+    }
+    setLockedNameSeed(trimmedName);
+    setIsSeedLocked(true);
+  }, [iconMode, isSeedLocked, trimmedName]);
+
+  const handleUploadedFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result !== "string") {
+          setError("Could not read selected image.");
+          return;
+        }
+        setError("");
+        setUploadedAvatar(result);
+        setIconMode("upload");
+      };
+      reader.onerror = () => {
+        setError("Could not read selected image.");
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    },
+    []
+  );
 
   useEffect(() => {
     if (initialValues == null) return;
@@ -111,8 +151,10 @@ export function CollectionForm({
     setVisibility(initialValues.visibility ?? "Private");
     setPassword(initialValues.password ?? "");
     const next = initialValues.avatar?.trim() ?? "";
-    setKeptAvatarSvg(next);
+    setUploadedAvatar(next);
     setIconMode(initialIconMode(initialValues.avatar));
+    setIsSeedLocked(false);
+    setLockedNameSeed("");
   }, [
     initialValues?.name,
     initialValues?.description,
@@ -129,8 +171,8 @@ export function CollectionForm({
       return;
     }
     const payloadAvatar =
-      iconMode === "keep" && keptAvatarSvg
-        ? keptAvatarSvg
+      iconMode === "upload"
+        ? uploadedAvatar || undefined
         : generatedAvatarSvg || undefined;
     if (
       payloadAvatar &&
@@ -179,35 +221,132 @@ export function CollectionForm({
               </p>
             </div>
 
-            {showIconRow && displayPreviewSrc && (
-              <div className="flex flex-wrap items-center gap-4 rounded-md border border-white/15 bg-white/5 p-3">
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-white/10">
-                  <img
-                    src={displayPreviewSrc}
-                    alt=""
-                    className="h-full w-full [image-rendering:pixelated]"
-                  />
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-white">Collection Icon</span>
+              <div className="rounded-md border border-white/15 bg-white/5 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-white/10">
+                    {activePreviewSrc ? (
+                      <img
+                        src={activePreviewSrc}
+                        alt=""
+                        className={cn(
+                          "h-full w-full",
+                          iconMode === "generate"
+                            ? "[image-rendering:pixelated]"
+                            : "object-cover"
+                        )}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-white/40">
+                        No icon
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">Final icon preview</p>
+                    <p className="text-xs text-white/50">
+                      This is the icon that will be used when creating the collection.
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white">Collection icon</p>
-                  <p className="text-xs text-white/50">
-                    {iconMode === "keep"
-                      ? "Current icon. Use new pattern to replace it with a generated one."
-                      : "Generated from the name and a random seed. Use new pattern to change it."}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={reshuffleSalt}
-                  className="min-h-11 min-w-[11rem] shrink-0"
-                >
-                  <Shuffle className="mr-1.5 h-4 w-4" />
-                  New pattern
-                </Button>
               </div>
-            )}
+              <div className="grid gap-3 md:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setIconMode("generate")}
+                  className={cn(
+                    "space-y-3 rounded-md border p-3 text-left transition-colors",
+                    iconMode === "generate"
+                      ? "border-primary/80 bg-primary/10"
+                      : "border-white/15 bg-white/5 hover:border-white/30"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-white">Generated</p>
+                      <p className="text-xs text-white/50">
+                        Random pattern from your collection name and seed.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label={isSeedLocked ? "Unlock icon seed" : "Lock icon seed"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIconMode("generate");
+                          toggleSeedLock();
+                        }}
+                      >
+                        {isSeedLocked ? (
+                          <Lock className="h-4 w-4" />
+                        ) : (
+                          <LockOpen className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="New pattern"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIconMode("generate");
+                          reshuffleSalt();
+                        }}
+                        disabled={isSeedLocked}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-white/50">
+                    {isSeedLocked
+                      ? "Generated icon is locked. Unlock to let it change while typing."
+                      : "Use refresh to generate a new pattern."}
+                  </p>
+                </button>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setIconMode("upload")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setIconMode("upload");
+                    }
+                  }}
+                  className={cn(
+                    "space-y-3 rounded-md border p-3 transition-colors",
+                    iconMode === "upload"
+                      ? "border-primary/80 bg-primary/10"
+                      : "border-white/15 bg-white/5 hover:border-white/30"
+                  )}
+                >
+                  <div>
+                    <p className="text-sm font-medium text-white">Upload Image</p>
+                    <p className="text-xs text-white/50">
+                      Upload your own collection icon image.
+                    </p>
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center rounded-md border border-white/20 bg-white/5 px-3 py-2 text-xs font-medium text-white transition-colors hover:border-white/40">
+                    Choose image
+                    <input
+                      type="file"
+                      accept="image/*,.svg"
+                      className="sr-only"
+                      onChange={(e) => {
+                        setIconMode("upload");
+                        handleUploadedFileChange(e);
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <label htmlFor="collection-description" className="text-sm font-medium text-white">

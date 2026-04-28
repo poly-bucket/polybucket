@@ -55,6 +55,7 @@ export interface UpdateCollectionRequest {
   description?: string;
   visibility?: "Public" | "Private" | "Unlisted";
   password?: string;
+  avatar?: string;
 }
 
 export interface GetUserCollectionsResponse {
@@ -104,7 +105,7 @@ export const collectionsService = {
       avatar: collection.avatar,
     });
     const response = await api().createCollection_CreateCollection(command);
-    return parseFileResponseAsJson<Collection>(response);
+    return response as Collection;
   },
 
   async updateCollection(
@@ -116,6 +117,7 @@ export const collectionsService = {
       description: collection.description,
       visibility: collection.visibility as CollectionVisibility | undefined,
       password: collection.password,
+      avatar: collection.avatar,
     });
     const response = await api().updateCollection_UpdateCollection(
       collection.id,

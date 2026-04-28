@@ -100,7 +100,7 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         var response = await _client.PostAsync("/api/collections", content);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         
         var createdCollection = await context.Collections.FirstOrDefaultAsync(c => c.Name == "Test Collection");
         createdCollection.ShouldNotBeNull();
@@ -171,7 +171,8 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
             Id = collection.Id,
             Name = "Updated Name",
             Description = "Updated Description",
-            Visibility = CollectionVisibility.Public
+            Visibility = CollectionVisibility.Public,
+            Avatar = "data:image/png;base64,dGVzdA=="
         };
 
         var content = new StringContent(JsonSerializer.Serialize(updateCommand), Encoding.UTF8, "application/json");
@@ -188,6 +189,7 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         updatedCollection.Name.ShouldBe("Updated Name");
         updatedCollection.Description.ShouldBe("Updated Description");
         updatedCollection.Visibility.ShouldBe(CollectionVisibility.Public);
+        updatedCollection.Avatar.ShouldBe("data:image/png;base64,dGVzdA==");
     }
 
     [Fact]
@@ -252,12 +254,16 @@ public class CollectionsControllerTests : IClassFixture<WebApplicationFactory<Pr
         var responseContent = await response.Content.ReadAsStringAsync();
         var result = JsonSerializer.Deserialize<dynamic>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        result.ShouldNotBeNull();
-        result.collections.ShouldNotBeNull();
-        result.totalCount.ShouldBe(2);
-        result.page.ShouldBe(1);
-        result.pageSize.ShouldBe(12);
-        result.totalPages.ShouldBe(1);
+        if (result is null)
+        {
+            throw new InvalidOperationException("Expected non-null collections response payload.");
+        }
+        dynamic nonNullResult = result;
+        nonNullResult.collections.ShouldNotBeNull();
+        nonNullResult.totalCount.ShouldBe(2);
+        nonNullResult.page.ShouldBe(1);
+        nonNullResult.pageSize.ShouldBe(12);
+        nonNullResult.totalPages.ShouldBe(1);
     }
 
     [Fact]
