@@ -2,14 +2,18 @@ import React from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import { Providers } from "@/components/providers/providers";
 import { AuthContext, type AuthUser } from "@/contexts/AuthContext";
-import type { LoginResult } from "@/contexts/AuthContext";
+import type { LoginOptions, LoginResult } from "@/contexts/AuthContext";
 import { vi } from "vitest";
 
 export interface MockAuthValue {
   user: AuthUser | null;
   isLoading?: boolean;
   isAuthenticated?: boolean;
-  login?: (emailOrUsername: string, password: string) => Promise<LoginResult>;
+  login?: (
+    emailOrUsername: string,
+    password: string,
+    options?: LoginOptions
+  ) => Promise<LoginResult>;
   logout?: () => void;
   refreshUserFromMe?: () => Promise<void>;
 }

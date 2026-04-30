@@ -16,11 +16,39 @@ import { LoginCommand, type LoginCommandResponse } from "@/lib/api/client";
 
 export type { AuthUser } from "@/lib/auth/authSession";
 
+export interface LoginOptions {
+  twoFactorToken?: string;
+  backupCode?: string;
+}
+
+function getThrownLoginMessage(err: unknown): string {
+  if (err && typeof err === "object") {
+    const o = err as Record<string, unknown>;
+    if (typeof o.message === "string" && o.message.trim()) {
+      return o.message;
+    }
+    if (typeof o.detail === "string" && o.detail.trim()) {
+      return o.detail;
+    }
+    if (typeof o.title === "string" && o.title.trim()) {
+      return o.title;
+    }
+  }
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+  return "An unexpected error occurred";
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (emailOrUsername: string, password: string) => Promise<LoginResult>;
+  login: (
+    emailOrUsername: string,
+    password: string,
+    options?: LoginOptions
+  ) => Promise<LoginResult>;
   logout: () => void;
   /** Re-fetch /api/auth/me and merge avatar + profilePictureUrl into the session user. */
   refreshUserFromMe: () => Promise<void>;
@@ -184,60 +212,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isLoading, user?.accessToken]);
 
-  const login = useCallback(async (emailOrUsername: string, password: string): Promise<LoginResult> => {
-    const apiClient = ApiClientFactory.getApiClient();
-    const command = new LoginCommand({
-      emailOrUsername,
-      email: emailOrUsername,
-      password,
-      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-    });
+  const login = useCallback(
+    async (
+      emailOrUsername: string,
+      password: string,
+      options?: LoginOptions
+    ): Promise<LoginResult> => {
+      const apiClient = ApiClientFactory.getApiClient();
+      const trimmedBackup = options?.backupCode?.trim() ?? "";
+      const trimmedTotp = options?.twoFactorToken?.trim() ?? "";
+      const useBackup = trimmedBackup.length > 0;
+      const command = new LoginCommand({
+        emailOrUsername,
+        email: emailOrUsername,
+        password,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+        twoFactorToken: useBackup ? undefined : trimmedTotp || undefined,
+        backupCode: useBackup ? trimmedBackup : undefined,
+      });
 
-    try {
-      const response: LoginCommandResponse = await apiClient.login_Login(command);
+      try {
+        const response: LoginCommandResponse = await apiClient.login_Login(command);
 
-      if (response.requiresTwoFactor) {
-        return {
-          success: false,
-          requiresTwoFactor: true,
-          error: "Two-factor authentication is required. This flow is not yet implemented.",
-        };
-      }
-
-      if (response.token) {
-        const decoded = extractUserFromJWT(response.token);
-        if (!decoded) {
-          return { success: false, error: "Invalid authentication token received" };
+        if (response.requiresTwoFactor) {
+          return {
+            success: false,
+            requiresTwoFactor: true,
+          };
         }
 
-        const authUser: AuthUser = {
-          id: decoded.id,
-          email: decoded.email,
-          username: decoded.username,
-          accessToken: response.token,
-          refreshToken: response.refreshToken,
-          roles: decoded.role ? [decoded.role] : [],
-          requiresFirstTimeSetup: response.requiresFirstTimeSetup,
-          setupStep: response.setupStep,
-        };
+        if (response.token) {
+          const decoded = extractUserFromJWT(response.token);
+          if (!decoded) {
+            return { success: false, error: "Invalid authentication token received" };
+          }
 
-        persistUser(authUser);
+          const authUser: AuthUser = {
+            id: decoded.id,
+            email: decoded.email,
+            username: decoded.username,
+            accessToken: response.token,
+            refreshToken: response.refreshToken,
+            roles: decoded.role ? [decoded.role] : [],
+            requiresFirstTimeSetup: response.requiresFirstTimeSetup,
+            setupStep: response.setupStep,
+          };
 
-        return {
-          success: true,
-          requiresFirstTimeSetup: response.requiresFirstTimeSetup,
-          setupStep: response.setupStep,
-        };
+          persistUser(authUser);
+
+          return {
+            success: true,
+            requiresFirstTimeSetup: response.requiresFirstTimeSetup,
+            setupStep: response.setupStep,
+          };
+        }
+
+        return { success: false, error: "Invalid response format" };
+      } catch (err: unknown) {
+        return { success: false, error: getThrownLoginMessage(err) };
       }
-
-      return { success: false, error: "Invalid response format" };
-    } catch (err: unknown) {
-      const error = err as { result?: { message?: string; detail?: string }; message?: string };
-      const message =
-        error.result?.message ?? error.result?.detail ?? error.message ?? "An unexpected error occurred";
-      return { success: false, error: message };
-    }
-  }, []);
+    },
+    []
+  );
 
   const logout = useCallback(() => {
     persistUser(null);
