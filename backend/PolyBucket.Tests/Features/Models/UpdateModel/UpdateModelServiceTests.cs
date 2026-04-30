@@ -31,7 +31,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
             _service = new UpdateModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model with a valid request, the update model service updates the model.")]
         public async Task UpdateModelAsync_WithValidRequest_ShouldUpdateModel()
         {
             // Arrange
@@ -72,7 +72,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
             _mockRepository.Verify(x => x.UpdateModelAsync(It.IsAny<Model>(), cancellationToken), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model that does not exist, the update model service throws a ModelNotFoundException.")]
         public async Task UpdateModelAsync_WithModelNotFound_ShouldThrowModelNotFoundException()
         {
             // Arrange
@@ -90,7 +90,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
                 await _service.UpdateModelAsync(modelId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a deleted model, the update model service throws a ValidationException.")]
         public async Task UpdateModelAsync_WithDeletedModel_ShouldThrowValidationException()
         {
             // Arrange
@@ -110,7 +110,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
                 await _service.UpdateModelAsync(modelId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model as a user without permission, the update model service throws an UnauthorizedAccessException.")]
         public async Task UpdateModelAsync_WithUnauthorizedUser_ShouldThrowUnauthorizedAccessException()
         {
             // Arrange
@@ -133,7 +133,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
                 await _service.UpdateModelAsync(modelId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model as a user with the MODEL_EDIT_ANY permission, the update model service allows the update.")]
         public async Task UpdateModelAsync_WithAdminPermission_ShouldAllowUpdate()
         {
             // Arrange

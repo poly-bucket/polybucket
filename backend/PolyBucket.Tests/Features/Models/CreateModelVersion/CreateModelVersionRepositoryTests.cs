@@ -28,7 +28,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             _repository = new CreateModelVersionRepository(_context);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model by id with an existing model, the create model version repository returns the model.")]
         public async Task GetModelByIdAsync_WithExistingModel_ShouldReturnModel()
         {
             // Arrange
@@ -55,7 +55,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             result.Name.ShouldBe("Test Model");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model by id with a non-existent model, the create model version repository returns null.")]
         public async Task GetModelByIdAsync_WithNonExistingModel_ShouldReturnNull()
         {
             // Arrange
@@ -69,7 +69,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             result.ShouldBeNull();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version with valid data, the create model version repository saves it to the database.")]
         public async Task CreateModelVersionAsync_WithValidVersion_ShouldSaveToDatabase()
         {
             // Arrange
@@ -98,7 +98,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             savedVersion.Name.ShouldBe("Version 2.0");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version that includes files, the create model version repository saves the files alongside the version.")]
         public async Task CreateModelVersionAsync_WithVersionFiles_ShouldSaveFilesToo()
         {
             // Arrange

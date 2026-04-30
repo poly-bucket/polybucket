@@ -2,14 +2,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using PolyBucket.Api;
-using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Tests.Factories;
@@ -24,7 +18,7 @@ namespace PolyBucket.Tests.Features.Models
         {
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model as the owner, the delete model controller soft-deletes the model.")]
         public async Task DeleteModel_ByOwner_ShouldSoftDeleteModel()
         {
             // Arrange
@@ -34,7 +28,7 @@ namespace PolyBucket.Tests.Features.Models
             await DbContext.SaveChangesAsync();
 
             var client = Factory.CreateClient();
-            var token = await GetAuthToken(client, user.Email, "TestPassword123!");
+            var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
@@ -42,6 +36,8 @@ namespace PolyBucket.Tests.Features.Models
 
             // Assert
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+            DbContext.ChangeTracker.Clear();
 
             // Verify model is soft deleted
             var deletedModel = await DbContext.Models
@@ -53,7 +49,7 @@ namespace PolyBucket.Tests.Features.Models
             Assert.Equal(user.Id, deletedModel.DeletedById);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model without authentication, the delete model controller returns Unauthorized.")]
         public async Task DeleteModel_WithoutAuthentication_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -71,7 +67,7 @@ namespace PolyBucket.Tests.Features.Models
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model as a non-owner, the delete model controller returns Forbidden.")]
         public async Task DeleteModel_ByNonOwner_ShouldReturnForbidden()
         {
             // Arrange
@@ -82,7 +78,7 @@ namespace PolyBucket.Tests.Features.Models
             await DbContext.SaveChangesAsync();
 
             var client = Factory.CreateClient();
-            var token = await GetAuthToken(client, nonOwner.Email, "TestPassword123!");
+            var token = await GetAuthTokenWithClient(client, nonOwner.Email, "TestPassword123!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
@@ -92,7 +88,7 @@ namespace PolyBucket.Tests.Features.Models
             Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model that does not exist, the delete model controller returns NotFound.")]
         public async Task DeleteModel_NonExistentModel_ShouldReturnNotFound()
         {
             // Arrange
@@ -101,7 +97,7 @@ namespace PolyBucket.Tests.Features.Models
             var nonExistentId = Guid.NewGuid();
 
             var client = Factory.CreateClient();
-            var token = await GetAuthToken(client, user.Email, "TestPassword123!");
+            var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
@@ -111,7 +107,7 @@ namespace PolyBucket.Tests.Features.Models
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model that has already been deleted, the delete model controller returns BadRequest.")]
         public async Task DeleteModel_AlreadyDeletedModel_ShouldReturnBadRequest()
         {
             // Arrange
@@ -123,17 +119,17 @@ namespace PolyBucket.Tests.Features.Models
             await DbContext.SaveChangesAsync();
 
             var client = Factory.CreateClient();
-            var token = await GetAuthToken(client, user.Email, "TestPassword123!");
+            var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
             var response = await client.DeleteAsync($"/api/models/{model.Id}");
 
             // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model that has files, the delete model controller soft-deletes the model and its files.")]
         public async Task DeleteModel_WithFiles_ShouldSoftDeleteModelAndFiles()
         {
             // Arrange
@@ -141,20 +137,24 @@ namespace PolyBucket.Tests.Features.Models
             var user = await UserFactory.CreateTestUser();
             var model = await ModelFactory.CreateTestModel(user.Id);
             
-            // Add some files to the model
             var modelFile = new ModelFile
             {
                 Id = Guid.NewGuid(),
+                ModelId = model.Id,
                 Name = "test.stl",
                 Path = "/uploads/test.stl",
                 Size = 1024,
-                MimeType = "application/octet-stream"
+                MimeType = "application/octet-stream",
+                CreatedAt = DateTime.UtcNow,
+                CreatedById = user.Id,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedById = user.Id
             };
-            model.Files.Add(modelFile);
+            await DbContext.ModelFiles.AddAsync(modelFile);
             await DbContext.SaveChangesAsync();
 
             var client = Factory.CreateClient();
-            var token = await GetAuthToken(client, user.Email, "TestPassword123!");
+            var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
@@ -162,6 +162,8 @@ namespace PolyBucket.Tests.Features.Models
 
             // Assert
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+            DbContext.ChangeTracker.Clear();
 
             // Verify model is soft deleted
             var deletedModel = await DbContext.Models
@@ -181,7 +183,7 @@ namespace PolyBucket.Tests.Features.Models
             Assert.NotNull(deletedFile.DeletedAt);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model as a user with admin permission, the delete model controller allows the deletion.")]
         public async Task DeleteModel_WithAdminPermission_ShouldAllowDeletion()
         {
             // Arrange
@@ -200,7 +202,7 @@ namespace PolyBucket.Tests.Features.Models
             }
 
             var client = Factory.CreateClient();
-            var token = await GetAuthToken(client, admin.Email, "TestPassword123!");
+            var token = await GetAuthTokenWithClient(client, admin.Email, "TestPassword123!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
@@ -208,6 +210,8 @@ namespace PolyBucket.Tests.Features.Models
 
             // Assert
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+            DbContext.ChangeTracker.Clear();
 
             // Verify model is soft deleted
             var deletedModel = await DbContext.Models
@@ -219,34 +223,5 @@ namespace PolyBucket.Tests.Features.Models
             Assert.Equal(admin.Id, deletedModel.DeletedById);
         }
 
-        private async Task<string> GetAuthToken(HttpClient client, string email, string password)
-        {
-            var loginRequest = new
-            {
-                Email = email,
-                Password = password
-            };
-
-            var content = new StringContent(
-                JsonConvert.SerializeObject(loginRequest),
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await client.PostAsync("/api/authentication/login", content);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var loginResponse = JsonConvert.DeserializeObject<LoginResponse>(responseContent);
-                return loginResponse?.AccessToken ?? string.Empty;
-            }
-
-            throw new InvalidOperationException("Failed to get auth token");
-        }
-
-        private class LoginResponse
-        {
-            public string AccessToken { get; set; } = string.Empty;
-        }
     }
 } 

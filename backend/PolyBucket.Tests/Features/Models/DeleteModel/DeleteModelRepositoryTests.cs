@@ -25,7 +25,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             _repository = new DeleteModelRepository(_context);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model by id with an existing model, the delete model repository returns the model.")]
         public async Task GetModelByIdAsync_WithExistingModel_ShouldReturnModel()
         {
             // Arrange
@@ -52,7 +52,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             result.Name.ShouldBe("Test Model");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model by id with a non-existent model, the delete model repository returns null.")]
         public async Task GetModelByIdAsync_WithNonExistingModel_ShouldReturnNull()
         {
             // Arrange
@@ -66,7 +66,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             result.ShouldBeNull();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model, the delete model repository marks the model as deleted.")]
         public async Task DeleteModelAsync_WithValidModel_ShouldMarkAsDeleted()
         {
             // Arrange
@@ -84,6 +84,11 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             await _context.SaveChangesAsync();
 
             var cancellationToken = CancellationToken.None;
+            var now = DateTime.UtcNow;
+            model.DeletedAt = now;
+            model.DeletedById = userId;
+            model.UpdatedAt = now;
+            model.UpdatedById = userId;
 
             // Act
             await _repository.DeleteModelAsync(model, cancellationToken);
@@ -95,7 +100,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             deletedModel.DeletedById.ShouldBe(userId);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model, the delete model repository updates the UpdatedAt timestamp.")]
         public async Task DeleteModelAsync_ShouldUpdateUpdatedAt()
         {
             // Arrange
@@ -110,8 +115,13 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             _context.Models.Add(model);
             await _context.SaveChangesAsync();
 
-            var originalUpdatedAt = model.UpdatedAt ?? DateTime.UtcNow;
+            var originalUpdatedAt = DateTime.UtcNow.AddHours(-1);
             var cancellationToken = CancellationToken.None;
+            var now = DateTime.UtcNow;
+            model.DeletedAt = now;
+            model.DeletedById = model.AuthorId;
+            model.UpdatedAt = now;
+            model.UpdatedById = model.AuthorId;
 
             // Act
             await _repository.DeleteModelAsync(model, cancellationToken);

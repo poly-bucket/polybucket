@@ -24,7 +24,7 @@ public class TwoFactorAuthServiceTests
         _service = new InitializeTwoFactorAuthService(_logger);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When initializing two-factor auth for a user, the two-factor auth service creates a valid two-factor auth record.")]
     public async Task InitializeTwoFactorAuthAsync_ShouldCreateValidTwoFactorAuth()
     {
         // Arrange
@@ -49,7 +49,7 @@ public class TwoFactorAuthServiceTests
         result.UpdatedAt!.Value.ShouldBeGreaterThan(DateTime.UtcNow.AddMinutes(-1));
     }
 
-    [Fact]
+    [Fact(DisplayName = "When generating a two-factor auth QR code, the two-factor auth service returns a valid otpauth URL.")]
     public async Task GenerateQrCodeAsync_ShouldReturnValidUrl()
     {
         // Arrange
@@ -81,7 +81,7 @@ public class TwoFactorAuthServiceTests
         result.ShouldContain("period=30");
     }
 
-    [Fact]
+    [Fact(DisplayName = "When initializing two-factor auth with a null user, the two-factor auth service throws an ArgumentNullException.")]
     public async Task InitializeTwoFactorAuthAsync_WithNullUser_ShouldThrowArgumentNullException()
     {
         // Act & Assert
@@ -91,7 +91,7 @@ public class TwoFactorAuthServiceTests
         });
     }
 
-    [Fact]
+    [Fact(DisplayName = "When generating a QR code with a null two-factor auth, the two-factor auth service throws an ArgumentNullException.")]
     public async Task GenerateQrCodeAsync_WithNullTwoFactorAuth_ShouldThrowArgumentNullException()
     {
         // Act & Assert
@@ -101,7 +101,7 @@ public class TwoFactorAuthServiceTests
         });
     }
 
-    [Fact]
+    [Fact(DisplayName = "When generating a QR code with an empty email, the two-factor auth service still returns a valid otpauth URL.")]
     public async Task GenerateQrCodeAsync_WithEmptyEmail_ShouldStillGenerateValidUrl()
     {
         // Arrange

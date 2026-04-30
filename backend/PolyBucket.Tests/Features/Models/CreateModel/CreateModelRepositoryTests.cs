@@ -28,7 +28,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
             _repository = new CreateModelRepository(_context);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model with valid data, the create model repository saves it to the database.")]
         public async Task CreateModelAsync_WithValidModel_ShouldSaveToDatabase()
         {
             // Arrange
@@ -55,7 +55,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
             savedModel.Name.ShouldBe("Test Model");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model that includes files, the create model repository saves the files alongside the model.")]
         public async Task CreateModelAsync_WithModelFiles_ShouldSaveFilesToo()
         {
             // Arrange

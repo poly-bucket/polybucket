@@ -1,14 +1,10 @@
-using System;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Users.UpdateUserProfile.Domain;
 using PolyBucket.Api.Features.Users.UpdateUserProfile.Http;
-using Xunit;
+using System.Security.Claims;
 
 namespace PolyBucket.Tests.Features.Users.UpdateUserProfile;
 
@@ -35,7 +31,7 @@ public class UpdateUserProfileControllerTests
         };
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a user profile with a valid request, the update user profile controller returns Ok.")]
     public async Task UpdateUserProfile_ValidRequest_ReturnsOkResult()
     {
         var request = new UpdateUserProfileRequest
@@ -57,11 +53,12 @@ public class UpdateUserProfileControllerTests
         var result = await _controller.UpdateUserProfile(request, CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        dynamic response = okResult.Value!;
-        Assert.Equal("User profile updated successfully", (string)response.message);
+        var messageProperty = okResult.Value!.GetType().GetProperty("message");
+        Assert.NotNull(messageProperty);
+        Assert.Equal("User profile updated successfully", messageProperty!.GetValue(okResult.Value) as string);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a user profile and the user is not found, the update user profile controller returns NotFound.")]
     public async Task UpdateUserProfile_UserNotFound_ReturnsNotFound()
     {
         var request = new UpdateUserProfileRequest
@@ -77,11 +74,12 @@ public class UpdateUserProfileControllerTests
         var result = await _controller.UpdateUserProfile(request, CancellationToken.None);
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-        dynamic errorResponse = notFoundResult.Value!;
-        Assert.Equal("User not found", (string)errorResponse.message);
+        var messageProperty = notFoundResult.Value!.GetType().GetProperty("message");
+        Assert.NotNull(messageProperty);
+        Assert.Equal("User not found", messageProperty!.GetValue(notFoundResult.Value) as string);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a user profile with unauthorized access, the update user profile controller returns Forbid.")]
     public async Task UpdateUserProfile_UnauthorizedAccess_ReturnsForbid()
     {
         var request = new UpdateUserProfileRequest
@@ -98,7 +96,7 @@ public class UpdateUserProfileControllerTests
         Assert.IsType<ForbidResult>(result);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a user profile and an unexpected exception is thrown, the update user profile controller returns InternalServerError.")]
     public async Task UpdateUserProfile_Exception_ReturnsInternalServerError()
     {
         var request = new UpdateUserProfileRequest
@@ -114,11 +112,14 @@ public class UpdateUserProfileControllerTests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        dynamic errorResponse = statusCodeResult.Value!;
-        Assert.Equal("An error occurred while updating the user profile", (string)errorResponse.message);
+        var messageProperty = statusCodeResult.Value!.GetType().GetProperty("message");
+        Assert.NotNull(messageProperty);
+        Assert.Equal(
+            "An error occurred while updating the user profile",
+            messageProperty!.GetValue(statusCodeResult.Value) as string);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a user profile without a valid user id claim, the update user profile controller returns Unauthorized.")]
     public async Task UpdateUserProfile_InvalidUserId_ReturnsUnauthorized()
     {
         _controller.ControllerContext = new ControllerContext

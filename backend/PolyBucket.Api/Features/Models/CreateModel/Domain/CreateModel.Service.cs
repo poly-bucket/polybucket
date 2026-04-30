@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
@@ -41,8 +42,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         {
             await ValidateRequestAsync(request);
             
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var authorId))
+            var userIdClaim = user.FindUserIdClaim();
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
             {
                 throw new ValidationException("Invalid authentication token");
             }
@@ -65,6 +66,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                     var modelFile = new ModelFile
                     {
                         Id = Guid.NewGuid(),
+                        ModelId = modelId,
                         Name = file.FileName,
                         Path = objectKey, // Store the object key, not the presigned URL
                         Size = file.Length,
@@ -245,11 +247,11 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
 
         private static LicenseTypes? ParseLicense(string? license)
         {
-            return license?.ToLower() switch
+            return license?.Trim().ToLowerInvariant() switch
             {
                 "mit" => LicenseTypes.MIT,
                 "gpl" => LicenseTypes.GPLv3,
-                "creative commons" => LicenseTypes.CCBy4,
+                "creative commons" or "ccby4" or "cc-by-4.0" => LicenseTypes.CCBy4,
                 "commercial" => LicenseTypes.MIT,
                 "custom" => LicenseTypes.MIT,
                 _ => null

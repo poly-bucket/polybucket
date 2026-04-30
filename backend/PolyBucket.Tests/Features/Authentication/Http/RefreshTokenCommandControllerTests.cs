@@ -46,7 +46,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             };
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing with a valid refresh token, the refresh token controller returns Ok with new tokens.")]
         public async Task RefreshToken_ValidToken_ShouldReturnOkWithNewTokens()
         {
             // Arrange
@@ -130,7 +130,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshTokenModel>()), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing with an unknown refresh token, the refresh token controller returns Unauthorized.")]
         public async Task RefreshToken_InvalidToken_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -156,7 +156,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing with an expired refresh token, the refresh token controller returns Unauthorized.")]
         public async Task RefreshToken_ExpiredToken_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -209,7 +209,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing with a revoked refresh token, the refresh token controller returns Unauthorized.")]
         public async Task RefreshToken_RevokedToken_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -264,7 +264,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing a token but the associated user is not found, the refresh token controller returns Unauthorized.")]
         public async Task RefreshToken_UserNotFound_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -320,7 +320,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing a token with an invalid model state, the refresh token controller returns BadRequest.")]
         public async Task RefreshToken_InvalidModelState_ShouldReturnBadRequest()
         {
             // Arrange
@@ -343,7 +343,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.GetRefreshTokenAsync(It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing a token and the repository throws an exception, the refresh token controller returns InternalServerError.")]
         public async Task RefreshToken_RepositoryThrowsException_ShouldReturnInternalServerError()
         {
             // Arrange
@@ -369,7 +369,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.GetUserByEmailAsync(It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When refreshing a token and the token service throws an exception, the refresh token controller returns InternalServerError.")]
         public async Task RefreshToken_TokenServiceThrowsException_ShouldReturnInternalServerError()
         {
             // Arrange

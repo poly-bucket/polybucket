@@ -29,7 +29,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             _service = new DeleteModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model with a valid request, the delete model service deletes the model.")]
         public async Task DeleteModelAsync_WithValidRequest_ShouldDeleteModel()
         {
             // Arrange
@@ -55,7 +55,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
             _mockRepository.Verify(x => x.DeleteModelAsync(It.IsAny<Model>(), cancellationToken), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model that does not exist, the delete model service throws a ModelNotFoundException.")]
         public async Task DeleteModelAsync_WithModelNotFound_ShouldThrowModelNotFoundException()
         {
             // Arrange
@@ -72,8 +72,8 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
                 await _service.DeleteModelAsync(modelId, user, cancellationToken));
         }
 
-        [Fact]
-        public async Task DeleteModelAsync_WithAlreadyDeletedModel_ShouldThrowValidationException()
+        [Fact(DisplayName = "When deleting a model that has already been deleted, the delete model service throws a ModelNotFoundException.")]
+        public async Task DeleteModelAsync_WithAlreadyDeletedModel_ShouldThrowModelNotFoundException()
         {
             // Arrange
             var modelId = Guid.NewGuid();
@@ -87,11 +87,11 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
                 .ReturnsAsync(deletedModel);
 
             // Act & Assert
-            await Should.ThrowAsync<ValidationException>(async () =>
+            await Should.ThrowAsync<ModelNotFoundException>(async () =>
                 await _service.DeleteModelAsync(modelId, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model as a user without permission, the delete model service throws an UnauthorizedAccessException.")]
         public async Task DeleteModelAsync_WithUnauthorizedUser_ShouldThrowUnauthorizedAccessException()
         {
             // Arrange
@@ -113,7 +113,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModel
                 await _service.DeleteModelAsync(modelId, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model as a user with the MODEL_DELETE_ANY permission, the delete model service allows the deletion.")]
         public async Task DeleteModelAsync_WithAdminPermission_ShouldAllowDelete()
         {
             // Arrange

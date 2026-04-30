@@ -46,7 +46,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Http
                     Files = files
                 };
                 var response = await _createModelVersionService.CreateModelVersionAsync(id, request, User, cancellationToken);
-                return CreatedAtAction(nameof(CreateModelVersion), new { id, versionId = response.ModelVersion.Id }, response);
+                return Created($"/api/models/{id}/versions/{response.ModelVersion.Id}", response);
             }
             catch (ValidationException ex)
             {
@@ -56,6 +56,10 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Http
             catch (ModelNotFoundException)
             {
                 return NotFound("Model not found");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (Exception ex)
             {

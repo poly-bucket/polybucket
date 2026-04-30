@@ -31,7 +31,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
             _service = new UpdateModelVersionService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model version with a valid request, the update model version service updates the version.")]
         public async Task UpdateModelVersionAsync_WithValidRequest_ShouldUpdateVersion()
         {
             // Arrange
@@ -69,7 +69,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
             _mockRepository.Verify(x => x.UpdateModelVersionAsync(It.IsAny<ModelVersion>(), cancellationToken), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model version that does not exist, the update model version service throws a ModelVersionNotFoundException.")]
         public async Task UpdateModelVersionAsync_WithModelVersionNotFound_ShouldThrowModelVersionNotFoundException()
         {
             // Arrange
@@ -88,8 +88,8 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
                 await _service.UpdateModelVersionAsync(modelId, versionId, request, user, cancellationToken));
         }
 
-        [Fact]
-        public async Task UpdateModelVersionAsync_WithWrongModelId_ShouldThrowValidationException()
+        [Fact(DisplayName = "When updating a model version under the wrong model id, the update model version service throws a ModelVersionNotFoundException.")]
+        public async Task UpdateModelVersionAsync_WithWrongModelId_ShouldThrowModelVersionNotFoundException()
         {
             // Arrange
             var modelId = Guid.NewGuid();
@@ -105,11 +105,11 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
                 .ReturnsAsync(modelVersion);
 
             // Act & Assert
-            await Should.ThrowAsync<PolyBucket.Api.Features.Models.UpdateModelVersion.Domain.ValidationException>(async () =>
+            await Should.ThrowAsync<ModelVersionNotFoundException>(async () =>
                 await _service.UpdateModelVersionAsync(wrongModelId, versionId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model version as a user without permission, the update model version service throws an UnauthorizedAccessException.")]
         public async Task UpdateModelVersionAsync_WithUnauthorizedUser_ShouldThrowUnauthorizedAccessException()
         {
             // Arrange
@@ -133,7 +133,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
                 await _service.UpdateModelVersionAsync(modelId, versionId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model version as a user with the MODEL_EDIT_ANY permission, the update model version service allows the update.")]
         public async Task UpdateModelVersionAsync_WithAdminPermission_ShouldAllowUpdate()
         {
             // Arrange

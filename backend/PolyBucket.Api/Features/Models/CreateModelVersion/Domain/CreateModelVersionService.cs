@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
@@ -9,9 +10,9 @@ using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,10 +43,8 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
 
         public async Task<CreateModelVersionResponse> CreateModelVersionAsync(Guid modelId, CreateModelVersionRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            ValidateRequest(request);
-            
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            var userIdClaim = user.FindUserIdClaim();
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
                 throw new ValidationException("Invalid authentication token");
             }
@@ -61,12 +60,13 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                 throw new ValidationException("Cannot create version for a deleted model");
             }
 
-            // Check ownership - user can only create versions for their own models unless they have MODEL_EDIT_ANY permission
             var hasAnyPermission = await _permissionService.HasPermissionAsync(userId, PermissionConstants.MODEL_EDIT_ANY);
             if (!hasAnyPermission && model.AuthorId != userId)
             {
                 throw new UnauthorizedAccessException("You do not have permission to create versions for this model");
             }
+
+            ValidateRequest(request);
 
             var versionId = Guid.NewGuid();
             var versionFiles = new List<ModelFile>();
@@ -86,6 +86,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                     var modelFile = new ModelFile
                     {
                         Id = Guid.NewGuid(),
+                        ModelId = model.Id,
                         Name = file.FileName,
                         Path = objectKey, // Store the object key, not the presigned URL
                         Size = file.Length,

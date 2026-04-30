@@ -93,7 +93,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             }
 
             var backupCodeEntity = twoFactorAuth.BackupCodes
-                .FirstOrDefault(bc => bc.Code == backupCode && !bc.IsUsed);
+                .FirstOrDefault(bc => string.Equals(bc.Code, backupCode, StringComparison.OrdinalIgnoreCase) && !bc.IsUsed);
 
             if (backupCodeEntity == null)
             {

@@ -16,7 +16,7 @@ namespace PolyBucket.Tests.Features.Models.DownloadModel.Http;
 
 public class DownloadModelControllerTests
 {
-    [Fact]
+    [Fact(DisplayName = "When downloading a model and the service returns NotFound, the download model controller returns NotFound.")]
     public async Task DownloadModel_WhenServiceReturnsNotFound_ReturnsNotFound()
     {
         var mock = new Mock<IDownloadModelService>();
@@ -40,7 +40,7 @@ public class DownloadModelControllerTests
         Assert.Equal("Model not found", notFound.Value);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When downloading a model and the service returns a single file, the download model controller returns the file stream result.")]
     public async Task DownloadModel_WhenServiceReturnsOkSingleFile_ReturnsFile()
     {
         var stream = new MemoryStream([1, 2, 3]);

@@ -29,7 +29,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             _repository = ServiceScope.ServiceProvider.GetRequiredService<IEnableTwoFactorAuthRepository>();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth with a valid token, the enable two-factor auth controller enables it successfully and returns backup codes.")]
         public async Task Enable_WithValidToken_ShouldEnableSuccessfully()
         {
             // Arrange
@@ -55,7 +55,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var command = new EnableTwoFactorAuthCommand 
             { 
                 UserId = user.Id, 
-                Token = "123456" // This would be a valid TOTP token
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             // Act
@@ -71,7 +71,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.BackupCodes.ShouldNotBeNull();
             result.BackupCodes.Count().ShouldBe(10); // Default backup code count
 
-            // Verify 2FA is enabled in database
+            _context.ChangeTracker.Clear();
             var updatedTwoFactorAuth = await _context.TwoFactorAuths.FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             updatedTwoFactorAuth.ShouldNotBeNull();
             updatedTwoFactorAuth.IsEnabled.ShouldBeTrue();
@@ -84,7 +84,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             backupCodes.All(bc => !bc.IsUsed).ShouldBeTrue();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth with an invalid TOTP token, the enable two-factor auth controller returns BadRequest.")]
         public async Task Enable_WithInvalidToken_ShouldReturnBadRequest()
         {
             // Arrange
@@ -123,7 +123,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             error.ShouldContain("Invalid token");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth that does not exist for the user, the enable two-factor auth controller returns BadRequest.")]
         public async Task Enable_WithNonExistentTwoFactorAuth_ShouldReturnBadRequest()
         {
             // Arrange
@@ -142,10 +142,10 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
             var error = await response.Content.ReadAsStringAsync();
-            error.ShouldContain("2FA not found");
+            error.ShouldContain("initialized");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth that is already enabled, the enable two-factor auth controller returns BadRequest.")]
         public async Task Enable_WithAlreadyEnabledTwoFactorAuth_ShouldReturnBadRequest()
         {
             // Arrange
@@ -185,7 +185,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             error.ShouldContain("2FA is already enabled");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth without authentication, the enable two-factor auth controller returns Unauthorized.")]
         public async Task Enable_WithUnauthenticatedUser_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -202,7 +202,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth for a user that does not match the authenticated token, the enable two-factor auth controller returns Unauthorized.")]
         public async Task Enable_WithDifferentUserInToken_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -223,7 +223,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth, the enable two-factor auth controller increments the version of the record.")]
         public async Task Enable_ShouldIncrementVersion()
         {
             // Arrange
@@ -249,7 +249,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var command = new EnableTwoFactorAuthCommand 
             { 
                 UserId = user.Id, 
-                Token = "123456"
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             // Act
@@ -259,7 +259,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             
-            // Verify version is incremented
+            _context.ChangeTracker.Clear();
             var updatedTwoFactorAuth = await _context.TwoFactorAuths.FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             updatedTwoFactorAuth.ShouldNotBeNull();
             updatedTwoFactorAuth.Version.ShouldBe(2);

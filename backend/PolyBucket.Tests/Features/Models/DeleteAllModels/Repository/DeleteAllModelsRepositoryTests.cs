@@ -10,7 +10,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteAllModels.Repository;
 
 public class DeleteAllModelsRepositoryTests
 {
-    [Fact]
+    [Fact(DisplayName = "When deleting all models and there are none, the delete all models repository returns zero.")]
     public async Task DeleteAllModelsAndReturnCountAsync_WhenNoModels_ReturnsZero()
     {
         var options = new DbContextOptionsBuilder<PolyBucketDbContext>()

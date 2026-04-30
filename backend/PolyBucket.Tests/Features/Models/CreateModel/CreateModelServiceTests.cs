@@ -31,7 +31,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
             _service = new CreateModelService(_mockRepository.Object, _mockStorage.Object, _mockLogger.Object);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model with a valid request, the create model service creates the model.")]
         public async Task CreateModelAsync_WithValidRequest_ShouldCreateModel()
         {
             // Arrange
@@ -70,7 +70,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
             _mockStorage.Verify(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), cancellationToken), Times.AtLeastOnce);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model with an empty name, the create model service throws a ValidationException.")]
         public async Task CreateModelAsync_WithEmptyName_ShouldThrowValidationException()
         {
             // Arrange
@@ -88,7 +88,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
                 await _service.CreateModelAsync(request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model without files, the create model service throws a ValidationException.")]
         public async Task CreateModelAsync_WithoutFiles_ShouldThrowValidationException()
         {
             // Arrange
@@ -106,7 +106,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
                 await _service.CreateModelAsync(request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model with an invalid user principal, the create model service throws a ValidationException.")]
         public async Task CreateModelAsync_WithInvalidUser_ShouldThrowValidationException()
         {
             // Arrange
@@ -126,11 +126,15 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
 
         private static IFormFile[] CreateTestFiles()
         {
+            var stlBytes = new byte[1024];
+            ReadOnlySpan<byte> solid = "solid"u8;
+            solid.CopyTo(stlBytes);
+
             var mockFile = new Mock<IFormFile>();
             mockFile.Setup(f => f.FileName).Returns("test.stl");
-            mockFile.Setup(f => f.Length).Returns(1024);
+            mockFile.Setup(f => f.Length).Returns(stlBytes.Length);
             mockFile.Setup(f => f.ContentType).Returns("application/octet-stream");
-            mockFile.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(new byte[1024]));
+            mockFile.Setup(f => f.OpenReadStream()).Returns(() => new MemoryStream(stlBytes));
 
             return new[] { mockFile.Object };
         }

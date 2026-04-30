@@ -1,181 +1,92 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using PolyBucket.Api;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Tests.Factories;
-using Shouldly;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
+using Shouldly;
+using Xunit;
 
 namespace PolyBucket.Tests.Features.Models.DeleteModel;
 
-public class DeleteModelIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("TestCollection")]
+public class DeleteModelIntegrationTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestUserFactory _userFactory;
-    private readonly TestModelFactory _modelFactory;
-
-    public DeleteModelIntegrationTests(WebApplicationFactory<Program> factory)
+    public DeleteModelIntegrationTests(TestCollectionFixture testFixture) : base(testFixture)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<PolyBucketDbContext>));
-
-                if (descriptor != null)
-                    services.Remove(descriptor);
-
-                services.AddDbContext<PolyBucketDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("DeleteModelTestDb");
-                });
-            });
-        });
-
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        _userFactory = new TestUserFactory(dbContext);
-        _modelFactory = new TestModelFactory(dbContext);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When deleting a model with a valid request, the delete model endpoint returns NoContent.")]
     public async Task DeleteModel_WithValidRequest_ReturnsNoContent()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model = await _modelFactory.CreateTestModel(user.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model = await ModelFactory.CreateTestModel(user.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
         var response = await client.DeleteAsync($"/api/models/{model.Id}");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When deleting a model without authentication, the delete model endpoint returns Unauthorized.")]
     public async Task DeleteModel_WithoutAuthentication_ReturnsUnauthorized()
     {
-        // Arrange
-        var client = _factory.CreateClient();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
 
-        // Act
-        var response = await client.DeleteAsync("/api/models/1");
+        var response = await client.DeleteAsync($"/api/models/{Guid.NewGuid()}");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When deleting a model that does not exist, the delete model endpoint returns NotFound.")]
     public async Task DeleteModel_WithNonExistentModel_ReturnsNotFound()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
-        var response = await client.DeleteAsync("/api/models/999");
+        var response = await client.DeleteAsync($"/api/models/{Guid.NewGuid()}");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When deleting a model as a user that does not own the model, the delete model endpoint returns Forbidden.")]
     public async Task DeleteModel_WithUnauthorizedUser_ReturnsForbidden()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var owner = await _userFactory.CreateTestUser("owner@test.com");
-        var unauthorizedUser = await _userFactory.CreateTestUser("unauthorized@test.com");
-        var model = await _modelFactory.CreateTestModel(owner.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var owner = await UserFactory.CreateTestUser("owner@test.com");
+        var unauthorizedUser = await UserFactory.CreateTestUser("unauthorized@test.com");
+        var model = await ModelFactory.CreateTestModel(owner.Id);
 
-        var token = await GetAuthTokenAsync(client, unauthorizedUser.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, unauthorizedUser.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
         var response = await client.DeleteAsync($"/api/models/{model.Id}");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When deleting a model that has already been deleted, the delete model endpoint returns NotFound.")]
     public async Task DeleteModel_WithAlreadyDeletedModel_ReturnsNotFound()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model = await _modelFactory.CreateTestModel(user.Id);
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model = await ModelFactory.CreateTestModel(user.Id);
         model.DeletedAt = DateTime.UtcNow;
         model.DeletedById = user.Id;
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
         var response = await client.DeleteAsync($"/api/models/{model.Id}");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
-
-    private async Task<string> GetAuthTokenAsync(HttpClient client, string email, string password)
-    {
-        var loginRequest = new
-        {
-            Email = email,
-            Password = password
-        };
-
-        var loginContent = new StringContent(
-            JsonSerializer.Serialize(loginRequest),
-            Encoding.UTF8,
-            "application/json");
-
-        var loginResponse = await client.PostAsync("/api/authentication/login", loginContent);
-        
-        if (loginResponse.IsSuccessStatusCode)
-        {
-            var loginResult = await loginResponse.Content.ReadAsStringAsync();
-            var tokenResponse = JsonSerializer.Deserialize<LoginResponse>(loginResult, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            return tokenResponse?.AccessToken ?? string.Empty;
-        }
-
-        return string.Empty;
-    }
-
-    private class LoginResponse
-    {
-        public string AccessToken { get; set; } = string.Empty;
-    }
-} 
+}

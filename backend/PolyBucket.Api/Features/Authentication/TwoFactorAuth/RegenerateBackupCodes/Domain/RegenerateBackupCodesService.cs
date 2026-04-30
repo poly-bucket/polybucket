@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Authentication.Domain;
 using System;
 using System.Collections.Generic;
@@ -11,26 +12,30 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
 {
     public interface IRegenerateBackupCodesService
     {
-        Task<IEnumerable<string>> RegenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth);
+        Task<IEnumerable<string>> RegenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, bool existingBackupCodesAlreadyRemovedFromDatabase = false);
     }
 
     public class RegenerateBackupCodesService : IRegenerateBackupCodesService
     {
         private readonly ILogger<RegenerateBackupCodesService> _logger;
+        private readonly PolyBucketDbContext _dbContext;
         private readonly TwoFactorAuthSettings _settings;
 
-        public RegenerateBackupCodesService(ILogger<RegenerateBackupCodesService> logger)
+        public RegenerateBackupCodesService(ILogger<RegenerateBackupCodesService> logger, PolyBucketDbContext dbContext)
         {
             _logger = logger;
+            _dbContext = dbContext;
             _settings = new TwoFactorAuthSettings();
         }
 
-        public async Task<IEnumerable<string>> RegenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth)
+        public async Task<IEnumerable<string>> RegenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, bool existingBackupCodesAlreadyRemovedFromDatabase = false)
         {
             _logger.LogInformation("RegenerateBackupCodesService.RegenerateBackupCodesAsync: Regenerating backup codes for user {UserId}", twoFactorAuth.UserId);
-            
-            // Clear existing backup codes
-            twoFactorAuth.BackupCodes.Clear();
+
+            if (!existingBackupCodesAlreadyRemovedFromDatabase)
+            {
+                twoFactorAuth.BackupCodes.Clear();
+            }
             
             var backupCodes = new List<string>();
             
@@ -59,7 +64,14 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
                     Version = 1 // Set initial version for new backup codes
                 };
                 
-                twoFactorAuth.BackupCodes.Add(backupCodeEntity);
+                if (existingBackupCodesAlreadyRemovedFromDatabase)
+                {
+                    _dbContext.BackupCodes.Add(backupCodeEntity);
+                }
+                else
+                {
+                    twoFactorAuth.BackupCodes.Add(backupCodeEntity);
+                }
             }
             
             // Update the main entity

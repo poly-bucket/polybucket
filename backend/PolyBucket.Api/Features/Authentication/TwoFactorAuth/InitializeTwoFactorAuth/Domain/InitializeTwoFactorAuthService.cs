@@ -27,8 +27,10 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
             _settings = new TwoFactorAuthSettings();
         }
 
-        public async Task<TwoFactorAuthDomain.TwoFactorAuth> InitializeTwoFactorAuthAsync(User user)
+        public Task<TwoFactorAuthDomain.TwoFactorAuth> InitializeTwoFactorAuthAsync(User user)
         {
+            ArgumentNullException.ThrowIfNull(user);
+
             _logger.LogInformation("InitializeTwoFactorAuthService.InitializeTwoFactorAuthAsync: Initializing 2FA for user {UserId}", user.Id);
             var secretKey = GenerateSecretKey();
             
@@ -48,11 +50,13 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
             };
 
             _logger.LogInformation("InitializeTwoFactorAuthService.InitializeTwoFactorAuthAsync: Initialized 2FA for user {UserId}", user.Id);
-            return twoFactorAuth;
+            return Task.FromResult(twoFactorAuth);
         }
 
-        public async Task<string> GenerateQrCodeAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, string email)
+        public Task<string> GenerateQrCodeAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, string email)
         {
+            ArgumentNullException.ThrowIfNull(twoFactorAuth);
+
             _logger.LogInformation("InitializeTwoFactorAuthService.GenerateQrCodeAsync: Generating QR code for user {UserId}", twoFactorAuth.UserId);
             var issuer = HttpUtility.UrlEncode(_settings.IssuerName);
             var account = HttpUtility.UrlEncode(email);
@@ -61,13 +65,13 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
             var qrCodeUrl = $"otpauth://totp/{issuer}:{account}?secret={secret}&issuer={issuer}&algorithm=SHA1&digits=6&period={_settings.TokenExpirySeconds}";
             
             _logger.LogInformation("InitializeTwoFactorAuthService.GenerateQrCodeAsync: Generated QR code URL for user {UserId}", twoFactorAuth.UserId);
-            return qrCodeUrl;
+            return Task.FromResult(qrCodeUrl);
         }
 
         private string GenerateSecretKey()
         {
             _logger.LogInformation("InitializeTwoFactorAuthService.GenerateSecretKey: Generating secret key");
-            var randomBytes = new byte[20];
+            var randomBytes = new byte[10];
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomBytes);

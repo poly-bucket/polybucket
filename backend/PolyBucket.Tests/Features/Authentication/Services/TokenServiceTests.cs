@@ -38,7 +38,7 @@ public class TokenServiceTests
         _tokenService = new TokenService(_configuration, _tokenSettingsService);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When generating an access token, the token service creates a valid JWT containing the expected claims.")]
     public async Task GenerateAccessTokenAsync_ShouldCreateValidJwtWithCorrectClaims()
     {
         // Arrange
@@ -85,7 +85,7 @@ public class TokenServiceTests
         claims.ShouldContain(c => c.Type == ClaimTypes.Role && c.Value == user.Role.Name);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When generating an access token, the token service creates a token with the correct expiration time.")]
     public async Task GenerateAccessTokenAsync_ShouldCreateTokenWithCorrectExpiration()
     {
         // Arrange
@@ -115,7 +115,7 @@ public class TokenServiceTests
         expirationTime.ShouldBeLessThanOrEqualTo(expectedExpiration);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When validating an invalid access token, the token service returns null.")]
     public void ValidateAccessToken_WithInvalidToken_ShouldReturnNull()
     {
         // Arrange
@@ -128,7 +128,7 @@ public class TokenServiceTests
         principal.ShouldBeNull();
     }
 
-    [Fact]
+    [Fact(DisplayName = "When generating an authentication response, the token service returns a complete response with tokens and user info.")]
     public async Task GenerateAuthenticationResponseAsync_ShouldReturnCompleteResponse()
     {
         // Arrange

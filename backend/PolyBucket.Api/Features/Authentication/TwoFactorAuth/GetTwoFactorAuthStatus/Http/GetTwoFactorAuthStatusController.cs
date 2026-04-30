@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.GetTwoFactorAuthStatus.Domain;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
-using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.GetTwoFactorAuthStatus.Http
 {
@@ -35,7 +35,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.GetTwoFactorAuthS
             try
             {
                 // Get user ID from the authenticated user using the standard claim type
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userIdClaim = User.FindUserIdClaim();
                 if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
                 {
                     _logger.LogWarning("GetTwoFactorAuthStatusController.GetStatus: No user ID found in token. Available claims: {Claims}", 

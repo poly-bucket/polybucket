@@ -1,250 +1,152 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using PolyBucket.Api;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Tests.Factories;
-using Shouldly;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
+using Shouldly;
+using Xunit;
 
 namespace PolyBucket.Tests.Features.Models.CreateModelVersion;
 
-public class CreateModelVersionIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("TestCollection")]
+public class CreateModelVersionIntegrationTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestUserFactory _userFactory;
-    private readonly TestModelFactory _modelFactory;
-
-    public CreateModelVersionIntegrationTests(WebApplicationFactory<Program> factory)
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<PolyBucketDbContext>));
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
-                if (descriptor != null)
-                    services.Remove(descriptor);
-
-                services.AddDbContext<PolyBucketDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("CreateModelVersionTestDb");
-                });
-            });
-        });
-
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        _userFactory = new TestUserFactory(dbContext);
-        _modelFactory = new TestModelFactory(dbContext);
+    public CreateModelVersionIntegrationTests(TestCollectionFixture testFixture) : base(testFixture)
+    {
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model version with a valid request, the create model version endpoint returns Created.")]
     public async Task CreateModelVersion_WithValidRequest_ReturnsCreated()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model = await _modelFactory.CreateTestModel(user.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model = await ModelFactory.CreateTestModel(user.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var content = new MultipartFormDataContent();
-        content.Add(new StringContent("2.0"), "VersionNumber");
-        content.Add(new StringContent("Updated version"), "Notes");
+        content.Add(new StringContent("2.0"), "name");
+        content.Add(new StringContent("Updated version"), "notes");
 
         var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("Test file content"));
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        content.Add(fileContent, "Files", "test-v2.stl");
+        content.Add(fileContent, "files", "test-v2.stl");
 
-        // Act
         var response = await client.PostAsync($"/api/models/{model.Id}/versions", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
-        
+
         var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<CreateModelVersionResponse>(responseContent, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<CreateModelVersionResponse>(responseContent, JsonOptions);
 
         result.ShouldNotBeNull();
-        result.Id.ShouldBeGreaterThan(0);
-        result.VersionNumber.ShouldBe("2.0");
-        result.Notes.ShouldBe("Updated version");
-        result.ModelId.ShouldBe(model.Id);
+        result!.ModelVersion.ShouldNotBeNull();
+        result.ModelVersion.Name.ShouldBe("2.0");
+        result.ModelVersion.Notes.ShouldBe("Updated version");
+        result.ModelVersion.ModelId.ShouldBe(model.Id);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model version without authentication, the create model version endpoint returns Unauthorized.")]
     public async Task CreateModelVersion_WithoutAuthentication_ReturnsUnauthorized()
     {
-        // Arrange
-        var client = _factory.CreateClient();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
         var content = new MultipartFormDataContent();
-        content.Add(new StringContent("2.0"), "VersionNumber");
+        content.Add(new StringContent("2.0"), "name");
 
-        // Act
-        var response = await client.PostAsync("/api/models/1/versions", content);
+        var response = await client.PostAsync($"/api/models/{Guid.NewGuid()}/versions", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model version for a model that does not exist, the create model version endpoint returns NotFound.")]
     public async Task CreateModelVersion_WithNonExistentModel_ReturnsNotFound()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var content = new MultipartFormDataContent();
-        content.Add(new StringContent("2.0"), "VersionNumber");
+        content.Add(new StringContent("2.0"), "name");
 
-        // Act
-        var response = await client.PostAsync("/api/models/999/versions", content);
+        var response = await client.PostAsync($"/api/models/{Guid.NewGuid()}/versions", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model version as a user that does not own the model, the create model version endpoint returns Forbidden.")]
     public async Task CreateModelVersion_WithUnauthorizedUser_ReturnsForbidden()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var owner = await _userFactory.CreateTestUser("owner@test.com");
-        var unauthorizedUser = await _userFactory.CreateTestUser("unauthorized@test.com");
-        var model = await _modelFactory.CreateTestModel(owner.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var owner = await UserFactory.CreateTestUser("owner@test.com");
+        var unauthorizedUser = await UserFactory.CreateTestUser("unauthorized@test.com");
+        var model = await ModelFactory.CreateTestModel(owner.Id);
 
-        var token = await GetAuthTokenAsync(client, unauthorizedUser.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, unauthorizedUser.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var content = new MultipartFormDataContent();
-        content.Add(new StringContent("2.0"), "VersionNumber");
+        content.Add(new StringContent("2.0"), "name");
 
-        // Act
         var response = await client.PostAsync($"/api/models/{model.Id}/versions", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model version without any files, the create model version endpoint returns BadRequest.")]
     public async Task CreateModelVersion_WithoutFiles_ReturnsBadRequest()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model = await _modelFactory.CreateTestModel(user.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model = await ModelFactory.CreateTestModel(user.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var content = new MultipartFormDataContent();
-        content.Add(new StringContent("2.0"), "VersionNumber");
-        content.Add(new StringContent("Updated version"), "Notes");
+        content.Add(new StringContent("2.0"), "name");
+        content.Add(new StringContent("Updated version"), "notes");
 
-        // Act
         var response = await client.PostAsync($"/api/models/{model.Id}/versions", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model version with an invalid file type, the create model version endpoint returns BadRequest.")]
     public async Task CreateModelVersion_WithInvalidFileType_ReturnsBadRequest()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model = await _modelFactory.CreateTestModel(user.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model = await ModelFactory.CreateTestModel(user.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var content = new MultipartFormDataContent();
-        content.Add(new StringContent("2.0"), "VersionNumber");
-        content.Add(new StringContent("Updated version"), "Notes");
+        content.Add(new StringContent("2.0"), "name");
+        content.Add(new StringContent("Updated version"), "notes");
 
         var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("Test file content"));
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
-        content.Add(fileContent, "Files", "test.txt");
+        content.Add(fileContent, "files", "test.txt");
 
-        // Act
         var response = await client.PostAsync($"/api/models/{model.Id}/versions", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
-
-    private async Task<string> GetAuthTokenAsync(HttpClient client, string email, string password)
-    {
-        var loginRequest = new
-        {
-            Email = email,
-            Password = password
-        };
-
-        var loginContent = new StringContent(
-            JsonSerializer.Serialize(loginRequest),
-            Encoding.UTF8,
-            "application/json");
-
-        var loginResponse = await client.PostAsync("/api/authentication/login", loginContent);
-        
-        if (loginResponse.IsSuccessStatusCode)
-        {
-            var loginResult = await loginResponse.Content.ReadAsStringAsync();
-            var tokenResponse = JsonSerializer.Deserialize<LoginResponse>(loginResult, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            return tokenResponse?.AccessToken ?? string.Empty;
-        }
-
-        return string.Empty;
-    }
-
-    private class LoginResponse
-    {
-        public string AccessToken { get; set; } = string.Empty;
-    }
-
-    private class CreateModelVersionResponse
-    {
-        public int Id { get; set; }
-        public string VersionNumber { get; set; } = string.Empty;
-        public string Notes { get; set; } = string.Empty;
-        public Guid ModelId { get; set; }
-    }
-} 
+}

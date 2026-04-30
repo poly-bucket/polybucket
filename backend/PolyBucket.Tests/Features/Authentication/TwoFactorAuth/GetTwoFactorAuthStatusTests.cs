@@ -28,7 +28,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             _repository = ServiceScope.ServiceProvider.GetRequiredService<IGetTwoFactorAuthStatusRepository>();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the status with enabled two-factor auth, the get two-factor auth status controller returns the enabled status.")]
         public async Task GetStatus_WithEnabledTwoFactorAuth_ShouldReturnEnabledStatus()
         {
             // Arrange
@@ -66,7 +66,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RemainingBackupCodes.ShouldBe(0); // No backup codes created yet
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the status with disabled two-factor auth, the get two-factor auth status controller returns the disabled status.")]
         public async Task GetStatus_WithDisabledTwoFactorAuth_ShouldReturnDisabledStatus()
         {
             // Arrange
@@ -103,7 +103,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RemainingBackupCodes.ShouldBe(0);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the status with no two-factor auth configured, the get two-factor auth status controller returns a not-initialized status.")]
         public async Task GetStatus_WithNoTwoFactorAuth_ShouldReturnNotInitializedStatus()
         {
             // Arrange
@@ -124,7 +124,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RemainingBackupCodes.ShouldBe(0);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the two-factor auth status without authentication, the get two-factor auth status controller returns Unauthorized.")]
         public async Task GetStatus_WithUnauthenticatedUser_ShouldReturnUnauthorized()
         {
             // Act
@@ -134,7 +134,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the two-factor auth status while all backup codes have been used, the get two-factor auth status controller reports zero remaining.")]
         public async Task GetStatus_WithAllUsedBackupCodes_ShouldReturnZeroRemaining()
         {
             // Arrange
@@ -180,7 +180,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RemainingBackupCodes.ShouldBe(0);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the two-factor auth status with no backup codes configured, the get two-factor auth status controller reports zero remaining.")]
         public async Task GetStatus_WithNoBackupCodes_ShouldReturnZeroRemaining()
         {
             // Arrange
@@ -217,7 +217,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RemainingBackupCodes.ShouldBe(0);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the two-factor auth status with a mix of used and unused backup codes, the get two-factor auth status controller reports the correct remaining count.")]
         public async Task GetStatus_WithMixedBackupCodes_ShouldReturnCorrectCount()
         {
             // Arrange
@@ -264,7 +264,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RemainingBackupCodes.ShouldBe(2); // Two unused backup codes
         }
 
-        [Fact]
+        [Fact(DisplayName = "When fetching the two-factor auth status, the get two-factor auth status controller includes the correct enabled and last-used timestamps.")]
         public async Task GetStatus_ShouldIncludeCorrectTimestamps()
         {
             // Arrange
@@ -299,11 +299,11 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             var result = await response.Content.ReadFromJsonAsync<GetTwoFactorAuthStatusResponse>();
             result.ShouldNotBeNull();
-            result.EnabledAt.ShouldBe(enabledAt);
-            result.LastUsedAt.ShouldBe(lastUsedAt);
+            result.EnabledAt!.Value.ShouldBe(enabledAt, TimeSpan.FromMilliseconds(10));
+            result.LastUsedAt!.Value.ShouldBe(lastUsedAt, TimeSpan.FromMilliseconds(10));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When calling the get two-factor auth status repository directly, the repository returns the correct data for the user.")]
         public async Task GetStatus_WithRepositoryMethod_ShouldReturnCorrectData()
         {
             // Arrange
@@ -336,7 +336,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.EnabledAt.ShouldNotBeNull();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When calling the get two-factor auth status repository for a user that does not exist, the repository returns null.")]
         public async Task GetStatus_WithNonExistentUser_ShouldReturnNull()
         {
             // Act

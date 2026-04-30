@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Http;
@@ -26,8 +27,8 @@ namespace PolyBucket.Api.Features.Models.UpdateModelVersion.Domain
 
         public async Task<UpdateModelVersionResponse> UpdateModelVersionAsync(Guid modelId, Guid versionId, UpdateModelVersionRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            var userIdClaim = user.FindUserIdClaim();
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
                 throw new ValidationException("Invalid authentication token");
             }

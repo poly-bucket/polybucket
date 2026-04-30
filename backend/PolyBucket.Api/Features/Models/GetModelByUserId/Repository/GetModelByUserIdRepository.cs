@@ -23,7 +23,6 @@ namespace PolyBucket.Api.Features.Models.GetModelByUserId.Repository
         {
             var query = _dbContext.Models
                 .Include(m => m.Files)
-                .Include(m => m.Author)
                 .Include(m => m.Categories)
                 .Include(m => m.Tags)
                 .Where(m => m.AuthorId == userId);

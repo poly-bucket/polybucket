@@ -23,7 +23,7 @@ public class GetUserProfileControllerTests
         _controller = new GetUserProfileController(_mockService.Object, _mockLogger.Object);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a user profile by a valid id, the get user profile controller returns Ok with the profile.")]
     public async Task GetUserProfileById_ValidId_ReturnsOkResult()
     {
         var userId = Guid.NewGuid();
@@ -57,7 +57,7 @@ public class GetUserProfileControllerTests
         Assert.Equal(5, response.TotalModels);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a user profile by id and the user is not found, the get user profile controller returns NotFound.")]
     public async Task GetUserProfileById_UserNotFound_ReturnsNotFound()
     {
         var userId = Guid.NewGuid();
@@ -68,11 +68,11 @@ public class GetUserProfileControllerTests
         var result = await _controller.GetUserProfileById(userId, CancellationToken.None);
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
-        dynamic errorResponse = notFoundResult.Value!;
-        Assert.Equal("User profile not found", (string)errorResponse.message);
+        var messageProperty = Assert.IsType<string>(notFoundResult.Value?.GetType().GetProperty("message")?.GetValue(notFoundResult.Value));
+        Assert.Equal("User profile not found", messageProperty);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a user profile by id and an unexpected exception is thrown, the get user profile controller returns InternalServerError.")]
     public async Task GetUserProfileById_Exception_ReturnsInternalServerError()
     {
         var userId = Guid.NewGuid();
@@ -84,11 +84,11 @@ public class GetUserProfileControllerTests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        dynamic errorResponse = statusCodeResult.Value!;
-        Assert.Equal("An error occurred while retrieving the user profile", (string)errorResponse.message);
+        var messageProperty = Assert.IsType<string>(statusCodeResult.Value?.GetType().GetProperty("message")?.GetValue(statusCodeResult.Value));
+        Assert.Equal("An error occurred while retrieving the user profile", messageProperty);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a user profile by a valid username, the get user profile controller returns Ok with the profile.")]
     public async Task GetUserProfileByUsername_ValidUsername_ReturnsOkResult()
     {
         var username = "testuser";
@@ -121,7 +121,7 @@ public class GetUserProfileControllerTests
         Assert.Equal(3, response.TotalModels);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a user profile by username and the user is not found, the get user profile controller returns NotFound.")]
     public async Task GetUserProfileByUsername_UserNotFound_ReturnsNotFound()
     {
         var username = "nonexistentuser";
@@ -132,11 +132,11 @@ public class GetUserProfileControllerTests
         var result = await _controller.GetUserProfileByUsername(username, CancellationToken.None);
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
-        dynamic errorResponse = notFoundResult.Value!;
-        Assert.Equal("User profile not found", (string)errorResponse.message);
+        var messageProperty = Assert.IsType<string>(notFoundResult.Value?.GetType().GetProperty("message")?.GetValue(notFoundResult.Value));
+        Assert.Equal("User profile not found", messageProperty);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a user profile by username and an unexpected exception is thrown, the get user profile controller returns InternalServerError.")]
     public async Task GetUserProfileByUsername_Exception_ReturnsInternalServerError()
     {
         var username = "testuser";
@@ -148,7 +148,7 @@ public class GetUserProfileControllerTests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        dynamic errorResponse = statusCodeResult.Value!;
-        Assert.Equal("An error occurred while retrieving the user profile", (string)errorResponse.message);
+        var messageProperty = Assert.IsType<string>(statusCodeResult.Value?.GetType().GetProperty("message")?.GetValue(statusCodeResult.Value));
+        Assert.Equal("An error occurred while retrieving the user profile", messageProperty);
     }
 }

@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Models;
 using System;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Authentication.Me.Http
@@ -24,7 +24,7 @@ namespace PolyBucket.Api.Features.Authentication.Me.Http
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userIdClaim = User.FindUserIdClaim();
                 if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
                 {
                     return Unauthorized("Invalid authentication token");

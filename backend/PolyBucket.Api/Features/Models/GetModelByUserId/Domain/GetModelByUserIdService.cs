@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.GetModelByUserId.Http;
@@ -110,8 +111,8 @@ namespace PolyBucket.Api.Features.Models.GetModelByUserId.Domain
             }
 
             // Handle authenticated user access
-            var currentUserIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
+            var currentUserIdClaim = user.FindUserIdClaim();
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !Guid.TryParse(currentUserIdClaim, out var currentUserId))
             {
                 throw new ValidationException("Invalid authentication token");
             }

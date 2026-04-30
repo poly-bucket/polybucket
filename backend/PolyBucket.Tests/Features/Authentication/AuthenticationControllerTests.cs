@@ -31,7 +31,7 @@ public class AuthenticationControllerTests
         };
     }
 
-    [Theory]
+    [Theory(DisplayName = "When inspecting authentication controllers, the controller has the ApiController and Route attributes applied")]
     [MemberData(nameof(ControllerTypes))]
     public void Controller_ShouldHaveApiControllerAndRoute(Type controllerType)
     {

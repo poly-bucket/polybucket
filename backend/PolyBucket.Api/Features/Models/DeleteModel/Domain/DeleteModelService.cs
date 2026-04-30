@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.DeleteModel.Repository;
@@ -24,8 +25,8 @@ namespace PolyBucket.Api.Features.Models.DeleteModel.Domain
 
         public async Task DeleteModelAsync(Guid modelId, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            var userIdClaim = user.FindUserIdClaim();
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
                 throw new ValidationException("Invalid authentication token");
             }
@@ -38,7 +39,7 @@ namespace PolyBucket.Api.Features.Models.DeleteModel.Domain
 
             if (model.IsDeleted)
             {
-                throw new ValidationException("Model is already deleted");
+                throw new ModelNotFoundException($"Model with ID {modelId} not found");
             }
 
             // Check ownership - user can only delete their own models unless they have MODEL_DELETE_ANY permission
@@ -51,12 +52,16 @@ namespace PolyBucket.Api.Features.Models.DeleteModel.Domain
             // Soft delete the model
             model.DeletedAt = DateTime.UtcNow;
             model.DeletedById = userId;
+            model.UpdatedAt = DateTime.UtcNow;
+            model.UpdatedById = userId;
 
             // Soft delete associated files
             foreach (var file in model.Files)
             {
                 file.DeletedAt = DateTime.UtcNow;
                 file.DeletedById = userId;
+                file.UpdatedAt = DateTime.UtcNow;
+                file.UpdatedById = userId;
             }
 
             await _repository.DeleteModelAsync(model, cancellationToken);

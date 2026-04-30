@@ -31,7 +31,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             _loginTwoFactorAuthRepository = ServiceScope.ServiceProvider.GetRequiredService<ILoginTwoFactorAuthRepository>();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials and a valid two-factor token, the login controller returns a successful response.")]
         public async Task Login_WithValidCredentialsAndValidToken_ShouldReturnSuccess()
         {
             // Arrange
@@ -42,7 +42,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             {
                 EmailOrUsername = user.Email,
                 Password = "TestPassword123!",
-                TwoFactorToken = "123456" // Valid token for testing
+                TwoFactorToken = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             // Act
@@ -58,7 +58,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RequiresTwoFactor.ShouldBeFalse();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials and an invalid two-factor token, the login controller returns Unauthorized.")]
         public async Task Login_WithValidCredentialsAndInvalidToken_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -80,7 +80,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials and a valid backup code, the login controller returns a successful response and marks the backup code as used.")]
         public async Task Login_WithValidCredentialsAndValidBackupCode_ShouldReturnSuccess()
         {
             // Arrange
@@ -122,14 +122,14 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RefreshToken.ShouldNotBeNullOrEmpty();
             result.RequiresTwoFactor.ShouldBeFalse();
 
-            // Verify backup code is marked as used
+            _context.ChangeTracker.Clear();
             var updatedBackupCode = await _context.BackupCodes.FirstOrDefaultAsync(bc => bc.Id == backupCode.Id);
             updatedBackupCode.ShouldNotBeNull();
             updatedBackupCode.IsUsed.ShouldBeTrue();
             updatedBackupCode.UsedAt.ShouldNotBeNull();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials and a backup code that has already been used, the login controller returns Unauthorized.")]
         public async Task Login_WithValidCredentialsAndUsedBackupCode_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -168,7 +168,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials but no two-factor token while two-factor auth is enabled, the login controller returns a response indicating that two-factor auth is required.")]
         public async Task Login_WithValidCredentialsAndNoTwoFactorToken_ShouldReturnRequiresTwoFactor()
         {
             // Arrange
@@ -195,7 +195,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RefreshToken.ShouldBeNullOrEmpty();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials while two-factor auth is disabled, the login controller returns a successful response.")]
         public async Task Login_WithValidCredentialsAndDisabledTwoFactorAuth_ShouldReturnSuccess()
         {
             // Arrange
@@ -221,7 +221,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.RequiresTwoFactor.ShouldBeFalse();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials and no two-factor auth configured, the login controller returns a successful response.")]
         public async Task Login_WithValidCredentialsAndNoTwoFactorAuth_ShouldReturnSuccess()
         {
             // Arrange

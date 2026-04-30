@@ -8,7 +8,7 @@ namespace PolyBucket.Tests.Features.Users.UnbanUser.Http;
 
 public class UnbanUserControllerTests
 {
-    [Fact]
+    [Fact(DisplayName = "When inspecting the unban user controller, the controller has the ApiController and Route attributes applied.")]
     public void Controller_ShouldHaveApiControllerAndRoute()
     {
         var controllerType = typeof(UnbanUserController);

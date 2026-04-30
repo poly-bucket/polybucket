@@ -1,31 +1,12 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Moq;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Authentication.Domain;
+using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api.Features.Authentication.Login.Domain;
-using PolyBucket.Api.Features.Authentication.Login.Http;
+using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
-using PolyBucket.Api.Features.SystemSettings.Domain;
 using Shouldly;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
-using PolyBucket.Api.Features.ACL.Domain;
-using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using PolyBucket.Api.Features.Authentication.Login.Repository;
 
 namespace PolyBucket.Tests.Features.Authentication.Http
 {
@@ -47,7 +28,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _loginTwoFactorAuthRepository = ServiceScope.ServiceProvider.GetRequiredService<ILoginTwoFactorAuthRepository>();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with valid credentials, the login controller returns a successful response.")]
         public async Task Login_WithValidCredentials_ShouldReturnSuccess()
         {
             // Arrange
@@ -71,7 +52,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             result.RequiresFirstTimeSetup.ShouldBeFalse();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with invalid credentials, the login controller returns Unauthorized.")]
         public async Task Login_WithInvalidCredentials_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -88,7 +69,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When logging in with empty credentials, the login controller returns BadRequest.")]
         public async Task Login_WithEmptyCredentials_ShouldReturnBadRequest()
         {
             // Arrange

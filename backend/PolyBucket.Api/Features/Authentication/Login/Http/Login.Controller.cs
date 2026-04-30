@@ -16,12 +16,22 @@ namespace PolyBucket.Api.Features.Authentication.Login.Http
 
         [HttpPost("login")]
         [ProducesResponseType(200, Type = typeof(LoginCommandResponse))]
+        [ProducesResponseType(400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
         {
             try
             {
+                var loginIdentifier = !string.IsNullOrWhiteSpace(command.EmailOrUsername)
+                    ? command.EmailOrUsername
+                    : command.Email;
+
+                if (string.IsNullOrWhiteSpace(loginIdentifier) || string.IsNullOrWhiteSpace(command.Password))
+                {
+                    return BadRequest(new { message = "Email/username and password are required" });
+                }
+
                 _logger.LogInformation("Login attempt for {Email}", command.Email);
                 var response = await _handler.Handle(command, cancellationToken);
                 _logger.LogInformation("Login successful for {Email}", command.Email);

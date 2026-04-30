@@ -11,17 +11,24 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PolyBucket.Tests.Features.Models.CreateModel;
 
 [Collection("TestCollection")]
 public class CreateModelIntegrationTests : BaseIntegrationTest
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     public CreateModelIntegrationTests(TestCollectionFixture testFixture) : base(testFixture)
     {
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model with a valid request, the create model endpoint returns Created.")]
     public async Task CreateModel_WithValidRequest_ReturnsCreated()
     {
         // Arrange
@@ -41,6 +48,10 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         content.Add(new StringContent("Public"), "Privacy");
         content.Add(new StringContent("CCBy4"), "License");
 
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("solid test endsolid"));
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(fileContent, "Files", "test.stl");
+
         // Act
         var response = await client.PostAsync("/api/models", content);
 
@@ -48,10 +59,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         
         var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<CreateModelResponse>(responseContent, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<CreateModelResponse>(responseContent, JsonOptions);
 
         result.ShouldNotBeNull();
         result.Model.ShouldNotBeNull();
@@ -63,7 +71,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         result.Model.AuthorId.ShouldBe(user.Id);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model without authentication, the create model endpoint returns Unauthorized.")]
     public async Task CreateModel_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Arrange
@@ -79,7 +87,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model with an empty name, the create model endpoint returns BadRequest.")]
     public async Task CreateModel_WithEmptyName_ReturnsBadRequest()
     {
         // Arrange
@@ -101,7 +109,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model without any files, the create model endpoint returns BadRequest.")]
     public async Task CreateModel_WithoutFiles_ReturnsBadRequest()
     {
         // Arrange
@@ -123,7 +131,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When creating a model with an invalid file type, the create model endpoint returns BadRequest.")]
     public async Task CreateModel_WithInvalidFileType_ReturnsBadRequest()
     {
         // Arrange
@@ -176,12 +184,12 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
             PropertyNameCaseInsensitive = true
         });
 
-        if (loginData?.AccessToken == null)
+        if (string.IsNullOrEmpty(loginData?.Token))
         {
             throw new Exception($"Failed to deserialize login response: {loginResult}");
         }
 
-        return loginData.AccessToken;
+        return loginData.Token;
     }
 
     private class CreateModelResponse
@@ -201,6 +209,6 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
 
     private class LoginResponse
     {
-        public string AccessToken { get; set; } = string.Empty;
+        public string Token { get; set; } = string.Empty;
     }
 } 

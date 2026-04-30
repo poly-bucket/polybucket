@@ -27,17 +27,22 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
             _repository = new UpdateModelRepository(_context);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model by id with an existing model, the update model repository returns the model.")]
         public async Task GetModelByIdAsync_WithExistingModel_ShouldReturnModel()
         {
             // Arrange
             var modelId = Guid.NewGuid();
+            var authorId = Guid.NewGuid();
             var model = new Model
             {
                 Id = modelId,
                 Name = "Test Model",
                 Description = "Test Description",
-                AuthorId = Guid.NewGuid()
+                AuthorId = authorId,
+                CreatedAt = DateTime.UtcNow,
+                CreatedById = authorId,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedById = authorId
             };
 
             _context.Models.Add(model);
@@ -54,7 +59,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
             result.Name.ShouldBe("Test Model");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model by id with a non-existent model, the update model repository returns null.")]
         public async Task GetModelByIdAsync_WithNonExistingModel_ShouldReturnNull()
         {
             // Arrange
@@ -68,16 +73,18 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
             result.ShouldBeNull();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model by id, the update model repository includes the model's files.")]
         public async Task GetModelByIdAsync_ShouldIncludeFiles()
         {
             // Arrange
             var modelId = Guid.NewGuid();
+            var authorId = Guid.NewGuid();
             var model = new Model
             {
                 Id = modelId,
                 Name = "Test Model",
-                AuthorId = Guid.NewGuid(),
+                Description = "D",
+                AuthorId = authorId,
                 Files = new List<ModelFile>
                 {
                     new ModelFile
@@ -86,7 +93,11 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
                         Name = "test.stl",
                         Path = "https://storage.example.com/test.stl",
                         Size = 1024,
-                        MimeType = "application/octet-stream"
+                        MimeType = "application/octet-stream",
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedById = authorId,
+                        UpdatedAt = DateTime.UtcNow,
+                        UpdatedById = authorId
                     }
                 }
             };
@@ -105,7 +116,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
             result.Files.ShouldHaveSingleItem();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model with valid data, the update model repository persists the change in the database.")]
         public async Task UpdateModelAsync_WithValidModel_ShouldUpdateInDatabase()
         {
             // Arrange

@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
-using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Http
 {
@@ -36,15 +36,20 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
             try
             {
                 // Get user ID from the authenticated user using the standard claim type
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                var userIdClaim = User.FindUserIdClaim();
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
                 {
                     _logger.LogWarning("DisableTwoFactorAuthController.Disable: No user ID found in token. Available claims: {Claims}", 
                         string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
                     return Unauthorized(new { message = "Invalid user authentication" });
                 }
 
-                command.UserId = userId;
+                if (command.UserId != Guid.Empty && command.UserId != authenticatedUserId)
+                {
+                    return Unauthorized(new { message = "Invalid user authentication" });
+                }
+
+                command.UserId = authenticatedUserId;
 
                 var response = await _handler.Handle(command, cancellationToken);
                 

@@ -60,7 +60,7 @@ public class ModelsControllerTests : IDisposable
         };
     }
 
-    [Theory]
+    [Theory(DisplayName = "When inspecting model controllers, the controller has the ApiController and Route attributes applied")]
     [MemberData(nameof(ControllerTypes))]
     public void Controller_ShouldHaveApiControllerAndRoute(Type controllerType)
     {

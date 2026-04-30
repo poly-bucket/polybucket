@@ -28,16 +28,16 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             _repository = new GetModelByUserIdRepository(_context);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models by user id with existing models, the get model by user id repository returns the models.")]
         public async Task GetModelsByUserIdAsync_WithExistingModels_ShouldReturnModels()
         {
             // Arrange
             var userId = Guid.NewGuid();
             var models = new List<Model>
             {
-                new Model { Id = Guid.NewGuid(), Name = "Model 1", AuthorId = userId },
-                new Model { Id = Guid.NewGuid(), Name = "Model 2", AuthorId = userId },
-                new Model { Id = Guid.NewGuid(), Name = "Model 3", AuthorId = userId }
+                new Model { Id = Guid.NewGuid(), Name = "Model 1", AuthorId = userId, Privacy = PrivacySettings.Public },
+                new Model { Id = Guid.NewGuid(), Name = "Model 2", AuthorId = userId, Privacy = PrivacySettings.Public },
+                new Model { Id = Guid.NewGuid(), Name = "Model 3", AuthorId = userId, Privacy = PrivacySettings.Public }
             };
 
             _context.Models.AddRange(models);
@@ -54,7 +54,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.TotalCount.ShouldBe(3);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models by user id with pagination, the get model by user id repository returns the requested page.")]
         public async Task GetModelsByUserIdAsync_WithPagination_ShouldReturnCorrectPage()
         {
             // Arrange
@@ -62,7 +62,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             var models = new List<Model>();
             for (int i = 1; i <= 15; i++)
             {
-                models.Add(new Model { Id = Guid.NewGuid(), Name = $"Model {i}", AuthorId = userId });
+                models.Add(new Model { Id = Guid.NewGuid(), Name = $"Model {i}", AuthorId = userId, Privacy = PrivacySettings.Public });
             }
 
             _context.Models.AddRange(models);
@@ -79,7 +79,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.TotalCount.ShouldBe(15);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models by user id with includePrivate enabled, the get model by user id repository returns private models.")]
         public async Task GetModelsByUserIdAsync_WithIncludePrivate_ShouldReturnPrivateModels()
         {
             // Arrange
@@ -103,7 +103,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.Models.Count().ShouldBe(2);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models by user id without includePrivate, the get model by user id repository excludes private models.")]
         public async Task GetModelsByUserIdAsync_WithoutIncludePrivate_ShouldNotReturnPrivateModels()
         {
             // Arrange
@@ -128,15 +128,15 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.Models.First().Name.ShouldBe("Public Model");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models by user id with includeDeleted enabled, the get model by user id repository returns deleted models.")]
         public async Task GetModelsByUserIdAsync_WithIncludeDeleted_ShouldReturnDeletedModels()
         {
             // Arrange
             var userId = Guid.NewGuid();
             var models = new List<Model>
             {
-                new Model { Id = Guid.NewGuid(), Name = "Active Model", AuthorId = userId },
-                new Model { Id = Guid.NewGuid(), Name = "Deleted Model", AuthorId = userId, DeletedAt = DateTime.UtcNow }
+                new Model { Id = Guid.NewGuid(), Name = "Active Model", AuthorId = userId, Privacy = PrivacySettings.Public },
+                new Model { Id = Guid.NewGuid(), Name = "Deleted Model", AuthorId = userId, Privacy = PrivacySettings.Public, DeletedAt = DateTime.UtcNow }
             };
 
             _context.Models.AddRange(models);
@@ -152,15 +152,15 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.Models.Count().ShouldBe(2);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models by user id without includeDeleted, the get model by user id repository excludes deleted models.")]
         public async Task GetModelsByUserIdAsync_WithoutIncludeDeleted_ShouldNotReturnDeletedModels()
         {
             // Arrange
             var userId = Guid.NewGuid();
             var models = new List<Model>
             {
-                new Model { Id = Guid.NewGuid(), Name = "Active Model", AuthorId = userId },
-                new Model { Id = Guid.NewGuid(), Name = "Deleted Model", AuthorId = userId, DeletedAt = DateTime.UtcNow }
+                new Model { Id = Guid.NewGuid(), Name = "Active Model", AuthorId = userId, Privacy = PrivacySettings.Public },
+                new Model { Id = Guid.NewGuid(), Name = "Deleted Model", AuthorId = userId, Privacy = PrivacySettings.Public, DeletedAt = DateTime.UtcNow }
             };
 
             _context.Models.AddRange(models);
@@ -177,7 +177,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.Models.First().Name.ShouldBe("Active Model");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models by user id and the user has no models, the get model by user id repository returns an empty list.")]
         public async Task GetModelsByUserIdAsync_WithNoModels_ShouldReturnEmptyList()
         {
             // Arrange

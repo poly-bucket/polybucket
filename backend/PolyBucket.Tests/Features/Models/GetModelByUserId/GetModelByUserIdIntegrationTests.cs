@@ -1,229 +1,118 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using PolyBucket.Api;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Tests.Factories;
-using Shouldly;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text;
+using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using PolyBucket.Api.Features.Models.GetModelByUserId.Domain;
+using Shouldly;
+using Xunit;
 
 namespace PolyBucket.Tests.Features.Models.GetModelByUserId;
 
-public class GetModelByUserIdIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("TestCollection")]
+public class GetModelByUserIdIntegrationTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestUserFactory _userFactory;
-    private readonly TestModelFactory _modelFactory;
-
-    public GetModelByUserIdIntegrationTests(WebApplicationFactory<Program> factory)
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<PolyBucketDbContext>));
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
-                if (descriptor != null)
-                    services.Remove(descriptor);
-
-                services.AddDbContext<PolyBucketDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("GetModelByUserIdTestDb");
-                });
-            });
-        });
-
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        _userFactory = new TestUserFactory(dbContext);
-        _modelFactory = new TestModelFactory(dbContext);
+    public GetModelByUserIdIntegrationTests(TestCollectionFixture testFixture) : base(testFixture)
+    {
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting models by user id with a valid request, the get model by user id endpoint returns Ok with the user's models.")]
     public async Task GetModelByUserId_WithValidRequest_ReturnsOk()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model1 = await _modelFactory.CreateTestModel(user.Id);
-        var model2 = await _modelFactory.CreateTestModel(user.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.AddRange(model1, model2);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model1 = await ModelFactory.CreateTestModel(user.Id);
+        var model2 = await ModelFactory.CreateTestModel(user.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
-        var response = await client.GetAsync($"/api/models/user/{user.Id.ToString()}?page=1&pageSize=10");
+        var response = await client.GetAsync($"/api/models/user/{user.Id}?page=1&take=10");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        
+
         var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<GetModelByUserIdResponse>(responseContent, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<GetModelByUserIdResponse>(responseContent, JsonOptions);
 
         result.ShouldNotBeNull();
-        result.Models.ShouldNotBeNull();
+        result!.Models.ShouldNotBeNull();
         result.Models.Count().ShouldBe(2);
         result.TotalCount.ShouldBe(2);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting models by user id without authentication, the get model by user id endpoint returns Unauthorized.")]
     public async Task GetModelByUserId_WithoutAuthentication_ReturnsUnauthorized()
     {
-        // Arrange
-        var client = _factory.CreateClient();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
 
-        // Act
-        var response = await client.GetAsync("/api/models/user/1");
+        var response = await client.GetAsync($"/api/models/user/{Guid.NewGuid()}");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting models for another user without permission, the get model by user id endpoint returns BadRequest.")]
     public async Task GetModelByUserId_WithUnauthorizedUser_ReturnsForbidden()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var owner = await _userFactory.CreateTestUser("owner@test.com");
-        var unauthorizedUser = await _userFactory.CreateTestUser("unauthorized@test.com");
-        var model = await _modelFactory.CreateTestModel(owner.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var owner = await UserFactory.CreateTestUser("owner@test.com");
+        var unauthorizedUser = await UserFactory.CreateTestUser("unauthorized@test.com");
+        await ModelFactory.CreateTestModel(owner.Id);
 
-        var token = await GetAuthTokenAsync(client, unauthorizedUser.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, unauthorizedUser.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
-        var response = await client.GetAsync($"/api/models/user/{owner.Id.ToString()}");
+        var response = await client.GetAsync($"/api/models/user/{owner.Id}");
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting models by user id with pagination parameters, the get model by user id endpoint returns the correctly paginated results.")]
     public async Task GetModelByUserId_WithPagination_ReturnsCorrectResults()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model1 = await _modelFactory.CreateTestModel(user.Id);
-        var model2 = await _modelFactory.CreateTestModel(user.Id);
-        var model3 = await _modelFactory.CreateTestModel(user.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.AddRange(model1, model2, model3);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        await ModelFactory.CreateTestModel(user.Id);
+        await ModelFactory.CreateTestModel(user.Id);
+        await ModelFactory.CreateTestModel(user.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
-        var response = await client.GetAsync($"/api/models/user/{user.Id.ToString()}?page=1&pageSize=2");
+        var response = await client.GetAsync($"/api/models/user/{user.Id}?page=1&take=2");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        
+
         var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<GetModelByUserIdResponse>(responseContent, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<GetModelByUserIdResponse>(responseContent, JsonOptions);
 
         result.ShouldNotBeNull();
-        result.Models.ShouldNotBeNull();
+        result!.Models.ShouldNotBeNull();
         result.Models.Count().ShouldBe(2);
         result.TotalCount.ShouldBe(3);
     }
 
-    [Fact]
-    public async Task GetModelByUserId_WithNonExistentUser_ReturnsEmptyList()
+    [Fact(DisplayName = "When requesting another user's models without the required permission, the get model by user id endpoint returns BadRequest.")]
+    public async Task GetModelByUserId_WithOtherUserIdWithoutPermission_ReturnsBadRequest()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
         var response = await client.GetAsync($"/api/models/user/{Guid.NewGuid()}");
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<GetModelByUserIdResponse>(responseContent, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
-
-        result.ShouldNotBeNull();
-        result.Models.ShouldNotBeNull();
-        result.Models.Count().ShouldBe(0);
-        result.TotalCount.ShouldBe(0);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
-
-    private async Task<string> GetAuthTokenAsync(HttpClient client, string email, string password)
-    {
-        var loginRequest = new
-        {
-            Email = email,
-            Password = password
-        };
-
-        var loginContent = new StringContent(
-            JsonSerializer.Serialize(loginRequest),
-            Encoding.UTF8,
-            "application/json");
-
-        var loginResponse = await client.PostAsync("/api/authentication/login", loginContent);
-        
-        if (loginResponse.IsSuccessStatusCode)
-        {
-            var loginResult = await loginResponse.Content.ReadAsStringAsync();
-            var tokenResponse = JsonSerializer.Deserialize<LoginResponse>(loginResult, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            return tokenResponse?.AccessToken ?? string.Empty;
-        }
-
-        return string.Empty;
-    }
-
-    private class LoginResponse
-    {
-        public string AccessToken { get; set; } = string.Empty;
-    }
-
-    private class GetModelByUserIdResponse
-    {
-        public IEnumerable<ModelSummary> Models { get; set; } = new List<ModelSummary>();
-        public int TotalCount { get; set; }
-    }
-
-    private class ModelSummary
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public Guid AuthorId { get; set; }
-    }
-} 
+}

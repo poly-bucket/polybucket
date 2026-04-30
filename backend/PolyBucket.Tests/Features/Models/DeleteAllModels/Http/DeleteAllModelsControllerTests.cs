@@ -15,7 +15,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteAllModels.Http;
 
 public class DeleteAllModelsControllerTests
 {
-    [Fact]
+    [Fact(DisplayName = "When deleting all models and the service succeeds, the delete all models controller returns Ok with the deleted count.")]
     public async Task DeleteAllModels_WhenServiceSucceeds_ReturnsOk()
     {
         var mock = new Mock<IDeleteAllModelsService>();

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Settings;
@@ -91,7 +92,7 @@ public static class ApplicationBuilderExtensions
             app.UseOpenApi();
             app.UseSwaggerUi();
         }
-        else
+        else if (!app.Configuration.GetValue<bool>("Database:SkipHostDatabaseInitialization"))
         {
             app.UseHttpsRedirection();
         }

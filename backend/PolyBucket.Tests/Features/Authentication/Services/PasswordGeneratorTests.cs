@@ -15,7 +15,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             _passwordGenerator = new PasswordGenerator();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating a password, the password generator returns a password within the default length range.")]
         public void GeneratePassword_ShouldGeneratePasswordWithinLengthRange()
         {
             // Arrange & Act
@@ -25,7 +25,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.InRange(password.Length, 14, 20);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating a password, the password generator includes at least one alphabetic character.")]
         public void GeneratePassword_ShouldContainAtLeastOneAlphaCharacter()
         {
             // Arrange & Act
@@ -35,7 +35,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.True(password.Any(char.IsLetter), "Password should contain at least one alphabetic character");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating a password, the password generator includes at least one numeric character.")]
         public void GeneratePassword_ShouldContainAtLeastOneNumber()
         {
             // Arrange & Act
@@ -45,7 +45,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.True(password.Any(char.IsDigit), "Password should contain at least one numeric character");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating a password, the password generator includes at least one lowercase letter.")]
         public void GeneratePassword_ShouldContainAtLeastOneLowercaseLetter()
         {
             // Arrange & Act
@@ -55,7 +55,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.True(password.Any(char.IsLower), "Password should contain at least one lowercase letter");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating a password, the password generator includes at least one uppercase letter.")]
         public void GeneratePassword_ShouldContainAtLeastOneUppercaseLetter()
         {
             // Arrange & Act
@@ -65,7 +65,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.True(password.Any(char.IsUpper), "Password should contain at least one uppercase letter");
         }
 
-        [Theory]
+        [Theory(DisplayName = "When generating a password with a custom length range, the password generator respects the specified limits")]
         [InlineData(14, 16)]
         [InlineData(16, 18)]
         [InlineData(18, 20)]
@@ -80,7 +80,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.True(password.Any(char.IsDigit), "Password should contain at least one numeric character");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating multiple passwords in succession, the password generator produces different passwords.")]
         public void GeneratePassword_GenerateMultiple_ShouldProduceDifferentPasswords()
         {
             // Arrange & Act
@@ -94,7 +94,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.NotEqual(password2, password3);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating a password, the password generator only includes valid characters.")]
         public void GeneratePassword_ShouldOnlyContainValidCharacters()
         {
             // Arrange
@@ -108,7 +108,7 @@ namespace PolyBucket.Tests.Features.Authentication.Services
                 $"Password contains invalid characters. Password: {password}");
         }
 
-        [Theory]
+        [Theory(DisplayName = "When generating a password with a minimum length that is too short, the password generator throws an ArgumentException")]
         [InlineData(3)]
         [InlineData(2)]
         [InlineData(1)]
@@ -118,14 +118,14 @@ namespace PolyBucket.Tests.Features.Authentication.Services
             Assert.Throws<ArgumentException>(() => _passwordGenerator.GeneratePassword(minLength, 20));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating a password with a maximum length less than the minimum length, the password generator throws an ArgumentException.")]
         public void GeneratePassword_WithMaxLengthLessThanMinLength_ShouldThrowArgumentException()
         {
             // Arrange, Act & Assert
             Assert.Throws<ArgumentException>(() => _passwordGenerator.GeneratePassword(15, 10));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When generating passwords across many repeated calls, the password generator produces sufficiently random results.")]
         public void GeneratePassword_RepeatedCalls_ShouldBeSufficientlyRandom()
         {
             // Arrange

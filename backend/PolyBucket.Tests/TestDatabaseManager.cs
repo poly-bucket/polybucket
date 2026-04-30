@@ -57,7 +57,7 @@ namespace PolyBucket.Tests
             
             var connectionString = GetTestConnectionString(configuration);
             var optionsBuilder = new DbContextOptionsBuilder<PolyBucketDbContext>();
-            optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly("PolyBucket.Api"));
+            optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly(typeof(PolyBucketDbContext).Assembly.GetName().Name!));
 
             using var context = new PolyBucketDbContext(optionsBuilder.Options);
             
@@ -150,6 +150,48 @@ namespace PolyBucket.Tests
             }
 
 
+        }
+
+        public static async Task ReseedRolePermissionsIfEmptyAsync(PolyBucketDbContext context)
+        {
+            if (await context.RolePermissions.AnyAsync())
+                return;
+
+            var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+            var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
+            var allPermissions = await context.Permissions.ToListAsync();
+
+            if (userRole != null && allPermissions.Count > 0)
+            {
+                var userScopedPermissions = allPermissions.Where(p =>
+                    !p.Name.Contains(".any", StringComparison.OrdinalIgnoreCase)
+                    && !p.Name.StartsWith("admin.", StringComparison.OrdinalIgnoreCase)
+                    && !p.Name.StartsWith("moderation.", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(p.Name, PermissionConstants.MODEL_VIEW_PRIVATE, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                var userPermissions = userScopedPermissions.Select(p => new RolePermission
+                {
+                    RoleId = userRole.Id,
+                    PermissionId = p.Id,
+                    IsGranted = true,
+                    GrantedByUserId = null
+                }).ToList();
+                await context.RolePermissions.AddRangeAsync(userPermissions);
+            }
+
+            if (adminRole != null && allPermissions.Count > 0)
+            {
+                var rolePermissions = allPermissions.Select(p => new RolePermission
+                {
+                    RoleId = adminRole.Id,
+                    PermissionId = p.Id,
+                    IsGranted = true,
+                    GrantedByUserId = null
+                }).ToList();
+                await context.RolePermissions.AddRangeAsync(rolePermissions);
+            }
+
+            await context.SaveChangesAsync();
         }
 
         private static async Task SeedRequiredDataAsync(PolyBucketDbContext context)
@@ -309,7 +351,7 @@ namespace PolyBucket.Tests
 
             var connectionString = GetTestConnectionString(configuration);
             services.AddDbContext<PolyBucketDbContext>(options =>
-                options.UseNpgsql(connectionString, b => b.MigrationsAssembly("PolyBucket.Api")));
+                options.UseNpgsql(connectionString, b => b.MigrationsAssembly(typeof(PolyBucketDbContext).Assembly.GetName().Name!)));
 
             // Add other services as needed for testing
             services.AddLogging();

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
@@ -27,8 +28,8 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
 
         public async Task<UpdateModelResponse> UpdateModelAsync(Guid modelId, UpdateModelRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            var userIdClaim = user.FindUserIdClaim();
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
                 throw new ValidationException("Invalid authentication token");
             }
@@ -49,6 +50,11 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
             if (!hasAnyPermission && model.AuthorId != userId)
             {
                 throw new UnauthorizedAccessException("You do not have permission to update this model");
+            }
+
+            if (request.Name != null && string.IsNullOrWhiteSpace(request.Name))
+            {
+                throw new ValidationException("Model name cannot be empty");
             }
 
             // Update model properties

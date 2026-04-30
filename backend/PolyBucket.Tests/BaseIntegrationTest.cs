@@ -8,7 +8,6 @@ using PolyBucket.Tests.Factories;
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PolyBucket.Api.Common.Models;
@@ -110,13 +109,14 @@ namespace PolyBucket.Tests
                 await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Comments\" CASCADE");
                 await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserSettings\" CASCADE");
                 await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"SystemSettings\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RolePermissions\" CASCADE");
                 
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Filaments\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Printers\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Reports\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserRoles\" CASCADE"); } catch { }
-                
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RolePermissions\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserPermissions\" CASCADE"); } catch { }
+
                 try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Users_Id_seq\" RESTART WITH 1"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Models_Id_seq\" RESTART WITH 1"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"ModelVersions_Id_seq\" RESTART WITH 1"); } catch { }
@@ -128,6 +128,9 @@ namespace PolyBucket.Tests
                 try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Reports_Id_seq\" RESTART WITH 1"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"UserSettings_Id_seq\" RESTART WITH 1"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"SystemSettings_Id_seq\" RESTART WITH 1"); } catch { }
+
+                await TestDatabaseManager.ReseedRolePermissionsIfEmptyAsync(ctx);
+                ctx.ChangeTracker.Clear();
             }
             catch (Exception ex)
             {
@@ -142,26 +145,75 @@ namespace PolyBucket.Tests
 
         protected async Task<string> GetAuthToken(string email, string password)
         {
-            var loginCommand = new
+            Client.DefaultRequestHeaders.Authorization = null;
+
+            var loginCommand = new LoginCommand
             {
                 EmailOrUsername = email,
                 Password = password
             };
 
-            var loginContent = new StringContent(
-                JsonSerializer.Serialize(loginCommand),
-                Encoding.UTF8,
-                "application/json");
+            var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginCommand);
 
-            var loginResponse = await Client.PostAsync("/api/auth/login", loginContent);
-            
-            if (loginResponse.IsSuccessStatusCode)
+            if (!loginResponse.IsSuccessStatusCode)
+                return string.Empty;
+
+            var json = await loginResponse.Content.ReadAsStringAsync();
+            return ExtractAccessTokenFromLoginJson(json);
+        }
+
+        protected static async Task<string> GetAuthTokenWithClient(HttpClient client, string email, string password)
+        {
+            client.DefaultRequestHeaders.Authorization = null;
+
+            var loginCommand = new LoginCommand
             {
-                var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginCommandResponse>();
-                return loginResult?.Token ?? "test-token";
+                EmailOrUsername = email,
+                Password = password
+            };
+
+            var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginCommand);
+
+            if (!loginResponse.IsSuccessStatusCode)
+                return string.Empty;
+
+            var json = await loginResponse.Content.ReadAsStringAsync();
+            return ExtractAccessTokenFromLoginJson(json);
+        }
+
+        private static string ExtractAccessTokenFromLoginJson(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return string.Empty;
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var requires2Fa = false;
+            foreach (var prop in root.EnumerateObject())
+            {
+                if (prop.Name.Equals("requiresTwoFactor", StringComparison.OrdinalIgnoreCase)
+                    && prop.Value.ValueKind == JsonValueKind.True)
+                {
+                    requires2Fa = true;
+                    break;
+                }
             }
 
-            return "test-token";
+            if (requires2Fa)
+                return string.Empty;
+
+            foreach (var prop in root.EnumerateObject())
+            {
+                if (prop.Name.Equals("token", StringComparison.OrdinalIgnoreCase)
+                    && prop.Value.ValueKind == JsonValueKind.String)
+                {
+                    var token = prop.Value.GetString();
+                    return string.IsNullOrEmpty(token) ? string.Empty : token;
+                }
+            }
+
+            return string.Empty;
         }
 
         protected HttpRequestMessage GetAuthHeaders(string token)

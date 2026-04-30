@@ -110,18 +110,6 @@ public static class ServiceCollectionExtensions
                 RoleClaimType = "role",
                 SaveSigninToken = true
             };
-            
-            options.Events = new JwtBearerEvents
-            {
-                OnTokenValidated = context =>
-                {
-                    // Ensure all claims are preserved
-                    var claims = context.Principal?.Claims.ToList() ?? new List<Claim>();
-                    var identity = new ClaimsIdentity(claims, context.Scheme.Name);
-                    context.Principal = new ClaimsPrincipal(identity);
-                    return Task.CompletedTask;
-                }
-            };
         });
 
         return services;

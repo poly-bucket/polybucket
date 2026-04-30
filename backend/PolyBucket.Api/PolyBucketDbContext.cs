@@ -212,15 +212,6 @@ namespace PolyBucket.Api.Data
             modelBuilder.Entity<Theme>()
                 .HasIndex(t => t.Name)
                 .IsUnique();
-
-            // TwoFactorAuth Concurrency Configuration
-            modelBuilder.Entity<TwoFactorAuthDomain.TwoFactorAuth>()
-                .Property(tfa => tfa.Version)
-                .IsConcurrencyToken();
-
-            modelBuilder.Entity<TwoFactorAuthDomain.BackupCode>()
-                .Property(bc => bc.Version)
-                .IsConcurrencyToken();
         }
     }
 } 

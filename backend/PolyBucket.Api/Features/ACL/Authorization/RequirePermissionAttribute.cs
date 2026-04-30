@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using PolyBucket.Api.Features.ACL.Services;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -36,7 +37,10 @@ namespace PolyBucket.Api.Features.ACL.Authorization
                 return;
             }
 
-            var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = context.HttpContext.User;
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                ?? user.FindFirst("sub")?.Value;
             if (!Guid.TryParse(userIdClaim, out var userId))
             {
                 context.Result = new UnauthorizedResult();

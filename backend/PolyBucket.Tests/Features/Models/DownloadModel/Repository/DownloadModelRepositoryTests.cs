@@ -14,7 +14,7 @@ namespace PolyBucket.Tests.Features.Models.DownloadModel.Repository;
 
 public class DownloadModelRepositoryTests
 {
-    [Fact]
+    [Fact(DisplayName = "When getting a download bundle for a missing model, the download model repository returns null.")]
     public async Task GetBundleForDownloadAsync_WhenModelMissing_ReturnsNull()
     {
         var options = new DbContextOptionsBuilder<PolyBucketDbContext>()
@@ -28,7 +28,7 @@ public class DownloadModelRepositoryTests
         Assert.Null(result);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a download bundle for an existing model, the download model repository returns a bundle with files.")]
     public async Task GetBundleForDownloadAsync_WhenModelExists_ReturnsBundleWithFiles()
     {
         var options = new DbContextOptionsBuilder<PolyBucketDbContext>()

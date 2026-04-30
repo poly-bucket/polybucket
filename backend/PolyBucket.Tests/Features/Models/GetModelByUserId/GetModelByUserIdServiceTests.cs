@@ -33,7 +33,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             _service = new GetModelByUserIdService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object, _mockStorageService.Object);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models for the current user's own id, the get model by user id service returns their models.")]
         public async Task GetModelsByUserIdAsync_WithOwnModels_ShouldReturnModels()
         {
             // Arrange
@@ -67,7 +67,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.Take.ShouldBe(10);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting another user's models without the required permission, the get model by user id service throws a ValidationException.")]
         public async Task GetModelsByUserIdAsync_WithOtherUserModels_ShouldThrowValidationException()
         {
             // Arrange
@@ -85,7 +85,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
                 await _service.GetModelsByUserIdAsync(otherUserId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting another user's models with the MODEL_VIEW_PRIVATE permission, the get model by user id service allows access.")]
         public async Task GetModelsByUserIdAsync_WithAdminPermission_ShouldAllowAccessToOtherUserModels()
         {
             // Arrange
@@ -111,7 +111,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
             result.Models.ShouldHaveSingleItem();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models with an invalid user principal, the get model by user id service throws a ValidationException.")]
         public async Task GetModelsByUserIdAsync_WithInvalidUser_ShouldThrowValidationException()
         {
             // Arrange
@@ -125,7 +125,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelByUserId
                 await _service.GetModelsByUserIdAsync(userId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting models with pagination parameters, the get model by user id service calculates the total page count correctly.")]
         public async Task GetModelsByUserIdAsync_WithPagination_ShouldCalculateTotalPages()
         {
             // Arrange

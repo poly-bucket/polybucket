@@ -153,19 +153,16 @@ namespace PolyBucket.Tests.Features.Collections
             // Should only return 3 favorite collections
             collectionsArray.Count.ShouldBe(3);
             
-            // Should be ordered by DisplayOrder first, then by Name
-            // First: "Fourth Collection" (DisplayOrder: 0, Name: "Fourth")
-            // Second: "First Collection" (DisplayOrder: 0, Name: "First") 
-            // Third: "Second Collection" (DisplayOrder: 1, Name: "Second")
-            collectionsArray[0].GetProperty("name").GetString().ShouldBe("Fourth Collection");
-            collectionsArray[1].GetProperty("name").GetString().ShouldBe("First Collection");
+            // Ordered by DisplayOrder, then Name (alphabetically among ties)
+            collectionsArray[0].GetProperty("name").GetString().ShouldBe("First Collection");
+            collectionsArray[1].GetProperty("name").GetString().ShouldBe("Fourth Collection");
             collectionsArray[2].GetProperty("name").GetString().ShouldBe("Second Collection");
             
             // Verify properties are correctly mapped
             var firstCollection = collectionsArray[0];
             firstCollection.GetProperty("id").GetString().ShouldNotBeNullOrEmpty();
-            firstCollection.GetProperty("name").GetString().ShouldBe("Fourth Collection");
-            firstCollection.GetProperty("description").GetString().ShouldBe("Fourth description");
+            firstCollection.GetProperty("name").GetString().ShouldBe("First Collection");
+            firstCollection.GetProperty("description").GetString().ShouldBe("First description");
             firstCollection.GetProperty("visibility").GetString().ShouldBe("Private");
             firstCollection.GetProperty("favorite").GetBoolean().ShouldBeTrue();
             firstCollection.GetProperty("displayOrder").GetInt32().ShouldBe(0);

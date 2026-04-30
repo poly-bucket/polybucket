@@ -20,7 +20,6 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Repository
         {
             return await _dbContext.Models
                 .Include(m => m.Files)
-                .Include(m => m.Author)
                 .Include(m => m.Categories)
                 .Include(m => m.Tags)
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);

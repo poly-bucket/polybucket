@@ -123,7 +123,7 @@ namespace PolyBucket.Tests.Features.Search
             {
                 Query = "test",
                 Page = 2,
-                PageSize = 5,
+                PageSize = 2,
                 Type = SearchType.All
             };
 
@@ -133,7 +133,7 @@ namespace PolyBucket.Tests.Features.Search
             // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Page);
-            Assert.Equal(5, result.PageSize);
+            Assert.Equal(2, result.PageSize);
             Assert.True(result.TotalPages >= 2);
         }
 

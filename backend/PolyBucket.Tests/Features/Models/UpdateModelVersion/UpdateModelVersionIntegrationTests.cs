@@ -1,70 +1,42 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using PolyBucket.Api;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Tests.Factories;
-using Shouldly;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using PolyBucket.Api.Features.Models.UpdateModelVersion.Domain;
+using Shouldly;
+using Xunit;
 
 namespace PolyBucket.Tests.Features.Models.UpdateModelVersion;
 
-public class UpdateModelVersionIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("TestCollection")]
+public class UpdateModelVersionIntegrationTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestUserFactory _userFactory;
-    private readonly TestModelFactory _modelFactory;
-
-    public UpdateModelVersionIntegrationTests(WebApplicationFactory<Program> factory)
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<PolyBucketDbContext>));
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
-                if (descriptor != null)
-                    services.Remove(descriptor);
-
-                services.AddDbContext<PolyBucketDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("UpdateModelVersionTestDb");
-                });
-            });
-        });
-
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        _userFactory = new TestUserFactory(dbContext);
-        _modelFactory = new TestModelFactory(dbContext);
+    public UpdateModelVersionIntegrationTests(TestCollectionFixture testFixture) : base(testFixture)
+    {
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a model version with a valid request, the update model version endpoint returns Ok.")]
     public async Task UpdateModelVersion_WithValidRequest_ReturnsOk()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model = await _modelFactory.CreateTestModel(user.Id);
-        var version = await _modelFactory.CreateTestModelVersion(model.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        dbContext.ModelVersions.Add(version);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model = await ModelFactory.CreateTestModel(user.Id);
+        var version = await ModelFactory.CreateTestModelVersion(model.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var updateRequest = new
         {
-            VersionNumber = "2.1",
+            Name = "2.1",
             Notes = "Updated version notes"
         };
 
@@ -73,168 +45,103 @@ public class UpdateModelVersionIntegrationTests : IClassFixture<WebApplicationFa
             Encoding.UTF8,
             "application/json");
 
-        // Act
         var response = await client.PutAsync($"/api/models/{model.Id}/versions/{version.Id}", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<UpdateModelVersionResponse>(responseContent, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
 
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(version.Id);
-        result.VersionNumber.ShouldBe("2.1");
-        result.Notes.ShouldBe("Updated version notes");
-        result.ModelId.ShouldBe(model.Id);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        var envelope = JsonSerializer.Deserialize<UpdateModelVersionResponse>(responseContent, JsonOptions);
+
+        envelope.ShouldNotBeNull();
+        envelope!.ModelVersion.ShouldNotBeNull();
+        envelope.ModelVersion.Id.ShouldBe(version.Id);
+        envelope.ModelVersion.Name.ShouldBe("2.1");
+        envelope.ModelVersion.Notes.ShouldBe("Updated version notes");
+        envelope.ModelVersion.ModelId.ShouldBe(model.Id);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a model version without authentication, the update model version endpoint returns Unauthorized.")]
     public async Task UpdateModelVersion_WithoutAuthentication_ReturnsUnauthorized()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var updateRequest = new { VersionNumber = "2.1" };
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var updateRequest = new { Name = "2.1" };
         var content = new StringContent(
             JsonSerializer.Serialize(updateRequest),
             Encoding.UTF8,
             "application/json");
 
-        // Act
-        var response = await client.PutAsync("/api/models/1/versions/1", content);
+        var response = await client.PutAsync($"/api/models/{Guid.NewGuid()}/versions/{Guid.NewGuid()}", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a model version that does not exist, the update model version endpoint returns NotFound.")]
     public async Task UpdateModelVersion_WithNonExistentVersion_ReturnsNotFound()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var updateRequest = new { VersionNumber = "2.1" };
+        var updateRequest = new { Name = "2.1" };
         var content = new StringContent(
             JsonSerializer.Serialize(updateRequest),
             Encoding.UTF8,
             "application/json");
 
-        // Act
-        var response = await client.PutAsync("/api/models/1/versions/999", content);
+        var response = await client.PutAsync($"/api/models/{Guid.NewGuid()}/versions/{Guid.NewGuid()}", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a model version as a user that does not own the model, the update model version endpoint returns Forbidden.")]
     public async Task UpdateModelVersion_WithUnauthorizedUser_ReturnsForbidden()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var owner = await _userFactory.CreateTestUser("owner@test.com");
-        var unauthorizedUser = await _userFactory.CreateTestUser("unauthorized@test.com");
-        var model = await _modelFactory.CreateTestModel(owner.Id);
-        var version = await _modelFactory.CreateTestModelVersion(model.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.Add(model);
-        dbContext.ModelVersions.Add(version);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var owner = await UserFactory.CreateTestUser("owner@test.com");
+        var unauthorizedUser = await UserFactory.CreateTestUser("unauthorized@test.com");
+        var model = await ModelFactory.CreateTestModel(owner.Id);
+        var version = await ModelFactory.CreateTestModelVersion(model.Id);
 
-        var token = await GetAuthTokenAsync(client, unauthorizedUser.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, unauthorizedUser.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var updateRequest = new { VersionNumber = "2.1" };
+        var updateRequest = new { Name = "2.1" };
         var content = new StringContent(
             JsonSerializer.Serialize(updateRequest),
             Encoding.UTF8,
             "application/json");
 
-        // Act
         var response = await client.PutAsync($"/api/models/{model.Id}/versions/{version.Id}", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When updating a model version under the wrong model id, the update model version endpoint returns NotFound.")]
     public async Task UpdateModelVersion_WithWrongModelId_ReturnsNotFound()
     {
-        // Arrange
-        var client = _factory.CreateClient();
-        var user = await _userFactory.CreateTestUser();
-        var model1 = await _modelFactory.CreateTestModel(user.Id);
-        var model2 = await _modelFactory.CreateTestModel(user.Id);
-        var version = await _modelFactory.CreateTestModelVersion(model1.Id);
-        
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
-        dbContext.Models.AddRange(model1, model2);
-        dbContext.ModelVersions.Add(version);
-        await dbContext.SaveChangesAsync();
+        await ResetStateAsync();
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        var model1 = await ModelFactory.CreateTestModel(user.Id);
+        var model2 = await ModelFactory.CreateTestModel(user.Id);
+        var version = await ModelFactory.CreateTestModelVersion(model1.Id);
 
-        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        var token = await GetAuthTokenWithClient(client, user.Email, "TestPassword123!");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var updateRequest = new { VersionNumber = "2.1" };
+        var updateRequest = new { Name = "2.1" };
         var content = new StringContent(
             JsonSerializer.Serialize(updateRequest),
             Encoding.UTF8,
             "application/json");
 
-        // Act
         var response = await client.PutAsync($"/api/models/{model2.Id}/versions/{version.Id}", content);
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
-
-    private async Task<string> GetAuthTokenAsync(HttpClient client, string email, string password)
-    {
-        var loginRequest = new
-        {
-            Email = email,
-            Password = password
-        };
-
-        var loginContent = new StringContent(
-            JsonSerializer.Serialize(loginRequest),
-            Encoding.UTF8,
-            "application/json");
-
-        var loginResponse = await client.PostAsync("/api/authentication/login", loginContent);
-        
-        if (loginResponse.IsSuccessStatusCode)
-        {
-            var loginResult = await loginResponse.Content.ReadAsStringAsync();
-            var tokenResponse = JsonSerializer.Deserialize<LoginResponse>(loginResult, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            return tokenResponse?.AccessToken ?? string.Empty;
-        }
-
-        return string.Empty;
-    }
-
-    private class LoginResponse
-    {
-        public string AccessToken { get; set; } = string.Empty;
-    }
-
-    private class UpdateModelVersionResponse
-    {
-        public Guid Id { get; set; }
-        public string VersionNumber { get; set; } = string.Empty;
-        public string Notes { get; set; } = string.Empty;
-        public Guid ModelId { get; set; }
-    }
-} 
+}

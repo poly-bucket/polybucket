@@ -44,7 +44,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             _controller.ControllerContext.HttpContext.Request.Headers["User-Agent"] = "Test User Agent";
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a user with valid data, the create user controller returns Created with the new user.")]
         public async Task CreateUser_WithValidData_ShouldReturnCreatedResult()
         {
             // Arrange
@@ -87,7 +87,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             Assert.Equal(expectedResponse.GeneratedPassword, responseData.GeneratedPassword);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a user with an email that is already registered, the create user controller returns Conflict.")]
         public async Task CreateUser_WithDuplicateEmail_ShouldReturnConflict()
         {
             // Arrange
@@ -109,7 +109,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             Assert.Equal(409, conflictResult.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a user with a username that is already taken, the create user controller returns Conflict.")]
         public async Task CreateUser_WithDuplicateUsername_ShouldReturnConflict()
         {
             // Arrange
@@ -131,7 +131,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             Assert.Equal(409, conflictResult.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a user with an invalid model, the create user controller returns BadRequest.")]
         public async Task CreateUser_WithInvalidModel_ShouldReturnBadRequest()
         {
             // Arrange
@@ -152,7 +152,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             Assert.Equal(400, badRequestResult.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a user and the service throws an unexpected error, the create user controller returns InternalServerError.")]
         public async Task CreateUser_WithUnexpectedError_ShouldReturnInternalServerError()
         {
             // Arrange
@@ -174,7 +174,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             Assert.Equal(500, statusCodeResult.StatusCode);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a user with a specific role id, the create user controller forwards the role id and returns Created.")]
         public async Task CreateUser_WithDifferentRoleIds_ShouldSucceed()
         {
             // Arrange
@@ -208,7 +208,7 @@ namespace PolyBucket.Tests.Features.Users.CreateUser.Http
             Assert.Equal(command.RoleId, roleId);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a user, the create user controller forwards the user agent and IP from the request to the service.")]
         public async Task CreateUser_ShouldSetUserAgentAndIpFromRequest()
         {
             // Arrange

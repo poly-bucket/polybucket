@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -25,7 +26,7 @@ public class GetModelByIdControllerTests
         _controller = new GetModelByIdController(_mediator.Object, _logger.Object);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a model by id and the model exists, the get model by id controller returns Ok with the model.")]
     public async Task GetModel_ReturnsOk_WhenModelFound()
     {
         var id = Guid.NewGuid();
@@ -38,11 +39,12 @@ public class GetModelByIdControllerTests
         ok.Value.ShouldBe(expected);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting a model by id and the model is missing, the get model by id controller returns NotFound.")]
     public async Task GetModel_ReturnsNotFound_WhenModelMissing()
     {
         var id = Guid.NewGuid();
-        _mediator.Setup(m => m.Send(It.IsAny<GetModelByIdQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync((GetModelByIdResponse)null!);
+        _mediator.Setup(m => m.Send(It.IsAny<GetModelByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new KeyNotFoundException());
         var result = await _controller.GetModel(id);
         result.Result.ShouldBeOfType<NotFoundResult>();
     }

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.Models.GetModelById.Domain;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -32,6 +33,16 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Http
                 var response = await _mediator.Send(query);
                 _logger.LogDebug("Received response from MediatR");
                 return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Model not found for ID: {Id}", id);
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access to model ID: {Id}", id);
+                return Forbid();
             }
             catch (Exception ex)
             {

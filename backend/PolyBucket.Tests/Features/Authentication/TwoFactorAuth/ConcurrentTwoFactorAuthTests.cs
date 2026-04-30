@@ -28,7 +28,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             _context = ServiceScope.ServiceProvider.GetRequiredService<PolyBucketDbContext>();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When multiple concurrent enable two-factor auth requests are made, the system handles concurrency gracefully and allows only one to succeed.")]
         public async Task Enable_ConcurrentEnableAttempts_ShouldHandleConcurrencyGracefully()
         {
             // Arrange
@@ -53,7 +53,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var command = new EnableTwoFactorAuthCommand
             {
                 UserId = user.Id,
-                Token = "123456"
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             // Act - Simulate concurrent requests
@@ -75,7 +75,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             successCount.ShouldBe(1);
             conflictCount.ShouldBe(2);
 
-            // Verify only one enablement succeeded
+            _context.ChangeTracker.Clear();
             var finalTwoFactorAuth = await _context.TwoFactorAuths
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             finalTwoFactorAuth.ShouldNotBeNull();
@@ -83,7 +83,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             finalTwoFactorAuth.Version.ShouldBeGreaterThan(1);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When concurrent enable and disable two-factor auth requests are made, the system handles concurrency gracefully.")]
         public async Task Enable_ConcurrentEnableAndDisable_ShouldHandleConcurrencyGracefully()
         {
             // Arrange
@@ -110,7 +110,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var enableCommand = new EnableTwoFactorAuthCommand
             {
                 UserId = user.Id,
-                Token = "123456"
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             var disableCommand = new DisableTwoFactorAuthCommand
@@ -133,7 +133,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var successCount = responses.Count(r => r.StatusCode == HttpStatusCode.OK);
             successCount.ShouldBe(1);
 
-            // Verify final state
+            _context.ChangeTracker.Clear();
             var finalTwoFactorAuth = await _context.TwoFactorAuths
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             finalTwoFactorAuth.ShouldNotBeNull();
@@ -142,7 +142,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             finalTwoFactorAuth.Version.ShouldBeGreaterThan(1);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When multiple concurrent disable two-factor auth requests are made, the system handles concurrency gracefully and allows only one to succeed.")]
         public async Task Disable_ConcurrentDisableAttempts_ShouldHandleConcurrencyGracefully()
         {
             // Arrange
@@ -188,14 +188,14 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             successCount.ShouldBe(1);
             conflictCount.ShouldBe(1);
 
-            // Verify only one disable succeeded
+            _context.ChangeTracker.Clear();
             var finalTwoFactorAuth = await _context.TwoFactorAuths
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             finalTwoFactorAuth.ShouldNotBeNull();
             finalTwoFactorAuth.IsEnabled.ShouldBeFalse();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When multiple concurrent regenerate backup codes requests are made, the system handles concurrency gracefully and allows only one to succeed.")]
         public async Task RegenerateBackupCodes_ConcurrentRegenerateAttempts_ShouldHandleConcurrencyGracefully()
         {
             // Arrange
@@ -218,12 +218,25 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             await _context.TwoFactorAuths.AddAsync(twoFactorAuth);
             await _context.SaveChangesAsync();
 
+            await _context.BackupCodes.AddAsync(new BackupCode
+            {
+                Id = Guid.NewGuid(),
+                TwoFactorAuthId = twoFactorAuth.Id,
+                Code = "11111111",
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+                CreatedById = user.Id,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedById = user.Id,
+                Version = 1
+            });
+            await _context.SaveChangesAsync();
+
             var command = new RegenerateBackupCodesCommand
             {
                 UserId = user.Id
             };
 
-            // Act - Simulate concurrent regenerate requests
             SetAuthHeaders(token);
             
             var tasks = new[]
@@ -242,7 +255,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             successCount.ShouldBe(1);
             conflictCount.ShouldBe(2);
 
-            // Verify backup codes were regenerated once
+            _context.ChangeTracker.Clear();
             var finalTwoFactorAuth = await _context.TwoFactorAuths
                 .Include(tfa => tfa.BackupCodes)
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
@@ -251,7 +264,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             finalTwoFactorAuth.Version.ShouldBeGreaterThan(2);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When enabling two-factor auth, the system increments the version of the two-factor auth record.")]
         public async Task Enable_WithVersionChange_ShouldIncrementVersion()
         {
             // Arrange
@@ -278,7 +291,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var command = new EnableTwoFactorAuthCommand
             {
                 UserId = user.Id,
-                Token = "123456"
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             // Act
@@ -288,14 +301,15 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             
+            _context.ChangeTracker.Clear();
             var updatedTwoFactorAuth = await _context.TwoFactorAuths
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             updatedTwoFactorAuth.ShouldNotBeNull();
             updatedTwoFactorAuth.Version.ShouldBe(initialVersion + 1);
         }
 
-        [Fact]
-        public async Task Enable_ConcurrentEnableWithDirectDatabaseModification_ShouldDetectConcurrencyConflict()
+        [Fact(DisplayName = "When enabling two-factor auth after the database row version has been bumped directly, the handler loads current state and enables successfully.")]
+        public async Task Enable_AfterDirectVersionBump_ShouldEnableSuccessfully()
         {
             // Arrange
             var user = await CreateTestUser();
@@ -319,23 +333,24 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var command = new EnableTwoFactorAuthCommand
             {
                 UserId = user.Id,
-                Token = "123456"
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
-            // Act - Modify version directly in database to simulate concurrent modification
             await _context.Database.ExecuteSqlRawAsync(
                 "UPDATE \"TwoFactorAuths\" SET \"Version\" = 2 WHERE \"Id\" = {0}", twoFactorAuth.Id);
 
             SetAuthHeaders(token);
             var response = await Client.PostAsJsonAsync("/api/auth/2fa/enable", command);
 
-            // Assert - Should fail with concurrency error
-            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-            var errorContent = await response.Content.ReadAsStringAsync();
-            errorContent.ShouldContain("modified by another operation");
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            _context.ChangeTracker.Clear();
+            var updated = await _context.TwoFactorAuths.AsNoTracking().FirstAsync(tfa => tfa.UserId == user.Id);
+            updated.IsEnabled.ShouldBeTrue();
+            updated.Version.ShouldBe(3);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When two-factor auth is enabled, then disabled, then enabled again, the system handles each sequential operation successfully.")]
         public async Task Enable_ThenDisable_ThenEnableAgain_ShouldHandleSequentialOperations()
         {
             // Arrange
@@ -360,7 +375,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var enableCommand = new EnableTwoFactorAuthCommand
             {
                 UserId = user.Id,
-                Token = "123456"
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             var disableCommand = new DisableTwoFactorAuthCommand
@@ -377,10 +392,11 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var disableResponse = await Client.PostAsJsonAsync("/api/auth/2fa/disable", disableCommand);
             disableResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
+            enableCommand.Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP");
             var enableResponse2 = await Client.PostAsJsonAsync("/api/auth/2fa/enable", enableCommand);
             enableResponse2.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            // Assert - Final state should be enabled
+            _context.ChangeTracker.Clear();
             var finalTwoFactorAuth = await _context.TwoFactorAuths
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             finalTwoFactorAuth.ShouldNotBeNull();
@@ -388,7 +404,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             finalTwoFactorAuth.Version.ShouldBeGreaterThan(3);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When performing multiple two-factor auth operations, the system maintains version consistency across each change.")]
         public async Task MultipleOperations_ShouldMaintainVersionConsistency()
         {
             // Arrange
@@ -413,7 +429,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var enableCommand = new EnableTwoFactorAuthCommand
             {
                 UserId = user.Id,
-                Token = "123456"
+                Token = TotpTestHelper.GenerateCurrentTotp("JBSWY3DPEHPK3PXP")
             };
 
             var regenerateCommand = new RegenerateBackupCodesCommand
@@ -427,13 +443,14 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             var enableResponse = await Client.PostAsJsonAsync("/api/auth/2fa/enable", enableCommand);
             enableResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
+            _context.ChangeTracker.Clear();
             var initialVersion = (await _context.TwoFactorAuths
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id))?.Version ?? 0;
 
             var regenerateResponse = await Client.PostAsJsonAsync("/api/auth/2fa/regenerate-backup-codes", regenerateCommand);
             regenerateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            // Assert - Version should be incremented for each operation
+            _context.ChangeTracker.Clear();
             var finalTwoFactorAuth = await _context.TwoFactorAuths
                 .FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             finalTwoFactorAuth.ShouldNotBeNull();

@@ -28,7 +28,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             _repository = ServiceScope.ServiceProvider.GetRequiredService<IRegenerateBackupCodesRepository>();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When regenerating backup codes for enabled two-factor auth, the regenerate backup codes controller regenerates them successfully and invalidates the old ones.")]
         public async Task Regenerate_WithEnabledTwoFactorAuth_ShouldRegenerateSuccessfully()
         {
             // Arrange
@@ -68,7 +68,6 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             SetAuthHeaders(token);
             var response = await Client.PostAsJsonAsync("/api/auth/2fa/regenerate-backup-codes", command);
 
-            // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             var result = await response.Content.ReadFromJsonAsync<RegenerateBackupCodesResponse>();
             result.ShouldNotBeNull();
@@ -77,7 +76,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             result.BackupCodes.ShouldNotBeNull();
             result.BackupCodes.Count().ShouldBe(10); // Default backup code count
 
-            // Verify old backup codes are marked as used
+            _context.ChangeTracker.Clear();
             var oldBackupCodes = await _context.BackupCodes.Where(bc => bc.TwoFactorAuthId == twoFactorAuth.Id && !result.BackupCodes.Contains(bc.Code)).ToListAsync();
             oldBackupCodes.All(bc => bc.IsUsed).ShouldBeTrue();
             oldBackupCodes.All(bc => bc.UsedAt.HasValue).ShouldBeTrue();
@@ -88,7 +87,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             newBackupCodes.All(bc => !bc.IsUsed).ShouldBeTrue();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When regenerating backup codes while two-factor auth is disabled, the regenerate backup codes controller returns BadRequest.")]
         public async Task Regenerate_WithDisabledTwoFactorAuth_ShouldReturnBadRequest()
         {
             // Arrange
@@ -124,7 +123,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             error.ShouldContain("2FA is not enabled");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When regenerating backup codes for a user with no two-factor auth configured, the regenerate backup codes controller returns BadRequest.")]
         public async Task Regenerate_WithNonExistentTwoFactorAuth_ShouldReturnBadRequest()
         {
             // Arrange
@@ -140,10 +139,10 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
             var error = await response.Content.ReadAsStringAsync();
-            error.ShouldContain("2FA not found");
+            error.ShouldContain("initialized");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When regenerating backup codes without authentication, the regenerate backup codes controller returns Unauthorized.")]
         public async Task Regenerate_WithUnauthenticatedUser_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -157,7 +156,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When regenerating backup codes for a user that does not match the authenticated token, the regenerate backup codes controller returns Unauthorized.")]
         public async Task Regenerate_WithDifferentUserInToken_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -175,7 +174,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When regenerating backup codes, the regenerate backup codes controller increments the version of the two-factor auth record.")]
         public async Task Regenerate_ShouldIncrementVersion()
         {
             // Arrange
@@ -200,6 +199,20 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             await _context.TwoFactorAuths.AddAsync(twoFactorAuth);
             await _context.SaveChangesAsync();
 
+            await _context.BackupCodes.AddAsync(new BackupCode
+            {
+                Id = Guid.NewGuid(),
+                TwoFactorAuthId = twoFactorAuth.Id,
+                Code = "22222222",
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+                CreatedById = user.Id,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedById = user.Id,
+                Version = 1
+            });
+            await _context.SaveChangesAsync();
+
             var command = new RegenerateBackupCodesCommand { UserId = user.Id };
 
             // Act
@@ -209,7 +222,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             
-            // Verify version is incremented
+            _context.ChangeTracker.Clear();
             var updatedTwoFactorAuth = await _context.TwoFactorAuths.FirstOrDefaultAsync(tfa => tfa.UserId == user.Id);
             updatedTwoFactorAuth.ShouldNotBeNull();
             updatedTwoFactorAuth.Version.ShouldBe(2);

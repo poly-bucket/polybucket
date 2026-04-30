@@ -34,7 +34,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             _service = new CreateModelVersionService(_mockRepository.Object, _mockStorage.Object, _mockPermissionService.Object, _mockLogger.Object);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version with a valid request, the create model version service creates the version.")]
         public async Task CreateModelVersionAsync_WithValidRequest_ShouldCreateVersion()
         {
             // Arrange
@@ -76,7 +76,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             _mockStorage.Verify(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), cancellationToken), Times.AtLeastOnce);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version for a model that does not exist, the create model version service throws a ModelNotFoundException.")]
         public async Task CreateModelVersionAsync_WithModelNotFound_ShouldThrowModelNotFoundException()
         {
             // Arrange
@@ -94,7 +94,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
                 await _service.CreateModelVersionAsync(modelId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version for a deleted model, the create model version service throws a ValidationException.")]
         public async Task CreateModelVersionAsync_WithDeletedModel_ShouldThrowValidationException()
         {
             // Arrange
@@ -114,7 +114,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
                 await _service.CreateModelVersionAsync(modelId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version as a user without permission, the create model version service throws an UnauthorizedAccessException.")]
         public async Task CreateModelVersionAsync_WithUnauthorizedUser_ShouldThrowUnauthorizedAccessException()
         {
             // Arrange
@@ -137,7 +137,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
                 await _service.CreateModelVersionAsync(modelId, request, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version as a user with the MODEL_EDIT_ANY permission, the create model version service allows the creation.")]
         public async Task CreateModelVersionAsync_WithAdminPermission_ShouldAllowCreate()
         {
             // Arrange
@@ -169,7 +169,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             result.ModelVersion.Name.ShouldBe("Version 2.0");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When creating a model version without any files, the create model version service throws a ValidationException.")]
         public async Task CreateModelVersionAsync_WithoutFiles_ShouldThrowValidationException()
         {
             // Arrange

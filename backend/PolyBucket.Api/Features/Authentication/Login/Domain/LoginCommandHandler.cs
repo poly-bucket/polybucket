@@ -143,6 +143,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                     await LogLoginAttempt(loginIdentifier, false, user.Id);
                     throw new UnauthorizedAccessException("Invalid two-factor authentication code");
                 }
+
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
             // Log successful login attempt (both application log and database record)

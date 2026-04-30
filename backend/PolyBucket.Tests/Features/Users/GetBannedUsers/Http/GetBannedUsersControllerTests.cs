@@ -8,7 +8,7 @@ namespace PolyBucket.Tests.Features.Users.GetBannedUsers.Http;
 
 public class GetBannedUsersControllerTests
 {
-    [Fact]
+    [Fact(DisplayName = "When inspecting the get banned users controller, the controller has the ApiController and Route attributes applied.")]
     public void Controller_ShouldHaveApiControllerAndRoute()
     {
         var controllerType = typeof(GetBannedUsersController);

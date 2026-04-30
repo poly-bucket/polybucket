@@ -27,12 +27,20 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
             _repository = new UpdateModelVersionRepository(_context);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model version with an existing version, the update model version repository returns the version.")]
         public async Task GetModelVersionAsync_WithExistingVersion_ShouldReturnVersion()
         {
             // Arrange
             var modelId = Guid.NewGuid();
             var versionId = Guid.NewGuid();
+            var model = new Model
+            {
+                Id = modelId,
+                Name = "Parent",
+                Description = "Desc",
+                AuthorId = Guid.NewGuid()
+            };
+            _context.Models.Add(model);
             var modelVersion = new ModelVersion
             {
                 Id = versionId,
@@ -56,7 +64,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
             result.Name.ShouldBe("Test Version");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model version with a non-existent version, the update model version repository returns null.")]
         public async Task GetModelVersionAsync_WithNonExistingVersion_ShouldReturnNull()
         {
             // Arrange
@@ -71,17 +79,26 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
             result.ShouldBeNull();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When getting a model version under a model id that does not match the version, the update model version repository returns null.")]
         public async Task GetModelVersionAsync_WithWrongModelId_ShouldReturnNull()
         {
             // Arrange
             var modelId = Guid.NewGuid();
             var versionId = Guid.NewGuid();
             var wrongModelId = Guid.NewGuid();
+            var model = new Model
+            {
+                Id = modelId,
+                Name = "Parent",
+                Description = "Desc",
+                AuthorId = Guid.NewGuid()
+            };
+            _context.Models.Add(model);
             var modelVersion = new ModelVersion
             {
                 Id = versionId,
                 Name = "Test Version",
+                Notes = "Notes",
                 ModelId = modelId,
                 VersionNumber = 1
             };
@@ -98,12 +115,20 @@ namespace PolyBucket.Tests.Features.Models.UpdateModelVersion
             result.ShouldBeNull();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When updating a model version with valid data, the update model version repository persists the change in the database.")]
         public async Task UpdateModelVersionAsync_WithValidVersion_ShouldUpdateInDatabase()
         {
             // Arrange
             var modelId = Guid.NewGuid();
             var versionId = Guid.NewGuid();
+            var model = new Model
+            {
+                Id = modelId,
+                Name = "Parent",
+                Description = "Desc",
+                AuthorId = Guid.NewGuid()
+            };
+            _context.Models.Add(model);
             var modelVersion = new ModelVersion
             {
                 Id = versionId,

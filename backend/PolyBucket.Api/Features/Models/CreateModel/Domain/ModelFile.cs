@@ -7,6 +7,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
     public class ModelFile : Auditable
     {
         public new Guid Id { get; set; }
+        public Guid ModelId { get; set; }
         public Model Model { get; set; } = null!;
         public string Name { get; set; } = string.Empty;
         public string Path { get; set; } = string.Empty;

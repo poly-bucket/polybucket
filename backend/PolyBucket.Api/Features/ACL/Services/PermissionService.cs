@@ -31,11 +31,12 @@ namespace PolyBucket.Api.Features.ACL.Services
                 return true;
 
             // Check user-specific permission overrides first (they take precedence)
-            var userOverride = await _context.UserPermissions
-                .Include(up => up.Permission)
-                .FirstOrDefaultAsync(up => up.UserId == userId && 
-                                          up.Permission.Name == permission && 
-                                          up.IsActive);
+            var userOverride = await (
+                from up in _context.UserPermissions
+                join p in _context.Permissions on up.PermissionId equals p.Id
+                where up.UserId == userId && (up.ExpiresAt == null || up.ExpiresAt > DateTime.UtcNow) && p.Name == permission
+                select up
+            ).FirstOrDefaultAsync();
 
             if (userOverride != null)
                 return userOverride.IsGranted;
@@ -43,11 +44,12 @@ namespace PolyBucket.Api.Features.ACL.Services
             // Check role permissions
             if (user.Role != null)
             {
-                var rolePermission = await _context.RolePermissions
-                    .Include(rp => rp.Permission)
-                    .FirstOrDefaultAsync(rp => rp.RoleId == user.Role.Id && 
-                                              rp.Permission.Name == permission &&
-                                              rp.IsGranted);
+                var rolePermission = await (
+                    from rp in _context.RolePermissions
+                    join p in _context.Permissions on rp.PermissionId equals p.Id
+                    where rp.RoleId == user.Role.Id && rp.IsGranted && p.Name == permission
+                    select rp
+                ).FirstOrDefaultAsync();
 
                 if (rolePermission != null)
                     return true;
@@ -120,7 +122,7 @@ namespace PolyBucket.Api.Features.ACL.Services
             // Apply user-specific overrides
             var userOverrides = await _context.UserPermissions
                 .Include(up => up.Permission)
-                .Where(up => up.UserId == userId && up.IsActive)
+                .Where(up => up.UserId == userId && (up.ExpiresAt == null || up.ExpiresAt > DateTime.UtcNow))
                 .ToListAsync();
 
             foreach (var userOverride in userOverrides)

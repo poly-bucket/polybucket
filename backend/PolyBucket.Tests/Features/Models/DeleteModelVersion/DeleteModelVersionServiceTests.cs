@@ -30,7 +30,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModelVersion
             _service = new DeleteModelVersionService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model version with a valid request, the delete model version service deletes the version.")]
         public async Task DeleteModelVersionAsync_WithValidRequest_ShouldDeleteVersion()
         {
             // Arrange
@@ -57,7 +57,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModelVersion
             _mockRepository.Verify(x => x.DeleteModelVersionAsync(It.IsAny<ModelVersion>(), cancellationToken), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model version that does not exist, the delete model version service throws a ModelVersionNotFoundException.")]
         public async Task DeleteModelVersionAsync_WithModelVersionNotFound_ShouldThrowModelVersionNotFoundException()
         {
             // Arrange
@@ -75,8 +75,8 @@ namespace PolyBucket.Tests.Features.Models.DeleteModelVersion
                 await _service.DeleteModelVersionAsync(modelId, versionId, user, cancellationToken));
         }
 
-        [Fact]
-        public async Task DeleteModelVersionAsync_WithWrongModelId_ShouldThrowValidationException()
+        [Fact(DisplayName = "When deleting a model version under the wrong model id, the delete model version service throws a ModelVersionNotFoundException.")]
+        public async Task DeleteModelVersionAsync_WithWrongModelId_ShouldThrowModelVersionNotFoundException()
         {
             // Arrange
             var modelId = Guid.NewGuid();
@@ -91,11 +91,11 @@ namespace PolyBucket.Tests.Features.Models.DeleteModelVersion
                 .ReturnsAsync(modelVersion);
 
             // Act & Assert
-            await Should.ThrowAsync<PolyBucket.Api.Features.Models.DeleteModelVersion.Domain.ValidationException>(async () =>
+            await Should.ThrowAsync<ModelVersionNotFoundException>(async () =>
                 await _service.DeleteModelVersionAsync(wrongModelId, versionId, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model version as a user without permission, the delete model version service throws an UnauthorizedAccessException.")]
         public async Task DeleteModelVersionAsync_WithUnauthorizedUser_ShouldThrowUnauthorizedAccessException()
         {
             // Arrange
@@ -118,7 +118,7 @@ namespace PolyBucket.Tests.Features.Models.DeleteModelVersion
                 await _service.DeleteModelVersionAsync(modelId, versionId, user, cancellationToken));
         }
 
-        [Fact]
+        [Fact(DisplayName = "When deleting a model version as a user with the MODEL_DELETE_ANY permission, the delete model version service allows the deletion.")]
         public async Task DeleteModelVersionAsync_WithAdminPermission_ShouldAllowDelete()
         {
             // Arrange

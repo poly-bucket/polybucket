@@ -19,6 +19,20 @@ namespace PolyBucket.Api.Features.Search.Repository
 
         public async Task<SearchResponse> SearchAsync(SearchQuery query)
         {
+            if (string.IsNullOrWhiteSpace(query.Query))
+            {
+                return new SearchResponse
+                {
+                    Results = new List<SearchResultItem>(),
+                    TotalCount = 0,
+                    Page = query.Page,
+                    PageSize = query.PageSize,
+                    TotalPages = 0,
+                    Query = query.Query,
+                    Type = query.Type
+                };
+            }
+
             var results = new List<SearchResultItem>();
             var totalCount = 0;
 
@@ -69,6 +83,7 @@ namespace PolyBucket.Api.Features.Search.Repository
         private async Task<(List<SearchResultItem>, int)> SearchModelsAsync(SearchQuery query)
         {
             var searchTerm = query.Query.ToLower();
+            const double fuzzyMatchThreshold = 0.7;
             
             var models = await _context.Models
                 .Include(m => m.Author)
@@ -83,7 +98,9 @@ namespace PolyBucket.Api.Features.Search.Repository
                     (m.Description != null && m.Description.ToLower().Contains(searchTerm)) ||
                     m.Categories.Any(c => c.Name.ToLower().Contains(searchTerm)) ||
                     m.Tags.Any(t => t.Name.ToLower().Contains(searchTerm)) ||
-                    m.Author.Username.ToLower().Contains(searchTerm))
+                    m.Author.Username.ToLower().Contains(searchTerm) ||
+                    IsFuzzyMatch(m.Name, searchTerm, fuzzyMatchThreshold) ||
+                    (m.Description != null && IsFuzzyMatch(m.Description, searchTerm, fuzzyMatchThreshold)))
                 .Select(m => new SearchResultItem
                 {
                     Id = m.Id,
@@ -107,6 +124,7 @@ namespace PolyBucket.Api.Features.Search.Repository
         private async Task<(List<SearchResultItem>, int)> SearchUsersAsync(SearchQuery query)
         {
             var searchTerm = query.Query.ToLower();
+            const double fuzzyMatchThreshold = 0.7;
             
             var users = await _context.Users
                 .Where(u => u.DeletedAt == null && u.IsProfilePublic)
@@ -117,7 +135,9 @@ namespace PolyBucket.Api.Features.Search.Repository
                     u.Username.ToLower().Contains(searchTerm) ||
                     (u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)) ||
                     (u.LastName != null && u.LastName.ToLower().Contains(searchTerm)) ||
-                    (u.Bio != null && u.Bio.ToLower().Contains(searchTerm)))
+                    (u.Bio != null && u.Bio.ToLower().Contains(searchTerm)) ||
+                    IsFuzzyMatch(u.Username, searchTerm, fuzzyMatchThreshold) ||
+                    (u.Bio != null && IsFuzzyMatch(u.Bio, searchTerm, fuzzyMatchThreshold)))
                 .Select(u => new SearchResultItem
                 {
                     Id = u.Id,
@@ -139,6 +159,7 @@ namespace PolyBucket.Api.Features.Search.Repository
         private async Task<(List<SearchResultItem>, int)> SearchCollectionsAsync(SearchQuery query)
         {
             var searchTerm = query.Query.ToLower();
+            const double fuzzyMatchThreshold = 0.7;
             
             var collections = await _context.Collections
                 .Include(c => c.Owner)
@@ -150,7 +171,9 @@ namespace PolyBucket.Api.Features.Search.Repository
                 .Where(c => 
                     c.Name.ToLower().Contains(searchTerm) ||
                     (c.Description != null && c.Description.ToLower().Contains(searchTerm)) ||
-                    c.Owner.Username.ToLower().Contains(searchTerm))
+                    c.Owner.Username.ToLower().Contains(searchTerm) ||
+                    IsFuzzyMatch(c.Name, searchTerm, fuzzyMatchThreshold) ||
+                    (c.Description != null && IsFuzzyMatch(c.Description, searchTerm, fuzzyMatchThreshold)))
                 .Select(c => new SearchResultItem
                 {
                     Id = c.Id,
@@ -208,6 +231,20 @@ namespace PolyBucket.Api.Features.Search.Repository
                 return 1;
 
             return 1 - (double)distance / maxLength;
+        }
+
+        private bool IsFuzzyMatch(string text, string searchTerm, double threshold)
+        {
+            var normalizedText = text.ToLower();
+            var normalizedSearchTerm = searchTerm.ToLower();
+
+            if (CalculateFuzzyScore(normalizedText, normalizedSearchTerm) >= threshold)
+                return true;
+
+            var terms = normalizedText
+                .Split(new[] { ' ', '\t', '\r', '\n', '-', '_', '.', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            return terms.Any(term => CalculateFuzzyScore(term, normalizedSearchTerm) >= threshold);
         }
 
         private int LevenshteinDistance(string s1, string s2)

@@ -39,7 +39,7 @@ public class GetUsersControllerTests
         };
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with valid parameters, the get users controller returns Ok with the user list.")]
     public async Task GetUsers_WithValidParameters_ReturnsOkResult()
     {
         var expectedResponse = new GetUsersResult
@@ -72,7 +72,7 @@ public class GetUsersControllerTests
         Assert.Equal(expectedResponse.Users, response.Users);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with an invalid page number, the get users controller returns BadRequest.")]
     public async Task GetUsers_WithInvalidPage_ReturnsBadRequest()
     {
         var result = await _controller.GetUsers(page: 0);
@@ -81,7 +81,7 @@ public class GetUsersControllerTests
         Assert.Equal("Page number must be greater than 0", badRequestResult.Value);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with an out-of-range page size, the get users controller returns BadRequest.")]
     public async Task GetUsers_WithInvalidPageSize_ReturnsBadRequest()
     {
         var result = await _controller.GetUsers(pageSize: 101);
@@ -90,7 +90,7 @@ public class GetUsersControllerTests
         Assert.Equal("Page size must be between 1 and 100", badRequestResult.Value);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with an invalid sort field, the get users controller returns BadRequest.")]
     public async Task GetUsers_WithInvalidSortField_ReturnsBadRequest()
     {
         var result = await _controller.GetUsers(sortBy: "invalidField");
@@ -99,7 +99,7 @@ public class GetUsersControllerTests
         Assert.Contains("Invalid sort field", badRequestResult.Value!.ToString());
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with valid filter values, the get users controller returns Ok with the filtered list.")]
     public async Task GetUsers_WithValidFilters_ReturnsOkResult()
     {
         var expectedResponse = new GetUsersResult
@@ -128,7 +128,7 @@ public class GetUsersControllerTests
         Assert.Equal(expectedResponse.TotalCount, response.TotalCount);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users and the service throws an exception, the get users controller returns InternalServerError.")]
     public async Task GetUsers_WhenServiceThrowsException_ReturnsInternalServerError()
     {
         _mockService.Setup(s => s.GetUsersAsync(It.IsAny<GetUsersQuery>(), It.IsAny<CancellationToken>()))
@@ -141,7 +141,7 @@ public class GetUsersControllerTests
         Assert.Contains("An error occurred while retrieving users", statusCodeResult.Value!.ToString());
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with default parameters, the get users controller forwards the expected default values to the service.")]
     public async Task GetUsers_WithDefaultParameters_UsesCorrectDefaults()
     {
         var expectedResponse = new GetUsersResult
@@ -167,7 +167,7 @@ public class GetUsersControllerTests
         Assert.True(capturedQuery.SortDescending);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with custom parameters, the get users controller passes the supplied values to the service.")]
     public async Task GetUsers_WithCustomParameters_PassesCorrectValues()
     {
         var expectedResponse = new GetUsersResult

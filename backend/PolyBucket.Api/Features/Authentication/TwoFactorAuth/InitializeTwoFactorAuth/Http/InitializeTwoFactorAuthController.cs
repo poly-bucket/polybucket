@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Domain;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
-using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Http
 {
@@ -35,26 +35,23 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
         {
             try
             {
-                // Debug: Log all available claims
-                _logger.LogInformation("Available claims in token:");
-                foreach (var claim in User.Claims)
-                {
-                    _logger.LogInformation("Claim: {Type} = {Value}", claim.Type, claim.Value);
-                }
-                
-                // Get user ID from the authenticated user using the standard claim type
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userIdClaim = User.FindUserIdClaim();
 
                 _logger.LogInformation("InitializeTwoFactorAuthController.Initialize: User ID: {UserId}", userIdClaim);
                                  
-                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
                 {
                     _logger.LogWarning("InitializeTwoFactorAuthController.Initialize: No user ID found in token. Available claims: {Claims}", 
                         string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
                     return Unauthorized(new { message = "Invalid user authentication" });
                 }
 
-                command.UserId = userId;
+                if (command.UserId != Guid.Empty && command.UserId != authenticatedUserId)
+                {
+                    return Unauthorized(new { message = "Invalid user authentication" });
+                }
+
+                command.UserId = authenticatedUserId;
 
                 var response = await _handler.Handle(command, cancellationToken);
                 return Ok(response);
@@ -76,12 +73,5 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFact
             }
         }
 
-        [HttpGet("debug-claims")]
-        [ProducesResponseType(200)]
-        public IActionResult DebugClaims()
-        {
-            var claims = User.Claims.Select(c => new { Type = c.Type, Value = c.Value }).ToList();
-            return Ok(new { claims });
-        }
     }
 } 

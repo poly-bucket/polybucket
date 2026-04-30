@@ -10,6 +10,7 @@ using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.SystemSettings.Services;
+using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Api.Common.Models;
 using Shouldly;
 using Xunit;
@@ -38,6 +39,13 @@ public class LoginCommandHandlerTests
         _mockLoginTwoFactorAuthService = new Mock<ILoginTwoFactorAuthService>();
         _mockLoginTwoFactorAuthRepository = new Mock<ILoginTwoFactorAuthRepository>();
         _mockAuthenticationSettingsService = new Mock<IAuthenticationSettingsService>();
+        _mockAuthenticationSettingsService
+            .Setup(x => x.GetAuthenticationSettingsAsync())
+            .ReturnsAsync(new AuthenticationSettings
+            {
+                AllowEmailLogin = true,
+                AllowUsernameLogin = true
+            });
 
         _handler = new LoginCommandHandler(
             _mockAuthRepository.Object,
@@ -52,7 +60,7 @@ public class LoginCommandHandlerTests
         );
     }
 
-    [Fact]
+    [Fact(DisplayName = "When handling a login with valid credentials, the login command handler returns a refresh token.")]
     public async Task Handle_ValidCredentials_ShouldReturnRefreshToken()
     {
         // Arrange
@@ -68,7 +76,8 @@ public class LoginCommandHandlerTests
             Email = "test@example.com",
             Username = "testuser",
             PasswordHash = "hashedpassword",
-            RequiresPasswordChange = false
+            RequiresPasswordChange = false,
+            HasCompletedFirstTimeSetup = true
         };
 
         var authResponse = new AuthenticationResponse
@@ -105,7 +114,7 @@ public class LoginCommandHandlerTests
         result.RequiresFirstTimeSetup.ShouldBeFalse();
     }
 
-    [Fact]
+    [Fact(DisplayName = "When handling a login with invalid credentials, the login command handler throws an UnauthorizedAccessException.")]
     public async Task Handle_InvalidCredentials_ShouldThrowUnauthorizedAccessException()
     {
         // Arrange
@@ -137,7 +146,7 @@ public class LoginCommandHandlerTests
         });
     }
 
-    [Fact]
+    [Fact(DisplayName = "When handling a login for a user that is not found, the login command handler throws an UnauthorizedAccessException.")]
     public async Task Handle_UserNotFound_ShouldThrowUnauthorizedAccessException()
     {
         // Arrange

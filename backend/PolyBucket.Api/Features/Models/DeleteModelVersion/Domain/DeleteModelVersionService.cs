@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.DeleteModelVersion.Repository;
@@ -24,8 +25,8 @@ namespace PolyBucket.Api.Features.Models.DeleteModelVersion.Domain
 
         public async Task DeleteModelVersionAsync(Guid modelId, Guid versionId, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            var userIdClaim = user.FindUserIdClaim();
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
                 throw new ValidationException("Invalid authentication token");
             }
@@ -38,7 +39,7 @@ namespace PolyBucket.Api.Features.Models.DeleteModelVersion.Domain
 
             if (modelVersion.DeletedAt.HasValue)
             {
-                throw new ValidationException("Model version is already deleted");
+                throw new ModelVersionNotFoundException($"Model version with ID {versionId} not found for model {modelId}");
             }
 
             // Check ownership - user can only delete versions for their own models unless they have MODEL_DELETE_ANY permission
@@ -51,12 +52,16 @@ namespace PolyBucket.Api.Features.Models.DeleteModelVersion.Domain
             // Soft delete the model version
             modelVersion.DeletedAt = DateTime.UtcNow;
             modelVersion.DeletedById = userId;
+            modelVersion.UpdatedAt = DateTime.UtcNow;
+            modelVersion.UpdatedById = userId;
 
             // Soft delete associated files
             foreach (var file in modelVersion.Files)
             {
                 file.DeletedAt = DateTime.UtcNow;
                 file.DeletedById = userId;
+                file.UpdatedAt = DateTime.UtcNow;
+                file.UpdatedById = userId;
             }
 
             await _repository.DeleteModelVersionAsync(modelVersion, cancellationToken);

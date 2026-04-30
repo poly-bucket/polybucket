@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.Collections.GetFavoriteCollections.Repository;
 using System;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.GetFavoriteCollections.Http
@@ -34,7 +34,7 @@ namespace PolyBucket.Api.Features.Collections.GetFavoriteCollections.Http
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userIdClaim = User.FindUserIdClaim();
                 if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
                 {
                     return Unauthorized("Invalid authentication token");

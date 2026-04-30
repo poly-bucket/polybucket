@@ -62,6 +62,8 @@ public class GetUsersRepositoryTests
         context.Roles.AddRange(adminRole, userRole, moderatorRole);
 
         var t = DateTime.UtcNow;
+        const string testSalt = "test-salt";
+        const string testPasswordHash = "test-password-hash";
         var users = new List<User>
         {
             new()
@@ -71,6 +73,8 @@ public class GetUsersRepositoryTests
                 Username = "admin",
                 FirstName = "Admin",
                 LastName = "User",
+                Salt = testSalt,
+                PasswordHash = testPasswordHash,
                 RoleId = adminRole.Id,
                 IsBanned = false,
                 LastLoginAt = t.AddHours(-2),
@@ -84,6 +88,8 @@ public class GetUsersRepositoryTests
                 Username = "user1",
                 FirstName = "John",
                 LastName = "Doe",
+                Salt = testSalt,
+                PasswordHash = testPasswordHash,
                 RoleId = userRole.Id,
                 IsBanned = false,
                 LastLoginAt = t.AddHours(-5),
@@ -97,6 +103,8 @@ public class GetUsersRepositoryTests
                 Username = "user2",
                 FirstName = "Jane",
                 LastName = "Smith",
+                Salt = testSalt,
+                PasswordHash = testPasswordHash,
                 RoleId = userRole.Id,
                 IsBanned = true,
                 BannedAt = t.AddDays(-2),
@@ -111,6 +119,8 @@ public class GetUsersRepositoryTests
                 Username = "moderator",
                 FirstName = "Mod",
                 LastName = "User",
+                Salt = testSalt,
+                PasswordHash = testPasswordHash,
                 RoleId = moderatorRole.Id,
                 IsBanned = false,
                 LastLoginAt = t.AddHours(-1),
@@ -170,7 +180,7 @@ public class GetUsersRepositoryTests
         await context.SaveChangesAsync();
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with the default query, the get users repository returns all users.")]
     public async Task GetPagedAsync_WithDefaultQuery_ReturnsAllUsers()
     {
         await using var context = CreateContext(_options);
@@ -186,7 +196,7 @@ public class GetUsersRepositoryTests
         Assert.Equal(20, result.PageSize);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with pagination, the get users repository returns the requested page.")]
     public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
     {
         await using var context = CreateContext(_options);
@@ -201,7 +211,7 @@ public class GetUsersRepositoryTests
         Assert.Equal(2, result.TotalPages);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with a search query, the get users repository filters the results to matching users.")]
     public async Task GetPagedAsync_WithSearchQuery_FiltersUsersCorrectly()
     {
         await using var context = CreateContext(_options);
@@ -215,7 +225,7 @@ public class GetUsersRepositoryTests
         Assert.Contains(result.Users, u => u.Username == "admin");
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with a role filter, the get users repository returns only users with that role.")]
     public async Task GetPagedAsync_WithRoleFilter_FiltersUsersByRole()
     {
         await using var context = CreateContext(_options);
@@ -229,7 +239,7 @@ public class GetUsersRepositoryTests
         Assert.All(result.Users, u => Assert.Equal("User", u.RoleName));
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with a status filter, the get users repository returns only users matching that status.")]
     public async Task GetPagedAsync_WithStatusFilter_FiltersUsersByStatus()
     {
         await using var context = CreateContext(_options);
@@ -243,7 +253,7 @@ public class GetUsersRepositoryTests
         Assert.All(result.Users, u => Assert.True(u.IsBanned));
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with a username sort, the get users repository returns users in the requested order.")]
     public async Task GetPagedAsync_WithSorting_SortsUsersCorrectly()
     {
         await using var context = CreateContext(_options);
@@ -260,7 +270,7 @@ public class GetUsersRepositoryTests
         Assert.Equal("user2", users[3].Username);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users sorted by last login, the get users repository orders users by their last login time.")]
     public async Task GetPagedAsync_WithLastLoginSorting_SortsByLastLogin()
     {
         await using var context = CreateContext(_options);
@@ -277,7 +287,7 @@ public class GetUsersRepositoryTests
         Assert.Equal("user2", users[3].Username);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users with combined filters and sorting, the get users repository applies all of them together.")]
     public async Task GetPagedAsync_WithComplexFilters_AppliesAllFilters()
     {
         await using var context = CreateContext(_options);
@@ -298,7 +308,7 @@ public class GetUsersRepositoryTests
         Assert.Contains(result.Users, u => u.Username == "user1" && !u.IsBanned);
     }
 
-    [Fact]
+    [Fact(DisplayName = "When getting users and no records match, the get users repository returns an empty list.")]
     public async Task GetPagedAsync_WithNoResults_ReturnsEmptyList()
     {
         await using var context = CreateContext(_options);

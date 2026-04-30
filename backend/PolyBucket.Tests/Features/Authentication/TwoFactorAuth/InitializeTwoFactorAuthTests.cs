@@ -28,7 +28,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             _repository = ServiceScope.ServiceProvider.GetRequiredService<IInitializeTwoFactorAuthRepository>();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When initializing two-factor auth for a valid authenticated user, the initialize two-factor auth controller initializes it successfully.")]
         public async Task Initialize_WithValidUser_ShouldInitializeSuccessfully()
         {
             // Arrange
@@ -55,7 +55,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             twoFactorAuth.SecretKey.ShouldBe(result.SecretKey);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When initializing two-factor auth for a user that is already initialized, the initialize two-factor auth controller returns BadRequest.")]
         public async Task Initialize_WithAlreadyInitializedUser_ShouldReturnBadRequest()
         {
             // Arrange
@@ -91,7 +91,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             error.ShouldContain("already initialized");
         }
 
-        [Fact]
+        [Fact(DisplayName = "When initializing two-factor auth without authentication, the initialize two-factor auth controller returns Unauthorized.")]
         public async Task Initialize_WithUnauthenticatedUser_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -104,7 +104,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When initializing two-factor auth for a user that does not match the authenticated token, the initialize two-factor auth controller returns Unauthorized.")]
         public async Task Initialize_WithDifferentUserInToken_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -121,7 +121,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When initializing two-factor auth, the initialize two-factor auth controller creates a new disabled two-factor auth record.")]
         public async Task Initialize_ShouldCreateNewTwoFactorAuthRecord()
         {
             // Arrange
@@ -144,7 +144,7 @@ namespace PolyBucket.Tests.Features.Authentication.TwoFactorAuth
             twoFactorAuth.SecretKey.ShouldNotBeNullOrEmpty();
         }
 
-        [Fact]
+        [Fact(DisplayName = "When initializing two-factor auth while an unenabled record already exists, the initialize two-factor auth controller replaces the existing record.")]
         public async Task Initialize_WithUnenabledExistingTwoFactorAuth_ShouldReplaceIt()
         {
             // Arrange

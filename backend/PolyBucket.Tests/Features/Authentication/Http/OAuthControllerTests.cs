@@ -40,7 +40,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             };
         }
 
-        [Fact]
+        [Fact(DisplayName = "When requesting an authorization URL for a valid provider, the OAuth controller returns Ok with the authorization URL.")]
         public async Task GetAuthorizationUrl_ValidProvider_ShouldReturnOkWithAuthUrl()
         {
             // Arrange
@@ -76,7 +76,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _oauthServiceMock.Verify(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When requesting an authorization URL without providing a state, the OAuth controller returns Ok with a generated state.")]
         public async Task GetAuthorizationUrl_WithoutState_ShouldReturnOkWithGeneratedState()
         {
             // Arrange
@@ -107,7 +107,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _oauthServiceMock.Verify(x => x.GetAuthorizationUrlAsync(provider, redirectUri, It.IsAny<string>()), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When requesting an authorization URL for an invalid provider, the OAuth controller returns BadRequest.")]
         public async Task GetAuthorizationUrl_InvalidProvider_ShouldReturnBadRequest()
         {
             // Arrange
@@ -130,7 +130,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _oauthServiceMock.Verify(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When handling an OAuth callback with a valid authorization code, the OAuth controller returns Ok with authentication data.")]
         public async Task OAuthCallback_ValidCode_ShouldReturnOkWithAuthentication()
         {
             // Arrange
@@ -184,7 +184,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 It.IsAny<string>()), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When handling an OAuth callback with a provider that does not match the route, the OAuth controller returns BadRequest.")]
         public async Task OAuthCallback_ProviderMismatch_ShouldReturnBadRequest()
         {
             // Arrange
@@ -213,7 +213,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When handling an OAuth callback that contains an error, the OAuth controller returns BadRequest with the error description.")]
         public async Task OAuthCallback_WithError_ShouldReturnBadRequest()
         {
             // Arrange
@@ -248,7 +248,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When handling an OAuth callback with an invalid model state, the OAuth controller returns BadRequest.")]
         public async Task OAuthCallback_InvalidModelState_ShouldReturnBadRequest()
         {
             // Arrange
@@ -279,7 +279,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When handling an OAuth callback and authentication fails, the OAuth controller returns Unauthorized.")]
         public async Task OAuthCallback_AuthenticationFails_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -317,7 +317,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 It.IsAny<string>()), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When handling an OAuth callback and the service throws an unexpected exception, the OAuth controller returns InternalServerError.")]
         public async Task OAuthCallback_ServiceThrowsException_ShouldReturnInternalServerError()
         {
             // Arrange
@@ -356,7 +356,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 It.IsAny<string>()), Times.Once);
         }
 
-        [Theory]
+        [Theory(DisplayName = "When requesting an authorization URL for a supported OAuth provider, the OAuth controller returns Ok")]
         [InlineData("google")]
         [InlineData("github")]
         [InlineData("microsoft")]
@@ -380,7 +380,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _oauthServiceMock.Verify(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state), Times.Once);
         }
 
-        [Fact]
+        [Fact(DisplayName = "When handling an OAuth callback that has an error without a description, the OAuth controller returns BadRequest with a generic message.")]
         public async Task OAuthCallback_EmptyErrorDescription_ShouldUseGenericMessage()
         {
             // Arrange
