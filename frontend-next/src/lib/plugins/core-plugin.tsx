@@ -87,7 +87,7 @@ function ProfileModelsTabWrapper({
 }
 
 function ProfileCollectionsTabWrapper({
-  userId,
+  username,
 }: {
   userId: string;
   username: string;
@@ -116,7 +116,7 @@ function ProfileCollectionsTabWrapper({
   );
   return (
     <ProfileCollectionsTab
-      userId={userId}
+      username={username}
       page={page}
       q={q}
       onPageChange={setPage}

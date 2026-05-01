@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -20,8 +21,13 @@ public class GetUserModelsController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Get user models by username.
+    /// Returns public models for regular viewers and includes private models for the owner and admins.
+    /// </summary>
     [HttpGet("{username}/models/public")]
     [ProducesResponseType(200, Type = typeof(GetUserModelsResult))]
+    [ProducesResponseType(403)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<GetUserModelsResult>> GetUserPublicModels(
@@ -32,12 +38,16 @@ public class GetUserModelsController : ControllerBase
     {
         try
         {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid? requestingUserId = Guid.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
             var query = new GetUserModelsQuery
             {
                 Username = username,
                 Page = page,
                 PageSize = pageSize,
-                IncludePrivate = false
+                RequestingUserId = requestingUserId,
+                IsRequestingUserAdmin = User.IsInRole("Admin"),
+                IncludePrivate = User.IsInRole("Admin")
             };
 
             var response = await _getUserModelsService.GetUserPublicModelsAsync(query, cancellationToken);
@@ -47,6 +57,11 @@ public class GetUserModelsController : ControllerBase
         {
             _logger.LogWarning(ex, "User models not found for username {Username}", username);
             return NotFound(new { message = "User models not found" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized models access for username {Username}", username);
+            return StatusCode(403, new { message = "User profile is private" });
         }
         catch (Exception ex)
         {

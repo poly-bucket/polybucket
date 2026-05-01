@@ -6,6 +6,8 @@ public class GetUserProfileQuery
 {
     public Guid Id { get; set; }
     public string? Username { get; set; }
+    public Guid? RequestingUserId { get; set; }
+    public bool IsRequestingUserAdmin { get; set; }
 }
 
 public class GetUserProfileResponse

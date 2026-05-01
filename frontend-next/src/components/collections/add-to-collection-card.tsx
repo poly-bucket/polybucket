@@ -66,7 +66,7 @@ export function AddToCollectionCard({ model, isOwner }: AddToCollectionCardProps
         <CardTitle className="text-white">Add to Collection</CardTitle>
       </CardHeader>
       <CardContent>
-        <DropdownMenu open={open} onOpenChange={handleOpenChange}>
+        <DropdownMenu modal={false} open={open} onOpenChange={handleOpenChange}>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full">
               <FolderPlus className="mr-2 h-4 w-4" />

@@ -1,6 +1,7 @@
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
 
@@ -19,6 +20,9 @@ namespace PolyBucket.Api.Features.Authentication.Repository
         Task<RefreshTokenModel> CreateRefreshTokenAsync(RefreshTokenModel refreshToken);
         Task<RefreshTokenModel?> GetRefreshTokenAsync(string token);
         Task RevokeRefreshTokenAsync(string token, string reason, string revokedByIp);
+        Task<RefreshTokenModel?> GetActiveRefreshTokenByIdAsync(Guid tokenId, Guid userId);
+        Task<IReadOnlyList<RefreshTokenModel>> GetActiveRefreshTokensForUserAsync(Guid userId);
+        Task RevokeRefreshTokenByIdAsync(Guid tokenId, string reason, string revokedByIp);
         Task RevokeAllRefreshTokensForUserAsync(Guid userId, string reason, string revokedByIp);
         
         // Password Reset methods

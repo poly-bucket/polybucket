@@ -8,7 +8,7 @@ import { formatNumber } from "@/lib/utils/modelUtils";
 import { useModelSidebarCards, PluginBoundary } from "@/lib/plugins";
 import type { Model } from "@/lib/api/client";
 import { LicenseTypes } from "@/lib/api/client";
-import { Download, Pencil, Trash2, Share2 } from "lucide-react";
+import { Download, Pencil, Trash2, Share2, GitCommitHorizontal } from "lucide-react";
 
 const LICENSE_LABELS: Record<string, string> = {
   [LicenseTypes.MIT]: "MIT License",
@@ -33,6 +33,7 @@ interface ModelDetailsSidebarProps {
   onDelete: () => void;
   onShare: () => void;
   onEdit?: () => void;
+  onCreateVersion?: () => void;
 }
 
 export function ModelDetailsSidebar({
@@ -45,6 +46,7 @@ export function ModelDetailsSidebar({
   onDelete,
   onShare,
   onEdit,
+  onCreateVersion,
 }: ModelDetailsSidebarProps) {
   const downloads = model.downloads ?? 0;
   const authorName = model.author?.username ?? "Unknown";
@@ -183,6 +185,20 @@ export function ModelDetailsSidebar({
                 >
                   <Pencil className="h-5 w-5" />
                   Edit Model
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={onCreateVersion}
+                  disabled={isFederated || !onCreateVersion}
+                  title={
+                    isFederated
+                      ? "Federated models cannot be versioned locally"
+                      : "Create a new model version"
+                  }
+                >
+                  <GitCommitHorizontal className="h-5 w-5" />
+                  New Version
                 </Button>
                 <Button
                   variant="destructive"

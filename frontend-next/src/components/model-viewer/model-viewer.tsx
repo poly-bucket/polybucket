@@ -23,6 +23,8 @@ interface ModelViewerProps {
   onResetCamera?: () => void;
 }
 
+type ViewerMode = "solid" | "wireframe";
+
 const STLModel = React.memo(
   ({
     fileData,
@@ -31,7 +33,12 @@ const STLModel = React.memo(
     onBoundingBoxCalculated,
   }: {
     fileData: ArrayBuffer | Blob;
-    renderSettings: { color: string; metalness: number; roughness: number };
+    renderSettings: {
+      viewMode: ViewerMode;
+      color: string;
+      metalness: number;
+      roughness: number;
+    };
     autoRotate: boolean;
     onBoundingBoxCalculated?: (boundingBox: THREE.Box3) => void;
   }) => {
@@ -77,8 +84,14 @@ const STLModel = React.memo(
           color: renderSettings.color,
           metalness: renderSettings.metalness,
           roughness: renderSettings.roughness,
+          wireframe: renderSettings.viewMode === "wireframe",
         }),
-      [renderSettings.color, renderSettings.metalness, renderSettings.roughness]
+      [
+        renderSettings.viewMode,
+        renderSettings.color,
+        renderSettings.metalness,
+        renderSettings.roughness,
+      ]
     );
 
     useFrame(() => {
@@ -267,6 +280,7 @@ export default function ModelViewer({
 }: ModelViewerProps) {
   const [fileData, setFileData] = useState<ArrayBuffer | null>(null);
   const [autoRotateState, setAutoRotateState] = useState(autoRotate);
+  const [isToolboxOpen, setIsToolboxOpen] = useState(false);
   const [cameraSettings, setCameraSettings] = useState({
     position: [0, 0, 5] as [number, number, number],
     minDistance: 2,
@@ -275,11 +289,27 @@ export default function ModelViewer({
   });
   const [lastBoundingBox, setLastBoundingBox] = useState<THREE.Box3 | null>(null);
   const [shouldResetCamera, setShouldResetCamera] = useState(false);
-  const [renderSettings] = useState({
+  const [renderSettings, setRenderSettings] = useState({
+    viewMode: "solid" as ViewerMode,
     color: "#888888",
     metalness: 0.5,
     roughness: 0.5,
   });
+  const [lightSettings, setLightSettings] = useState({
+    angle: 27,
+    height: 10,
+    distance: 11,
+  });
+
+  const directionalLightPosition = useMemo(
+    () =>
+      [
+        Math.cos((lightSettings.angle * Math.PI) / 180) * lightSettings.distance,
+        lightSettings.height,
+        Math.sin((lightSettings.angle * Math.PI) / 180) * lightSettings.distance,
+      ] as [number, number, number],
+    [lightSettings.angle, lightSettings.height, lightSettings.distance]
+  );
 
   useEffect(() => {
     file.arrayBuffer().then((buf) => setFileData(buf));
@@ -358,22 +388,167 @@ export default function ModelViewer({
 
   return (
     <div className="relative h-full w-full min-h-[384px]">
-      <div className="absolute top-2 right-2 z-10 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setAutoRotateState((prev) => !prev)}
-          className="rounded bg-white/10 px-3 py-1 text-sm text-white backdrop-blur hover:bg-white/20"
-        >
-          {autoRotateState ? "Stop" : "Auto Rotate"}
-        </button>
-        <button
-          type="button"
-          onClick={handleResetCamera}
-          className="rounded bg-white/10 px-3 py-1 text-sm text-white backdrop-blur hover:bg-white/20"
-        >
-          Reset View
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setIsToolboxOpen((prev) => !prev)}
+        className="absolute top-2 left-2 z-20 rounded bg-white/10 px-3 py-1 text-sm text-white backdrop-blur hover:bg-white/20"
+      >
+        {isToolboxOpen ? "Hide Toolbox" : "Show Toolbox"}
+      </button>
+
+      {isToolboxOpen && (
+        <div className="absolute top-12 right-2 z-20 max-h-[calc(100%-3.5rem)] w-72 overflow-y-auto rounded-lg border border-white/20 bg-black/55 p-3 text-white backdrop-blur">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
+                View Mode
+              </p>
+              <select
+                value={renderSettings.viewMode}
+                onChange={(e) =>
+                  setRenderSettings((prev) => ({
+                    ...prev,
+                    viewMode: e.target.value as ViewerMode,
+                  }))
+                }
+                className="w-full rounded bg-white/10 px-2 py-1 text-sm text-white outline-none ring-1 ring-white/10"
+              >
+                <option value="solid">Solid</option>
+                <option value="wireframe">Wireframe</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
+                Material
+              </p>
+              <label className="block space-y-1">
+                <span className="text-xs text-white/70">Color</span>
+                <input
+                  type="color"
+                  value={renderSettings.color}
+                  onChange={(e) =>
+                    setRenderSettings((prev) => ({
+                      ...prev,
+                      color: e.target.value,
+                    }))
+                  }
+                  className="h-9 w-full cursor-pointer rounded border border-white/15 bg-white/5 p-1"
+                />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs text-white/70">
+                  Metalness {renderSettings.metalness.toFixed(2)}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={renderSettings.metalness}
+                  onChange={(e) =>
+                    setRenderSettings((prev) => ({
+                      ...prev,
+                      metalness: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full"
+                />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs text-white/70">
+                  Roughness {renderSettings.roughness.toFixed(2)}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={renderSettings.roughness}
+                  onChange={(e) =>
+                    setRenderSettings((prev) => ({
+                      ...prev,
+                      roughness: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full"
+                />
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
+                Lighting
+              </p>
+              <label className="block space-y-1">
+                <span className="text-xs text-white/70">
+                  Angle {lightSettings.angle}°
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="360"
+                  step="1"
+                  value={lightSettings.angle}
+                  onChange={(e) =>
+                    setLightSettings((prev) => ({
+                      ...prev,
+                      angle: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full"
+                />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs text-white/70">
+                  Height {lightSettings.height}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="20"
+                  step="1"
+                  value={lightSettings.height}
+                  onChange={(e) =>
+                    setLightSettings((prev) => ({
+                      ...prev,
+                      height: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full"
+                />
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
+                Camera
+              </p>
+              <button
+                type="button"
+                onClick={handleResetCamera}
+                className="w-full rounded bg-white/10 px-3 py-1 text-sm text-white hover:bg-white/20"
+              >
+                Reset View
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
+                Animation
+              </p>
+              <button
+                type="button"
+                onClick={() => setAutoRotateState((prev) => !prev)}
+                className="w-full rounded bg-white/10 px-3 py-1 text-sm text-white hover:bg-white/20"
+              >
+                {autoRotateState ? "Stop Auto Rotate" : "Start Auto Rotate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Canvas
         camera={{ position: cameraSettings.position, fov: 50 }}
         frameloop={autoRotateState ? "always" : "demand"}
@@ -392,7 +567,7 @@ export default function ModelViewer({
           resetCamera={shouldResetCamera}
         />
         <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
+        <directionalLight position={directionalLightPosition} intensity={1} />
         {isSTL && (
           <STLModel
             fileData={fileData}

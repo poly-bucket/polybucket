@@ -2,7 +2,6 @@
 
 import React, {
   useState,
-  useRef,
   useEffect,
   useCallback,
 } from "react";
@@ -12,7 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { uploadModel } from "@/lib/services/modelsService";
 import {
   getFileSettings,
-  getEnabledFileTypesByCategory,
   getExtensionsByCategory,
   isFileTypeAllowed,
 } from "@/lib/services/fileTypeSettingsService";
@@ -35,77 +33,49 @@ import FileDropZone from "./file-drop-zone";
 import FileQueue, { type UploadedFile } from "./file-queue";
 import MetadataForm, { type ModelData } from "./metadata-form";
 import ThumbnailGenerator from "./thumbnail-generator";
-import ModelViewer from "@/components/model-viewer/model-viewer";
-import PDFViewer from "@/components/viewers/pdf-viewer";
-import MarkdownViewer from "@/components/viewers/markdown-viewer";
+import UploadPreviewCarousel from "./upload-preview-carousel";
 import { Button } from "@/components/primitives/button";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/primitives/card";
 import { cn } from "@/lib/utils";
-
-const MAX_FILES_PER_UPLOAD = 20;
-
-function ImagePreview({ file }: { file: File }) {
-  const [url, setUrl] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    const u = URL.createObjectURL(file);
-    setUrl(u);
-    return () => URL.revokeObjectURL(u);
-  }, [file]);
-  if (!url) return null;
-  return (
-    <div className="w-full h-full flex items-center justify-center p-4">
-      <img
-        src={url}
-        alt="Preview"
-        className="max-w-full max-h-full object-contain"
-      />
-    </div>
-  );
-}
-
-function createUploadedFile(file: File): UploadedFile {
-  return {
-    id: Math.random().toString(36).slice(2, 11),
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    file,
-    progress: 0,
-    isThumbnail: false,
-  };
-}
+import { getUploadDefaults } from "@/lib/services/contentDefaultsService";
+import {
+  MAX_FILES_PER_UPLOAD,
+  createUploadedFile,
+  getUploadFileType,
+  setThumbnailSelection,
+} from "./upload-shared";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function ModelUploadView() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const localUploadDefaults = getUploadDefaults();
   const [fileTypeSettings, setFileTypeSettings] = useState<
     FileTypeSettingsData[] | undefined
   >(undefined);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
+  const [selectedThumbnailFileId, setSelectedThumbnailFileId] = useState<string | null>(null);
   const [modelData, setModelData] = useState<ModelData>({
     title: "",
     description: "",
-    privacy: PrivacySettings.Public,
-    license: "MIT",
+    privacy: localUploadDefaults.privacy as PrivacySettings,
+    license: localUploadDefaults.license,
     categories: [],
-    aiGenerated: false,
-    workInProgress: false,
-    nsfw: false,
-    remix: false,
+    aiGenerated: localUploadDefaults.aiGenerated,
+    workInProgress: localUploadDefaults.workInProgress,
+    nsfw: localUploadDefaults.nsfw,
+    remix: localUploadDefaults.remix,
   });
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isExtractingZip, setIsExtractingZip] = useState(false);
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
 
-  const default3D = [".stl", ".glb", ".gltf", ".3mf"];
+  const default3D = [".stl", ".obj", ".fbx", ".glb", ".gltf", ".3mf", ".step", ".stp"];
   const defaultImage = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
   const defaultArchive = [".zip"];
   const defaultDoc = [".pdf", ".md", ".markdown"];
@@ -182,12 +152,7 @@ export default function ModelUploadView() {
 
   const getFileType = useCallback(
     (fileName: string): "3d" | "image" | "pdf" | "markdown" | "unknown" => {
-      const ext = fileName.toLowerCase().substring(fileName.lastIndexOf("."));
-      if (supported3DFormats.includes(ext)) return "3d";
-      if (supportedImageFormats.includes(ext)) return "image";
-      if (fileName.toLowerCase().endsWith(".pdf")) return "pdf";
-      if (isMarkdownFile(fileName)) return "markdown";
-      return "unknown";
+      return getUploadFileType(fileName, supported3DFormats, supportedImageFormats);
     },
     [supported3DFormats, supportedImageFormats]
   );
@@ -215,11 +180,16 @@ export default function ModelUploadView() {
       const files = convertToFiles(result.files);
       const remaining = MAX_FILES_PER_UPLOAD - uploadedFiles.length;
       const toAdd = files.slice(0, remaining);
-      const newUploaded = toAdd.map(createUploadedFile);
+      const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
+      const newUploaded = toAdd.map((fileItem) => {
+        const nextFile = createUploadedFile(fileItem, takenNames);
+        takenNames.add(nextFile.name);
+        return nextFile;
+      });
       setUploadedFiles((prev) => [...prev, ...newUploaded]);
       const firstPreview = newUploaded.find(
-        (f) =>
-          getFileType(f.name) !== "unknown"
+        (fileItem) =>
+          getFileType(fileItem.name) !== "unknown"
       );
       if (firstPreview && !previewFile)
         setPreviewFile(firstPreview);
@@ -227,7 +197,7 @@ export default function ModelUploadView() {
         `Zip extracted: ${toAdd.length} file(s) added. ${files.length - toAdd.length} skipped (max reached).`
       );
     },
-    [canAddMoreFiles, uploadedFiles.length, previewFile, getFileType]
+    [canAddMoreFiles, uploadedFiles, previewFile, getFileType]
   );
 
   const processMarkdownFile = useCallback(async (file: File) => {
@@ -298,7 +268,12 @@ export default function ModelUploadView() {
         else if (isMarkdownFile(file.name)) await processMarkdownFile(file);
       }
 
-      const newFiles = toAdd.map(createUploadedFile);
+      const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
+      const newFiles = toAdd.map((fileItem) => {
+        const nextFile = createUploadedFile(fileItem, takenNames);
+        takenNames.add(nextFile.name);
+        return nextFile;
+      });
       setUploadedFiles((prev) => [...prev, ...newFiles]);
       const firstPreviewable = newFiles.find(
         (f) => getFileType(f.name) !== "unknown"
@@ -324,6 +299,9 @@ export default function ModelUploadView() {
   const handleRemoveFile = (id: string) => {
     setUploadedFiles((prev) => {
       const next = prev.filter((x) => x.id !== id);
+      if (selectedThumbnailFileId === id) {
+        setSelectedThumbnailFileId(null);
+      }
       if (previewFile?.id === id)
         setPreviewFile(next.length > 0 ? next[0] : null);
       return next;
@@ -331,24 +309,81 @@ export default function ModelUploadView() {
   };
 
   const handleThumbnailToggle = (id: string, checked: boolean) => {
-    setUploadedFiles((prev) =>
-      prev.map((f) => ({
-        ...f,
-        isThumbnail: checked ? f.id === id : f.id === id ? false : f.isThumbnail,
-      }))
-    );
+    const selectedId = checked ? id : null;
+    setSelectedThumbnailFileId(selectedId);
+    setUploadedFiles((prev) => setThumbnailSelection(prev, selectedId));
   };
 
   const handleClearAll = () => {
     setUploadedFiles([]);
     setPreviewFile(null);
+    setSelectedThumbnailFileId(null);
+  };
+
+  const handleThumbnailSelected = (value: string) => {
+    const selectedId = value === "none" ? null : value;
+    setSelectedThumbnailFileId(selectedId);
+    setUploadedFiles((prev) => setThumbnailSelection(prev, selectedId));
+  };
+
+  const handleThumbnailGenerated = useCallback(
+    (blob: Blob, fileName: string) => {
+      const generatedFile = new File([blob], fileName, { type: "image/png" });
+      const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
+      const generatedUploaded = createUploadedFile(generatedFile, takenNames);
+      setUploadedFiles((prev) => {
+        const next = [...prev, generatedUploaded];
+        return setThumbnailSelection(next, generatedUploaded.id);
+      });
+      setSelectedThumbnailFileId(generatedUploaded.id);
+      setPreviewFile(generatedUploaded);
+      toast.success("Generated thumbnail added to upload queue");
+    },
+    [uploadedFiles]
+  );
+
+  const thumbnailCandidates = uploadedFiles.filter(
+    (fileItem) => getFileType(fileItem.name) === "image"
+  );
+
+  const selectedThumbnailFile = uploadedFiles.find(
+    (fileItem) => fileItem.id === selectedThumbnailFileId
+  );
+
+  useEffect(() => {
+    if (selectedThumbnailFileId && !uploadedFiles.some((fileItem) => fileItem.id === selectedThumbnailFileId)) {
+      setSelectedThumbnailFileId(null);
+      setUploadedFiles((prev) => setThumbnailSelection(prev, null));
+    }
+  }, [selectedThumbnailFileId, uploadedFiles]);
+
+  useEffect(() => {
+    setUploadedFiles((prev) => setThumbnailSelection(prev, selectedThumbnailFileId));
+  }, [selectedThumbnailFileId]);
+
+  const canGenerateThumbnail = previewFile ? getFileType(previewFile.name) === "3d" : false;
+
+  const reviewThumbnailPreviewUrl = React.useMemo(() => {
+    if (!selectedThumbnailFile) return null;
+    const objectUrl = URL.createObjectURL(selectedThumbnailFile.file);
+    return objectUrl;
+  }, [selectedThumbnailFile]);
+
+  useEffect(() => {
+    return () => {
+      if (reviewThumbnailPreviewUrl) URL.revokeObjectURL(reviewThumbnailPreviewUrl);
+    };
+  }, [reviewThumbnailPreviewUrl]);
+
+  const getThumbnailFileIdForUpload = () => {
+    if (!selectedThumbnailFileId) return undefined;
+    return uploadedFiles.find((fileItem) => fileItem.id === selectedThumbnailFileId)?.name;
   };
 
   const handleUpload = async () => {
     if (uploadedFiles.length === 0) return;
     setIsUploading(true);
     try {
-      const thumbnailFile = uploadedFiles.find((f) => f.isThumbnail);
       const result = await uploadModel({
         modelData: {
           name: modelData.title,
@@ -360,7 +395,7 @@ export default function ModelUploadView() {
           workInProgress: modelData.workInProgress,
           nsfw: modelData.nsfw,
           remix: modelData.remix,
-          thumbnailFileId: thumbnailFile?.name,
+          thumbnailFileId: getThumbnailFileIdForUpload(),
         },
         files: uploadedFiles.map((f) => f.file),
       });
@@ -476,60 +511,52 @@ export default function ModelUploadView() {
 
         {currentStep === 2 && (
           <div className="space-y-6">
-            <Card variant="glass" className="overflow-hidden">
-              <CardHeader>
-                <CardTitle>
-                  Preview {previewFile && `: ${previewFile.name}`}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-96 w-full bg-muted/30">
-                  {previewFile ? (
-                    (() => {
-                      const ft = getFileType(previewFile.name);
-                      if (ft === "3d")
-                        return (
-                          <ModelViewer
-                            file={previewFile.file}
-                            fileName={previewFile.name}
-                            autoRotate
-                          />
-                        );
-                      if (ft === "image")
-                        return (
-                          <ImagePreview file={previewFile.file} />
-                        );
-                      if (ft === "pdf")
-                        return (
-                          <PDFViewer
-                            file={previewFile.file}
-                            width="100%"
-                            height={384}
-                            className="h-96"
-                          />
-                        );
-                      if (ft === "markdown")
-                        return (
-                          <MarkdownViewer
-                            file={previewFile.file}
-                            width="100%"
-                            height={384}
-                            className="h-96"
-                          />
-                        );
-                      return (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                          Preview not available for this file type
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      Select a file from the queue to preview
-                    </div>
-                  )}
-                </div>
-              </CardContent>
+            <UploadPreviewCarousel
+              files={uploadedFiles}
+              activeFileId={previewFile?.id ?? null}
+              getFileType={getFileType}
+              onActiveFileChange={handleSelectFile}
+              onOpenThumbnailGenerator={() => setShowThumbnailGenerator(true)}
+            />
+
+            <Card variant="glass" className="p-6 space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Thumbnail Selection</h3>
+                <p className="text-sm text-muted-foreground">
+                  Choose which image should be used as the model thumbnail.
+                </p>
+              </div>
+              <Select
+                value={selectedThumbnailFileId ?? "none"}
+                onValueChange={handleThumbnailSelected}
+              >
+                <SelectTrigger variant="glass" className="w-full">
+                  <SelectValue placeholder="Select thumbnail image" />
+                </SelectTrigger>
+                <SelectContent variant="glass">
+                  <SelectItem value="none">No thumbnail selected</SelectItem>
+                  {thumbnailCandidates.map((fileItem) => (
+                    <SelectItem key={fileItem.id} value={fileItem.id}>
+                      {fileItem.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {canGenerateThumbnail && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => setShowThumbnailGenerator(true)}
+                >
+                  Generate thumbnail from current 3D preview
+                </Button>
+              )}
+              {thumbnailCandidates.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Upload or generate at least one image to select a thumbnail.
+                </p>
+              )}
             </Card>
 
             <Card variant="glass" className="p-6">
@@ -560,6 +587,10 @@ export default function ModelUploadView() {
                   <span className="text-foreground font-medium">Files:</span>{" "}
                   {uploadedFiles.length}
                 </p>
+                <p>
+                  <span className="text-foreground font-medium">Thumbnail:</span>{" "}
+                  {selectedThumbnailFile ? selectedThumbnailFile.name : "None selected"}
+                </p>
                 {previewFile && (
                   <p>
                     <span className="text-foreground font-medium">
@@ -569,6 +600,16 @@ export default function ModelUploadView() {
                   </p>
                 )}
               </div>
+              {reviewThumbnailPreviewUrl && (
+                <div className="mt-4 rounded-md border border-white/20 bg-white/5 p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Selected thumbnail preview</p>
+                  <img
+                    src={reviewThumbnailPreviewUrl}
+                    alt="Selected thumbnail preview"
+                    className="h-28 w-28 rounded object-cover"
+                  />
+                </div>
+              )}
               <div className="flex gap-4 mt-6">
                 <Button variant="outline" onClick={() => setCurrentStep(2)}>
                   Back
@@ -584,11 +625,12 @@ export default function ModelUploadView() {
           </div>
         )}
 
-      {showThumbnailGenerator && previewFile && (
+      {showThumbnailGenerator && previewFile && canGenerateThumbnail && (
         <ThumbnailGenerator
           modelFile={previewFile.file}
-          onThumbnailGenerated={() => setShowThumbnailGenerator(false)}
-          onCancel={() => setShowThumbnailGenerator(false)}
+          open={showThumbnailGenerator}
+          onOpenChange={setShowThumbnailGenerator}
+          onThumbnailGenerated={handleThumbnailGenerated}
         />
       )}
     </div>

@@ -4,15 +4,17 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
-import SecurityStep from "@/setup/SecurityStep";
+import AdminAccountSetupStep from "@/setup/AdminAccountSetupStep";
+import SiteSecurityStep from "@/setup/SiteSecurityStep";
 import SiteEssentialsStep from "@/setup/SiteEssentialsStep";
 import SetupComplete from "@/setup/SetupComplete";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 
-type StepIndex = 0 | 1;
+type StepIndex = 0 | 1 | 2;
 const STEP_NAMES: Record<StepIndex, string> = {
-  0: "Security",
-  1: "Site essentials",
+  0: "Admin Account Setup",
+  1: "Site security",
+  2: "Site essentials",
 };
 
 export default function SetupPage() {
@@ -97,9 +99,14 @@ export default function SetupPage() {
     checkStatus();
   }, [user?.accessToken, isAuthLoading, router]);
 
-  const handleSecurityComplete = (data: Record<string, unknown>) => {
+  const handleAdminAccountComplete = (data: Record<string, unknown>) => {
     setSetupData((prev) => ({ ...prev, ...data }));
     setCurrentStep(1);
+  };
+
+  const handleSiteSecurityComplete = (data: Record<string, unknown>) => {
+    setSetupData((prev) => ({ ...prev, ...data }));
+    setCurrentStep(2);
   };
 
   const handleSiteComplete = async (data: Record<string, unknown>) => {
@@ -164,31 +171,33 @@ export default function SetupPage() {
     <div className="w-full max-w-lg space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-white">
-            PolyBucket setup
+            Setup Wizard
           </h1>
           <p className="mt-1 text-sm text-white/60">
-            Step {currentStep + 1} of 2: {STEP_NAMES[currentStep]}
+            Step {currentStep + 1} of 3: {STEP_NAMES[currentStep]}
           </p>
         </div>
 
         <Card variant="glass" className="border-white/20">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {STEP_NAMES[currentStep]}
-            </CardTitle>
-          </CardHeader>
           <CardContent>
             {currentStep === 0 && (
-              <SecurityStep
-                onComplete={handleSecurityComplete}
+              <AdminAccountSetupStep
+                onComplete={handleAdminAccountComplete}
                 onBack={() => setCurrentStep(0)}
                 isFirstStep={true}
               />
             )}
             {currentStep === 1 && (
+              <SiteSecurityStep
+                onComplete={handleSiteSecurityComplete}
+                onBack={() => setCurrentStep(0)}
+                data={setupData}
+              />
+            )}
+            {currentStep === 2 && (
               <SiteEssentialsStep
                 onComplete={handleSiteComplete}
-                onBack={() => setCurrentStep(0)}
+                onBack={() => setCurrentStep(1)}
                 data={setupData}
               />
             )}

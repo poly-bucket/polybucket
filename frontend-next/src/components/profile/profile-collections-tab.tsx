@@ -13,7 +13,7 @@ const PAGE_SIZE = 12;
 const DEBOUNCE_MS = 300;
 
 interface ProfileCollectionsTabProps {
-  userId: string;
+  username: string;
   page: number;
   q: string;
   onPageChange: (page: number) => void;
@@ -21,7 +21,7 @@ interface ProfileCollectionsTabProps {
 }
 
 export function ProfileCollectionsTab({
-  userId,
+  username,
   page,
   q,
   onPageChange,
@@ -31,13 +31,15 @@ export function ProfileCollectionsTab({
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(q, DEBOUNCE_MS);
 
   const loadCollections = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetchUserCollections(
-        userId,
+        username,
         page,
         PAGE_SIZE,
         debouncedSearch || undefined
@@ -45,14 +47,17 @@ export function ProfileCollectionsTab({
       setCollections(response.collections ?? []);
       setTotalPages(response.totalPages ?? 1);
       setTotalCount(response.totalCount ?? 0);
-    } catch {
+    } catch (err) {
+      const message =
+        (err as { result?: { message?: string }; message?: string })?.result?.message ??
+        (err as { message?: string })?.message ??
+        "Failed to load collections";
+      setError(message);
       setCollections([]);
-      setTotalPages(1);
-      setTotalCount(0);
     } finally {
       setLoading(false);
     }
-  }, [userId, page, debouncedSearch]);
+  }, [username, page, debouncedSearch]);
 
   useEffect(() => {
     loadCollections();
@@ -81,9 +86,10 @@ export function ProfileCollectionsTab({
       ) : collections.length === 0 ? (
         <div className="rounded-xl border border-white/20 bg-white/5 px-8 py-12 text-center">
           <p className="text-white/60">
-            {debouncedSearch
+            {error ??
+              (debouncedSearch
               ? `No collections found matching "${debouncedSearch}"`
-              : "No collections found"}
+              : "No collections found")}
           </p>
         </div>
       ) : (

@@ -63,14 +63,14 @@ export async function fetchUserModels(
 }
 
 export async function fetchUserCollections(
-  userId: string,
+  username: string,
   page: number,
   pageSize: number,
   search?: string
 ): Promise<GetPublicUserCollectionsResult> {
   const client = ApiClientFactory.getApiClient();
-  return client.getPublicUserCollections_GetPublicUserCollections(
-    userId,
+  return client.getPublicUserCollections_GetPublicUserCollectionsByUsername(
+    username,
     page,
     pageSize,
     search ?? undefined,

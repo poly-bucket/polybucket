@@ -5,6 +5,9 @@ import { Input } from "@/components/primitives/input";
 import { Button } from "@/components/primitives/button";
 import { cn } from "@/lib/utils";
 import type { PrivacySettings } from "@/lib/api/client";
+import { Textarea } from "@/components/ui/glass/textarea";
+import { Switch } from "@/components/primitives/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const CATEGORIES = [
   "Art",
@@ -84,17 +87,13 @@ export default function MetadataForm({
         <label className="block text-sm font-medium text-foreground mb-2">
           Description
         </label>
-        <textarea
+        <Textarea
+          variant="glass"
           value={data.description}
           onChange={(e) => onChange("description", e.target.value)}
           rows={4}
           placeholder="Enter model description"
-          className={cn(
-            "w-full min-w-0 rounded-md border bg-transparent px-3 py-2 text-base",
-            "border-input dark:bg-input/30 glass-bg border-white/20",
-            "placeholder:text-muted-foreground resize-none",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          )}
+          className="resize-none"
         />
       </div>
 
@@ -103,41 +102,36 @@ export default function MetadataForm({
           <label className="block text-sm font-medium text-foreground mb-2">
             Privacy
           </label>
-          <select
-            value={data.privacy}
-            onChange={(e) =>
-              onChange("privacy", e.target.value as PrivacySettings)
-            }
-            className={cn(
-              "w-full h-9 rounded-md border px-3 py-1 text-sm",
-              "border-input dark:bg-input/30 glass-bg border-white/20",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            )}
+          <Select
+            value={data.privacy as string}
+            onValueChange={(value) => onChange("privacy", value as PrivacySettings)}
           >
-            <option value="Public">Public</option>
-            <option value="Private">Private</option>
-            <option value="Unlisted">Unlisted</option>
-          </select>
+            <SelectTrigger variant="glass" className="w-full">
+              <SelectValue placeholder="Select privacy" />
+            </SelectTrigger>
+            <SelectContent variant="glass">
+              <SelectItem value="Public">Public</SelectItem>
+              <SelectItem value="Private">Private</SelectItem>
+              <SelectItem value="Unlisted">Unlisted</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
             License
           </label>
-          <select
-            value={data.license}
-            onChange={(e) => onChange("license", e.target.value)}
-            className={cn(
-              "w-full h-9 rounded-md border px-3 py-1 text-sm",
-              "border-input dark:bg-input/30 glass-bg border-white/20",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            )}
-          >
-            {LICENSES.map((license) => (
-              <option key={license} value={license}>
-                {license}
-              </option>
-            ))}
-          </select>
+          <Select value={data.license} onValueChange={(value) => onChange("license", value)}>
+            <SelectTrigger variant="glass" className="w-full">
+              <SelectValue placeholder="Select license" />
+            </SelectTrigger>
+            <SelectContent variant="glass">
+              {LICENSES.map((license) => (
+                <SelectItem key={license} value={license}>
+                  {license}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -179,13 +173,11 @@ export default function MetadataForm({
               key={key}
               className="flex items-center gap-2 cursor-pointer text-sm text-foreground"
             >
-              <input
-                type="checkbox"
+              <Switch
                 checked={data[key as keyof ModelData] as boolean}
-                onChange={(e) =>
-                  onChange(key as keyof ModelData, e.target.checked)
+                onCheckedChange={(checked) =>
+                  onChange(key as keyof ModelData, checked)
                 }
-                className="rounded border-input"
               />
               {label}
             </label>

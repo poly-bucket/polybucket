@@ -9,7 +9,7 @@ public interface IGetUserProfileRepository
 {
     Task<User?> GetByIdWithRoleAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetByUsernameWithRoleAsync(string username, CancellationToken cancellationToken = default);
-    Task<GetUserProfileStatisticsRow> GetProfileStatisticsAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<GetUserProfileStatisticsRow> GetProfileStatisticsAsync(Guid userId, bool includePrivate, CancellationToken cancellationToken = default);
 }
 
 public class GetUserProfileStatisticsRow

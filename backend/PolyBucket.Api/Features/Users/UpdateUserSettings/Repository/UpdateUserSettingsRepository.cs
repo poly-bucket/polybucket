@@ -31,6 +31,10 @@ public class UpdateUserSettingsRepository(PolyBucketDbContext context) : IUpdate
         if (request.MeasurementSystem != null) settings.MeasurementSystem = request.MeasurementSystem;
         if (request.TimeZone != null) settings.TimeZone = request.TimeZone;
         if (request.AutoRotateModels.HasValue) settings.AutoRotateModels = request.AutoRotateModels.Value;
+        if (request.NotifyOnMentions.HasValue) settings.NotifyOnMentions = request.NotifyOnMentions.Value;
+        if (request.NotifyOnFollows.HasValue) settings.NotifyOnFollows = request.NotifyOnFollows.Value;
+        if (request.NotifyOnLikes.HasValue) settings.NotifyOnLikes = request.NotifyOnLikes.Value;
+        if (request.NotifyOnComments.HasValue) settings.NotifyOnComments = request.NotifyOnComments.Value;
         if (request.DashboardViewType != null) settings.DashboardViewType = request.DashboardViewType;
         if (request.CardSize != null) settings.CardSize = request.CardSize;
         if (request.CardSpacing != null) settings.CardSpacing = request.CardSpacing;

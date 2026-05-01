@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +23,15 @@ public class GetPublicUserCollectionsController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Get profile collections by user ID.
+    /// Returns public collections for regular viewers and includes private collections for owner/admin viewers.
+    /// </summary>
     [HttpGet("{userId}/collections/public")]
     [ProducesResponseType(200, Type = typeof(GetPublicUserCollectionsResult))]
     [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<GetPublicUserCollectionsResult>> GetPublicUserCollections(
         [FromRoute] Guid userId,
@@ -47,6 +54,8 @@ public class GetPublicUserCollectionsController : ControllerBase
                 return BadRequest("Page size must be between 1 and 100");
             }
 
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid? requestingUserId = Guid.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
             var query = new GetPublicUserCollectionsQuery
             {
                 UserId = userId,
@@ -54,11 +63,23 @@ public class GetPublicUserCollectionsController : ControllerBase
                 PageSize = pageSize,
                 SearchQuery = searchQuery,
                 SortBy = sortBy,
-                SortDescending = sortDescending
+                SortDescending = sortDescending,
+                RequestingUserId = requestingUserId,
+                IsRequestingUserAdmin = User.IsInRole("Admin")
             };
 
             var response = await _getPublicUserCollectionsService.GetPublicUserCollectionsAsync(query, cancellationToken);
             return Ok(response);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "User not found while retrieving collections for user {UserId}", userId);
+            return NotFound(new { message = "User not found" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized collections access for user {UserId}", userId);
+            return StatusCode(403, new { message = "User profile is private" });
         }
         catch (Exception ex)
         {
@@ -67,9 +88,15 @@ public class GetPublicUserCollectionsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Get profile collections by username.
+    /// Returns public collections for regular viewers and includes private collections for owner/admin viewers.
+    /// </summary>
     [HttpGet("profile/{username}/collections/public")]
     [ProducesResponseType(200, Type = typeof(GetPublicUserCollectionsResult))]
     [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<GetPublicUserCollectionsResult>> GetPublicUserCollectionsByUsername(
         [FromRoute] string username,
@@ -92,18 +119,32 @@ public class GetPublicUserCollectionsController : ControllerBase
                 return BadRequest("Page size must be between 1 and 100");
             }
 
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid? requestingUserId = Guid.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
             var query = new GetPublicUserCollectionsQuery
             {
-                UserId = Guid.Empty,
+                Username = username,
                 Page = page,
                 PageSize = pageSize,
                 SearchQuery = searchQuery,
                 SortBy = sortBy,
-                SortDescending = sortDescending
+                SortDescending = sortDescending,
+                RequestingUserId = requestingUserId,
+                IsRequestingUserAdmin = User.IsInRole("Admin")
             };
 
             var response = await _getPublicUserCollectionsService.GetPublicUserCollectionsAsync(query, cancellationToken);
             return Ok(response);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "User not found while retrieving collections for username {Username}", username);
+            return NotFound(new { message = "User not found" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized collections access for username {Username}", username);
+            return StatusCode(403, new { message = "User profile is private" });
         }
         catch (Exception ex)
         {

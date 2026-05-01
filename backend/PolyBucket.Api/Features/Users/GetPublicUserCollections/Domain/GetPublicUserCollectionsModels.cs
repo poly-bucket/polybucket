@@ -6,11 +6,14 @@ namespace PolyBucket.Api.Features.Users.GetPublicUserCollections.Domain;
 public class GetPublicUserCollectionsQuery
 {
     public Guid UserId { get; set; }
+    public string? Username { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
     public string? SearchQuery { get; set; }
     public string? SortBy { get; set; } = "CreatedAt";
     public bool SortDescending { get; set; } = true;
+    public Guid? RequestingUserId { get; set; }
+    public bool IsRequestingUserAdmin { get; set; }
 }
 
 public class GetPublicUserCollectionsResult

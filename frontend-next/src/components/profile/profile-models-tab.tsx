@@ -34,18 +34,23 @@ export function ProfileModelsTab({
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadModels = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetchUserModels(username, page, PAGE_SIZE);
       setModels(response.models ?? []);
       setTotalPages(response.totalPages ?? 1);
       setTotalCount(response.totalCount ?? 0);
-    } catch {
+    } catch (err) {
+      const message =
+        (err as { result?: { message?: string }; message?: string })?.result?.message ??
+        (err as { message?: string })?.message ??
+        "Failed to load models";
+      setError(message);
       setModels([]);
-      setTotalPages(1);
-      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -68,7 +73,7 @@ export function ProfileModelsTab({
   if (models.length === 0) {
     return (
       <div className="rounded-xl border border-white/20 bg-white/5 px-8 py-12 text-center">
-        <p className="text-white/60">No models found</p>
+        <p className="text-white/60">{error ?? "No models found"}</p>
       </div>
     );
   }

@@ -11,6 +11,8 @@ public class GetUserModelsQuery
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
     public bool IncludePrivate { get; set; } = false;
+    public Guid? RequestingUserId { get; set; }
+    public bool IsRequestingUserAdmin { get; set; }
 }
 
 public class GetUserModelsResult

@@ -8,10 +8,9 @@ import { SettingsToggle } from "@/components/settings/settings-toggle";
 export default function NotificationsSettingsPage() {
   const { settings, updateSettings } = useUserSettings();
 
-  const handleToggle = async (value: boolean) => {
-    const previous = settings?.emailNotifications ?? true;
+  const handleToggle = async (key: "emailNotifications" | "notifyOnMentions" | "notifyOnFollows" | "notifyOnLikes" | "notifyOnComments", value: boolean) => {
     try {
-      const success = await updateSettings({ emailNotifications: value });
+      const success = await updateSettings({ [key]: value });
       if (success) {
         toast.success("Notification settings updated");
       } else {
@@ -37,14 +36,35 @@ export default function NotificationsSettingsPage() {
       description="Choose which emails you want to receive"
     >
       <SettingsToggle
-        label="Email Notifications"
-        description="Receive emails about updates, comments, and system announcements"
+        label="Enable Email Notifications"
+        description="Master switch for receiving account emails"
         checked={settings.emailNotifications ?? true}
-        onCheckedChange={handleToggle}
+        onCheckedChange={(checked) => handleToggle("emailNotifications", checked)}
       />
-      <p className="mt-4 text-xs text-white/50">
-        More granular notification controls (mentions, followers, likes, comments) will be available when the backend supports them.
-      </p>
+      <SettingsToggle
+        label="Mentions"
+        description="Notify me when someone mentions me"
+        checked={settings.notifyOnMentions ?? true}
+        onCheckedChange={(checked) => handleToggle("notifyOnMentions", checked)}
+      />
+      <SettingsToggle
+        label="Follows"
+        description="Notify me when someone follows my profile"
+        checked={settings.notifyOnFollows ?? true}
+        onCheckedChange={(checked) => handleToggle("notifyOnFollows", checked)}
+      />
+      <SettingsToggle
+        label="Likes"
+        description="Notify me when someone likes my models"
+        checked={settings.notifyOnLikes ?? true}
+        onCheckedChange={(checked) => handleToggle("notifyOnLikes", checked)}
+      />
+      <SettingsToggle
+        label="Comments"
+        description="Notify me about new comments on my content"
+        checked={settings.notifyOnComments ?? true}
+        onCheckedChange={(checked) => handleToggle("notifyOnComments", checked)}
+      />
     </SettingsSection>
   );
 }

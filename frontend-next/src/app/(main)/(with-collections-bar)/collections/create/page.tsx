@@ -1,16 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { collectionsService } from "@/lib/services/collectionsService";
+import { getCollectionDefaults } from "@/lib/services/contentDefaultsService";
 import { CollectionForm } from "@/components/collections/collection-form";
 import { Button } from "@/components/primitives/button";
 
 export default function CreateCollectionPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialValues, setInitialValues] = useState<{
+    visibility?: "Public" | "Private" | "Unlisted";
+  }>({});
+
+  useEffect(() => {
+    const defaults = getCollectionDefaults();
+    setInitialValues({ visibility: defaults.visibility });
+  }, []);
 
   const handleSubmit = async (values: {
     name: string;
@@ -45,6 +54,7 @@ export default function CreateCollectionPage() {
         <h1 className="text-2xl font-bold text-white">Create Collection</h1>
       </div>
       <CollectionForm
+        initialValues={initialValues}
         submitLabel="Create"
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

@@ -13,6 +13,10 @@ public class UpdateUserSettingsCommand
     public string? MeasurementSystem { get; set; }
     public string? TimeZone { get; set; }
     public bool? AutoRotateModels { get; set; }
+    public bool? NotifyOnMentions { get; set; }
+    public bool? NotifyOnFollows { get; set; }
+    public bool? NotifyOnLikes { get; set; }
+    public bool? NotifyOnComments { get; set; }
     public string? DashboardViewType { get; set; }
     public string? CardSize { get; set; }
     public string? CardSpacing { get; set; }

@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,8 @@ public class GetUserProfileController : ControllerBase
     }
 
     /// <summary>
-    /// Get user profile by ID
+    /// Get user profile by ID.
+    /// Private profiles are visible to the profile owner and admins; other viewers receive a private-profile response.
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(200, Type = typeof(GetUserProfileResponse))]
@@ -35,6 +37,7 @@ public class GetUserProfileController : ControllerBase
         try
         {
             var query = new GetUserProfileQuery { Id = id };
+            PopulateRequesterContext(query);
             var response = await _getUserProfileService.GetUserProfileAsync(query, cancellationToken);
 
             if (response is PrivateProfileResponse privateResponse)
@@ -57,7 +60,8 @@ public class GetUserProfileController : ControllerBase
     }
 
     /// <summary>
-    /// Get user profile by username
+    /// Get user profile by username.
+    /// Private profiles are visible to the profile owner and admins; other viewers receive a private-profile response.
     /// </summary>
     [HttpGet("by-username/{username}")]
     [ProducesResponseType(200, Type = typeof(GetUserProfileResponse))]
@@ -71,6 +75,7 @@ public class GetUserProfileController : ControllerBase
         try
         {
             var query = new GetUserProfileQuery { Username = username };
+            PopulateRequesterContext(query);
             var response = await _getUserProfileService.GetUserProfileAsync(query, cancellationToken);
 
             if (response is PrivateProfileResponse privateResponse)
@@ -90,5 +95,16 @@ public class GetUserProfileController : ControllerBase
             _logger.LogError(ex, "Error retrieving user profile for username {Username}", username);
             return StatusCode(500, new { message = "An error occurred while retrieving the user profile" });
         }
+    }
+
+    private void PopulateRequesterContext(GetUserProfileQuery query)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (Guid.TryParse(userIdClaim, out var userId))
+        {
+            query.RequestingUserId = userId;
+        }
+
+        query.IsRequestingUserAdmin = User.IsInRole("Admin");
     }
 }

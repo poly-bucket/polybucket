@@ -29,6 +29,13 @@ export interface ModelUploadRequest {
   files: File[];
 }
 
+/*
+Upload contract notes:
+- `thumbnailFileId` must match the uploaded file name sent in `files`.
+- Client-side upload flows normalize duplicate file names before submit.
+- If no thumbnail is selected, `thumbnailFileId` is omitted.
+*/
+
 export interface UploadedModel {
   id: string;
   name?: string;

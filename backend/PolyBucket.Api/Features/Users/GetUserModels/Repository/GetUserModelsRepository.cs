@@ -21,15 +21,21 @@ public class GetUserModelsRepository(PolyBucketDbContext dbContext) : IGetUserMo
             throw new KeyNotFoundException($"User with username {query.Username} not found");
         }
 
+        var canViewPrivate = query.IsRequestingUserAdmin || (query.RequestingUserId.HasValue && query.RequestingUserId.Value == user.Id);
+        var includePrivate = query.IncludePrivate || canViewPrivate;
+
         if (!user.IsProfilePublic)
         {
-            throw new UnauthorizedAccessException("User profile is private");
+            if (!canViewPrivate)
+            {
+                throw new UnauthorizedAccessException("User profile is private");
+            }
         }
 
         var modelsQuery = dbContext.Models
             .Where(m => m.AuthorId == user.Id && m.DeletedAt == null);
 
-        if (!query.IncludePrivate)
+        if (!includePrivate)
         {
             modelsQuery = modelsQuery.Where(m => m.Privacy == PrivacySettings.Public);
         }

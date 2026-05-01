@@ -11,6 +11,10 @@ export interface UserSettingsData {
   measurementSystem?: string;
   timeZone?: string;
   autoRotateModels?: boolean;
+  notifyOnMentions?: boolean;
+  notifyOnFollows?: boolean;
+  notifyOnLikes?: boolean;
+  notifyOnComments?: boolean;
   dashboardViewType?: string;
   cardSize?: string;
   cardSpacing?: string;
@@ -25,6 +29,10 @@ export function getDefaultSettings(): UserSettingsData {
     measurementSystem: "metric",
     timeZone: "UTC",
     autoRotateModels: true,
+    notifyOnMentions: true,
+    notifyOnFollows: true,
+    notifyOnLikes: true,
+    notifyOnComments: true,
     dashboardViewType: "grid",
     cardSize: "medium",
     cardSpacing: "normal",
@@ -45,6 +53,10 @@ export async function getUserSettings(): Promise<UserSettingsData | null> {
       measurementSystem: settings.measurementSystem ?? "metric",
       timeZone: settings.timeZone ?? "UTC",
       autoRotateModels: settings.autoRotateModels ?? true,
+      notifyOnMentions: settings.notifyOnMentions ?? true,
+      notifyOnFollows: settings.notifyOnFollows ?? true,
+      notifyOnLikes: settings.notifyOnLikes ?? true,
+      notifyOnComments: settings.notifyOnComments ?? true,
       dashboardViewType: settings.dashboardViewType ?? "grid",
       cardSize: settings.cardSize ?? "medium",
       cardSpacing: settings.cardSpacing ?? "normal",
@@ -81,6 +93,10 @@ export async function updateUserSettings(
       measurementSystem: partial.measurementSystem,
       timeZone: partial.timeZone,
       autoRotateModels: partial.autoRotateModels,
+      notifyOnMentions: partial.notifyOnMentions,
+      notifyOnFollows: partial.notifyOnFollows,
+      notifyOnLikes: partial.notifyOnLikes,
+      notifyOnComments: partial.notifyOnComments,
       dashboardViewType: partial.dashboardViewType,
       cardSize: partial.cardSize,
       cardSpacing: partial.cardSpacing,

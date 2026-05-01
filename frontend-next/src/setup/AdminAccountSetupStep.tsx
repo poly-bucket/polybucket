@@ -17,7 +17,7 @@ import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import PasswordStrengthIndicator from "./PasswordStrengthIndicator";
 
-interface SecurityStepProps {
+interface AdminAccountSetupStepProps {
   onComplete: (data: {
     passwordChanged?: boolean;
     passwordSkipped?: boolean;
@@ -28,13 +28,13 @@ interface SecurityStepProps {
   isFirstStep: boolean;
 }
 
-type SecurityPhase = "password" | "2fa";
+type AdminAccountSetupPhase = "password" | "2fa";
 
-export default function SecurityStep({
+export default function AdminAccountSetupStep({
   onComplete,
   onBack,
   isFirstStep,
-}: SecurityStepProps) {
+}: AdminAccountSetupStepProps) {
   const { user, refreshUserFromMe } = useAuth();
   const [setupAvatarSalt, setSetupAvatarSalt] = useState("");
   const [setupAvatarSaving, setSetupAvatarSaving] = useState(false);
@@ -63,7 +63,7 @@ export default function SecurityStep({
     }
   };
 
-  const [phase, setPhase] = useState<SecurityPhase>("password");
+  const [phase, setPhase] = useState<AdminAccountSetupPhase>("password");
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -456,10 +456,10 @@ export default function SecurityStep({
   return (
     <form onSubmit={handlePasswordChange} className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium text-white mb-4">Security</h3>
+        <h3 className="text-lg font-medium text-white mb-4">Admin account setup</h3>
         <p className="text-white/70 text-sm mb-4">
-          Change your default admin password for security. You can optionally
-          enable two-factor authentication.
+          Set up the administrator account: change the default password, optionally
+          enable two-factor authentication, and personalize your avatar.
         </p>
       </div>
 

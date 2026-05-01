@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
-import {
-  UpdateSiteSettingsCommand,
-  PrivacySettings,
-} from "@/lib/api/client";
+import { UpdateSiteSettingsCommand } from "@/lib/api/client";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
-
-const DEFAULT_ALLOWED_FILE_TYPES =
-  ".stl,.obj,.fbx,.3ds,.glb,.gltf,.ply,.step,.stp,.iges,.igs,.brep,.png,.jpg,.jpeg,.gif";
+import {
+  defaultNonSecuritySiteSettings,
+  readSiteSecurityFromData,
+} from "./setupSiteDefaults";
 
 interface SiteEssentialsStepProps {
   onComplete: (data: Record<string, unknown>) => void;
@@ -66,31 +64,33 @@ export default function SiteEssentialsStep({
     setErrors({});
     try {
       const client = ApiClientFactory.getApiClient();
+      const base = defaultNonSecuritySiteSettings;
+      const security = readSiteSecurityFromData(data);
       const command = new UpdateSiteSettingsCommand({
         siteName: formData.siteName,
-        siteDescription: "3D Model Repository",
+        siteDescription: base.siteDescription,
         contactEmail: formData.contactEmail,
         allowPublicBrowsing: formData.allowPublicBrowsing,
         allowUserRegistration: formData.allowUserRegistration,
-        requireLoginForUpload: false,
-        requireEmailVerification: false,
-        disableEmailSettings: false,
-        maxFileSizeBytes: 100 * 1024 * 1024,
-        allowedFileTypes: DEFAULT_ALLOWED_FILE_TYPES,
-        maxFilesPerUpload: 5,
-        enableFileCompression: true,
-        autoGeneratePreviews: true,
-        defaultModelPrivacy: PrivacySettings.Public,
-        autoApproveModels: false,
-        requireModeration: true,
-        defaultUserRole: "User",
-        allowCustomRoles: false,
-        maxFailedLoginAttempts: 5,
-        lockoutDurationMinutes: 15,
-        requireStrongPasswords: true,
-        passwordMinLength: 8,
-        defaultTheme: "dark",
-        defaultLanguage: "en",
+        requireLoginForUpload: security.requireLoginForUpload,
+        requireEmailVerification: security.requireEmailVerification,
+        disableEmailSettings: base.disableEmailSettings,
+        maxFileSizeBytes: base.maxFileSizeBytes,
+        allowedFileTypes: base.allowedFileTypes,
+        maxFilesPerUpload: base.maxFilesPerUpload,
+        enableFileCompression: base.enableFileCompression,
+        autoGeneratePreviews: base.autoGeneratePreviews,
+        defaultModelPrivacy: base.defaultModelPrivacy,
+        autoApproveModels: security.autoApproveModels,
+        requireModeration: security.requireModeration,
+        defaultUserRole: base.defaultUserRole,
+        allowCustomRoles: base.allowCustomRoles,
+        maxFailedLoginAttempts: security.maxFailedLoginAttempts,
+        lockoutDurationMinutes: security.lockoutDurationMinutes,
+        requireStrongPasswords: security.requireStrongPasswords,
+        passwordMinLength: security.passwordMinLength,
+        defaultTheme: base.defaultTheme,
+        defaultLanguage: base.defaultLanguage,
       });
       const response = await client.systemSetup_UpdateSiteSettings(command);
       if (response?.success) {

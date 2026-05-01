@@ -77,6 +77,35 @@ namespace PolyBucket.Api.Features.Authentication.Repository
             }
         }
 
+        public Task<RefreshTokenModel?> GetActiveRefreshTokenByIdAsync(Guid tokenId, Guid userId)
+        {
+            return _context.RefreshTokens
+                .Where(rt => rt.Id == tokenId && rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<IReadOnlyList<RefreshTokenModel>> GetActiveRefreshTokensForUserAsync(Guid userId)
+        {
+            return await _context.RefreshTokens
+                .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(rt => rt.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task RevokeRefreshTokenByIdAsync(Guid tokenId, string reason, string revokedByIp)
+        {
+            var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Id == tokenId);
+            if (refreshToken == null || refreshToken.RevokedAt != null)
+            {
+                return;
+            }
+
+            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.ReasonRevoked = reason;
+            refreshToken.RevokedByIp = revokedByIp;
+            await _context.SaveChangesAsync();
+        }
+
         public async Task RevokeAllRefreshTokensForUserAsync(Guid userId, string reason, string revokedByIp)
         {
             var userRefreshTokens = await _context.RefreshTokens.Where(rt => rt.UserId == userId && rt.RevokedAt == null).ToListAsync();

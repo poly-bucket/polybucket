@@ -71,6 +71,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Authentication.Login.Repository.ILoginTwoFactorAuthRepository, Features.Authentication.Login.Repository.LoginTwoFactorAuthRepository>();
         services.AddTransient<Features.Authentication.Register.Domain.RegisterCommandHandler>();
         services.AddTransient<Features.Authentication.Login.Domain.LoginCommandHandler>();
+        services.AddScoped<Features.Authentication.Account.Domain.DeleteOwnAccountService>();
         services.AddTransient<Features.Authentication.ChangePassword.Domain.ChangePasswordCommandHandler>();
         services.AddTransient<Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Domain.InitializeTwoFactorAuthCommandHandler>();
         services.AddTransient<Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Domain.EnableTwoFactorAuthCommandHandler>();

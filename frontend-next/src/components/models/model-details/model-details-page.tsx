@@ -94,6 +94,7 @@ export function ModelDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [editModalInitialTab, setEditModalInitialTab] = useState<"edit" | "version" | "editVersion">("edit");
   const [isDeleting, setIsDeleting] = useState(false);
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(
     new Set()
@@ -249,6 +250,16 @@ export function ModelDetailsPage() {
     toast.success("Model updated");
   }, []);
 
+  const handleOpenEditDetails = useCallback(() => {
+    setEditModalInitialTab("edit");
+    setShowEditModal(true);
+  }, []);
+
+  const handleOpenCreateVersion = useCallback(() => {
+    setEditModalInitialTab("version");
+    setShowEditModal(true);
+  }, []);
+
   const handleVersionCreated = useCallback(() => {
     setShowEditModal(false);
     loadModel();
@@ -393,7 +404,8 @@ export function ModelDetailsPage() {
             onDownload={handleDownload}
             onDelete={() => setShowDeleteConfirm(true)}
             onShare={handleShare}
-            onEdit={() => setShowEditModal(true)}
+            onEdit={handleOpenEditDetails}
+            onCreateVersion={handleOpenCreateVersion}
           />
         </div>
       </div>
@@ -410,6 +422,7 @@ export function ModelDetailsPage() {
         model={model}
         open={showEditModal}
         onOpenChange={setShowEditModal}
+        initialTab={editModalInitialTab}
         onModelUpdate={handleModelUpdate}
         onVersionCreated={handleVersionCreated}
         onVersionUpdate={handleVersionUpdate}

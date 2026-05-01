@@ -69,8 +69,7 @@ export default function FileQueue({
 
       {files.some((f) => getFileType(f.name) === "image") && onThumbnailToggle && (
         <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-foreground">
-          <strong>Tip:</strong> Use checkboxes next to images to select the
-          thumbnail.
+          <strong>Tip:</strong> Use the thumbnail selector in the preview step, or the image checkboxes here, to choose the model thumbnail.
         </div>
       )}
 

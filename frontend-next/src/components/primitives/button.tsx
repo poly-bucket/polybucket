@@ -56,7 +56,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "glass",
       size = "default",
       asChild = false,
-      effect = "glow",
+      effect = "none",
       ...props
     },
     ref

@@ -20,6 +20,13 @@ public class GetUserProfileService(IGetUserProfileRepository repository) : IGetU
 
         if (!user.IsProfilePublic)
         {
+            var canViewPrivateProfile = query.IsRequestingUserAdmin || (query.RequestingUserId.HasValue && query.RequestingUserId.Value == user.Id);
+            if (canViewPrivateProfile)
+            {
+                var privateProfileStatistics = await repository.GetProfileStatisticsAsync(user.Id, includePrivate: true, cancellationToken);
+                return BuildResponse(user, privateProfileStatistics);
+            }
+
             return new PrivateProfileResponse
             {
                 Id = user.Id,
@@ -29,8 +36,14 @@ public class GetUserProfileService(IGetUserProfileRepository repository) : IGetU
             };
         }
 
-        var statistics = await repository.GetProfileStatisticsAsync(user.Id, cancellationToken);
+        var includePrivate = query.IsRequestingUserAdmin || (query.RequestingUserId.HasValue && query.RequestingUserId.Value == user.Id);
+        var statistics = await repository.GetProfileStatisticsAsync(user.Id, includePrivate, cancellationToken);
 
+        return BuildResponse(user, statistics);
+    }
+
+    private static GetUserProfileResponse BuildResponse(Common.Models.User user, GetUserProfileStatisticsRow statistics)
+    {
         return new GetUserProfileResponse
         {
             Id = user.Id,

@@ -4,6 +4,7 @@ using MediatR;
 using PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain;
 using PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.CompleteFirstTimeSetup.Domain;
+using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.SystemSettings.Http
 {
@@ -12,6 +13,20 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
     public class SystemSetupController(IMediator mediator) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;
+        private static readonly string[] AdminRoleClaimTypes =
+        [
+            ClaimTypes.Role,
+            "role",
+            "roles",
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+
+        private bool IsAdminRequest()
+        {
+            return User.Claims.Any(claim =>
+                AdminRoleClaimTypes.Contains(claim.Type, StringComparer.OrdinalIgnoreCase)
+                && string.Equals(claim.Value, "Admin", StringComparison.OrdinalIgnoreCase));
+        }
 
         /// <summary>
         /// Check the current status of first-time setup
@@ -32,9 +47,14 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
         /// <param name="command">Site settings configuration</param>
         /// <returns>Update result</returns>
         [HttpPost("site-settings")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<ActionResult<UpdateSiteSettingsResponse>> UpdateSiteSettings([FromBody] UpdateSiteSettingsCommand command)
         {
+            if (!IsAdminRequest())
+            {
+                return Forbid();
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -68,9 +88,14 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
         /// </summary>
         /// <returns>Completion result</returns>
         [HttpPost("complete")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<ActionResult<CompleteFirstTimeSetupResponse>> CompleteSetup()
         {
+            if (!IsAdminRequest())
+            {
+                return Forbid();
+            }
+
             var command = new CompleteFirstTimeSetupCommand();
             var result = await _mediator.Send(command);
             

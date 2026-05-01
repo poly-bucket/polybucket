@@ -4,7 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Common.Models.Enums;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Features.Collections.Domain.Enums;
 
 namespace PolyBucket.Api.Features.Users.GetUserProfile.Repository;
 
@@ -26,12 +28,19 @@ public class GetUserProfileRepository(PolyBucketDbContext dbContext) : IGetUserP
             .FirstOrDefaultAsync(u => u.Username == username, cancellationToken);
     }
 
-    public async Task<GetUserProfileStatisticsRow> GetProfileStatisticsAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<GetUserProfileStatisticsRow> GetProfileStatisticsAsync(Guid userId, bool includePrivate, CancellationToken cancellationToken = default)
     {
         var row = new GetUserProfileStatisticsRow();
 
-        var modelStats = await dbContext.Models
-            .Where(m => m.AuthorId == userId && m.DeletedAt == null)
+        var modelsQuery = dbContext.Models
+            .Where(m => m.AuthorId == userId && m.DeletedAt == null);
+
+        if (!includePrivate)
+        {
+            modelsQuery = modelsQuery.Where(m => m.Privacy == PrivacySettings.Public);
+        }
+
+        var modelStats = await modelsQuery
             .GroupBy(m => 1)
             .Select(g => new
             {
@@ -48,8 +57,14 @@ public class GetUserProfileRepository(PolyBucketDbContext dbContext) : IGetUserP
             row.TotalLikes = modelStats.TotalLikes;
         }
 
-        row.TotalCollections = await dbContext.Collections
-            .CountAsync(c => c.OwnerId == userId && c.DeletedAt == null, cancellationToken);
+        var collectionsQuery = dbContext.Collections
+            .Where(c => c.OwnerId == userId && c.DeletedAt == null);
+        if (!includePrivate)
+        {
+            collectionsQuery = collectionsQuery.Where(c => c.Visibility == CollectionVisibility.Public);
+        }
+
+        row.TotalCollections = await collectionsQuery.CountAsync(cancellationToken);
 
         var likesGiven = await dbContext.Likes
             .Where(l => l.UserId == userId && l.DeletedAt == null)

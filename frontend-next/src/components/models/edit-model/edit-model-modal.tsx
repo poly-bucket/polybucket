@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ interface EditModelModalProps {
   model: Model;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTab?: "edit" | "version" | "editVersion";
   onModelUpdate?: (model: Model) => void;
   onVersionCreated?: () => void;
   onVersionUpdate?: (versionId: string, updated: ExtendedModelVersion) => void;
@@ -28,12 +29,19 @@ export function EditModelModal({
   model,
   open,
   onOpenChange,
+  initialTab = "edit",
   onModelUpdate,
   onVersionCreated,
   onVersionUpdate,
 }: EditModelModalProps) {
-  const [activeTab, setActiveTab] = useState("edit");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(initialTab);
+    }
+  }, [open, initialTab]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {

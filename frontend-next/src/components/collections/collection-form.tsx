@@ -252,9 +252,16 @@ export function CollectionForm({
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setIconMode("generate")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setIconMode("generate");
+                    }
+                  }}
                   className={cn(
                     "space-y-3 rounded-md border p-3 text-left transition-colors",
                     iconMode === "generate"
@@ -308,7 +315,7 @@ export function CollectionForm({
                       ? "Generated icon is locked. Unlock to let it change while typing."
                       : "Use refresh to generate a new pattern."}
                   </p>
-                </button>
+                </div>
                 <div
                   role="button"
                   tabIndex={0}

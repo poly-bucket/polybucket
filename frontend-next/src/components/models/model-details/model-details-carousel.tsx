@@ -201,7 +201,7 @@ export function ModelDetailsCarousel({
 
   if (items.length === 0) {
     return (
-      <Card variant="glass" className="overflow-hidden border-white/20">
+      <Card variant="glass" className="gap-0 overflow-hidden border-white/20 py-0">
         <div
           className="flex min-h-[300px] items-center justify-center bg-white/5 text-white/60"
           style={{ aspectRatio: "16/9" }}
@@ -214,7 +214,7 @@ export function ModelDetailsCarousel({
 
   return (
     <div className="space-y-4">
-      <Card variant="glass" className="overflow-hidden border-white/20">
+      <Card variant="glass" className="gap-0 overflow-hidden border-white/20 py-0">
         <div
           className="relative bg-white/5"
           style={{
