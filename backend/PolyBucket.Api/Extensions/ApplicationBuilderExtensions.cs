@@ -116,6 +116,8 @@ public static class ApplicationBuilderExtensions
         app.UseAuthentication();
         app.UseAuthorization();
         
+        app.UsePrivateSiteAccess();
+        
         app.MapHealthChecks("/health");
         
         app.MapControllers();

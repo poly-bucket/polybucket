@@ -5,6 +5,7 @@ import { Card } from "@/components/primitives/card";
 import { Heart, Download, MessageCircle } from "lucide-react";
 import type { Model } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { isImageUrl } from "@/lib/utils/modelUtils";
 
 function formatNumber(num: number | undefined): string {
   if (!num) return "0";
@@ -20,7 +21,9 @@ interface ModelCardProps {
 }
 
 export function ModelCard({ model, onClick, className }: ModelCardProps) {
-  const thumbnailUrl = model.thumbnailUrl;
+  const thumbnailUrl = isImageUrl(model.thumbnailUrl)
+    ? model.thumbnailUrl
+    : undefined;
   const authorName = model.author?.username ?? "Unknown";
   const totalLikes = model.likes ?? 0;
   const downloads = model.downloads ?? 0;

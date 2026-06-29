@@ -9,6 +9,7 @@ namespace PolyBucket.Api.Features.SystemSettings.Http;
 
 [ApiController]
 [Route("api/system-settings/auth")]
+[Authorize(Roles = "Admin")]
 public class AuthenticationSettingsController(
     IAuthenticationSettingsService authenticationSettingsService,
     ILogger<AuthenticationSettingsController> logger) : ControllerBase

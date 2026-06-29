@@ -6,6 +6,7 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
+using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using System;
@@ -95,25 +96,21 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
 
                     versionFiles.Add(modelFile);
 
-                    // Check if this file should be the thumbnail - store object key, not presigned URL
-                    if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId))
+                    // Check if this file should be the thumbnail - only images are valid thumbnails
+                    if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId) && IsImageFile(file.FileName))
                     {
                         thumbnailObjectKey = objectKey;
                     }
                 }
 
-                // If no thumbnail was specified, prefer image files, then fallback to first 3D model
+                // If no thumbnail was specified, fall back to the first image file.
+                // 3D mesh files are never used as thumbnails; the client renders the model instead.
                 if (thumbnailObjectKey == null)
                 {
                     var imageFile = versionFiles.FirstOrDefault(f => IsImageFile(f.Name));
                     if (imageFile != null)
                     {
                         thumbnailObjectKey = imageFile.Path;
-                    }
-                    else
-                    {
-                        var first3DModel = versionFiles.FirstOrDefault(f => Is3DModelFile(f.Name));
-                        thumbnailObjectKey = first3DModel?.Path;
                     }
                 }
 
@@ -141,7 +138,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                 _logger.LogInformation("Successfully created version {VersionId} for model {ModelId} with {FileCount} files by user {UserId}", 
                     versionId, model.Id, versionFiles.Count, userId);
 
-                return new CreateModelVersionResponse { ModelVersion = version };
+                return new CreateModelVersionResponse { ModelVersion = ModelDtoMapper.ToVersionDto(version) };
             }
             catch (Exception ex)
             {

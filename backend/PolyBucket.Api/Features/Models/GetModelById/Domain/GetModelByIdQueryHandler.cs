@@ -13,6 +13,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System;
 using PolyBucket.Api.Common.Storage;
+using PolyBucket.Api.Features.Models.Common;
 
 namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 {
@@ -94,7 +95,7 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 
                 return new GetModelByIdResponse
                 {
-                    Model = model
+                    Model = ModelDtoMapper.ToDto(model)
                 };
             }
             catch (System.Exception ex)

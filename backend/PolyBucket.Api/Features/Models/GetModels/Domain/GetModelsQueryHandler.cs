@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using PolyBucket.Api.Features.Models.GetModels.Domain;
 using PolyBucket.Api.Common.Storage;
+using PolyBucket.Api.Features.Models.Common;
+using System.Linq;
 
 namespace PolyBucket.Api.Features.Models.GetModels.Domain
 {
@@ -40,7 +42,7 @@ namespace PolyBucket.Api.Features.Models.GetModels.Domain
 
                 return new GetModelsResponse
                 {
-                    Models = models,
+                    Models = models.Select(ModelDtoMapper.ToDto).ToList(),
                     TotalCount = totalCount,
                     Page = request.Page,
                     TotalPages = totalPages

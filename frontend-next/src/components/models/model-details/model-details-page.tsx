@@ -9,7 +9,7 @@ import { useModelDetailTabs, PluginBoundary } from "@/lib/plugins";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { fetchModelById } from "@/lib/services/modelsService";
 import { getApiConfig } from "@/lib/api/config";
-import { isMarkdownFile } from "@/lib/utils/modelUtils";
+import { isMarkdownFile, isImageUrl } from "@/lib/utils/modelUtils";
 import type { Model, ModelFile } from "@/lib/api/client";
 import { ModelDetailsCarousel, type CarouselItem } from "./model-details-carousel";
 import { ModelDetailsSidebar } from "./model-details-sidebar";
@@ -19,11 +19,11 @@ import { EditModelModal } from "../edit-model/edit-model-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
 
-function buildCarouselItems(model: Model): CarouselItem[] {
+export function buildCarouselItems(model: Model): CarouselItem[] {
   const items: CarouselItem[] = [];
   const baseUrl = getApiConfig().baseUrl;
 
-  if (model.thumbnailUrl) {
+  if (isImageUrl(model.thumbnailUrl)) {
     items.push({
       id: "thumbnail",
       type: "image",

@@ -70,6 +70,63 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
             _mockStorage.Verify(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), cancellationToken), Times.AtLeastOnce);
         }
 
+        [Fact(DisplayName = "When creating a model with only 3D files, the create model service leaves the thumbnail unset.")]
+        public async Task CreateModelAsync_WithOnly3DFiles_ShouldLeaveThumbnailNull()
+        {
+            // Arrange
+            var request = new CreateModelRequest
+            {
+                Name = "Test Model",
+                Privacy = "public",
+                Files = CreateTestFiles()
+            };
+
+            var user = CreateTestUser();
+            var cancellationToken = CancellationToken.None;
+
+            _mockStorage.Setup(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), cancellationToken))
+                .ReturnsAsync("https://storage.example.com/test-file.stl");
+
+            _mockRepository.Setup(x => x.CreateModelAsync(It.IsAny<Model>(), cancellationToken))
+                .ReturnsAsync((Model model, CancellationToken ct) => model);
+
+            // Act
+            var result = await _service.CreateModelAsync(request, user, cancellationToken);
+
+            // Assert
+            result.Model.ShouldNotBeNull();
+            result.Model.ThumbnailUrl.ShouldBeNull();
+        }
+
+        [Fact(DisplayName = "When creating a model that includes an image file, the create model service uses the image as the thumbnail.")]
+        public async Task CreateModelAsync_WithImageFile_ShouldSetThumbnailToImage()
+        {
+            // Arrange
+            var request = new CreateModelRequest
+            {
+                Name = "Test Model",
+                Privacy = "public",
+                Files = CreateModelAndImageFiles()
+            };
+
+            var user = CreateTestUser();
+            var cancellationToken = CancellationToken.None;
+
+            _mockStorage.Setup(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), cancellationToken))
+                .ReturnsAsync("https://storage.example.com/test-file");
+
+            _mockRepository.Setup(x => x.CreateModelAsync(It.IsAny<Model>(), cancellationToken))
+                .ReturnsAsync((Model model, CancellationToken ct) => model);
+
+            // Act
+            var result = await _service.CreateModelAsync(request, user, cancellationToken);
+
+            // Assert
+            result.Model.ShouldNotBeNull();
+            result.Model.ThumbnailUrl.ShouldNotBeNull();
+            result.Model.ThumbnailUrl!.ShouldEndWith("preview.png");
+        }
+
         [Fact(DisplayName = "When creating a model with an empty name, the create model service throws a ValidationException.")]
         public async Task CreateModelAsync_WithEmptyName_ShouldThrowValidationException()
         {
@@ -137,6 +194,31 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
             mockFile.Setup(f => f.OpenReadStream()).Returns(() => new MemoryStream(stlBytes));
 
             return new[] { mockFile.Object };
+        }
+
+        private static IFormFile[] CreateModelAndImageFiles()
+        {
+            var stlBytes = new byte[1024];
+            ReadOnlySpan<byte> solid = "solid"u8;
+            solid.CopyTo(stlBytes);
+
+            var stlFile = new Mock<IFormFile>();
+            stlFile.Setup(f => f.FileName).Returns("model.stl");
+            stlFile.Setup(f => f.Length).Returns(stlBytes.Length);
+            stlFile.Setup(f => f.ContentType).Returns("application/octet-stream");
+            stlFile.Setup(f => f.OpenReadStream()).Returns(() => new MemoryStream(stlBytes));
+
+            var pngBytes = new byte[64];
+            ReadOnlySpan<byte> pngHeader = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            pngHeader.CopyTo(pngBytes);
+
+            var imageFile = new Mock<IFormFile>();
+            imageFile.Setup(f => f.FileName).Returns("preview.png");
+            imageFile.Setup(f => f.Length).Returns(pngBytes.Length);
+            imageFile.Setup(f => f.ContentType).Returns("image/png");
+            imageFile.Setup(f => f.OpenReadStream()).Returns(() => new MemoryStream(pngBytes));
+
+            return new[] { stlFile.Object, imageFile.Object };
         }
 
         private static ClaimsPrincipal CreateTestUser()

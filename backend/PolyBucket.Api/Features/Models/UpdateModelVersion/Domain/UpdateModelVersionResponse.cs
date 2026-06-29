@@ -1,10 +1,9 @@
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
+using PolyBucket.Api.Features.Models.Common;
 
 namespace PolyBucket.Api.Features.Models.UpdateModelVersion.Domain
 {
     public class UpdateModelVersionResponse
     {
-        public ModelVersion ModelVersion { get; set; } = null!;
+        public ModelVersionDto ModelVersion { get; set; } = null!;
     }
-} 
+}

@@ -4,6 +4,7 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Http;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Repository;
+using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Common.Models;
 using System;
 using System.Security.Claims;
@@ -70,7 +71,7 @@ namespace PolyBucket.Api.Features.Models.UpdateModelVersion.Domain
 
             _logger.LogInformation("Model version {ModelId}/{VersionId} updated by user {UserId}", modelId, versionId, userId);
 
-            return new UpdateModelVersionResponse { ModelVersion = modelVersion };
+            return new UpdateModelVersionResponse { ModelVersion = ModelDtoMapper.ToVersionDto(modelVersion) };
         }
     }
 

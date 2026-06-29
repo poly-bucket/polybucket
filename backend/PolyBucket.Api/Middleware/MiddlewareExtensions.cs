@@ -18,4 +18,9 @@ public static class MiddlewareExtensions
     {
         return app.UseMiddleware<RequestLoggingMiddleware>();
     }
+
+    public static IApplicationBuilder UsePrivateSiteAccess(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<PrivateSiteAccessMiddleware>();
+    }
 } 

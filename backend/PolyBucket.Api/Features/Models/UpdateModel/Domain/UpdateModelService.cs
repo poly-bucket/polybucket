@@ -4,6 +4,7 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
 using PolyBucket.Api.Features.Models.UpdateModel.Repository;
+using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Common.Models.Enums;
 using System;
@@ -117,7 +118,7 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
 
             _logger.LogInformation("Model {ModelId} updated by user {UserId}", modelId, userId);
 
-            return new UpdateModelResponse { Model = model };
+            return new UpdateModelResponse { Model = ModelDtoMapper.ToDto(model) };
         }
     }
 

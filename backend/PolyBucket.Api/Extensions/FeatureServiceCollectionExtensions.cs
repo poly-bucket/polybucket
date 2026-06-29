@@ -82,6 +82,8 @@ public static class FeatureServiceCollectionExtensions
         // System Settings
         services.AddTransient<Features.SystemSettings.Services.IAuthenticationSettingsService, Features.SystemSettings.Services.AuthenticationSettingsService>();
         services.AddTransient<Features.SystemSettings.Services.ITokenSettingsService, Features.SystemSettings.Services.TokenSettingsService>();
+        services.AddMemoryCache();
+        services.AddScoped<Features.SystemSettings.Services.ISitePrivacyState, Features.SystemSettings.Services.SitePrivacyState>();
         
         // FontAwesome Settings
         services.AddTransient<Features.SystemSettings.Domain.IFontAwesomeSettingsService, Features.SystemSettings.Services.FontAwesomeSettingsService>();

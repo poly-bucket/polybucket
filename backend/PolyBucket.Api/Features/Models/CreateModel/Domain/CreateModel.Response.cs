@@ -1,9 +1,9 @@
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Features.Models.Common;
 
 namespace PolyBucket.Api.Features.Models.CreateModel.Domain
 {
     public class CreateModelResponse
     {
-        public Model Model { get; set; } = null!;
+        public ModelDto Model { get; set; } = null!;
     }
-} 
+}

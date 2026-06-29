@@ -26,6 +26,12 @@ export function getFileType(fileName: string): ModelFileType {
   return "unknown";
 }
 
+export function isImageUrl(url: string | undefined | null): boolean {
+  if (!url) return false;
+  const path = url.split("?")[0];
+  return getFileType(path) === "image";
+}
+
 export function isMarkdownFile(fileName: string): boolean {
   const fileExtension = fileName
     .toLowerCase()

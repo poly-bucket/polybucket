@@ -5,6 +5,7 @@ using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Repository;
+using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Common.Models.Enums;
 using System;
@@ -79,28 +80,21 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
 
                     modelFiles.Add(modelFile);
 
-                    // Check if this file should be the thumbnail - store object key, not presigned URL
-                    if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId))
+                    // Check if this file should be the thumbnail - only images are valid thumbnails
+                    if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId) && IsImageFile(file.FileName))
                     {
                         thumbnailObjectKey = objectKey;
                     }
                 }
 
-                // If no thumbnail was specified, prefer image files, then fallback to first 3D model
+                // If no thumbnail was specified, fall back to the first image file.
+                // 3D mesh files are never used as thumbnails; the client renders the model instead.
                 if (thumbnailObjectKey == null)
                 {
                     var imageFile = modelFiles.FirstOrDefault(f => IsImageFile(f.Name));
                     if (imageFile != null)
                     {
                         thumbnailObjectKey = imageFile.Path;
-                    }
-                    else
-                    {
-                        var first3DModel = modelFiles.FirstOrDefault(f => Is3DModelFile(f.Name));
-                        if (first3DModel != null)
-                        {
-                            thumbnailObjectKey = first3DModel.Path;
-                        }
                     }
                 }
 
@@ -133,7 +127,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                 _logger.LogInformation("Successfully created model {ModelId} with {FileCount} files for user {UserId}", 
                     modelId, modelFiles.Count, authorId);
 
-                return new CreateModelResponse { Model = model };
+                return new CreateModelResponse { Model = ModelDtoMapper.ToDto(model) };
             }
             catch (Exception ex)
             {

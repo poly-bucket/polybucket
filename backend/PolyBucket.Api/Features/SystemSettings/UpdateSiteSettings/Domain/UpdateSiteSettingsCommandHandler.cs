@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.SystemSettings.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
@@ -10,11 +11,13 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
     public class UpdateSiteSettingsCommandHandler(
         PolyBucketDbContext context,
         ILogger<UpdateSiteSettingsCommandHandler> logger,
-        IHttpContextAccessor httpContextAccessor) : IRequestHandler<UpdateSiteSettingsCommand, UpdateSiteSettingsResponse>
+        IHttpContextAccessor httpContextAccessor,
+        ISitePrivacyState sitePrivacyState) : IRequestHandler<UpdateSiteSettingsCommand, UpdateSiteSettingsResponse>
     {
         private readonly PolyBucketDbContext _context = context;
         private readonly ILogger<UpdateSiteSettingsCommandHandler> _logger = logger;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
 
         public async Task<UpdateSiteSettingsResponse> Handle(UpdateSiteSettingsCommand request, CancellationToken cancellationToken)
         {
@@ -109,6 +112,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
+                _sitePrivacyState.Invalidate();
                 
                 _logger.LogInformation("Site settings updated successfully by user {UserId}", 
                     userIdClaim?.Value ?? "unknown");
