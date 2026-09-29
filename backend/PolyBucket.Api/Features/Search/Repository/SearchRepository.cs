@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Search.Domain;
+using PolyBucket.Api.Features.ModelModeration.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,6 +91,8 @@ namespace PolyBucket.Api.Features.Search.Repository
                 .Include(m => m.Categories)
                 .Include(m => m.Tags)
                 .Where(m => m.DeletedAt == null && m.Privacy == PolyBucket.Api.Common.Models.Enums.PrivacySettings.Public)
+                .AsNoTracking()
+                .WherePubliclyVisible(_context.ModelModerationRecords)
                 .ToListAsync();
 
             var results = models

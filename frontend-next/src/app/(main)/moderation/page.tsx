@@ -7,7 +7,7 @@ export default function ModerationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/moderation/reports");
+    router.replace("/moderation/models");
   }, [router]);
 
   return null;

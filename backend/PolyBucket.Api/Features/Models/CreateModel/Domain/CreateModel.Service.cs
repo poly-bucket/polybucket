@@ -5,6 +5,8 @@ using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Repository;
+using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Common.Models.Enums;
@@ -22,6 +24,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
     {
         private readonly ICreateModelRepository _repository;
         private readonly IStorageService _storage;
+        private readonly IModelModerationEnqueueService _moderationEnqueueService;
         private readonly ILogger<CreateModelService> _logger;
 
         private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".3mf", ".step", ".stp" };
@@ -32,10 +35,15 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         private const long MaxFileSize = 100 * 1024 * 1024; // 100MB
         private const long Max3DModelSize = 500 * 1024 * 1024; // 500MB for 3D models
 
-        public CreateModelService(ICreateModelRepository repository, IStorageService storage, ILogger<CreateModelService> logger)
+        public CreateModelService(
+            ICreateModelRepository repository,
+            IStorageService storage,
+            IModelModerationEnqueueService moderationEnqueueService,
+            ILogger<CreateModelService> logger)
         {
             _repository = repository;
             _storage = storage;
+            _moderationEnqueueService = moderationEnqueueService;
             _logger = logger;
         }
 
@@ -123,6 +131,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
 
                 // Save model
                 await _repository.CreateModelAsync(model, cancellationToken);
+                await _moderationEnqueueService.ApplyModerationStateForNewModelAsync(model, authorId, cancellationToken);
 
                 _logger.LogInformation("Successfully created model {ModelId} with {FileCount} files for user {UserId}", 
                     modelId, modelFiles.Count, authorId);

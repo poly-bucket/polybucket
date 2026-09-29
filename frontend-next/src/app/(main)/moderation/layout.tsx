@@ -73,7 +73,7 @@ export default function ModerationLayout({
   return (
     <PanelLayout
       title="Moderation Control Panel"
-      description="Manage reports, banned users, and audit logs"
+      description="Review model uploads, reports, banned users, and audit logs"
       navItems={navItems}
     >
       {children}

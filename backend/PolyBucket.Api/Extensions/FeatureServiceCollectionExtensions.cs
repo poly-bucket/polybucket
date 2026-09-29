@@ -8,6 +8,7 @@ using PolyBucket.Api.Common.Plugins;
 using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.SystemSettings.Plugins;
 using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Api.Features.ModelModeration;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -18,6 +19,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
         services.AddModelsFeature();
+        services.AddModelModerationFeature();
 
         // Collections
         services.AddTransient<Features.Collections.CreateCollection.Repository.ICollectionRepository, Features.Collections.CreateCollection.Repository.CollectionRepository>();

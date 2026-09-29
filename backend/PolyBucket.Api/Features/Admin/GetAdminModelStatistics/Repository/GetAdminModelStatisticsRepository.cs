@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Admin.GetAdminModelStatistics.Repository;
 using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Api.Features.ModelModeration.Domain;
 using System;
 using System.Linq;
 using System.Threading;
@@ -103,9 +104,8 @@ namespace PolyBucket.Api.Features.Admin.GetAdminModelStatistics.Repository
                 }
             }
 
-            // Note: Pending review and flagged models would need additional logic
-            // based on your moderation system. For now, setting to 0.
-            var pendingReviewModels = 0;
+            var pendingReviewModels = await _dbContext.ModelModerationRecords
+                .CountAsync(r => r.Status == ModelModerationStatus.Pending, cancellationToken);
             var flaggedModels = 0;
 
             return new ModelStatisticsData

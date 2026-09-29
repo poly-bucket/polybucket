@@ -52,6 +52,7 @@ namespace PolyBucket.Api.Data
         public DbSet<TwoFactorAuthDomain.BackupCode> BackupCodes { get; set; } = null!;
         public DbSet<ModelPreview> ModelPreviews { get; set; } = null!;
         public DbSet<ModerationAuditLog> ModerationAuditLogs { get; set; } = null!;
+        public DbSet<ModelModerationRecord> ModelModerationRecords { get; set; } = null!;
         
         // ACL System
         public DbSet<Permission> Permissions { get; set; } = null!;
@@ -212,6 +213,16 @@ namespace PolyBucket.Api.Data
             modelBuilder.Entity<Theme>()
                 .HasIndex(t => t.Name)
                 .IsUnique();
+
+            modelBuilder.Entity<ModelModerationRecord>(entity =>
+            {
+                entity.ToTable("ModelModeration");
+                entity.HasIndex(r => r.ModelId).IsUnique();
+                entity.HasOne(r => r.Model)
+                    .WithMany()
+                    .HasForeignKey(r => r.ModelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 } 

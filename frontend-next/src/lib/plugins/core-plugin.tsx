@@ -8,6 +8,7 @@ import {
   User,
   Settings,
   Box,
+  Inbox,
   LogOut,
   Bell,
   Lock,
@@ -230,6 +231,7 @@ export const corePlugin: PluginDefinition = {
       { id: "plugins", label: "Plugins", group: "Extensions", icon: Puzzle, path: "/admin/plugins", requiredRoles: ["Admin"] },
     ],
     moderationNavItems: [
+      { id: "models", label: "Model queue", group: "Content", icon: Inbox, path: "/moderation/models", requiredRoles: ["Admin", "Moderator"] },
       { id: "reports", label: "Reports", group: "Content", icon: Flag, path: "/moderation/reports", requiredRoles: ["Admin", "Moderator"] },
       { id: "banned-users", label: "Banned Users", group: "Content", icon: UserMinus, path: "/moderation/banned-users", requiredRoles: ["Admin", "Moderator"] },
       { id: "audit-logs", label: "Audit Logs", group: "Content", icon: Clock, path: "/moderation/audit-logs", requiredRoles: ["Admin", "Moderator"] },

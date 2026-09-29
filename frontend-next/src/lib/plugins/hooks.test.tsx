@@ -91,6 +91,7 @@ describe("useModerationNavItems", () => {
       mockAuth: { user: adminUser, isLoading: false },
     });
 
+    expect(screen.getByTestId("moderation-nav-models")).toBeInTheDocument();
     expect(screen.getByTestId("moderation-nav-reports")).toBeInTheDocument();
     expect(screen.getByTestId("moderation-nav-banned-users")).toBeInTheDocument();
   });

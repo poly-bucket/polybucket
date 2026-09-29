@@ -113,6 +113,8 @@ namespace PolyBucket.Tests
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Filaments\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Printers\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Reports\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelModeration\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModerationAuditLogs\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserRoles\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RolePermissions\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserPermissions\" CASCADE"); } catch { }

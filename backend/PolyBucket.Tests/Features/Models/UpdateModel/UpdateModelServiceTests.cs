@@ -11,6 +11,7 @@ using PolyBucket.Api.Common.Models.Enums;
 using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
 using PolyBucket.Api.Features.Models.UpdateModel.Repository;
+using PolyBucket.Api.Features.ModelModeration.Domain;
 using Shouldly;
 using Xunit;
 
@@ -20,6 +21,7 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
     {
         private readonly Mock<IUpdateModelRepository> _mockRepository;
         private readonly Mock<IPermissionService> _mockPermissionService;
+        private readonly Mock<IModelModerationEnqueueService> _mockModerationEnqueueService;
         private readonly Mock<ILogger<UpdateModelService>> _mockLogger;
         private readonly UpdateModelService _service;
 
@@ -27,8 +29,13 @@ namespace PolyBucket.Tests.Features.Models.UpdateModel
         {
             _mockRepository = new Mock<IUpdateModelRepository>();
             _mockPermissionService = new Mock<IPermissionService>();
+            _mockModerationEnqueueService = new Mock<IModelModerationEnqueueService>();
             _mockLogger = new Mock<ILogger<UpdateModelService>>();
-            _service = new UpdateModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
+            _service = new UpdateModelService(
+                _mockRepository.Object,
+                _mockPermissionService.Object,
+                _mockModerationEnqueueService.Object,
+                _mockLogger.Object);
         }
 
         [Fact(DisplayName = "When updating a model with a valid request, the update model service updates the model.")]

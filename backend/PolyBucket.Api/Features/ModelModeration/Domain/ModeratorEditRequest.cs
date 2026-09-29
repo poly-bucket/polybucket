@@ -51,6 +51,8 @@ namespace PolyBucket.Api.Features.ModelModeration.Domain
         ApproveWithChanges,
         FlagForReview,
         FeatureModel,
-        UnfeatureModel
+        UnfeatureModel,
+        Approve,
+        Reject
     }
 } 

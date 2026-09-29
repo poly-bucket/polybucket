@@ -11,6 +11,7 @@ using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Repository;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Features.ModelModeration.Domain;
 using Shouldly;
 using Xunit;
 
@@ -20,6 +21,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
     {
         private readonly Mock<ICreateModelRepository> _mockRepository;
         private readonly Mock<IStorageService> _mockStorage;
+        private readonly Mock<IModelModerationEnqueueService> _mockModerationEnqueueService;
         private readonly Mock<ILogger<CreateModelService>> _mockLogger;
         private readonly CreateModelService _service;
 
@@ -27,8 +29,13 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
         {
             _mockRepository = new Mock<ICreateModelRepository>();
             _mockStorage = new Mock<IStorageService>();
+            _mockModerationEnqueueService = new Mock<IModelModerationEnqueueService>();
             _mockLogger = new Mock<ILogger<CreateModelService>>();
-            _service = new CreateModelService(_mockRepository.Object, _mockStorage.Object, _mockLogger.Object);
+            _service = new CreateModelService(
+                _mockRepository.Object,
+                _mockStorage.Object,
+                _mockModerationEnqueueService.Object,
+                _mockLogger.Object);
         }
 
         [Fact(DisplayName = "When creating a model with a valid request, the create model service creates the model.")]

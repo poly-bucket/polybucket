@@ -5,6 +5,7 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
 using PolyBucket.Api.Features.Models.UpdateModel.Repository;
 using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Common.Models.Enums;
 using System;
@@ -18,12 +19,18 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
     {
         private readonly IUpdateModelRepository _repository;
         private readonly IPermissionService _permissionService;
+        private readonly IModelModerationEnqueueService _moderationEnqueueService;
         private readonly ILogger<UpdateModelService> _logger;
 
-        public UpdateModelService(IUpdateModelRepository repository, IPermissionService permissionService, ILogger<UpdateModelService> logger)
+        public UpdateModelService(
+            IUpdateModelRepository repository,
+            IPermissionService permissionService,
+            IModelModerationEnqueueService moderationEnqueueService,
+            ILogger<UpdateModelService> logger)
         {
             _repository = repository;
             _permissionService = permissionService;
+            _moderationEnqueueService = moderationEnqueueService;
             _logger = logger;
         }
 
@@ -74,10 +81,11 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
                 model.License = request.License.Value;
             }
 
+            var privacyChanged = false;
             if (request.Privacy.HasValue)
             {
                 model.Privacy = request.Privacy.Value;
-                model.IsPublic = request.Privacy.Value == PrivacySettings.Public;
+                privacyChanged = true;
             }
 
             if (request.AIGenerated.HasValue)
@@ -115,6 +123,11 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
             model.UpdatedById = userId;
 
             await _repository.UpdateModelAsync(model, cancellationToken);
+
+            if (privacyChanged)
+            {
+                await _moderationEnqueueService.ApplyModerationStateForPublicVisibilityChangeAsync(model, userId, cancellationToken);
+            }
 
             _logger.LogInformation("Model {ModelId} updated by user {UserId}", modelId, userId);
 

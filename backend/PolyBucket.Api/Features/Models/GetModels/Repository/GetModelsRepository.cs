@@ -2,6 +2,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Features.ModelModeration.Domain;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,8 +24,8 @@ namespace PolyBucket.Api.Features.Models.GetModels.Repository
                 .Include(m => m.Files)
                 .Include(m => m.Author)
                 .Where(m => m.DeletedAt == null)
-                .Where(m => m.IsPublic)
-                .AsNoTracking();
+                .AsNoTracking()
+                .WherePubliclyVisible(_context.ModelModerationRecords);
 
             if (string.Equals(sortBy, "createdAt", StringComparison.OrdinalIgnoreCase))
             {

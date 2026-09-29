@@ -116,8 +116,7 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 
         private async Task<bool> CanUserAccessModel(Model model)
         {
-            // Public models are accessible to everyone
-            if (model.Privacy == PrivacySettings.Public)
+            if (model.Privacy == PrivacySettings.Public && model.IsPublic)
             {
                 return true;
             }

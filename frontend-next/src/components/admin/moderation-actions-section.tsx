@@ -9,13 +9,15 @@ export function ModerationActionsSection() {
       description="Manage models awaiting moderation"
     >
       <div className="rounded-lg border border-white/10 glass-bg p-8 text-center">
-        <p className="text-white/80 mb-2">
-          Moderation API is not yet implemented.
+        <p className="text-white/80 mb-4">
+          Approve or reject models from the moderation model queue.
         </p>
-        <p className="text-sm text-white/50">
-          Bulk approve, reject, hide, and show actions for models awaiting
-          moderation will be available when the backend supports them.
-        </p>
+        <a
+          href="/moderation/models"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Open model queue
+        </a>
       </div>
     </SettingsSection>
   );
