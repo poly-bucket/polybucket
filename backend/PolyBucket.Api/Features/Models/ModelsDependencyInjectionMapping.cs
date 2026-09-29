@@ -46,6 +46,34 @@ public static class ModelsDependencyInjectionMapping
             UpdateModel.Repository.UpdateModelRepository>();
 
         services.AddTransient<
+            AddTagToModel.Domain.IAddTagToModelService,
+            AddTagToModel.Domain.AddTagToModelService>();
+        services.AddTransient<
+            AddTagToModel.Repository.IAddTagToModelRepository,
+            AddTagToModel.Repository.AddTagToModelRepository>();
+
+        services.AddTransient<
+            RemoveTagFromModel.Domain.IRemoveTagFromModelService,
+            RemoveTagFromModel.Domain.RemoveTagFromModelService>();
+        services.AddTransient<
+            RemoveTagFromModel.Repository.IRemoveTagFromModelRepository,
+            RemoveTagFromModel.Repository.RemoveTagFromModelRepository>();
+
+        services.AddTransient<
+            AddCategoryToModel.Domain.IAddCategoryToModelService,
+            AddCategoryToModel.Domain.AddCategoryToModelService>();
+        services.AddTransient<
+            AddCategoryToModel.Repository.IAddCategoryToModelRepository,
+            AddCategoryToModel.Repository.AddCategoryToModelRepository>();
+
+        services.AddTransient<
+            RemoveCategoryFromModel.Domain.IRemoveCategoryFromModelService,
+            RemoveCategoryFromModel.Domain.RemoveCategoryFromModelService>();
+        services.AddTransient<
+            RemoveCategoryFromModel.Repository.IRemoveCategoryFromModelRepository,
+            RemoveCategoryFromModel.Repository.RemoveCategoryFromModelRepository>();
+
+        services.AddTransient<
             UpdateModelVersion.Domain.IUpdateModelVersionService,
             UpdateModelVersion.Domain.UpdateModelVersionService>();
         services.AddTransient<

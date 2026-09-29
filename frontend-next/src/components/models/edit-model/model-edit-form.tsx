@@ -177,31 +177,33 @@ export function ModelEditForm({
       );
       const toAddCategories = categories.filter((name) => !currentCategoryNames.has(name));
 
+      let failedCategoryOps = 0;
       try {
-        const categoryClient = ApiClientFactory.getApiClient();
-        const categoryResponse = await categoryClient.getCategories_GetCategories(
-          1,
-          100,
-          null
-        );
+        const categoryResponse = await client.getCategories_GetCategories(1, 100, null);
         const nameToId = new Map(
           (categoryResponse.categories ?? []).map((c) => [c.name ?? "", c.id ?? ""])
         );
 
-        await Promise.allSettled([
+        const categoryResults = await Promise.allSettled([
           ...toRemoveCategories.map((c) =>
             c.id
               ? client.removeCategoryFromModel_RemoveCategoryFromModel(model.id!, c.id)
               : Promise.resolve()
           ),
           ...toAddCategories
-            .filter((name) => nameToId.has(name))
+            .filter((name) => nameToId.get(name))
             .map((name) =>
               client.addCategoryToModel_AddCategoryToModel(model.id!, nameToId.get(name)!)
             ),
         ]);
+
+        failedCategoryOps = categoryResults.filter((r) => r.status === "rejected").length;
       } catch {
-        // Category sync may require admin; skip gracefully
+        failedCategoryOps = 1;
+      }
+
+      if (failedCategoryOps > 0) {
+        toast.error(`Some category updates failed (${failedCategoryOps})`);
       }
 
       const refreshed = await client.getModelById_GetModel(model.id);
