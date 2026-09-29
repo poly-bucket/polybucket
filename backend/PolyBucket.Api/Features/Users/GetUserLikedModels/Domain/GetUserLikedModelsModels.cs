@@ -6,6 +6,7 @@ namespace PolyBucket.Api.Features.Users.GetUserLikedModels.Domain;
 public class GetUserLikedModelsQuery
 {
     public Guid UserId { get; set; }
+    public string? Username { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
     public string? SearchQuery { get; set; }

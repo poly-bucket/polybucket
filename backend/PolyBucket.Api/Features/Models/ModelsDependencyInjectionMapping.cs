@@ -118,6 +118,13 @@ public static class ModelsDependencyInjectionMapping
             DownloadModel.Domain.IDownloadModelService,
             DownloadModel.Domain.DownloadModelService>();
 
+        services.AddScoped<
+            LikeModel.Domain.ILikeModelService,
+            LikeModel.Domain.LikeModelService>();
+        services.AddTransient<
+            LikeModel.Repository.ILikeModelRepository,
+            LikeModel.Repository.LikeModelRepository>();
+
         return services;
     }
 }

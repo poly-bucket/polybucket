@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.ACL.Domain;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Linq;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Features.Models.Common;
 
@@ -93,9 +94,17 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 
                 _logger.LogDebug("Returning model response");
 
+                var modelDto = ModelDtoMapper.ToDto(model);
+                var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var currentUserId))
+                {
+                    modelDto.IsLikedByCurrentUser = model.LikeCollection?.Any(l =>
+                        l.UserId == currentUserId && l.DeletedAt == null) ?? false;
+                }
+
                 return new GetModelByIdResponse
                 {
-                    Model = ModelDtoMapper.ToDto(model)
+                    Model = modelDto
                 };
             }
             catch (System.Exception ex)

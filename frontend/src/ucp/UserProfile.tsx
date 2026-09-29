@@ -15,7 +15,8 @@ import {
   Language, 
   Link,
   Lock,
-  ErrorOutline
+  ErrorOutline,
+  ThumbUp
 } from '@mui/icons-material';
 import { CircularProgress, Typography, TextField, InputAdornment, IconButton } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon, NavigateBefore as NavigateBeforeIcon, NavigateNext as NavigateNextIcon } from '@mui/icons-material';
@@ -136,6 +137,7 @@ const UserProfile: React.FC = () => {
   // Data states
   const [models, setModels] = useState<UserModel[]>([]);
   const [collections, setCollections] = useState<UserCollection[]>([]);
+  const [likedModels, setLikedModels] = useState<UserModel[]>([]);
   
   // Pagination and search states
   const [modelsPage, setModelsPage] = useState(1);
@@ -148,7 +150,11 @@ const UserProfile: React.FC = () => {
   const [collectionsTotalCount, setCollectionsTotalCount] = useState(0);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
-  
+  const [likedPage, setLikedPage] = useState(1);
+  const [likedSearch, setLikedSearch] = useState('');
+  const [likedTotalPages, setLikedTotalPages] = useState(1);
+  const [likedTotalCount, setLikedTotalCount] = useState(0);
+  const [likedLoading, setLikedLoading] = useState(false);
 
   const [comments, setComments] = useState<any[]>([]);
 
@@ -204,16 +210,29 @@ const UserProfile: React.FC = () => {
 
 
 
-  // const fetchLikedModels = async (userId: string) => {
-  //   try {
-  //     const response = await api.get(`/users/${userId}/liked-models`);
-  //     if (response.data) {
-  //       setLikedModels(response.data.models || []);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching liked models:', error);
-  //   }
-  // };
+  const fetchLikedModels = async (username: string, page: number = 1, search: string = '') => {
+    try {
+      setLikedLoading(true);
+      const response = await apiClient.getUserLikedModels_GetUserLikedModelsByUsername(
+        username,
+        page,
+        12,
+        search || undefined,
+        'LikedAt',
+        true
+      );
+      if (response) {
+        const modelsData = response.models || [];
+        setLikedModels(modelsData as UserModel[]);
+        setLikedTotalCount(response.totalCount || 0);
+        setLikedTotalPages(response.totalPages || 1);
+      }
+    } catch (error) {
+      console.error('Error fetching liked models:', error);
+    } finally {
+      setLikedLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -288,11 +307,11 @@ const UserProfile: React.FC = () => {
         //     await fetchUserFilaments(profile.id);
         //   }
         //   break;
-        // case 'liked':
-        //   if (profile && likedModels.length === 0) {
-        //     await fetchLikedModels(profile.id);
-        //   }
-        //   break;
+        case 'liked':
+          if (profile && profile.username && likedModels.length === 0) {
+            await fetchLikedModels(profile.username);
+          }
+          break;
         case 'comments':
           if (profile && comments.length === 0) {
             // await fetchUserComments(profile.id);
@@ -313,6 +332,9 @@ const UserProfile: React.FC = () => {
     } else if (tab === 'collections') {
       setCollectionsPage(1);
       setCollectionsSearch('');
+    } else if (tab === 'liked') {
+      setLikedPage(1);
+      setLikedSearch('');
     }
     await loadTabData(tab);
   };
@@ -590,16 +612,16 @@ const UserProfile: React.FC = () => {
                 <Print className="w-5 h-5" />
                 Printers & Filaments
               </button> */}
-              {/* <button
+              <button
                 onClick={() => handleTabChange('liked')}
                 className={`lg-tab-button ${
                   activeTab === 'liked' ? 'active' : ''
                 }`}
               >
                 <ThumbUp className="w-5 h-5" />
-                Liked Models
+                Likes ({profile.totalLikes})
               </button>
-              <button
+              {/* <button
                 onClick={() => handleTabChange('comments')}
                 className={`lg-tab-button ${
                   activeTab === 'comments' ? 'active' : ''
@@ -876,24 +898,92 @@ const UserProfile: React.FC = () => {
 
           {activeTab === 'liked' && (
             <div>
-              {/* {likedModels.length > 0 ? (
-                <ModelGrid
-                  models={likedModels.map(model => ({
-                    id: model.id,
-                    name: model.name,
-                    description: model.description,
-                    thumbnailUrl: model.thumbnailUrl,
-                    author: { username: profile.username },
-                    comments: [],
-                    // Add other required properties
-                  } as any))}
-                  onModelClick={(model) => navigate(`/models/${model.id}`)}
+              <div className="mb-4">
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Search liked models..."
+                  value={likedSearch}
+                  onChange={(e) => {
+                    const search = e.target.value;
+                    setLikedSearch(search);
+                    setLikedPage(1);
+                    if (profile?.username) {
+                      fetchLikedModels(profile.username, 1, search);
+                    }
+                  }}
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon className="text-white/60" style={{ fontSize: '18px' }} />
+                      </InputAdornment>
+                    ),
+                    className: 'text-white',
+                  }}
                 />
+              </div>
+              {likedLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <CircularProgress />
+                </div>
+              ) : likedModels.length > 0 ? (
+                <>
+                  <ModelGrid
+                    models={likedModels.map((model) => ({
+                      id: model.id,
+                      name: model.name,
+                      description: model.description,
+                      thumbnailUrl: model.thumbnailUrl,
+                      likes: model.likes,
+                      downloads: model.downloads,
+                      author: (model as { author?: { username: string } }).author,
+                    } as any))}
+                    onModelClick={(model) => navigate(`/models/${model.id}`)}
+                  />
+                  {likedTotalPages > 1 && (
+                    <div className="flex justify-center items-center mt-6 space-x-2">
+                      <IconButton
+                        onClick={() => {
+                          const page = likedPage - 1;
+                          setLikedPage(page);
+                          if (profile?.username) {
+                            fetchLikedModels(profile.username, page, likedSearch);
+                          }
+                        }}
+                        disabled={likedPage <= 1}
+                        className="text-white/60 hover:text-white disabled:text-white/30"
+                        size="small"
+                      >
+                        <NavigateBeforeIcon />
+                      </IconButton>
+                      <span className="text-white/60 text-sm">
+                        Page {likedPage} of {likedTotalPages} ({likedTotalCount} total)
+                      </span>
+                      <IconButton
+                        onClick={() => {
+                          const page = likedPage + 1;
+                          setLikedPage(page);
+                          if (profile?.username) {
+                            fetchLikedModels(profile.username, page, likedSearch);
+                          }
+                        }}
+                        disabled={likedPage >= likedTotalPages}
+                        className="text-white/60 hover:text-white disabled:text-white/30"
+                        size="small"
+                      >
+                        <NavigateNextIcon />
+                      </IconButton>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="lg-card p-8 text-center">
-                  <p className="text-white/60">No liked models found</p>
+                  <p className="text-white/60">
+                    {likedSearch ? `No liked models matching "${likedSearch}"` : 'No liked models found'}
+                  </p>
                 </div>
-              )} */}
+              )}
             </div>
           )}
 

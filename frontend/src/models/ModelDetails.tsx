@@ -11,6 +11,7 @@ import EditModelModal from './EditModelModal';
 import PDFViewer from '../components/common/PDFViewer';
 import MarkdownViewer from '../components/common/MarkdownViewer';
 import { DeleteModelService } from '../services/deleteModelService';
+import { LikeModelService } from '../services/likeModelService';
 
 const ModelViewer = lazy(() => import('./ModelViewer'));
 
@@ -156,9 +157,9 @@ const ModelDetails: React.FC = () => {
             updatedAt: response.model.updatedAt?.toISOString(),
             downloadCount: 0,
             rating: 0,
-            isLiked: false,
+            isLiked: (response.model as { isLikedByCurrentUser?: boolean }).isLikedByCurrentUser ?? false,
             isInCollection: false,
-            likes: Array.isArray(response.model.likes) ? response.model.likes : [],
+            likes: response.model.likes ?? 0,
             isFederated: response.model.isFederated || false,
             remoteInstanceId: response.model.remoteInstanceId,
             remoteModelId: response.model.remoteModelId,
@@ -166,7 +167,8 @@ const ModelDetails: React.FC = () => {
             lastFederationSync: response.model.lastFederationSync?.toISOString()
           };
           setModel(extendedModel);
-          setLikeCount(Array.isArray(response.model.likes) ? response.model.likes.length : (response.model.likes || 0));
+          setIsLiked((response.model as { isLikedByCurrentUser?: boolean }).isLikedByCurrentUser ?? false);
+          setLikeCount(typeof response.model.likes === 'number' ? response.model.likes : 0);
           
           // Prepare carousel items - images first, then 3D models, then documents
           const items: Array<{
@@ -416,9 +418,26 @@ const ModelDetails: React.FC = () => {
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    if (!model?.id) {
+      return;
+    }
+    if (!isAuthenticated || !user?.accessToken) {
+      alert('Please sign in to like models');
+      return;
+    }
+
+    const previousLiked = isLiked;
+    const previousCount = likeCount;
     setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    setLikeCount(prev => (isLiked ? prev - 1 : prev + 1));
+
+    const result = await LikeModelService.toggleLike(model.id, previousLiked, user.accessToken);
+    if (!result.success) {
+      setIsLiked(previousLiked);
+      setLikeCount(previousCount);
+      alert(result.message || 'Failed to update like');
+    }
   };
 
   const handleModelUpdate = (updatedModel: ExtendedModel) => {
@@ -916,11 +935,11 @@ const ModelDetails: React.FC = () => {
                   )}
 
                   <div className="grid grid-cols-2 gap-3">
-                    {/* <button
+                    <button
                       onClick={handleLike}
                       className={`lg-button ${
-                        isLiked 
-                          ? 'lg-badge lg-badge-error' 
+                        isLiked
+                          ? 'lg-badge lg-badge-error'
                           : 'hover:bg-gray-700'
                       } flex items-center justify-center`}
                     >
@@ -928,7 +947,7 @@ const ModelDetails: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                       {formatNumber(likeCount)}
-                    </button> */}
+                    </button>
 
                     <button className="lg-button hover:bg-gray-700 flex items-center justify-center">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -952,10 +971,10 @@ const ModelDetails: React.FC = () => {
                     <span className="text-gray-400">Downloads</span>
                     <span className="font-semibold text-white">{formatNumber(model.downloadCount || 0)}</span>
                   </div>
-                  {/* <div className="flex justify-between">
+                  <div className="flex justify-between">
                     <span className="text-gray-400">Likes</span>
                     <span className="font-semibold text-white">{formatNumber(likeCount)}</span>
-                  </div> */}
+                  </div>
                   {/* <div className="flex justify-between">
                     <span className="text-gray-400">Comments</span>
                     <span className="font-semibold text-white">{formatNumber(model.comments?.length || 0)}</span>

@@ -70,10 +70,13 @@ const ModelCard: React.FC<ModelCardProps> = ({
     }
   };
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Implement like functionality
-    console.log('Like model:', model.id);
+    if (!user?.accessToken || !model.id) {
+      return;
+    }
+    const { LikeModelService } = await import('../services/likeModelService');
+    await LikeModelService.toggleLike(model.id, model.isLiked ?? false, user.accessToken);
   };
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -151,7 +154,9 @@ const ModelCard: React.FC<ModelCardProps> = ({
   const thumbnailUrl = model.thumbnailUrl;
 
   // Calculate like percentage for the like bar
-  const totalLikes = (model.likes?.length || 0);
+  const totalLikes = typeof model.likes === 'number'
+    ? model.likes
+    : (Array.isArray(model.likes) ? model.likes.length : 0);
   const likePercentage = totalLikes > 0 ? 100 : 0;
 
   // Get author name

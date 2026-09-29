@@ -134,6 +134,7 @@ namespace PolyBucket.Api.Features.Models.Common
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
+        public bool IsLikedByCurrentUser { get; set; }
     }
 
     public static class ModelDtoMapper

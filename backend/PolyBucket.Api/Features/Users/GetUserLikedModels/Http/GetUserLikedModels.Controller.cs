@@ -92,7 +92,7 @@ public class GetUserLikedModelsController : ControllerBase
 
             var query = new GetUserLikedModelsQuery
             {
-                UserId = Guid.Empty,
+                Username = username,
                 Page = page,
                 PageSize = pageSize,
                 SearchQuery = searchQuery,
@@ -102,6 +102,14 @@ public class GetUserLikedModelsController : ControllerBase
 
             var response = await _getUserLikedModelsService.GetUserLikedModelsAsync(query, cancellationToken);
             return Ok(response);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

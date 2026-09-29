@@ -138,7 +138,9 @@ const ModelGrid: React.FC<ModelGridProps> = ({
       return num.toString();
     };
 
-    const totalLikes = (model.likes?.length || 0);
+    const totalLikes = typeof model.likes === 'number'
+      ? model.likes
+      : (Array.isArray(model.likes) ? model.likes.length : 0);
     const authorName = model.author?.username || 'Unknown';
 
     return (
