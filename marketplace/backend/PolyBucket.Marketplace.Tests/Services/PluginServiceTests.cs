@@ -295,6 +295,32 @@ namespace PolyBucket.Marketplace.Tests.Services
         }
 
         [Fact]
+        public async Task GetPluginsForMainApiAsync_WithInvalidPage_NormalizesToPageOne()
+        {
+            var result = await _pluginService.GetPluginsForMainApiAsync(page: 0, pageSize: 10);
+
+            result.Page.ShouldBe(1);
+            result.PageSize.ShouldBe(10);
+        }
+
+        [Fact]
+        public async Task GetPluginsForMainApiAsync_WithInvalidPageSize_NormalizesToTwenty()
+        {
+            var result = await _pluginService.GetPluginsForMainApiAsync(page: 1, pageSize: 200);
+
+            result.Page.ShouldBe(1);
+            result.PageSize.ShouldBe(20);
+        }
+
+        [Fact]
+        public async Task GetPluginsForMainApiAsync_WithLargePageSize_CapsAtTwenty()
+        {
+            var result = await _pluginService.GetPluginsForMainApiAsync(page: 1, pageSize: 1000);
+
+            result.PageSize.ShouldBe(20);
+        }
+
+        [Fact]
         public async Task GetCategoriesForMainApiAsync_ReturnsCategories()
         {
             // Act

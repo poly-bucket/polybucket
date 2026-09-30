@@ -4,6 +4,7 @@ namespace PolyBucket.Marketplace.Api.Services
 {
     public class FileService : IFileService
     {
+        private const int MaxStoredFileNameLength = 200;
         private readonly ILogger<FileService> _logger;
         private readonly string _uploadPath;
 
@@ -12,7 +13,6 @@ namespace PolyBucket.Marketplace.Api.Services
             _logger = logger;
             _uploadPath = configuration["FileStorage:UploadPath"] ?? "uploads/plugins";
             
-            // Ensure upload directory exists
             Directory.CreateDirectory(_uploadPath);
         }
 
@@ -25,15 +25,19 @@ namespace PolyBucket.Marketplace.Api.Services
                     throw new ArgumentException("File is empty or null");
                 }
 
-                // Create plugin-specific directory
                 var pluginDir = Path.Combine(_uploadPath, pluginId);
                 Directory.CreateDirectory(pluginDir);
 
-                // Generate unique filename
-                var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{file.FileName}";
+                var safeOriginalName = Path.GetFileName(file.FileName);
+                if (string.IsNullOrEmpty(safeOriginalName))
+                {
+                    safeOriginalName = "upload";
+                }
+
+                safeOriginalName = TruncateFileName(safeOriginalName, MaxStoredFileNameLength);
+                var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{safeOriginalName}";
                 var filePath = Path.Combine(pluginDir, fileName);
 
-                // Save file
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
@@ -91,12 +95,36 @@ namespace PolyBucket.Marketplace.Api.Services
             }
         }
 
-        public async Task<string> GetPluginFileUrlAsync(string filePath)
+        public Task<string> GetPluginFileUrlAsync(string filePath)
         {
-            // Convert file path to URL
+            if (string.IsNullOrEmpty(filePath))
+            {
+                return Task.FromResult(string.Empty);
+            }
+
             var relativePath = Path.GetRelativePath(_uploadPath, filePath);
             var urlPath = relativePath.Replace(Path.DirectorySeparatorChar, '/');
-            return $"/api/files/{urlPath}";
+            return Task.FromResult($"/api/files/{urlPath}");
+        }
+
+        private static string TruncateFileName(string fileName, int maxLength)
+        {
+            if (fileName.Length <= maxLength)
+            {
+                return fileName;
+            }
+
+            var extension = Path.GetExtension(fileName);
+            var baseName = Path.GetFileNameWithoutExtension(fileName);
+            var maxBaseLength = maxLength - extension.Length;
+            if (maxBaseLength < 1)
+            {
+                return extension.Length <= maxLength
+                    ? extension
+                    : extension[..maxLength];
+            }
+
+            return baseName[..maxBaseLength] + extension;
         }
     }
 }

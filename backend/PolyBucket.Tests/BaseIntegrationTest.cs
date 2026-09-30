@@ -16,6 +16,7 @@ using Xunit;
 
 namespace PolyBucket.Tests
 {
+    [Trait("Category", "Integration")]
     public abstract class BaseIntegrationTest : IAsyncDisposable
     {
         protected TestWebApplicationFactory Factory { get; }

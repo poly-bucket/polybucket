@@ -30,6 +30,7 @@ public class RemoveTagFromModelControllerTests : BaseIntegrationTest
             CreatedById = user.Id,
             UpdatedById = user.Id
         };
+        await DbContext.Tags.AddAsync(tag);
         model.Tags.Add(tag);
         await DbContext.SaveChangesAsync();
         var client = Factory.CreateClient();
@@ -97,6 +98,7 @@ public class RemoveTagFromModelControllerTests : BaseIntegrationTest
             CreatedById = owner.Id,
             UpdatedById = owner.Id
         };
+        await DbContext.Tags.AddAsync(tag);
         model.Tags.Add(tag);
         await DbContext.SaveChangesAsync();
         var client = Factory.CreateClient();

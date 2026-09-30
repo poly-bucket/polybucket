@@ -9,6 +9,7 @@ using Xunit;
 
 namespace PolyBucket.Tests.Email;
 
+[Trait("Category", "Integration")]
 [Collection("MailpitCollection")]
 public class SmtpEmailTransportMailpitTests(MailpitFixture mailpit)
 {

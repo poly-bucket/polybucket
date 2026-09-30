@@ -4,7 +4,9 @@ using PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.R
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Email.Domain;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,6 +50,9 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 throw new ArgumentException("User not found");
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+
+            EnableTwoFactorAuthResponse response;
             try
             {
                 _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: Starting 2FA enable for user {UserId}", command.UserId);
@@ -81,6 +86,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 
                 if (!isValid)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     _logger.LogWarning("EnableTwoFactorAuthCommandHandler.Handle: Invalid token provided for 2FA enablement for user {UserId}", command.UserId);
                     return new EnableTwoFactorAuthResponse
                     {
@@ -144,11 +150,9 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 }
                 
                 await _enableTwoFactorAuthRepository.UpdateAsync(twoFactorAuth);
-                await _accountEmailService.SendTwoFactorChangedAsync(user, true, command.Client, cancellationToken: cancellationToken);
-                
-                _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: 2FA enabled successfully for user {UserId}", command.UserId);
-                
-                return new EnableTwoFactorAuthResponse
+                await transaction.CommitAsync(cancellationToken);
+
+                response = new EnableTwoFactorAuthResponse
                 {
                     Success = true,
                     Message = "Two-factor authentication has been enabled successfully",
@@ -157,9 +161,27 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
             }
             catch (DbUpdateConcurrencyException ex)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogWarning(ex, "EnableTwoFactorAuthCommandHandler.Handle: Concurrent modification detected for user {UserId}", command.UserId);
                 throw new InvalidOperationException("The 2FA configuration was modified by another operation. Please try again.");
             }
+            catch (DbUpdateException ex) when (IsPostgresSerializationFailure(ex))
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogWarning(ex, "EnableTwoFactorAuthCommandHandler.Handle: Serialization conflict for user {UserId}", command.UserId);
+                throw new InvalidOperationException("The 2FA configuration was modified by another operation. Please try again.");
+            }
+
+            await _accountEmailService.SendTwoFactorChangedAsync(user, true, command.Client, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: 2FA enabled successfully for user {UserId}", command.UserId);
+
+            return response;
+        }
+
+        private static bool IsPostgresSerializationFailure(DbUpdateException ex)
+        {
+            return ex.InnerException is PostgresException pg && pg.SqlState == "40001";
         }
     }
 } 

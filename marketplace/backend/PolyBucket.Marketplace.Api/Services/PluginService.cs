@@ -537,6 +537,16 @@ namespace PolyBucket.Marketplace.Api.Services
         {
             try
             {
+                if (page < 1)
+                {
+                    page = 1;
+                }
+
+                if (pageSize < 1 || pageSize > 20)
+                {
+                    pageSize = 20;
+                }
+
                 var query = _context.Plugins
                     .Include(p => p.Reviews)
                     .Include(p => p.Author)
