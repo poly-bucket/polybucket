@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using Shouldly;
 using Xunit;
 
@@ -22,6 +23,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
         private readonly Mock<ICreateModelVersionRepository> _mockRepository;
         private readonly Mock<PolyBucket.Api.Common.Storage.IStorageService> _mockStorage;
         private readonly Mock<IPermissionService> _mockPermissionService;
+        private readonly Mock<IModelPreviewQueue> _mockPreviewQueue = new();
         private readonly Mock<ILogger<CreateModelVersionService>> _mockLogger;
         private readonly CreateModelVersionService _service;
         private readonly Guid _userId = Guid.NewGuid();
@@ -37,6 +39,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
                 _mockRepository.Object,
                 _mockStorage.Object,
                 _mockPermissionService.Object,
+                _mockPreviewQueue.Object,
                 _mockLogger.Object);
 
             _mockRepository
@@ -70,6 +73,19 @@ namespace PolyBucket.Tests.Features.Models.CreateModelVersion
             // Assert
             result.ModelVersion.ShouldNotBeNull();
             result.ModelVersion.ThumbnailUrl.ShouldBeNull();
+        }
+
+        [Fact(DisplayName = "When a model version is created, a background preview is queued for the model.")]
+        public async Task CreateModelVersionAsync_QueuesPreview()
+        {
+            // Arrange
+            var request = new CreateModelVersionRequest { Name = "2.0", Notes = "Notes", Files = Create3DFiles() };
+
+            // Act
+            await _service.CreateModelVersionAsync(_modelId, request, CreateUser(), CancellationToken.None);
+
+            // Assert
+            _mockPreviewQueue.Verify(q => q.EnqueueForNewContentAsync(_modelId, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact(DisplayName = "When creating a model version that includes an image file, the create model version service uses the image as the thumbnail.")]

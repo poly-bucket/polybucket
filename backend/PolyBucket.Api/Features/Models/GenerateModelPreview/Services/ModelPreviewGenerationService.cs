@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
@@ -18,13 +19,16 @@ namespace PolyBucket.Api.Features.Models.GenerateModelPreview.Services
     {
         private readonly IStorageService _storageService;
         private readonly ILogger<ModelPreviewGenerationService> _logger;
+        private readonly ModelPreviewOptions _options;
         private readonly string[] _supportedFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".ply", ".3mf", ".step", ".stp" };
 
         public ModelPreviewGenerationService(
             IStorageService storageService,
+            IOptions<ModelPreviewOptions> options,
             ILogger<ModelPreviewGenerationService> logger)
         {
             _storageService = storageService;
+            _options = options.Value;
             _logger = logger;
         }
 
@@ -49,13 +53,19 @@ namespace PolyBucket.Api.Features.Models.GenerateModelPreview.Services
 
             try
             {
-                // Download and install browser if needed
-                await new BrowserFetcher().DownloadAsync();
+                var executablePath = _options.BrowserExecutablePath
+                    ?? Environment.GetEnvironmentVariable("PUPPETEER_EXECUTABLE_PATH");
+                if (string.IsNullOrWhiteSpace(executablePath))
+                {
+                    await new BrowserFetcher().DownloadAsync();
+                    executablePath = null;
+                }
 
                 using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
                 {
                     Headless = true,
-                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
+                    ExecutablePath = executablePath,
+                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
                 });
 
                 using var page = await browser.NewPageAsync();

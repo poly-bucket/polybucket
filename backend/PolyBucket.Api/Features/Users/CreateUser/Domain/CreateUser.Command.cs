@@ -26,6 +26,8 @@ namespace PolyBucket.Api.Features.Users.CreateUser.Domain
         [StringLength(100)]
         public string? Country { get; set; }
 
+        public bool MarkEmailVerified { get; set; } = true;
+
         // These will be set internally by the system
         public string UserAgent { get; set; } = string.Empty;
         public string CreatedByIp { get; set; } = string.Empty;

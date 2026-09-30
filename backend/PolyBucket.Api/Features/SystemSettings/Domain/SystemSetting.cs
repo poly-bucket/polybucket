@@ -21,6 +21,12 @@ public static class SystemSettingKeys
     public const string EmailFromAddress = "Email:FromAddress";
     public const string EmailFromName = "Email:FromName";
     public const string EmailRequireVerification = "Email:RequireVerification";
+    public const string EmailTransport = "Email:Transport";
+    public const string EmailSecurity = "Email:Security";
+    public const string EmailReplyTo = "Email:ReplyTo";
+    public const string EmailPublicBaseUrl = "Email:PublicBaseUrl";
+    public const string EmailAllowInvalidCertificates = "Email:AllowInvalidCertificates";
+    public const string EmailLastSuccessfulTestAt = "Email:LastSuccessfulTestAt";
     
     // Authentication Configuration Keys
     public const string AuthLoginMethod = "Auth:LoginMethod"; // "email", "username", "both"

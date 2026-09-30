@@ -21,11 +21,16 @@ vi.mock("@/lib/api/clientFactory", () => ({
       createCollection_CreateCollection: mockCreateCollection,
       updateCollection_UpdateCollection: mockUpdateCollection,
       deleteCollection_DeleteCollection: mockDeleteCollection,
-      addModelToCollection_AddModelToCollection2: mockAddModelToCollection,
-      removeModelFromCollection_RemoveModelFromCollection2: mockRemoveModelFromCollection,
       getFavoriteCollections_GetFavoriteCollections: mockGetFavoriteCollections,
       favoriteCollection_ToggleFavorite: mockToggleFavorite,
     }),
+  },
+}));
+
+vi.mock("@/lib/api/axiosConfig", () => ({
+  default: {
+    post: (...args: unknown[]) => mockAddModelToCollection(...args),
+    delete: (...args: unknown[]) => mockRemoveModelFromCollection(...args),
   },
 }));
 
@@ -130,7 +135,7 @@ describe("collectionsService", () => {
 
       await collectionsService.addModelToCollection("c1", "m1");
 
-      expect(mockAddModelToCollection).toHaveBeenCalledWith("c1", "m1");
+      expect(mockAddModelToCollection).toHaveBeenCalledWith("/api/collections/c1/models/m1");
     });
   });
 
@@ -140,7 +145,7 @@ describe("collectionsService", () => {
 
       await collectionsService.removeModelFromCollection("c1", "m1");
 
-      expect(mockRemoveModelFromCollection).toHaveBeenCalledWith("c1", "m1");
+      expect(mockRemoveModelFromCollection).toHaveBeenCalledWith("/api/collections/c1/models/m1");
     });
   });
 

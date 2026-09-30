@@ -37,11 +37,14 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 _tokenServiceMock.Object,
                 _loggerMock.Object);
 
+            var httpContext = new DefaultHttpContext();
+            httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Loopback;
+
             _controller = new RefreshTokenController(_handler, Mock.Of<ILogger<RefreshTokenController>>())
             {
                 ControllerContext = new ControllerContext
                 {
-                    HttpContext = new DefaultHttpContext()
+                    HttpContext = httpContext
                 }
             };
         }

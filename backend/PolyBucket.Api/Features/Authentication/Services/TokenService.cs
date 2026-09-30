@@ -13,6 +13,8 @@ namespace PolyBucket.Api.Features.Authentication.Services
 {
     public class TokenService(IConfiguration configuration, ITokenSettingsService tokenSettingsService) : ITokenService
     {
+        public const string EmailVerifiedClaim = "email_verified";
+
         private readonly IConfiguration _configuration = configuration;
         private readonly ITokenSettingsService _tokenSettingsService = tokenSettingsService;
 
@@ -60,7 +62,7 @@ namespace PolyBucket.Api.Features.Authentication.Services
                 new Claim(ClaimTypes.Role, user.Role?.Name ?? "User"),
                 new Claim("sub", user.Id.ToString()),
                 new Claim("name", user.Username ?? string.Empty),
-                new Claim("email_verified", "true"),
+                new Claim(EmailVerifiedClaim, user.EmailVerifiedAt.HasValue ? "true" : "false"),
                 new Claim("jti", Guid.NewGuid().ToString()),
                 new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             };
@@ -160,7 +162,7 @@ namespace PolyBucket.Api.Features.Authentication.Services
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Role = user.Role?.Name ?? "User",
-                    IsEmailVerified = true, // TODO: Add email verification check
+                    IsEmailVerified = user.EmailVerifiedAt.HasValue,
                     CreatedAt = user.CreatedAt,
                     Avatar = user.Avatar
                 }

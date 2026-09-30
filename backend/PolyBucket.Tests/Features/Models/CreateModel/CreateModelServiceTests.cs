@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Repository;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using Shouldly;
 using Xunit;
 
@@ -22,6 +23,7 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
         private readonly Mock<ICreateModelRepository> _mockRepository;
         private readonly Mock<IStorageService> _mockStorage;
         private readonly Mock<IModelModerationEnqueueService> _mockModerationEnqueueService;
+        private readonly Mock<IModelPreviewQueue> _mockPreviewQueue;
         private readonly Mock<ILogger<CreateModelService>> _mockLogger;
         private readonly CreateModelService _service;
 
@@ -30,12 +32,31 @@ namespace PolyBucket.Tests.Features.Models.CreateModel
             _mockRepository = new Mock<ICreateModelRepository>();
             _mockStorage = new Mock<IStorageService>();
             _mockModerationEnqueueService = new Mock<IModelModerationEnqueueService>();
+            _mockPreviewQueue = new Mock<IModelPreviewQueue>();
             _mockLogger = new Mock<ILogger<CreateModelService>>();
             _service = new CreateModelService(
                 _mockRepository.Object,
                 _mockStorage.Object,
                 _mockModerationEnqueueService.Object,
+                _mockPreviewQueue.Object,
                 _mockLogger.Object);
+        }
+
+        [Fact(DisplayName = "When a model is created, a background preview is queued for it.")]
+        public async Task CreateModelAsync_WithValidRequest_QueuesPreview()
+        {
+            // Arrange
+            var request = new CreateModelRequest { Name = "Preview Model", Privacy = "public", Files = CreateTestFiles() };
+            _mockStorage.Setup(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("https://storage.example.com/test-file.stl");
+            _mockRepository.Setup(x => x.CreateModelAsync(It.IsAny<Model>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Model model, CancellationToken ct) => model);
+
+            // Act
+            var result = await _service.CreateModelAsync(request, CreateTestUser(), CancellationToken.None);
+
+            // Assert
+            _mockPreviewQueue.Verify(q => q.EnqueueForNewContentAsync(result.Model.Id, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact(DisplayName = "When creating a model with a valid request, the create model service creates the model.")]

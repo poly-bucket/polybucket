@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using MediatR;
+using PolyBucket.Api.Common.Http;
 using PolyBucket.Api.Features.Authentication.ChangePassword.Domain;
 
 namespace PolyBucket.Api.Features.Authentication.ChangePassword.Http
@@ -26,6 +27,7 @@ namespace PolyBucket.Api.Features.Authentication.ChangePassword.Http
                 return BadRequest(ModelState);
             }
 
+            command.Client = ClientRequestInfo.From(HttpContext);
             var result = await _mediator.Send(command);
             
             if (!result.Success)

@@ -94,7 +94,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             {
                 _logger.LogWarning("User not found for identifier: {Identifier}", loginIdentifier);
                 // Log failed login attempt
-                await LogLoginAttempt(loginIdentifier, false, null);
+                await LogLoginAttempt(loginIdentifier, false, null, command);
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
@@ -102,7 +102,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             {
                 _logger.LogWarning("Invalid password for user: {UserId}", user.Id);
                 // Log failed login attempt
-                await LogLoginAttempt(loginIdentifier, false, user.Id);
+                await LogLoginAttempt(loginIdentifier, false, user.Id, command);
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
@@ -140,7 +140,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 if (!isValidTwoFactor)
                 {
                     _logger.LogWarning("Invalid 2FA token/backup code for user {UserId}", user.Id);
-                    await LogLoginAttempt(loginIdentifier, false, user.Id);
+                    await LogLoginAttempt(loginIdentifier, false, user.Id, command);
                     throw new UnauthorizedAccessException("Invalid two-factor authentication code");
                 }
 
@@ -148,7 +148,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             }
 
             // Log successful login attempt (both application log and database record)
-            await LogLoginAttempt(loginIdentifier, true, user.Id);
+            await LogLoginAttempt(loginIdentifier, true, user.Id, command);
             
             // Generate authentication response
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
@@ -161,7 +161,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 UserId = user.Id,
                 ExpiresAt = authResponse.RefreshTokenExpiresAt,
                 CreatedAt = DateTime.UtcNow,
-                CreatedByIp = "127.0.0.1" // TODO: Get from request
+                CreatedByIp = command.Client.IpAddress
             };
 
             await _authRepository.CreateRefreshTokenAsync(refreshToken);
@@ -225,7 +225,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             return identifier.Contains("@") && identifier.Contains(".");
         }
 
-        private async Task LogLoginAttempt(string identifier, bool success, Guid? userId)
+        private async Task LogLoginAttempt(string identifier, bool success, Guid? userId, LoginCommand command)
         {
             // Skip logging failed login attempts for non-existent users to avoid foreign key constraint issues
             if (!success && userId == null)
@@ -239,7 +239,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 Email = identifier, // Store the identifier as email for backward compatibility
                 UserId = userId,
                 Successful = success,
-                UserAgent = "Unknown", // TODO: Get from request
+                IpAddress = command.Client.IpAddress,
+                UserAgent = command.Client.UserAgent,
                 CreatedAt = DateTime.UtcNow
             };
 

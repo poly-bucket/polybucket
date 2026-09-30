@@ -79,6 +79,11 @@ public static class ApplicationBuilderExtensions
 
     private static void ConfigureMiddleware(WebApplication app)
     {
+        if (app.Configuration.GetValue("ForwardedHeaders:Enabled", true))
+        {
+            app.UseForwardedHeaders();
+        }
+
         app.UseGlobalExceptionHandler();
         
         app.UseCors();
@@ -113,6 +118,8 @@ public static class ApplicationBuilderExtensions
         
         app.UseRouting();
         
+        app.UseRateLimiter();
+
         app.UseAuthentication();
         app.UseAuthorization();
         

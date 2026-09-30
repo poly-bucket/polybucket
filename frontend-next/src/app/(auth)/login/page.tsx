@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -204,9 +205,17 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-white/80">
-                  Password
-                </label>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm font-medium text-white/80">
+                    Password
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-primary underline-offset-4 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Input
                     id="password"

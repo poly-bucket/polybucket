@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common.Http;
+using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.ForgotPassword.Domain;
 using System;
 using System.Threading;
@@ -21,8 +24,10 @@ namespace PolyBucket.Api.Features.Authentication.ForgotPassword.Http
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Success response (always returns 200 for security)</returns>
         [HttpPost("forgot-password")]
+        [EnableRateLimiting(RequestSecurityServiceCollectionExtensions.AuthStrictPolicy)]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
+        [ProducesResponseType(429)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -32,6 +37,7 @@ namespace PolyBucket.Api.Features.Authentication.ForgotPassword.Http
 
             try
             {
+                command.Client = ClientRequestInfo.From(HttpContext);
                 await _handler.Handle(command, cancellationToken);
                 // Always return success to prevent email enumeration
                 return Ok(new { message = "If the email address exists, a password reset link has been sent" });

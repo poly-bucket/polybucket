@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.Email.Domain;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
@@ -12,11 +13,13 @@ namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
     public class ChangePasswordCommandHandler(
         PolyBucketDbContext context,
         IPasswordHasher passwordHasher,
+        IAccountEmailService accountEmailService,
         ILogger<ChangePasswordCommandHandler> logger,
         IHttpContextAccessor httpContextAccessor) : IRequestHandler<ChangePasswordCommand, ChangePasswordResponse>
     {
         private readonly PolyBucketDbContext _context = context;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
+        private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly ILogger<ChangePasswordCommandHandler> _logger = logger;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
@@ -81,7 +84,7 @@ namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
                 {
                     token.RevokedAt = DateTime.UtcNow;
                     token.ReasonRevoked = "Password changed";
-                    token.RevokedByIp = "127.0.0.1"; // TODO: Get from request
+                    token.RevokedByIp = command.Client.IpAddress;
                 }
 
                 // If this is the admin user and they haven't completed first-time setup, mark admin as configured
@@ -97,6 +100,7 @@ namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
+                await _accountEmailService.SendPasswordChangedAsync(user, command.Client, cancellationToken: cancellationToken);
 
                 _logger.LogInformation("Password changed successfully for user {UserId}", userId);
 

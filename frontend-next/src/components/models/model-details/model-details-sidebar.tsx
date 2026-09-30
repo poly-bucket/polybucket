@@ -9,6 +9,7 @@ import { useModelSidebarCards, PluginBoundary } from "@/lib/plugins";
 import type { Model } from "@/lib/api/client";
 import { LicenseTypes } from "@/lib/api/client";
 import { Download, Pencil, Trash2, Share2, GitCommitHorizontal } from "lucide-react";
+import { AddToCollectionPopover } from "./add-to-collection-popover";
 
 const LICENSE_LABELS: Record<string, string> = {
   [LicenseTypes.MIT]: "MIT License",
@@ -215,6 +216,10 @@ export function ModelDetailsSidebar({
                   {isDeleting ? "Deleting..." : "Delete Model"}
                 </Button>
               </>
+            )}
+
+            {isAuthenticated && !isFederated && model.id && (
+              <AddToCollectionPopover modelId={model.id} />
             )}
 
             <Button

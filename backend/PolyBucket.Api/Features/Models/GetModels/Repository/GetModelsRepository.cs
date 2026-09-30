@@ -27,18 +27,26 @@ namespace PolyBucket.Api.Features.Models.GetModels.Repository
                 .AsNoTracking()
                 .WherePubliclyVisible(_context.ModelModerationRecords);
 
-            if (string.Equals(sortBy, "createdAt", StringComparison.OrdinalIgnoreCase))
-            {
-                query = query.OrderByDescending(m => m.CreatedAt);
-            }
-
             var totalCount = await query.CountAsync();
-            var models = await query
+            var models = await ApplyOrdering(query, sortBy)
                 .Skip((page - 1) * take)
                 .Take(take)
                 .ToListAsync();
 
             return (models, totalCount);
+        }
+
+        public static IOrderedQueryable<Model> ApplyOrdering(IQueryable<Model> query, string? sortBy)
+        {
+            var normalized = sortBy?.Trim().ToLowerInvariant();
+            var ordered = normalized switch
+            {
+                "downloads" => query.OrderByDescending(m => m.Downloads).ThenByDescending(m => m.CreatedAt),
+                "likes" => query.OrderByDescending(m => m.Likes).ThenByDescending(m => m.CreatedAt),
+                "name" => query.OrderBy(m => m.Name).ThenByDescending(m => m.CreatedAt),
+                _ => query.OrderByDescending(m => m.CreatedAt)
+            };
+            return ordered.ThenBy(m => m.Id);
         }
     }
 }

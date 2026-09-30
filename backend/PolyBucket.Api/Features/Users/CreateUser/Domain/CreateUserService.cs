@@ -1,11 +1,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common.Email;
+using PolyBucket.Api.Common.Http;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.Email.Domain;
 using PolyBucket.Api.Features.Users.CreateUser.Repository;
 using PolyBucket.Api.Features.Users.Domain;
 
@@ -16,10 +19,13 @@ public class CreateUserService(
     ICreateUserRepository createUserRepository,
     IPasswordHasher passwordHasher,
     IPasswordGenerator passwordGenerator,
-    IEmailService emailService,
-    IConfiguration configuration,
+    ITokenService tokenService,
+    IEmailSettingsResolver emailSettingsResolver,
+    IAccountEmailService accountEmailService,
     ILogger<CreateUserService> logger) : ICreateUserService
 {
+    public static readonly TimeSpan InviteLifetime = TimeSpan.FromHours(72);
+
     public async Task<CreateUserCommandResponse> CreateUserAsync(CreateUserCommand command, CancellationToken cancellationToken = default)
     {
         if (await authRepository.IsEmailTakenAsync(command.Email))
@@ -56,6 +62,7 @@ public class CreateUserService(
             RoleId = command.RoleId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            EmailVerifiedAt = command.MarkEmailVerified ? DateTime.UtcNow : null,
             Settings = new UserSettings
             {
                 Id = Guid.NewGuid(),
@@ -72,7 +79,7 @@ public class CreateUserService(
 
         await authRepository.CreateUserAsync(user);
 
-        logger.LogInformation("User created by admin: {Email} with role {Role}", user.Email, user.Role);
+        logger.LogInformation("User created by admin: {Email} with role {Role}", user.Email, role.Name);
 
         var loginRecord = new UserLogin
         {
@@ -85,15 +92,24 @@ public class CreateUserService(
         };
         await authRepository.CreateLoginRecordAsync(loginRecord);
 
-        var requiresEmailVerification = Convert.ToBoolean(configuration["AppSettings:Email:RequireEmailVerification"] ?? "false");
+        var emailSettings = await emailSettingsResolver.GetEffectiveSettingsAsync(cancellationToken);
+        var inviteQueued = false;
 
-        if (requiresEmailVerification)
+        if (emailSettings.CanDeliver && emailSettings.HasPublicBaseUrl)
         {
-            await emailService.SendAdminCreatedAccountEmailAsync(user.Email, user.Username, generatedPassword);
-        }
-        else
-        {
-            await emailService.SendAdminCreatedAccountEmailAsync(user.Email, user.Username, generatedPassword);
+            var inviteToken = tokenService.GeneratePasswordResetToken();
+            await authRepository.CreatePasswordResetTokenAsync(new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                Token = TokenHasher.Hash(inviteToken),
+                Email = user.Email,
+                ExpiresAt = DateTime.UtcNow.Add(InviteLifetime),
+                CreatedAt = DateTime.UtcNow,
+                CreatedByIp = ClientRequestInfo.UnknownIp
+            });
+
+            var outcome = await accountEmailService.SendAccountInviteAsync(user, inviteToken, InviteLifetime, cancellationToken: cancellationToken);
+            inviteQueued = outcome == EmailEnqueueOutcome.Queued;
         }
 
         return new CreateUserCommandResponse
@@ -106,9 +122,10 @@ public class CreateUserService(
             FirstName = user.FirstName,
             LastName = user.LastName,
             Country = user.Country,
-            GeneratedPassword = generatedPassword,
+            GeneratedPassword = inviteQueued ? null : generatedPassword,
+            InviteEmailQueued = inviteQueued,
             CreatedAt = user.CreatedAt,
-            EmailVerificationRequired = requiresEmailVerification
+            EmailVerificationRequired = emailSettings.CanDeliver && emailSettings.RequireEmailVerification
         };
     }
 }

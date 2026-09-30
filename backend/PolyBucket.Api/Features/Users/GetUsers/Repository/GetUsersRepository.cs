@@ -79,6 +79,7 @@ public class GetUsersRepository(PolyBucketDbContext context) : IGetUsersReposito
                 BanExpiresAt = u.BanExpiresAt,
                 HasCompletedFirstTimeSetup = u.HasCompletedFirstTimeSetup,
                 RequiresPasswordChange = u.RequiresPasswordChange,
+                EmailVerifiedAt = u.EmailVerifiedAt,
                 Avatar = u.Avatar,
                 LastLoginAt = null,
                 CreatedAt = u.CreatedAt,

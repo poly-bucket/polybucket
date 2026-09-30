@@ -6,6 +6,7 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.DeleteModel.Domain;
 using PolyBucket.Api.Features.Models.LikeModel.Repository;
+using PolyBucket.Api.Features.Notifications.Domain;
 using System;
 using System.Security.Claims;
 using System.Threading;
@@ -16,6 +17,7 @@ namespace PolyBucket.Api.Features.Models.LikeModel.Domain;
 public class LikeModelService(
     ILikeModelRepository repository,
     IPermissionService permissionService,
+    INotificationPublisher notificationPublisher,
     ILogger<LikeModelService> logger) : ILikeModelService
 {
     public async Task LikeModelAsync(Guid modelId, ClaimsPrincipal user, CancellationToken cancellationToken)
@@ -69,6 +71,21 @@ public class LikeModelService(
         model.Likes++;
         model.UpdatedAt = now;
         model.UpdatedById = userId;
+
+        await notificationPublisher.PublishAsync(new NotificationRequest
+        {
+            RecipientUserId = model.AuthorId,
+            ActorUserId = userId,
+            Type = NotificationType.ModelLiked,
+            Title = $"{NotificationRequest.ActorToken} liked your model",
+            Message = $"{NotificationRequest.ActorToken} liked \"{model.Name}\".",
+            ActionUrl = $"/models/{model.Id}",
+            RelatedEntityId = model.Id,
+            RelatedEntityType = "Model",
+            Priority = NotificationPriority.Low,
+            DedupeKey = $"model-like:{model.Id}:{userId}",
+            SendEmail = false
+        }, cancellationToken);
 
         await repository.SaveChangesAsync(cancellationToken);
         logger.LogInformation("User {UserId} liked model {ModelId}", userId, modelId);

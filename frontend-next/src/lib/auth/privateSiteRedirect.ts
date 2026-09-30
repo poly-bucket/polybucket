@@ -1,7 +1,7 @@
 export const PRIVATE_SITE_MARKER_HEADER = "x-site-access";
 export const PRIVATE_SITE_MARKER_VALUE = "login-required";
 
-const AUTH_PATHS = ["/login", "/setup"];
+const AUTH_PATHS = ["/login", "/setup", "/verify-email", "/forgot-password", "/reset-password"];
 
 type HeaderLookup =
   | { get(name: string): string | null | undefined }

@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...cur,
         avatar: me.avatar ?? cur.avatar,
         profilePictureUrl: me.profilePictureUrl ?? cur.profilePictureUrl,
+        isEmailVerified: me.isEmailVerified ?? cur.isEmailVerified,
       };
       persistUser(next);
     } catch (err) {
@@ -199,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...cur,
           avatar: me.avatar ?? cur.avatar,
           profilePictureUrl: me.profilePictureUrl ?? cur.profilePictureUrl,
+          isEmailVerified: me.isEmailVerified ?? cur.isEmailVerified,
         };
         persistUser(next);
       } catch (err) {
@@ -256,6 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             roles: decoded.role ? [decoded.role] : [],
             requiresFirstTimeSetup: response.requiresFirstTimeSetup,
             setupStep: response.setupStep,
+            isEmailVerified: decoded.isEmailVerified,
           };
 
           persistUser(authUser);

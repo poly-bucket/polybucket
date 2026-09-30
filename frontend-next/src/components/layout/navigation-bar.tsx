@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavItems } from "@/lib/plugins";
 import { UserAvatar } from "./user-avatar";
 import { UserMenu } from "./user-menu";
+import { NotificationBell } from "./notification-bell";
 import { SearchCommand, useSearchCommand } from "@/components/search/search-command";
 import { ChevronDown, Search } from "lucide-react";
 
@@ -91,6 +92,8 @@ export function NavigationBar() {
                   </Link>
                 );
               })}
+
+              {isAuthenticated && <NotificationBell />}
 
               {isAuthenticated ? (
                 <button

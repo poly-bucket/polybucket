@@ -9,6 +9,7 @@ using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -24,6 +25,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
         private readonly ICreateModelVersionRepository _repository;
         private readonly IStorageService _storage;
         private readonly IPermissionService _permissionService;
+        private readonly IModelPreviewQueue _previewQueue;
         private readonly ILogger<CreateModelVersionService> _logger;
 
         private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".3mf", ".step", ".stp" };
@@ -34,11 +36,12 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
         private const long MaxFileSize = 100 * 1024 * 1024; // 100MB
         private const long Max3DModelSize = 500 * 1024 * 1024; // 500MB for 3D models
 
-        public CreateModelVersionService(ICreateModelVersionRepository repository, IStorageService storage, IPermissionService permissionService, ILogger<CreateModelVersionService> logger)
+        public CreateModelVersionService(ICreateModelVersionRepository repository, IStorageService storage, IPermissionService permissionService, IModelPreviewQueue previewQueue, ILogger<CreateModelVersionService> logger)
         {
             _repository = repository;
             _storage = storage;
             _permissionService = permissionService;
+            _previewQueue = previewQueue;
             _logger = logger;
         }
 
@@ -134,6 +137,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
 
                 // Save version
                 await _repository.CreateModelVersionAsync(version, cancellationToken);
+                await _previewQueue.EnqueueForNewContentAsync(model.Id, CancellationToken.None);
 
                 _logger.LogInformation("Successfully created version {VersionId} for model {ModelId} with {FileCount} files by user {UserId}", 
                     versionId, model.Id, versionFiles.Count, userId);

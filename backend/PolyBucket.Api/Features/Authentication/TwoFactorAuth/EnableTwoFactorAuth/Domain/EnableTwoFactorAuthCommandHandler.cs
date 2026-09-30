@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Repository;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Features.Email.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
         private readonly IEnableTwoFactorAuthRepository _enableTwoFactorAuthRepository;
         private readonly IEnableTwoFactorAuthUserReadRepository _userReadRepository;
         private readonly PolyBucketDbContext _dbContext;
+        private readonly IAccountEmailService _accountEmailService;
         private readonly ILogger<EnableTwoFactorAuthCommandHandler> _logger;
 
         public EnableTwoFactorAuthCommandHandler(
@@ -24,12 +26,14 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
             IEnableTwoFactorAuthRepository enableTwoFactorAuthRepository,
             IEnableTwoFactorAuthUserReadRepository userReadRepository,
             PolyBucketDbContext dbContext,
+            IAccountEmailService accountEmailService,
             ILogger<EnableTwoFactorAuthCommandHandler> logger)
         {
             _enableTwoFactorAuthService = enableTwoFactorAuthService;
             _enableTwoFactorAuthRepository = enableTwoFactorAuthRepository;
             _userReadRepository = userReadRepository;
             _dbContext = dbContext;
+            _accountEmailService = accountEmailService;
             _logger = logger;
         }
 
@@ -140,6 +144,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 }
                 
                 await _enableTwoFactorAuthRepository.UpdateAsync(twoFactorAuth);
+                await _accountEmailService.SendTwoFactorChangedAsync(user, true, command.Client, cancellationToken: cancellationToken);
                 
                 _logger.LogInformation("EnableTwoFactorAuthCommandHandler.Handle: 2FA enabled successfully for user {UserId}", command.UserId);
                 

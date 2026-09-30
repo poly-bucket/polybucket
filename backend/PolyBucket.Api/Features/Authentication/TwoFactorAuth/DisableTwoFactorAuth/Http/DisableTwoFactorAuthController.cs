@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common;
+using PolyBucket.Api.Common.Http;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain;
 using System;
 using System.Threading;
@@ -26,6 +27,13 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
             _logger = logger;
         }
 
+        /// <summary>
+        /// Disables two-factor authentication for the signed-in user.
+        /// </summary>
+        /// <remarks>Sends a security notice to the account's email address when email is configured.</remarks>
+        /// <response code="200">2FA was disabled.</response>
+        /// <response code="400">2FA is not enabled or could not be disabled.</response>
+        /// <response code="401">The user is not signed in.</response>
         [HttpPost("disable")]
         [ProducesResponseType(200, Type = typeof(DisableTwoFactorAuthResponse))]
         [ProducesResponseType(400)]
@@ -50,6 +58,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
                 }
 
                 command.UserId = authenticatedUserId;
+                command.Client = ClientRequestInfo.From(HttpContext);
 
                 var response = await _handler.Handle(command, cancellationToken);
                 

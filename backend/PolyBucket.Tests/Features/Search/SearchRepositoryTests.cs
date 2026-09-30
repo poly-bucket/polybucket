@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Search.Domain;
 using PolyBucket.Api.Features.Search.Repository;
@@ -8,6 +9,7 @@ using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -25,7 +27,10 @@ namespace PolyBucket.Tests.Features.Search
                 .Options;
 
             _context = new PolyBucketDbContext(options);
-            _searchRepository = new SearchRepository(_context);
+            var capabilities = new Mock<ISearchCapabilities>();
+            capabilities.Setup(c => c.GetModeAsync(It.IsAny<PolyBucketDbContext>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(SearchTextMode.Basic);
+            _searchRepository = new SearchRepository(_context, capabilities.Object);
 
             SeedTestData();
         }
@@ -123,8 +128,8 @@ namespace PolyBucket.Tests.Features.Search
             {
                 Query = "test",
                 Page = 2,
-                PageSize = 2,
-                Type = SearchType.All
+                PageSize = 1,
+                Type = SearchType.Models
             };
 
             // Act
@@ -133,17 +138,42 @@ namespace PolyBucket.Tests.Features.Search
             // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Page);
-            Assert.Equal(2, result.PageSize);
-            Assert.True(result.TotalPages >= 2);
+            Assert.Equal(1, result.PageSize);
+            Assert.Equal(2, result.TotalPages);
+            Assert.Single(result.Results);
         }
 
         [Fact]
-        public async Task SearchAsync_WithFuzzySearch_HandlesTypos()
+        public async Task SearchAsync_WithAllType_ReportsCountsPerType()
         {
             // Arrange
             var query = new SearchQuery
             {
-                Query = "tesst", // typo in "test"
+                Query = "test",
+                Page = 1,
+                PageSize = 1,
+                Type = SearchType.All
+            };
+
+            // Act
+            var result = await _searchRepository.SearchAsync(query);
+
+            // Assert
+            Assert.Equal(2, result.Counts.Models);
+            Assert.Equal(2, result.Counts.Users);
+            Assert.Equal(2, result.Counts.Collections);
+            Assert.Equal(6, result.TotalCount);
+            Assert.Equal(3, result.Results.Count());
+            Assert.Equal(2, result.TotalPages);
+        }
+
+        [Fact]
+        public async Task SearchAsync_WithoutTrigramSupport_DoesNotMatchTypos()
+        {
+            // Arrange
+            var query = new SearchQuery
+            {
+                Query = "tesst",
                 Page = 1,
                 PageSize = 10,
                 Type = SearchType.All
@@ -153,9 +183,38 @@ namespace PolyBucket.Tests.Features.Search
             var result = await _searchRepository.SearchAsync(query);
 
             // Assert
-            Assert.NotNull(result);
-            // Should still find results despite the typo
-            Assert.True(result.TotalCount > 0);
+            Assert.Equal(0, result.TotalCount);
+        }
+
+        [Fact]
+        public async Task SearchAsync_WithPrivateOrDeletedModels_ExcludesThem()
+        {
+            // Arrange
+            var author = _context.Users.First();
+            _context.Models.AddRange(
+                new Model { Id = Guid.NewGuid(), Name = "Hidden test", AuthorId = author.Id, Privacy = PrivacySettings.Private, IsPublic = false, CreatedAt = DateTime.UtcNow },
+                new Model { Id = Guid.NewGuid(), Name = "Deleted test", AuthorId = author.Id, Privacy = PrivacySettings.Public, IsPublic = true, DeletedAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow });
+            await _context.SaveChangesAsync();
+            var query = new SearchQuery { Query = "test", Page = 1, PageSize = 10, Type = SearchType.Models };
+
+            // Act
+            var result = await _searchRepository.SearchAsync(query);
+
+            // Assert
+            Assert.DoesNotContain(result.Results, r => r.Title == "Hidden test" || r.Title == "Deleted test");
+        }
+
+        [Fact]
+        public async Task SearchAsync_WithUserSearch_HidesEmailUnlessShown()
+        {
+            // Arrange
+            var query = new SearchQuery { Query = "user", Page = 1, PageSize = 10, Type = SearchType.Users };
+
+            // Act
+            var result = await _searchRepository.SearchAsync(query);
+
+            // Assert
+            Assert.All(result.Results, r => Assert.Null(r.Email));
         }
 
         [Fact]
@@ -181,7 +240,6 @@ namespace PolyBucket.Tests.Features.Search
 
         private void SeedTestData()
         {
-            // Create test users
             var user1 = new User
             {
                 Id = Guid.NewGuid(),
@@ -203,7 +261,7 @@ namespace PolyBucket.Tests.Features.Search
                 Email = "another@example.com",
                 FirstName = "Another",
                 LastName = "User",
-                Bio = "Another user bio",
+                Bio = "Another test user bio",
                 PasswordHash = "hash",
                 Salt = "salt",
                 CreatedAt = DateTime.UtcNow,
@@ -212,7 +270,6 @@ namespace PolyBucket.Tests.Features.Search
 
             _context.Users.AddRange(user1, user2);
 
-            // Create test models
             var model1 = new Model
             {
                 Id = Guid.NewGuid(),
@@ -221,6 +278,7 @@ namespace PolyBucket.Tests.Features.Search
                 AuthorId = user1.Id,
                 Author = user1,
                 Privacy = PrivacySettings.Public,
+                IsPublic = true,
                 CreatedAt = DateTime.UtcNow,
                 Downloads = 10,
                 Likes = 5
@@ -234,6 +292,7 @@ namespace PolyBucket.Tests.Features.Search
                 AuthorId = user2.Id,
                 Author = user2,
                 Privacy = PrivacySettings.Public,
+                IsPublic = true,
                 CreatedAt = DateTime.UtcNow,
                 Downloads = 20,
                 Likes = 8
@@ -241,7 +300,6 @@ namespace PolyBucket.Tests.Features.Search
 
             _context.Models.AddRange(model1, model2);
 
-            // Create test collections
             var collection1 = new Collection
             {
                 Id = Guid.NewGuid(),

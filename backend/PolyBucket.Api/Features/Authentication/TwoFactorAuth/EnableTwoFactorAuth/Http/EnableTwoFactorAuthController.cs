@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common;
+using PolyBucket.Api.Common.Http;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Domain;
 using System;
 using System.Threading;
@@ -26,6 +27,13 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
             _logger = logger;
         }
 
+        /// <summary>
+        /// Enables two-factor authentication after confirming a code from the authenticator app.
+        /// </summary>
+        /// <remarks>Sends a security notice to the account's email address when email is configured.</remarks>
+        /// <response code="200">2FA was enabled; the response contains one-time backup codes.</response>
+        /// <response code="400">The code is invalid or 2FA is not initialized.</response>
+        /// <response code="401">The user is not signed in.</response>
         [HttpPost("enable")]
         [ProducesResponseType(200, Type = typeof(EnableTwoFactorAuthResponse))]
         [ProducesResponseType(400)]
@@ -51,6 +59,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 }
 
                 command.UserId = authenticatedUserId;
+                command.Client = ClientRequestInfo.From(HttpContext);
 
                 var response = await _handler.Handle(command, cancellationToken);
                 

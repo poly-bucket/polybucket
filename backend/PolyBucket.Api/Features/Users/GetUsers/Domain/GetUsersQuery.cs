@@ -39,6 +39,7 @@ public class UserListItemDto
     public DateTime? BanExpiresAt { get; set; }
     public bool HasCompletedFirstTimeSetup { get; set; }
     public bool RequiresPasswordChange { get; set; }
+    public DateTime? EmailVerifiedAt { get; set; }
     public string? Avatar { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public DateTime CreatedAt { get; set; }

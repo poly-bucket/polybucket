@@ -15,3 +15,13 @@ public class ConflictException : Exception
     {
     }
 }
+
+public class DomainValidationException : Exception
+{
+    public DomainValidationException(IReadOnlyList<string> errors) : base(string.Join(" ", errors))
+    {
+        Errors = errors;
+    }
+
+    public IReadOnlyList<string> Errors { get; }
+}

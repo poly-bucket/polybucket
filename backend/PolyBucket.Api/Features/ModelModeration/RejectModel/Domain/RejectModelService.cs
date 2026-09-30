@@ -1,6 +1,7 @@
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.ModelModeration.RejectModel.Repository;
+using PolyBucket.Api.Features.Notifications.Domain;
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -10,10 +11,12 @@ namespace PolyBucket.Api.Features.ModelModeration.RejectModel.Domain;
 
 public class RejectModelService(
     IRejectModelRepository repository,
-    IModerationAuditLogWriter auditLogWriter) : IRejectModelService
+    IModerationAuditLogWriter auditLogWriter,
+    INotificationPublisher notificationPublisher) : IRejectModelService
 {
     private readonly IRejectModelRepository _repository = repository;
     private readonly IModerationAuditLogWriter _auditLogWriter = auditLogWriter;
+    private readonly INotificationPublisher _notificationPublisher = notificationPublisher;
 
     public async Task RejectAsync(
         Guid modelId,
@@ -41,6 +44,21 @@ public class RejectModelService(
         record.RejectionReason = reason;
         model.IsPublic = false;
         model.UpdatedAt = DateTime.UtcNow;
+
+        await _notificationPublisher.PublishAsync(new NotificationRequest
+        {
+            RecipientUserId = model.AuthorId,
+            ActorUserId = moderatorId,
+            Type = NotificationType.ModelRejected,
+            Title = "Your model was not approved",
+            Message = string.IsNullOrWhiteSpace(reason)
+                ? $"\"{model.Name}\" did not pass moderation."
+                : $"\"{model.Name}\" did not pass moderation. Reason: {reason.Trim()}",
+            ActionUrl = $"/models/{model.Id}",
+            RelatedEntityId = model.Id,
+            RelatedEntityType = "Model",
+            Priority = NotificationPriority.High
+        }, cancellationToken);
 
         await _repository.SaveAsync(cancellationToken);
 

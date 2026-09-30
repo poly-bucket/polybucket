@@ -59,6 +59,7 @@ public static class OpenTelemetryServiceCollectionExtensions
                 }))
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
+                .AddMeter(PolyBucket.Api.Common.Email.EmailMetrics.MeterName)
                 .AddOtlpExporter(options =>
                 {
                     options.Endpoint = new Uri(otlpEndpoint);

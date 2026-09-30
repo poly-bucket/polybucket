@@ -3,6 +3,7 @@ using PolyBucket.Api.Data;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
 
@@ -20,12 +21,31 @@ namespace PolyBucket.Api.Features.Authentication.Repository
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public Task<User?> GetUserForUpdateByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            return _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+        }
+
+        public Task<User?> GetUserForUpdateByIdAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            return _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        }
+
         public async Task<User?> GetUserByUsernameAsync(string username)
         {
             return await _context.Users
                 .Include(u => u.Role)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Username == username);
+        }
+
+        public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<User> CreateUserAsync(User user)
@@ -125,19 +145,30 @@ namespace PolyBucket.Api.Features.Authentication.Repository
             return token;
         }
 
-        public async Task<PasswordResetToken?> GetPasswordResetTokenAsync(string token)
+        public Task<PasswordResetToken?> GetPasswordResetTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default)
         {
-            return await _context.PasswordResetTokens.FirstOrDefaultAsync(t => t.Token == token);
+            return _context.PasswordResetTokens
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Token == tokenHash, cancellationToken);
         }
 
-        public async Task MarkPasswordResetTokenAsUsedAsync(string token)
+        public async Task<bool> TryConsumePasswordResetTokenAsync(Guid tokenId, DateTime usedAt, CancellationToken cancellationToken = default)
         {
-            var dbToken = await _context.PasswordResetTokens.FirstOrDefaultAsync(t => t.Token == token);
-            if (dbToken != null)
-            {
-                dbToken.IsUsed = true;
-                await _context.SaveChangesAsync();
-            }
+            var updated = await _context.PasswordResetTokens
+                .Where(t => t.Id == tokenId && !t.IsUsed && t.ExpiresAt > usedAt)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(t => t.IsUsed, true)
+                    .SetProperty(t => t.UsedAt, usedAt), cancellationToken);
+            return updated == 1;
+        }
+
+        public Task<int> InvalidateOutstandingPasswordResetTokensAsync(string email, DateTime usedAt, CancellationToken cancellationToken = default)
+        {
+            return _context.PasswordResetTokens
+                .Where(t => t.Email == email && !t.IsUsed)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(t => t.IsUsed, true)
+                    .SetProperty(t => t.UsedAt, usedAt), cancellationToken);
         }
 
         public async Task DeleteExpiredPasswordResetTokensAsync()
@@ -157,19 +188,39 @@ namespace PolyBucket.Api.Features.Authentication.Repository
             return token;
         }
 
-        public async Task<EmailVerificationToken?> GetEmailVerificationTokenAsync(string token)
+        public Task<EmailVerificationToken?> GetEmailVerificationTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default)
         {
-            return await _context.EmailVerificationTokens.FirstOrDefaultAsync(t => t.Token == token);
+            return _context.EmailVerificationTokens
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Token == tokenHash, cancellationToken);
         }
 
-        public async Task MarkEmailVerificationTokenAsUsedAsync(string token)
+        public async Task<bool> TryConsumeEmailVerificationTokenAsync(Guid tokenId, DateTime usedAt, CancellationToken cancellationToken = default)
         {
-            var dbToken = await _context.EmailVerificationTokens.FirstOrDefaultAsync(t => t.Token == token);
-            if (dbToken != null)
-            {
-                dbToken.IsUsed = true;
-                await _context.SaveChangesAsync();
-            }
+            var updated = await _context.EmailVerificationTokens
+                .Where(t => t.Id == tokenId && !t.IsUsed && t.ExpiresAt > usedAt)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(t => t.IsUsed, true)
+                    .SetProperty(t => t.UsedAt, usedAt), cancellationToken);
+            return updated == 1;
+        }
+
+        public Task<int> InvalidateOutstandingEmailVerificationTokensAsync(string email, EmailVerificationPurpose purpose, DateTime usedAt, CancellationToken cancellationToken = default)
+        {
+            return _context.EmailVerificationTokens
+                .Where(t => t.Email == email && t.Purpose == purpose && !t.IsUsed)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(t => t.IsUsed, true)
+                    .SetProperty(t => t.UsedAt, usedAt), cancellationToken);
+        }
+
+        public Task<DateTime?> GetLatestEmailVerificationTokenCreatedAtAsync(string email, EmailVerificationPurpose purpose, CancellationToken cancellationToken = default)
+        {
+            return _context.EmailVerificationTokens
+                .Where(t => t.Email == email && t.Purpose == purpose)
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t => (DateTime?)t.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task DeleteExpiredEmailVerificationTokensAsync()
@@ -207,4 +258,4 @@ namespace PolyBucket.Api.Features.Authentication.Repository
                 .FirstOrDefaultAsync(p => p.Provider == provider && p.User.Email == email);
         }
     }
-} 
+}

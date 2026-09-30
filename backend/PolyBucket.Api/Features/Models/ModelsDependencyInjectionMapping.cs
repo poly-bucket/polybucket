@@ -16,6 +16,13 @@ public static class ModelsDependencyInjectionMapping
             GetModelById.Services.IGetModelByIdService,
             GetModelById.Services.GetModelByIdService>();
 
+        services.AddTransient<
+            GetModelVersions.Repository.IGetModelVersionsRepository,
+            GetModelVersions.Repository.GetModelVersionsRepository>();
+        services.AddTransient<
+            GetModelVersions.Domain.IGetModelVersionsService,
+            GetModelVersions.Domain.GetModelVersionsService>();
+
         services.AddScoped<CreateModel.Domain.CreateModelService>();
         services.AddTransient<
             CreateModel.Repository.ICreateModelRepository,
@@ -104,12 +111,27 @@ public static class ModelsDependencyInjectionMapping
         services.AddTransient<
             GetModelPreview.Repository.IModelPreviewRepository,
             GetModelPreview.Repository.ModelPreviewRepository>();
+        services.AddOptions<GenerateModelPreview.Domain.ModelPreviewOptions>()
+            .BindConfiguration(GenerateModelPreview.Domain.ModelPreviewOptions.SectionName);
+        services.AddSingleton<
+            GenerateModelPreview.Domain.IModelPreviewSignal,
+            GenerateModelPreview.Domain.ModelPreviewSignal>();
         services.AddTransient<
-            GenerateModelPreview.Repository.IGenerateModelPreviewRepository,
-            GenerateModelPreview.Repository.GenerateModelPreviewRepository>();
+            GenerateModelPreview.Repository.IModelPreviewQueueRepository,
+            GenerateModelPreview.Repository.ModelPreviewQueueRepository>();
+        services.AddScoped<
+            GenerateModelPreview.Domain.IModelPreviewQueue,
+            GenerateModelPreview.Domain.ModelPreviewQueue>();
+        services.AddScoped<
+            GenerateModelPreview.Domain.IModelPreviewProcessor,
+            GenerateModelPreview.Domain.ModelPreviewProcessor>();
+        services.AddScoped<
+            GenerateModelPreview.Domain.IGenerateModelPreviewService,
+            GenerateModelPreview.Domain.GenerateModelPreviewService>();
         services.AddTransient<
             GenerateModelPreview.Services.IModelPreviewGenerationService,
             GenerateModelPreview.Services.ModelPreviewGenerationService>();
+        services.AddHostedService<GenerateModelPreview.Domain.ModelPreviewWorker>();
 
         services.AddTransient<
             DownloadModel.Repository.IDownloadModelRepository,

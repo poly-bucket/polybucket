@@ -6,6 +6,7 @@ using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Repository;
 using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Common.Models;
@@ -25,6 +26,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         private readonly ICreateModelRepository _repository;
         private readonly IStorageService _storage;
         private readonly IModelModerationEnqueueService _moderationEnqueueService;
+        private readonly IModelPreviewQueue _previewQueue;
         private readonly ILogger<CreateModelService> _logger;
 
         private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".3mf", ".step", ".stp" };
@@ -39,11 +41,13 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             ICreateModelRepository repository,
             IStorageService storage,
             IModelModerationEnqueueService moderationEnqueueService,
+            IModelPreviewQueue previewQueue,
             ILogger<CreateModelService> logger)
         {
             _repository = repository;
             _storage = storage;
             _moderationEnqueueService = moderationEnqueueService;
+            _previewQueue = previewQueue;
             _logger = logger;
         }
 
@@ -132,6 +136,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                 // Save model
                 await _repository.CreateModelAsync(model, cancellationToken);
                 await _moderationEnqueueService.ApplyModerationStateForNewModelAsync(model, authorId, cancellationToken);
+                await _previewQueue.EnqueueForNewContentAsync(modelId, CancellationToken.None);
 
                 _logger.LogInformation("Successfully created model {ModelId} with {FileCount} files for user {UserId}", 
                     modelId, modelFiles.Count, authorId);

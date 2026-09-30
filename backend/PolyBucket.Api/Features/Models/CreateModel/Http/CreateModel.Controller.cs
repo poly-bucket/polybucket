@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.Authentication.Authorization;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using System.Threading;
@@ -27,6 +28,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Http
         }
 
         [HttpPost]
+        [RequireVerifiedEmail]
         [DisableRequestSizeLimit]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(CreateModelResponse), StatusCodes.Status201Created)]

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.Authentication.Authorization;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
 using System;
 using System.Threading.Tasks;
@@ -22,6 +23,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Http
         private readonly ILogger<CreateModelVersionController> _logger = logger;
 
         [HttpPost("{id}/versions")]
+        [RequireVerifiedEmail]
         [DisableRequestSizeLimit]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(CreateModelVersionResponse), StatusCodes.Status201Created)]

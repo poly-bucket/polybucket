@@ -1,0 +1,41 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.Http;
+
+namespace PolyBucket.Api.Features.Comments.RemoveCommentDislike.Http;
+
+[ApiController]
+[Route("api/comments")]
+[Authorize]
+public class RemoveCommentDislikeController(ICommentReactionService reactionService) : ControllerBase
+{
+    /// <summary>
+    /// Removes the caller's dislike from a comment. Does nothing if the caller has not disliked it.
+    /// </summary>
+    /// <param name="commentId">The comment id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">The comment's counts and the caller's current reaction.</response>
+    /// <response code="401">The caller is not signed in.</response>
+    /// <response code="404">The comment does not exist or is hidden.</response>
+    [HttpDelete("{commentId:guid}/dislike")]
+    [ProducesResponseType(typeof(CommentReactionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveDislike(Guid commentId, CancellationToken cancellationToken)
+    {
+        var userId = User.GetCommentUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var outcome = await reactionService.RemoveReactionAsync(commentId, userId.Value, CommentReactionType.Dislike, cancellationToken);
+        return outcome.Change == CommentReactionChange.NotFound
+            ? NotFound()
+            : Ok(CommentReactionResponse.From(outcome));
+    }
+}

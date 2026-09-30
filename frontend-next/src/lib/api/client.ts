@@ -16586,6 +16586,7 @@ export class UserListItemDto implements IUserListItemDto {
     banExpiresAt?: Date | undefined;
     hasCompletedFirstTimeSetup?: boolean;
     requiresPasswordChange?: boolean;
+    emailVerifiedAt?: Date | undefined;
     avatar?: string | undefined;
     lastLoginAt?: Date | undefined;
     createdAt?: Date;
@@ -16616,6 +16617,7 @@ export class UserListItemDto implements IUserListItemDto {
             this.banExpiresAt = _data["banExpiresAt"] ? new Date(_data["banExpiresAt"].toString()) : undefined as any;
             this.hasCompletedFirstTimeSetup = _data["hasCompletedFirstTimeSetup"];
             this.requiresPasswordChange = _data["requiresPasswordChange"];
+            this.emailVerifiedAt = _data["emailVerifiedAt"] ? new Date(_data["emailVerifiedAt"].toString()) : undefined as any;
             this.avatar = _data["avatar"];
             this.lastLoginAt = _data["lastLoginAt"] ? new Date(_data["lastLoginAt"].toString()) : undefined as any;
             this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : undefined as any;
@@ -16646,6 +16648,7 @@ export class UserListItemDto implements IUserListItemDto {
         data["banExpiresAt"] = this.banExpiresAt ? this.banExpiresAt.toISOString() : undefined as any;
         data["hasCompletedFirstTimeSetup"] = this.hasCompletedFirstTimeSetup;
         data["requiresPasswordChange"] = this.requiresPasswordChange;
+        data["emailVerifiedAt"] = this.emailVerifiedAt ? this.emailVerifiedAt.toISOString() : undefined as any;
         data["avatar"] = this.avatar;
         data["lastLoginAt"] = this.lastLoginAt ? this.lastLoginAt.toISOString() : undefined as any;
         data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : undefined as any;
@@ -16669,6 +16672,7 @@ export interface IUserListItemDto {
     banExpiresAt?: Date | undefined;
     hasCompletedFirstTimeSetup?: boolean;
     requiresPasswordChange?: boolean;
+    emailVerifiedAt?: Date | undefined;
     avatar?: string | undefined;
     lastLoginAt?: Date | undefined;
     createdAt?: Date;
@@ -17806,7 +17810,8 @@ export class CreateUserCommandResponse implements ICreateUserCommandResponse {
     firstName?: string | undefined;
     lastName?: string | undefined;
     country?: string | undefined;
-    generatedPassword?: string;
+    generatedPassword?: string | undefined;
+    inviteEmailQueued?: boolean;
     createdAt?: Date;
     emailVerificationRequired?: boolean;
 
@@ -17830,6 +17835,7 @@ export class CreateUserCommandResponse implements ICreateUserCommandResponse {
             this.lastName = _data["lastName"];
             this.country = _data["country"];
             this.generatedPassword = _data["generatedPassword"];
+            this.inviteEmailQueued = _data["inviteEmailQueued"];
             this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : undefined as any;
             this.emailVerificationRequired = _data["emailVerificationRequired"];
         }
@@ -17853,6 +17859,7 @@ export class CreateUserCommandResponse implements ICreateUserCommandResponse {
         data["lastName"] = this.lastName;
         data["country"] = this.country;
         data["generatedPassword"] = this.generatedPassword;
+        data["inviteEmailQueued"] = this.inviteEmailQueued;
         data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : undefined as any;
         data["emailVerificationRequired"] = this.emailVerificationRequired;
         return data;
@@ -17868,7 +17875,8 @@ export interface ICreateUserCommandResponse {
     firstName?: string | undefined;
     lastName?: string | undefined;
     country?: string | undefined;
-    generatedPassword?: string;
+    generatedPassword?: string | undefined;
+    inviteEmailQueued?: boolean;
     createdAt?: Date;
     emailVerificationRequired?: boolean;
 }

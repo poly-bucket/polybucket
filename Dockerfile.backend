@@ -40,8 +40,9 @@ WORKDIR /app
 COPY --from=build /app/publish .
 RUN chown -R app:app /app
 
-# Install curl for healthchecks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl for healthchecks and Chromium for background model preview rendering
+RUN apt-get update && apt-get install -y --no-install-recommends curl chromium fonts-liberation && rm -rf /var/lib/apt/lists/*
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 EXPOSE 11666
 

@@ -117,6 +117,7 @@ namespace PolyBucket.Api.Data.Seeders
                 UpdatedAt = DateTime.UtcNow,
                 RequiresPasswordChange = true,
                 HasCompletedFirstTimeSetup = false,
+                EmailVerifiedAt = DateTime.UtcNow,
                 Settings = new UserSettings
                 {
                     Language = "en",

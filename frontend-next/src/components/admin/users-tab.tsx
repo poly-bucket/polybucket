@@ -10,6 +10,8 @@ import {
   Eye,
   EyeOff,
   Copy,
+  MailCheck,
+  KeyRound,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
@@ -46,6 +48,12 @@ import {
   createUser,
   getAllRolesUnpaginated,
 } from "@/lib/services/adminService";
+import {
+  generatePasswordResetLink,
+  getAccountApiErrorMessage,
+  markUserEmailVerified,
+  resolvePasswordResetLinkUrl,
+} from "@/lib/services/accountEmailService";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { formatDate } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -88,10 +96,12 @@ export function UsersTab() {
   const [createResult, setCreateResult] = useState<{
     password?: string;
     userId?: string;
+    inviteEmailQueued?: boolean;
   } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rowAction, setRowAction] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -185,8 +195,9 @@ export function UsersTab() {
       });
       const response = await createUser(command);
       setCreateResult({
-        password: response.generatedPassword,
+        password: response.generatedPassword ?? undefined,
         userId: response.userId,
+        inviteEmailQueued: response.inviteEmailQueued ?? false,
       });
       toast.success("User created");
       await fetchUsers();
@@ -214,6 +225,36 @@ export function UsersTab() {
     if (createResult?.password) {
       navigator.clipboard.writeText(createResult.password);
       toast.success("Password copied to clipboard");
+    }
+  };
+
+  const handleMarkVerified = async (user: UserListItemDto) => {
+    if (!user.id) return;
+    setRowAction(`${user.id}:verify`);
+    try {
+      await markUserEmailVerified(user.id);
+      toast.success(`${user.username ?? "User"}'s email marked as verified`);
+      await fetchUsers();
+    } catch (err) {
+      toast.error(getAccountApiErrorMessage(err, "Failed to mark email as verified"));
+    } finally {
+      setRowAction(null);
+    }
+  };
+
+  const handleCopyResetLink = async (user: UserListItemDto) => {
+    if (!user.id) return;
+    setRowAction(`${user.id}:reset`);
+    try {
+      const link = await generatePasswordResetLink(user.id);
+      await navigator.clipboard.writeText(
+        resolvePasswordResetLinkUrl(link, window.location.origin)
+      );
+      toast.success("Reset link copied. It works once and expires in 24 hours.");
+    } catch (err) {
+      toast.error(getAccountApiErrorMessage(err, "Failed to create a reset link"));
+    } finally {
+      setRowAction(null);
     }
   };
 
@@ -366,8 +407,16 @@ export function UsersTab() {
                             <div className="font-medium text-white">
                               {user.username ?? "Unknown"}
                             </div>
-                            <div className="text-sm text-white/60">
-                              {user.email ?? "No email"}
+                            <div className="flex items-center gap-2 text-sm text-white/60">
+                              <span>{user.email ?? "No email"}</span>
+                              {!user.emailVerifiedAt && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-amber-400/40 text-amber-200"
+                                >
+                                  Unverified
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -401,24 +450,48 @@ export function UsersTab() {
                         {formatDate(user.createdAt)}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openBanDialog(user, !user.isBanned)}
-                          className="text-white/70 hover:text-white border-white/20"
-                        >
-                          {user.isBanned ? (
-                            <>
-                              <ShieldCheck className="h-4 w-4 mr-1" />
-                              Unban
-                            </>
-                          ) : (
-                            <>
-                              <Ban className="h-4 w-4 mr-1" />
-                              Ban
-                            </>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openBanDialog(user, !user.isBanned)}
+                            className="text-white/70 hover:text-white border-white/20"
+                          >
+                            {user.isBanned ? (
+                              <>
+                                <ShieldCheck className="h-4 w-4 mr-1" />
+                                Unban
+                              </>
+                            ) : (
+                              <>
+                                <Ban className="h-4 w-4 mr-1" />
+                                Ban
+                              </>
+                            )}
+                          </Button>
+                          {!user.emailVerifiedAt && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMarkVerified(user)}
+                              disabled={rowAction === `${user.id}:verify`}
+                              className="text-white/70 hover:text-white border-white/20"
+                            >
+                              <MailCheck className="h-4 w-4 mr-1" />
+                              Mark verified
+                            </Button>
                           )}
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCopyResetLink(user)}
+                            disabled={rowAction === `${user.id}:reset`}
+                            className="text-white/70 hover:text-white border-white/20"
+                          >
+                            <KeyRound className="h-4 w-4 mr-1" />
+                            Copy reset link
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -532,11 +605,19 @@ export function UsersTab() {
             <DialogTitle>Create User</DialogTitle>
             <DialogDescription>
               {createResult
-                ? "User created. Copy the generated password and share it securely."
-                : "Create a new user. A password will be generated."}
+                ? createResult.inviteEmailQueued
+                  ? "User created. An invite email with a link to set their password is on its way."
+                  : "User created. Email delivery isn't configured, so copy the generated password and share it securely."
+                : "Create a new user. They'll get an invite email if email delivery is configured; otherwise a password is generated."}
             </DialogDescription>
           </DialogHeader>
-          {createResult ? (
+          {createResult?.inviteEmailQueued ? (
+            <DialogFooter>
+              <Button variant="glass" onClick={closeCreateDialog}>
+                Done
+              </Button>
+            </DialogFooter>
+          ) : createResult ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Input

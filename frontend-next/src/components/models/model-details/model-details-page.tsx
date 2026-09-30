@@ -15,6 +15,7 @@ import { ModelDetailsCarousel, type CarouselItem } from "./model-details-carouse
 import { ModelDetailsSidebar } from "./model-details-sidebar";
 import { ModelDetailsFiles } from "./model-details-files";
 import { DeleteModelDialog } from "./delete-model-dialog";
+import { ModelComments } from "./model-comments";
 import { EditModelModal } from "../edit-model/edit-model-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
@@ -392,6 +393,8 @@ export function ModelDetailsPage() {
             isAuthenticated={isAuthenticated}
             onFileDownload={handleFileDownload}
           />
+
+          {!model.isFederated && <ModelComments modelId={model.id!} />}
         </div>
 
         <div className="lg:col-span-2">

@@ -7,6 +7,8 @@ namespace PolyBucket.Api.Features.Authentication.Domain
     {
         public string Token { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public Guid? UserId { get; set; }
+        public EmailVerificationPurpose Purpose { get; set; } = EmailVerificationPurpose.VerifyAddress;
         public DateTime ExpiresAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsUsed { get; set; }
@@ -16,4 +18,10 @@ namespace PolyBucket.Api.Features.Authentication.Domain
         public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
         public bool IsValid => !IsUsed && !IsExpired;
     }
-} 
+
+    public enum EmailVerificationPurpose
+    {
+        VerifyAddress,
+        ChangeAddress
+    }
+}

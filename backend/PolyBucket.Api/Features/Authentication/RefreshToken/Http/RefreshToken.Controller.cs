@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common.Http;
+using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Domain;
 using System;
 using System.Threading;
@@ -14,10 +17,18 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Http
         private readonly RefreshTokenCommandHandler _handler = handler;
         private readonly ILogger<RefreshTokenController> _logger = logger;
 
+        /// <summary>
+        /// Exchange a valid refresh token for a new access and refresh token pair
+        /// </summary>
+        /// <param name="command">The refresh token to rotate</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>New authentication tokens</returns>
         [HttpPost("refresh-token")]
+        [EnableRateLimiting(RequestSecurityServiceCollectionExtensions.AuthStandardPolicy)]
         [ProducesResponseType(200, Type = typeof(RefreshTokenCommandResponse))]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
+        [ProducesResponseType(429)]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -27,6 +38,7 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Http
 
             try
             {
+                command.Client = ClientRequestInfo.From(HttpContext);
                 var response = await _handler.Handle(command, cancellationToken);
                 return Ok(response);
             }

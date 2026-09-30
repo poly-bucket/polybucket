@@ -1,4 +1,5 @@
 import { ApiClientFactory } from "@/lib/api/clientFactory";
+import axiosInstance from "@/lib/api/axiosConfig";
 import {
   CreateCollectionCommand,
   UpdateCollectionCommand,
@@ -134,20 +135,14 @@ export const collectionsService = {
     collectionId: string,
     modelId: string
   ): Promise<void> {
-    await api().addModelToCollection_AddModelToCollection2(
-      collectionId,
-      modelId
-    );
+    await axiosInstance.post(`/api/collections/${collectionId}/models/${modelId}`);
   },
 
   async removeModelFromCollection(
     collectionId: string,
     modelId: string
   ): Promise<void> {
-    await api().removeModelFromCollection_RemoveModelFromCollection2(
-      collectionId,
-      modelId
-    );
+    await axiosInstance.delete(`/api/collections/${collectionId}/models/${modelId}`);
   },
 
   async getFavoriteCollections(): Promise<Collection[]> {

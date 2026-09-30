@@ -11,6 +11,7 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.DeleteModel.Domain;
 using PolyBucket.Api.Features.Models.LikeModel.Domain;
 using PolyBucket.Api.Features.Models.LikeModel.Repository;
+using PolyBucket.Api.Features.Notifications.Domain;
 using Shouldly;
 using Xunit;
 
@@ -21,6 +22,7 @@ public class LikeModelServiceTests
     private readonly Mock<ILikeModelRepository> _mockRepository;
     private readonly Mock<IPermissionService> _mockPermissionService;
     private readonly Mock<ILogger<LikeModelService>> _mockLogger;
+    private readonly Mock<INotificationPublisher> _mockPublisher;
     private readonly LikeModelService _service;
 
     public LikeModelServiceTests()
@@ -28,7 +30,62 @@ public class LikeModelServiceTests
         _mockRepository = new Mock<ILikeModelRepository>();
         _mockPermissionService = new Mock<IPermissionService>();
         _mockLogger = new Mock<ILogger<LikeModelService>>();
-        _service = new LikeModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
+        _mockPublisher = new Mock<INotificationPublisher>();
+        _service = new LikeModelService(_mockRepository.Object, _mockPermissionService.Object, _mockPublisher.Object, _mockLogger.Object);
+    }
+
+    [Fact(DisplayName = "When liking a model, the like model service publishes a deduplicated in-app notification to the author.")]
+    public async Task LikeModelAsync_WithValidRequest_PublishesDedupedInAppNotification()
+    {
+        // Arrange
+        var modelId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+        var model = CreateTestModel(modelId, authorId);
+        var cancellationToken = CancellationToken.None;
+        NotificationRequest? published = null;
+
+        _mockRepository.Setup(x => x.IsModelLikesEnabledAsync(cancellationToken)).ReturnsAsync(true);
+        _mockRepository.Setup(x => x.GetModelByIdAsync(modelId, cancellationToken)).ReturnsAsync(model);
+        _mockRepository.Setup(x => x.FindLikeAsync(modelId, userId, cancellationToken)).ReturnsAsync((Api.Features.Models.LikeModel.Domain.Like?)null);
+        _mockRepository.Setup(x => x.SaveChangesAsync(cancellationToken)).Returns(Task.CompletedTask);
+        _mockPublisher.Setup(x => x.PublishAsync(It.IsAny<NotificationRequest>(), cancellationToken))
+            .Callback<NotificationRequest, CancellationToken>((r, _) => published = r)
+            .ReturnsAsync(true);
+
+        // Act
+        await _service.LikeModelAsync(modelId, user, cancellationToken);
+
+        // Assert
+        published.ShouldNotBeNull();
+        published.RecipientUserId.ShouldBe(authorId);
+        published.ActorUserId.ShouldBe(userId);
+        published.Type.ShouldBe(NotificationType.ModelLiked);
+        published.DedupeKey.ShouldBe($"model-like:{modelId}:{userId}");
+        published.SendEmail.ShouldBeFalse();
+    }
+
+    [Fact(DisplayName = "When liking a model that is already liked, the like model service does not publish a notification.")]
+    public async Task LikeModelAsync_WhenAlreadyLiked_DoesNotPublish()
+    {
+        // Arrange
+        var modelId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+        var model = CreateTestModel(modelId, Guid.NewGuid());
+        var existingLike = new Api.Features.Models.LikeModel.Domain.Like { Id = Guid.NewGuid(), ModelId = modelId, UserId = userId };
+        var cancellationToken = CancellationToken.None;
+
+        _mockRepository.Setup(x => x.IsModelLikesEnabledAsync(cancellationToken)).ReturnsAsync(true);
+        _mockRepository.Setup(x => x.GetModelByIdAsync(modelId, cancellationToken)).ReturnsAsync(model);
+        _mockRepository.Setup(x => x.FindLikeAsync(modelId, userId, cancellationToken)).ReturnsAsync(existingLike);
+
+        // Act
+        await _service.LikeModelAsync(modelId, user, cancellationToken);
+
+        // Assert
+        _mockPublisher.Verify(x => x.PublishAsync(It.IsAny<NotificationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "When liking a model with a valid request, the like model service increments the like count.")]

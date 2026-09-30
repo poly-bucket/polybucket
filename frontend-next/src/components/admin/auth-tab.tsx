@@ -281,11 +281,10 @@ export function AuthTab() {
             </SettingsField>
             <SettingsToggle
               label="Require email verification"
-              description="Users must verify their email before full access"
+              description="Unverified users cannot upload, comment, or create collections. Change this in the Email settings, where delivery can be tested first."
               checked={merged.requireEmailVerification ?? false}
-              onCheckedChange={(v) =>
-                handleChange({ requireEmailVerification: v })
-              }
+              onCheckedChange={() => undefined}
+              disabled
             />
             <SettingsFooter
               onSave={handleSave}

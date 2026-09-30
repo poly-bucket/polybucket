@@ -26,11 +26,6 @@ import type {
   UpdateCategoryCommand,
   UpdateCategoryResponse,
   DeleteCategoryResponse,
-  EmailSettingsResponse,
-  UpdateEmailSettingsCommand,
-  UpdateEmailSettingsResponse,
-  TestEmailConfigurationCommand,
-  TestEmailConfigurationResponse,
   TokenSettings,
   CheckFirstTimeSetupResponse,
   UpdateSiteSettingsCommand,
@@ -163,22 +158,6 @@ export async function updateFileSettings(
   command: UpdateFileSettingsCommand
 ): Promise<UpdateFileSettingsResponse> {
   return client().updateFileSettings_UpdateFileSettings(command);
-}
-
-export async function getEmailSettings(): Promise<EmailSettingsResponse> {
-  return client().getEmailSettings_GetEmailSettings();
-}
-
-export async function updateEmailSettings(
-  command: UpdateEmailSettingsCommand
-): Promise<UpdateEmailSettingsResponse> {
-  return client().updateEmailSettings_UpdateEmailSettings(command);
-}
-
-export async function testEmailConfiguration(
-  command: TestEmailConfigurationCommand
-): Promise<TestEmailConfigurationResponse> {
-  return client().testEmailConfiguration_TestEmailConfiguration(command);
 }
 
 export async function getTokenSettings(): Promise<TokenSettings> {

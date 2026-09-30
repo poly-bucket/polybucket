@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Features.Email.Domain;
 using PolyBucket.Api.Features.Users.Domain;
 using PolyBucket.Api.Features.Printers.Domain;
 using CommentDomain = PolyBucket.Api.Features.Comments.Domain;
@@ -18,18 +20,25 @@ using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Federation.Domain;
 using PolyBucket.Api.Features.ThemeManagement.Domain;
+using PolyBucket.Api.Features.Notifications.Domain;
 using ReportsDomain = PolyBucket.Api.Features.Reports.Domain;
 using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
 
 namespace PolyBucket.Api.Data
 {
-    public class PolyBucketDbContext(DbContextOptions<PolyBucketDbContext> options) : DbContext(options)
+    public class PolyBucketDbContext(DbContextOptions<PolyBucketDbContext> options) : DbContext(options), IDataProtectionKeyContext
     {
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
+        public DbSet<EmailMessage> EmailMessages { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<UserLogin> UserLogins { get; set; } = null!;
         public DbSet<UserSettings> UserSettings { get; set; } = null!;
+        public DbSet<UserAuditLog> UserAuditLogs { get; set; } = null!;
         public DbSet<Printer> Printers { get; set; } = null!;
         public DbSet<CommentDomain.Comment> Comments { get; set; } = null!;
+        public DbSet<CommentDomain.EnhancedComment> EnhancedComments { get; set; } = null!;
+        public DbSet<CommentDomain.CommentReaction> CommentReactions { get; set; } = null!;
+        public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<Model> Models { get; set; } = null!;
         public DbSet<ModelFile> ModelFiles { get; set; } = null!;
         public DbSet<Like> Likes { get; set; } = null!;
@@ -111,6 +120,9 @@ namespace PolyBucket.Api.Data
             modelBuilder.Entity<ModelPreview>()
                 .HasIndex(p => new { p.ModelId, p.Size })
                 .IsUnique();
+
+            modelBuilder.Entity<ModelPreview>()
+                .HasIndex(p => new { p.Status, p.NextAttemptAt });
 
             // Model Version Configuration
             modelBuilder.Entity<ModelVersion>()
@@ -222,6 +234,86 @@ namespace PolyBucket.Api.Data
                     .WithMany()
                     .HasForeignKey(r => r.ModelId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<EmailMessage>(entity =>
+            {
+                entity.ToTable("EmailMessages");
+                entity.HasKey(m => m.Id);
+                entity.Property(m => m.TemplateKey).HasConversion<string>().HasMaxLength(64);
+                entity.Property(m => m.Status).HasConversion<string>().HasMaxLength(32);
+                entity.Property(m => m.Recipient).HasMaxLength(320).IsRequired();
+                entity.Property(m => m.ModelJson).HasColumnType("jsonb").IsRequired();
+                entity.Property(m => m.LastError).HasMaxLength(2000);
+                entity.Property(m => m.IdempotencyKey).HasMaxLength(200);
+                entity.HasIndex(m => new { m.Status, m.NextAttemptAt });
+                entity.HasIndex(m => m.CreatedAt);
+                entity.HasIndex(m => m.IdempotencyKey)
+                    .IsUnique()
+                    .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+            });
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.PendingEmail)
+                .HasMaxLength(320);
+
+            modelBuilder.Entity<PasswordResetToken>()
+                .HasIndex(t => t.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<EmailVerificationToken>(entity =>
+            {
+                entity.Property(t => t.Purpose).HasConversion<string>().HasMaxLength(32);
+                entity.HasIndex(t => t.Token).IsUnique();
+                entity.HasIndex(t => new { t.Email, t.CreatedAt });
+            });
+
+            modelBuilder.Entity<UserAuditLog>(entity =>
+            {
+                entity.ToTable("UserAuditLogs");
+                entity.Property(a => a.Action).HasConversion<string>().HasMaxLength(64);
+                entity.Property(a => a.Details).HasMaxLength(2000);
+                entity.Property(a => a.IpAddress).HasMaxLength(64);
+                entity.HasIndex(a => new { a.UserId, a.CreatedAt });
+            });
+
+            modelBuilder.Entity<CommentDomain.EnhancedComment>(entity =>
+            {
+                entity.ToTable("EnhancedComments");
+                entity.Property(c => c.Content).HasMaxLength(CommentDomain.CommentLimits.MaxContentLength);
+                entity.Property(c => c.TargetType).HasConversion<string>().HasMaxLength(32);
+                entity.Property(c => c.ModerationReason).HasMaxLength(CommentDomain.CommentLimits.MaxReasonLength);
+                entity.HasOne(c => c.Author).WithMany().HasForeignKey(c => c.AuthorId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(c => c.ModeratedByUser).WithMany().HasForeignKey(c => c.ModeratedByUserId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(c => c.ParentComment).WithMany().HasForeignKey(c => c.ParentCommentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(c => new { c.TargetType, c.TargetId, c.CreatedAt });
+                entity.HasIndex(c => c.ParentCommentId);
+                entity.HasIndex(c => c.AuthorId);
+            });
+
+            modelBuilder.Entity<CommentDomain.CommentReaction>(entity =>
+            {
+                entity.ToTable("CommentReactions");
+                entity.Property(r => r.Type).HasConversion<string>().HasMaxLength(16);
+                entity.HasOne(r => r.Comment).WithMany().HasForeignKey(r => r.CommentId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<User>().WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(r => new { r.CommentId, r.UserId }).IsUnique();
+                entity.HasIndex(r => r.UserId);
+            });
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.ToTable("Notifications");
+                entity.Property(n => n.Title).HasMaxLength(NotificationLimits.MaxTitleLength).IsRequired();
+                entity.Property(n => n.Message).HasMaxLength(NotificationLimits.MaxMessageLength).IsRequired();
+                entity.Property(n => n.ActionUrl).HasMaxLength(NotificationLimits.MaxActionUrlLength);
+                entity.Property(n => n.DedupeKey).HasMaxLength(NotificationLimits.MaxDedupeKeyLength);
+                entity.Property(n => n.RelatedEntityType).HasMaxLength(64);
+                entity.Property(n => n.Type).HasConversion<string>().HasMaxLength(32);
+                entity.Property(n => n.Priority).HasConversion<string>().HasMaxLength(16);
+                entity.HasOne<User>().WithMany().HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(n => new { n.UserId, n.IsRead, n.CreatedAt });
+                entity.HasIndex(n => new { n.UserId, n.DedupeKey });
             });
         }
     }

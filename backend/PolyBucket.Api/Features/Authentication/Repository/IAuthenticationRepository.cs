@@ -2,6 +2,7 @@ using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
 
@@ -10,7 +11,10 @@ namespace PolyBucket.Api.Features.Authentication.Repository
     public interface IAuthenticationRepository
     {
         Task<User?> GetUserByEmailAsync(string email);
+        Task<User?> GetUserForUpdateByEmailAsync(string email, CancellationToken cancellationToken = default);
+        Task<User?> GetUserForUpdateByIdAsync(Guid userId, CancellationToken cancellationToken = default);
         Task<User?> GetUserByUsernameAsync(string username);
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<User> CreateUserAsync(User user);
         Task CreateLoginRecordAsync(UserLogin userLogin);
         Task<bool> IsEmailTakenAsync(string email);
@@ -27,14 +31,17 @@ namespace PolyBucket.Api.Features.Authentication.Repository
         
         // Password Reset methods
         Task<PasswordResetToken> CreatePasswordResetTokenAsync(PasswordResetToken token);
-        Task<PasswordResetToken?> GetPasswordResetTokenAsync(string token);
-        Task MarkPasswordResetTokenAsUsedAsync(string token);
+        Task<PasswordResetToken?> GetPasswordResetTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default);
+        Task<bool> TryConsumePasswordResetTokenAsync(Guid tokenId, DateTime usedAt, CancellationToken cancellationToken = default);
+        Task<int> InvalidateOutstandingPasswordResetTokensAsync(string email, DateTime usedAt, CancellationToken cancellationToken = default);
         Task DeleteExpiredPasswordResetTokensAsync();
         
         // Email Verification methods
         Task<EmailVerificationToken> CreateEmailVerificationTokenAsync(EmailVerificationToken token);
-        Task<EmailVerificationToken?> GetEmailVerificationTokenAsync(string token);
-        Task MarkEmailVerificationTokenAsUsedAsync(string token);
+        Task<EmailVerificationToken?> GetEmailVerificationTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default);
+        Task<bool> TryConsumeEmailVerificationTokenAsync(Guid tokenId, DateTime usedAt, CancellationToken cancellationToken = default);
+        Task<int> InvalidateOutstandingEmailVerificationTokensAsync(string email, EmailVerificationPurpose purpose, DateTime usedAt, CancellationToken cancellationToken = default);
+        Task<DateTime?> GetLatestEmailVerificationTokenCreatedAtAsync(string email, EmailVerificationPurpose purpose, CancellationToken cancellationToken = default);
         Task DeleteExpiredEmailVerificationTokensAsync();
         
         // OAuth methods

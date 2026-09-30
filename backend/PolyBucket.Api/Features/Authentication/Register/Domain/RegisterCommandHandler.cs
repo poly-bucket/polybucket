@@ -1,11 +1,12 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using PolyBucket.Api.Common.Email;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.Email.Domain;
 using PolyBucket.Api.Features.Users.Domain;
 using System;
 using System.Threading;
@@ -16,17 +17,19 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
     public class RegisterCommandHandler(
         IAuthenticationRepository authRepository,
         ITokenService tokenService,
-        IEmailService emailService,
+        IEmailSettingsResolver emailSettingsResolver,
+        IAccountEmailService accountEmailService,
         IPasswordHasher passwordHasher,
-        IConfiguration configuration,
         ILogger<RegisterCommandHandler> logger,
         PolyBucketDbContext context)
     {
+        public static readonly TimeSpan EmailVerificationLifetime = TimeSpan.FromHours(24);
+
         private readonly IAuthenticationRepository _authRepository = authRepository;
         private readonly ITokenService _tokenService = tokenService;
-        private readonly IEmailService _emailService = emailService;
+        private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
+        private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
-        private readonly IConfiguration _configuration = configuration;
         private readonly ILogger<RegisterCommandHandler> _logger = logger;
         private readonly PolyBucketDbContext _context = context;
 
@@ -93,6 +96,16 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
             // Generate authentication response
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
 
+            await _authRepository.CreateRefreshTokenAsync(new PolyBucket.Api.Features.Authentication.Domain.RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                Token = authResponse.RefreshToken,
+                UserId = user.Id,
+                ExpiresAt = authResponse.RefreshTokenExpiresAt,
+                CreatedAt = DateTime.UtcNow,
+                CreatedByIp = command.Client.IpAddress
+            });
+
             // Create login record
             var loginRecord = new UserLogin
             {
@@ -100,59 +113,53 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                 Email = user.Email,
                 UserId = user.Id,
                 Successful = true,
-                UserAgent = command.UserAgent,
+                IpAddress = command.Client.IpAddress,
+                UserAgent = command.Client.UserAgent,
                 CreatedAt = DateTime.UtcNow
             };
             await _authRepository.CreateLoginRecordAsync(loginRecord);
 
-            // Check if email service is configured and if email verification is required
-            var isEmailServiceConfigured = await _emailService.IsEmailServiceConfiguredAsync();
-            var emailSettings = await _emailService.GetEmailSettingsAsync();
+            var emailSettings = await _emailSettingsResolver.GetEffectiveSettingsAsync(cancellationToken);
+            var isEmailServiceConfigured = emailSettings.CanDeliver;
             var requiresEmailVerification = isEmailServiceConfigured && emailSettings.RequireEmailVerification;
-            string? emailVerificationToken = null;
 
             if (isEmailServiceConfigured)
             {
                 if (requiresEmailVerification)
                 {
-                    emailVerificationToken = _tokenService.GenerateEmailVerificationToken();
+                    var emailVerificationToken = _tokenService.GenerateEmailVerificationToken();
                     var verificationToken = new EmailVerificationToken
                     {
                         Id = Guid.NewGuid(),
-                        Token = emailVerificationToken,
+                        Token = TokenHasher.Hash(emailVerificationToken),
                         Email = user.Email,
-                        ExpiresAt = DateTime.UtcNow.AddHours(24),
+                        UserId = user.Id,
+                        Purpose = EmailVerificationPurpose.VerifyAddress,
+                        ExpiresAt = DateTime.UtcNow.Add(EmailVerificationLifetime),
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByIp = "127.0.0.1" // TODO: Get from request
+                        CreatedByIp = command.Client.IpAddress
                     };
 
                     await _authRepository.CreateEmailVerificationTokenAsync(verificationToken);
+                    await _accountEmailService.SendVerificationAsync(user, emailVerificationToken, EmailVerificationLifetime, cancellationToken: cancellationToken);
 
-                    // Send verification email
-                    var frontendUrl = _configuration["AppSettings:Frontend:BaseUrl"];
-                    var verificationUrl = $"{frontendUrl}/verify-email";
-                    await _emailService.SendEmailVerificationAsync(user.Email, emailVerificationToken, verificationUrl);
-                    
-                    _logger.LogInformation("Email verification sent to user: {Email}", user.Email);
+                    _logger.LogInformation("Email verification queued for user: {Email}", user.Email);
                 }
                 else
                 {
-                    // Send welcome email if email service is configured but verification is not required
-                    await _emailService.SendWelcomeEmailAsync(user.Email, user.Username);
-                    _logger.LogInformation("Welcome email sent to user: {Email}", user.Email);
+                    await _accountEmailService.SendWelcomeAsync(user, cancellationToken: cancellationToken);
+                    _logger.LogInformation("Welcome email queued for user: {Email}", user.Email);
                 }
             }
             else
             {
-                // Email service is not configured, skip email sending
                 _logger.LogWarning("Email service is not configured. Skipping email sending for user: {Email}", user.Email);
             }
 
             return new RegisterCommandResponse
             {
                 Authentication = authResponse,
-                RequiresEmailVerification = requiresEmailVerification,
-                EmailVerificationToken = emailVerificationToken
+                RequiresEmailVerification = requiresEmailVerification
             };
         }
     }

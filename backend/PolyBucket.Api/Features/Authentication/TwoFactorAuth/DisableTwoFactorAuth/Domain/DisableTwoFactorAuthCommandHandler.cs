@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Repository;
+using PolyBucket.Api.Features.Email.Domain;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain
 {
@@ -15,17 +16,20 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
         private readonly IDisableTwoFactorAuthService _disableTwoFactorAuthService;
         private readonly IDisableTwoFactorAuthRepository _disableTwoFactorAuthRepository;
         private readonly PolyBucketDbContext _dbContext;
+        private readonly IAccountEmailService _accountEmailService;
         private readonly ILogger<DisableTwoFactorAuthCommandHandler> _logger;
 
         public DisableTwoFactorAuthCommandHandler(
             IDisableTwoFactorAuthService disableTwoFactorAuthService,
             IDisableTwoFactorAuthRepository disableTwoFactorAuthRepository,
             PolyBucketDbContext dbContext,
+            IAccountEmailService accountEmailService,
             ILogger<DisableTwoFactorAuthCommandHandler> logger)
         {
             _disableTwoFactorAuthService = disableTwoFactorAuthService;
             _disableTwoFactorAuthRepository = disableTwoFactorAuthRepository;
             _dbContext = dbContext;
+            _accountEmailService = accountEmailService;
             _logger = logger;
         }
 
@@ -56,6 +60,12 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
                     await _disableTwoFactorAuthRepository.UpdateAsync(twoFactorAuth);
 
                     await transaction.CommitAsync(cancellationToken);
+
+                    var user = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+                    if (user != null)
+                    {
+                        await _accountEmailService.SendTwoFactorChangedAsync(user, false, command.Client, cancellationToken: cancellationToken);
+                    }
 
                     _logger.LogInformation("2FA disabled successfully for user {UserId}", command.UserId);
 

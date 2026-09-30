@@ -6,16 +6,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import AdminAccountSetupStep from "@/setup/AdminAccountSetupStep";
 import SiteSecurityStep from "@/setup/SiteSecurityStep";
+import EmailSetupStep from "@/setup/EmailSetupStep";
 import SiteEssentialsStep from "@/setup/SiteEssentialsStep";
 import SetupComplete from "@/setup/SetupComplete";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 
-type StepIndex = 0 | 1 | 2;
+type StepIndex = 0 | 1 | 2 | 3;
 const STEP_NAMES: Record<StepIndex, string> = {
   0: "Admin Account Setup",
   1: "Site security",
-  2: "Site essentials",
+  2: "Email",
+  3: "Site essentials",
 };
+const TOTAL_STEPS = Object.keys(STEP_NAMES).length;
 
 export default function SetupPage() {
   const router = useRouter();
@@ -109,6 +112,11 @@ export default function SetupPage() {
     setCurrentStep(2);
   };
 
+  const handleEmailComplete = (data: Record<string, unknown>) => {
+    setSetupData((prev) => ({ ...prev, ...data }));
+    setCurrentStep(3);
+  };
+
   const handleSiteComplete = async (data: Record<string, unknown>) => {
     setSetupData((prev) => ({ ...prev, ...data }));
     setIsCompletingSetup(true);
@@ -168,13 +176,13 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="w-full max-w-lg space-y-6">
+    <div className={`w-full space-y-6 ${currentStep === 2 ? "max-w-2xl" : "max-w-lg"}`}>
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-white">
             Setup Wizard
           </h1>
           <p className="mt-1 text-sm text-white/60">
-            Step {currentStep + 1} of 3: {STEP_NAMES[currentStep]}
+            Step {currentStep + 1} of {TOTAL_STEPS}: {STEP_NAMES[currentStep]}
           </p>
         </div>
 
@@ -195,9 +203,16 @@ export default function SetupPage() {
               />
             )}
             {currentStep === 2 && (
+              <EmailSetupStep
+                onComplete={handleEmailComplete}
+                onBack={() => setCurrentStep(1)}
+                defaultTestRecipient={user?.email ?? ""}
+              />
+            )}
+            {currentStep === 3 && (
               <SiteEssentialsStep
                 onComplete={handleSiteComplete}
-                onBack={() => setCurrentStep(1)}
+                onBack={() => setCurrentStep(2)}
                 data={setupData}
               />
             )}

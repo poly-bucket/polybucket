@@ -200,20 +200,6 @@ export default function SiteSecurityStep({
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
-            checked={formData.requireEmailVerification}
-            onChange={(e) =>
-              handleInputChange("requireEmailVerification", e.target.checked)
-            }
-            className="rounded border-white/30 bg-white/5 text-blue-500 focus:ring-blue-500"
-          />
-          <span className="text-sm text-white/80">
-            Require email verification for new accounts
-          </span>
-        </label>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
             checked={formData.requireModeration}
             onChange={(e) =>
               handleInputChange("requireModeration", e.target.checked)

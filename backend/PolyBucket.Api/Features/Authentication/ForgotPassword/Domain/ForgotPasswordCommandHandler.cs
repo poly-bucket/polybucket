@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.Email.Domain;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,48 +12,40 @@ namespace PolyBucket.Api.Features.Authentication.ForgotPassword.Domain
     public class ForgotPasswordCommandHandler(
         IAuthenticationRepository authRepository,
         ITokenService tokenService,
-        IEmailService emailService,
-        IConfiguration configuration,
+        IAccountEmailService accountEmailService,
         ILogger<ForgotPasswordCommandHandler> logger)
     {
+        public static readonly TimeSpan ResetTokenLifetime = TimeSpan.FromHours(1);
+
         private readonly IAuthenticationRepository _authRepository = authRepository;
         private readonly ITokenService _tokenService = tokenService;
-        private readonly IEmailService _emailService = emailService;
-        private readonly IConfiguration _configuration = configuration;
+        private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly ILogger<ForgotPasswordCommandHandler> _logger = logger;
 
         public async Task Handle(ForgotPasswordCommand command, CancellationToken cancellationToken)
         {
-            // Check if user exists
             var user = await _authRepository.GetUserByEmailAsync(command.Email);
             if (user == null)
             {
-                // Don't reveal if email exists or not for security reasons
-                _logger.LogInformation("Password reset requested for non-existent email: {Email}", command.Email);
+                _logger.LogInformation("Password reset requested for an unknown email address");
                 return;
             }
 
-            // Generate reset token
             var resetToken = _tokenService.GeneratePasswordResetToken();
             var passwordResetToken = new PasswordResetToken
             {
                 Id = Guid.NewGuid(),
-                Token = resetToken,
-                Email = command.Email,
-                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                Token = TokenHasher.Hash(resetToken),
+                Email = user.Email,
+                ExpiresAt = DateTime.UtcNow.Add(ResetTokenLifetime),
                 CreatedAt = DateTime.UtcNow,
-                CreatedByIp = "127.0.0.1" // TODO: Get from request
+                CreatedByIp = command.Client.IpAddress
             };
 
-            // Save reset token
             await _authRepository.CreatePasswordResetTokenAsync(passwordResetToken);
+            var outcome = await _accountEmailService.SendPasswordResetAsync(user, resetToken, ResetTokenLifetime, cancellationToken: cancellationToken);
 
-            // Send reset email
-            var frontendUrl = _configuration["AppSettings:Frontend:BaseUrl"];
-            var resetUrl = $"{frontendUrl}/reset-password";
-            await _emailService.SendPasswordResetEmailAsync(command.Email, resetToken, resetUrl);
-
-            _logger.LogInformation("Password reset email sent to: {Email}", command.Email);
+            _logger.LogInformation("Password reset email for user {UserId}: {Outcome}", user.Id, outcome);
         }
     }
-} 
+}

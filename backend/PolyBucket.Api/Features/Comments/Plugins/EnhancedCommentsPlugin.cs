@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.Repository;
 using PolyBucket.Api.Common.Plugins;
 using PolyBucket.Api.Features.Reports.Domain;
+using PolyBucket.Api.Features.Notifications.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +12,18 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Comments.Plugins
 {
-    public class EnhancedCommentsPlugin(PolyBucketDbContext context, IReportingPlugin reportingPlugin) : IEnhancedCommentsPlugin
+    public class EnhancedCommentsPlugin(
+        PolyBucketDbContext context,
+        IReportingPlugin reportingPlugin,
+        ICommentReactionService reactionService,
+        ICommentReactionRepository reactionRepository,
+        INotificationPublisher notificationPublisher) : IEnhancedCommentsPlugin
     {
         private readonly PolyBucketDbContext _context = context;
+        private readonly INotificationPublisher _notificationPublisher = notificationPublisher;
         private readonly IReportingPlugin _reportingPlugin = reportingPlugin;
+        private readonly ICommentReactionService _reactionService = reactionService;
+        private readonly ICommentReactionRepository _reactionRepository = reactionRepository;
 
         public string Id => "enhanced-comments-plugin";
         public string Name => "Enhanced Comments Plugin";
@@ -74,7 +84,7 @@ namespace PolyBucket.Api.Features.Comments.Plugins
                     Name = "Max Comment Length",
                     Description = "Maximum number of characters allowed in a comment",
                     Type = PluginSettingType.Number,
-                    DefaultValue = 2000,
+                    DefaultValue = CommentLimits.MaxContentLength,
                     Required = true
                 },
                 ["allowNestedComments"] = new PluginSetting
@@ -115,48 +125,109 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<EnhancedComment> AddCommentAsync(CommentTarget target, Guid authorId, string content, Guid? parentCommentId = null)
         {
+            var normalizedContent = NormalizeContent(content);
+
             var author = await _context.Users.FindAsync(authorId);
             if (author == null)
                 throw new InvalidOperationException("Author not found");
 
-            // Validate target exists
             await ValidateTargetExistsAsync(target);
 
-            // Validate parent comment if specified
+            Guid? repliedToAuthorId = null;
             if (parentCommentId.HasValue)
             {
-                var parentComment = await _context.Set<EnhancedComment>()
+                var parentComment = await _context.EnhancedComments
                     .FirstOrDefaultAsync(c => c.Id == parentCommentId.Value);
                 if (parentComment == null)
                     throw new InvalidOperationException("Parent comment not found");
-                
-                // Ensure parent comment is for the same target
+
                 if (parentComment.TargetId != target.TargetId || parentComment.TargetType != target.TargetType)
                     throw new InvalidOperationException("Parent comment is not for the same target");
+
+                repliedToAuthorId = parentComment.AuthorId;
+                parentCommentId = parentComment.ParentCommentId ?? parentComment.Id;
             }
 
+            var now = DateTime.UtcNow;
             var comment = new EnhancedComment
             {
                 Id = Guid.NewGuid(),
-                Content = content,
+                Content = normalizedContent,
                 AuthorId = authorId,
                 Author = author,
                 ParentCommentId = parentCommentId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = now,
+                CreatedById = authorId,
+                UpdatedAt = now,
+                UpdatedById = authorId
             };
 
             comment.SetTarget(target);
 
-            _context.Set<EnhancedComment>().Add(comment);
+            _context.EnhancedComments.Add(comment);
+            await PublishCommentNotificationsAsync(comment, target, repliedToAuthorId);
             await _context.SaveChangesAsync();
             
             return comment;
         }
 
+        private async Task PublishCommentNotificationsAsync(EnhancedComment comment, CommentTarget target, Guid? repliedToAuthorId)
+        {
+            Guid? modelAuthorId = null;
+            string? actionUrl = null;
+            if (target.TargetType == CommentTargetType.Model)
+            {
+                var model = await _context.Models
+                    .AsNoTracking()
+                    .Where(m => m.Id == target.TargetId)
+                    .Select(m => new { m.AuthorId, m.Name })
+                    .FirstOrDefaultAsync();
+                if (model != null)
+                {
+                    modelAuthorId = model.AuthorId;
+                    actionUrl = $"/models/{target.TargetId}#comments";
+                    await _notificationPublisher.PublishAsync(new NotificationRequest
+                    {
+                        RecipientUserId = model.AuthorId,
+                        ActorUserId = comment.AuthorId,
+                        Type = NotificationType.CommentAdded,
+                        Title = $"{NotificationRequest.ActorToken} commented on your model",
+                        Message = $"{NotificationRequest.ActorToken} commented on \"{model.Name}\": {Preview(comment.Content)}",
+                        ActionUrl = actionUrl,
+                        RelatedEntityId = comment.Id,
+                        RelatedEntityType = "Comment"
+                    });
+                }
+            }
+
+            if (repliedToAuthorId.HasValue && repliedToAuthorId != modelAuthorId)
+            {
+                await _notificationPublisher.PublishAsync(new NotificationRequest
+                {
+                    RecipientUserId = repliedToAuthorId.Value,
+                    ActorUserId = comment.AuthorId,
+                    Type = NotificationType.CommentReplied,
+                    Title = $"{NotificationRequest.ActorToken} replied to your comment",
+                    Message = $"{NotificationRequest.ActorToken} replied: {Preview(comment.Content)}",
+                    ActionUrl = actionUrl,
+                    RelatedEntityId = comment.Id,
+                    RelatedEntityType = "Comment"
+                });
+            }
+        }
+
+        private static string Preview(string content)
+        {
+            const int maxLength = 140;
+            return content.Length <= maxLength ? content : content[..maxLength].TrimEnd() + "…";
+        }
+
         public async Task<EnhancedComment> UpdateCommentAsync(Guid commentId, Guid userId, string content)
         {
-            var comment = await _context.Set<EnhancedComment>()
+            var normalizedContent = NormalizeContent(content);
+
+            var comment = await _context.EnhancedComments
+                .Include(c => c.Author)
                 .FirstOrDefaultAsync(c => c.Id == commentId);
 
             if (comment == null)
@@ -165,7 +236,8 @@ namespace PolyBucket.Api.Features.Comments.Plugins
             if (!comment.CanBeEditedBy(userId))
                 throw new UnauthorizedAccessException("User cannot edit this comment");
 
-            comment.Content = content;
+            comment.Content = normalizedContent;
+            comment.UpdatedById = userId;
             comment.MarkAsEdited();
 
             await _context.SaveChangesAsync();
@@ -174,7 +246,7 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<bool> DeleteCommentAsync(Guid commentId, Guid userId, bool isAdmin = false)
         {
-            var comment = await _context.Set<EnhancedComment>()
+            var comment = await _context.EnhancedComments
                 .FirstOrDefaultAsync(c => c.Id == commentId);
 
             if (comment == null)
@@ -183,16 +255,17 @@ namespace PolyBucket.Api.Features.Comments.Plugins
             if (!comment.CanBeDeletedBy(userId, isAdmin))
                 return false;
 
-            _context.Set<EnhancedComment>().Remove(comment);
+            _context.EnhancedComments.Remove(comment);
             await _context.SaveChangesAsync();
             return true;
         }
 
         public async Task<IEnumerable<EnhancedComment>> GetCommentsForTargetAsync(CommentTarget target, bool includeHidden = false, int page = 1, int pageSize = 20)
         {
-            var query = _context.Set<EnhancedComment>()
+            var query = _context.EnhancedComments
+                .AsNoTracking()
                 .Include(c => c.Author)
-                .Where(c => c.TargetId == target.TargetId && c.TargetType == target.TargetType);
+                .Where(c => c.TargetId == target.TargetId && c.TargetType == target.TargetType && c.ParentCommentId == null);
 
             if (!includeHidden)
             {
@@ -201,6 +274,7 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
             return await query
                 .OrderByDescending(c => c.CreatedAt)
+                .ThenBy(c => c.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -208,7 +282,8 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<EnhancedComment?> GetCommentByIdAsync(Guid commentId)
         {
-            return await _context.Set<EnhancedComment>()
+            return await _context.EnhancedComments
+                .AsNoTracking()
                 .Include(c => c.Author)
                 .Include(c => c.ParentComment)
                 .FirstOrDefaultAsync(c => c.Id == commentId);
@@ -216,7 +291,8 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<IEnumerable<EnhancedComment>> GetRepliesAsync(Guid parentCommentId, bool includeHidden = false)
         {
-            var query = _context.Set<EnhancedComment>()
+            var query = _context.EnhancedComments
+                .AsNoTracking()
                 .Include(c => c.Author)
                 .Where(c => c.ParentCommentId == parentCommentId);
 
@@ -227,13 +303,14 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
             return await query
                 .OrderBy(c => c.CreatedAt)
+                .ThenBy(c => c.Id)
                 .ToListAsync();
         }
 
         public async Task<int> GetCommentCountForTargetAsync(CommentTarget target, bool includeHidden = false)
         {
-            var query = _context.Set<EnhancedComment>()
-                .Where(c => c.TargetId == target.TargetId && c.TargetType == target.TargetType);
+            var query = _context.EnhancedComments
+                .Where(c => c.TargetId == target.TargetId && c.TargetType == target.TargetType && c.ParentCommentId == null);
 
             if (!includeHidden)
             {
@@ -245,111 +322,41 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<bool> LikeCommentAsync(Guid commentId, Guid userId)
         {
-            var comment = await _context.Set<EnhancedComment>()
-                .FirstOrDefaultAsync(c => c.Id == commentId);
-
-            if (comment == null || comment.IsHidden)
-                return false;
-
-            // Check if user already liked this comment
-            if (await HasUserLikedCommentAsync(commentId, userId))
-                return false;
-
-            // Remove dislike if exists
-            if (await HasUserDislikedCommentAsync(commentId, userId))
-            {
-                await RemoveDislikeAsync(commentId, userId);
-                comment.Dislikes--;
-            }
-
-            comment.Likes++;
-            // TODO: Store individual like records for tracking
-            await _context.SaveChangesAsync();
-            return true;
+            var outcome = await _reactionService.ReactAsync(commentId, userId, CommentReactionType.Like);
+            return outcome.Change != CommentReactionChange.NotFound;
         }
 
         public async Task<bool> DislikeCommentAsync(Guid commentId, Guid userId)
         {
-            var comment = await _context.Set<EnhancedComment>()
-                .FirstOrDefaultAsync(c => c.Id == commentId);
-
-            if (comment == null || comment.IsHidden)
-                return false;
-
-            // Check if user already disliked this comment
-            if (await HasUserDislikedCommentAsync(commentId, userId))
-                return false;
-
-            // Remove like if exists
-            if (await HasUserLikedCommentAsync(commentId, userId))
-            {
-                await RemoveLikeAsync(commentId, userId);
-                comment.Likes--;
-            }
-
-            comment.Dislikes++;
-            // TODO: Store individual dislike records for tracking
-            await _context.SaveChangesAsync();
-            return true;
+            var outcome = await _reactionService.ReactAsync(commentId, userId, CommentReactionType.Dislike);
+            return outcome.Change != CommentReactionChange.NotFound;
         }
 
         public async Task<bool> RemoveLikeAsync(Guid commentId, Guid userId)
         {
-            var comment = await _context.Set<EnhancedComment>()
-                .FirstOrDefaultAsync(c => c.Id == commentId);
-
-            if (comment == null)
-                return false;
-
-            if (await HasUserLikedCommentAsync(commentId, userId))
-            {
-                comment.Likes = Math.Max(0, comment.Likes - 1);
-                // TODO: Remove individual like record
-                await _context.SaveChangesAsync();
-                return true;
-            }
-
-            return false;
+            var outcome = await _reactionService.RemoveReactionAsync(commentId, userId, CommentReactionType.Like);
+            return outcome.Change == CommentReactionChange.Applied;
         }
 
         public async Task<bool> RemoveDislikeAsync(Guid commentId, Guid userId)
         {
-            var comment = await _context.Set<EnhancedComment>()
-                .FirstOrDefaultAsync(c => c.Id == commentId);
-
-            if (comment == null)
-                return false;
-
-            if (await HasUserDislikedCommentAsync(commentId, userId))
-            {
-                comment.Dislikes = Math.Max(0, comment.Dislikes - 1);
-                // TODO: Remove individual dislike record
-                await _context.SaveChangesAsync();
-                return true;
-            }
-
-            return false;
+            var outcome = await _reactionService.RemoveReactionAsync(commentId, userId, CommentReactionType.Dislike);
+            return outcome.Change == CommentReactionChange.Applied;
         }
 
         public async Task<bool> HasUserLikedCommentAsync(Guid commentId, Guid userId)
         {
-            // TODO: Implement proper like tracking with a separate table
-            // For now, return false as placeholder
-            await Task.CompletedTask;
-            return false;
+            return await _reactionRepository.GetUserReactionAsync(commentId, userId) == CommentReactionType.Like;
         }
 
         public async Task<bool> HasUserDislikedCommentAsync(Guid commentId, Guid userId)
         {
-            // TODO: Implement proper dislike tracking with a separate table
-            // For now, return false as placeholder
-            await Task.CompletedTask;
-            return false;
+            return await _reactionRepository.GetUserReactionAsync(commentId, userId) == CommentReactionType.Dislike;
         }
 
         public async Task<bool> ModerateCommentAsync(Guid commentId, Guid moderatorId, string reason)
         {
-            var comment = await _context.Set<EnhancedComment>()
+            var comment = await _context.EnhancedComments
                 .FirstOrDefaultAsync(c => c.Id == commentId);
 
             if (comment == null)
@@ -362,7 +369,7 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<bool> UnmoderateCommentAsync(Guid commentId, Guid moderatorId)
         {
-            var comment = await _context.Set<EnhancedComment>()
+            var comment = await _context.EnhancedComments
                 .FirstOrDefaultAsync(c => c.Id == commentId);
 
             if (comment == null)
@@ -380,11 +387,13 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<IEnumerable<EnhancedComment>> GetModeratedCommentsAsync(int page = 1, int pageSize = 20)
         {
-            return await _context.Set<EnhancedComment>()
+            return await _context.EnhancedComments
+                .AsNoTracking()
                 .Include(c => c.Author)
                 .Include(c => c.ModeratedByUser)
                 .Where(c => c.IsModerated)
                 .OrderByDescending(c => c.ModeratedAt)
+                .ThenBy(c => c.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -392,13 +401,18 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<bool> ReportCommentAsync(Guid commentId, Guid reporterId, string reason)
         {
+            if (!await _context.EnhancedComments.AnyAsync(c => c.Id == commentId))
+            {
+                return false;
+            }
+
             try
             {
                 await _reportingPlugin.SubmitReportAsync(
                     ReportType.Comment,
                     commentId,
                     reporterId,
-                    ReportReason.Other, // Map string reason to enum
+                    ReportReason.Other,
                     reason
                 );
                 return true;
@@ -411,18 +425,18 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<bool> DeleteAllCommentsForTargetAsync(CommentTarget target, Guid deletedByUserId)
         {
-            var comments = await _context.Set<EnhancedComment>()
+            var comments = await _context.EnhancedComments
                 .Where(c => c.TargetId == target.TargetId && c.TargetType == target.TargetType)
                 .ToListAsync();
 
-            _context.Set<EnhancedComment>().RemoveRange(comments);
+            _context.EnhancedComments.RemoveRange(comments);
             await _context.SaveChangesAsync();
             return true;
         }
 
         public async Task<bool> ModerateAllCommentsForUserAsync(Guid userId, Guid moderatorId, string reason)
         {
-            var comments = await _context.Set<EnhancedComment>()
+            var comments = await _context.EnhancedComments
                 .Where(c => c.AuthorId == userId && !c.IsModerated)
                 .ToListAsync();
 
@@ -437,7 +451,8 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<CommentStatistics> GetCommentStatisticsAsync(CommentTarget target)
         {
-            var comments = await _context.Set<EnhancedComment>()
+            var comments = await _context.EnhancedComments
+                .AsNoTracking()
                 .Include(c => c.Author)
                 .Where(c => c.TargetId == target.TargetId && c.TargetType == target.TargetType)
                 .ToListAsync();
@@ -470,7 +485,8 @@ namespace PolyBucket.Api.Features.Comments.Plugins
 
         public async Task<UserCommentStatistics> GetUserCommentStatisticsAsync(Guid userId)
         {
-            var comments = await _context.Set<EnhancedComment>()
+            var comments = await _context.EnhancedComments
+                .AsNoTracking()
                 .Where(c => c.AuthorId == userId)
                 .ToListAsync();
 
@@ -488,13 +504,25 @@ namespace PolyBucket.Api.Features.Comments.Plugins
             return stats;
         }
 
+        private static string NormalizeContent(string content)
+        {
+            var trimmed = content?.Trim() ?? string.Empty;
+            if (trimmed.Length == 0)
+                throw new InvalidOperationException("Comment content is required");
+
+            if (trimmed.Length > CommentLimits.MaxContentLength)
+                throw new InvalidOperationException($"Comment content must be {CommentLimits.MaxContentLength} characters or fewer");
+
+            return trimmed;
+        }
+
         private async Task ValidateTargetExistsAsync(CommentTarget target)
         {
             bool exists = target.TargetType switch
             {
-                CommentTargetType.Model => await _context.Models.AnyAsync(m => m.Id == target.TargetId),
-                CommentTargetType.UserProfile => await _context.Users.AnyAsync(u => u.Id == target.TargetId),
-                CommentTargetType.Collection => await _context.Collections.AnyAsync(c => c.Id == target.TargetId),
+                CommentTargetType.Model => await _context.Models.AnyAsync(m => m.Id == target.TargetId && m.DeletedAt == null),
+                CommentTargetType.UserProfile => await _context.Users.AnyAsync(u => u.Id == target.TargetId && u.DeletedAt == null),
+                CommentTargetType.Collection => await _context.Collections.AnyAsync(c => c.Id == target.TargetId && c.DeletedAt == null),
                 _ => false
             };
 

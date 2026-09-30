@@ -12,6 +12,14 @@ namespace PolyBucket.Api.Features.Search.Domain
         public int TotalPages { get; set; }
         public string Query { get; set; } = string.Empty;
         public SearchType Type { get; set; }
+        public SearchTypeCounts Counts { get; set; } = new();
+    }
+
+    public class SearchTypeCounts
+    {
+        public int Models { get; set; }
+        public int Users { get; set; }
+        public int Collections { get; set; }
     }
 
     public class SearchResultItem

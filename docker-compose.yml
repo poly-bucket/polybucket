@@ -19,6 +19,7 @@ services:
       - Admin__Username=admin
       - Admin__Email=admin@polybucket.com
       - Admin__Password=Polybucket123
+      - AppSettings__Frontend__BaseUrl=http://localhost:12001
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
       - OTEL_SERVICE_NAME=polybucket-api
       - OTEL_RESOURCE_ATTRIBUTES=service.name=polybucket-api,service.version=1.0.0,deployment.environment=Development
@@ -107,6 +108,20 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: polybucket-mailpit
+    profiles: ["mail"]
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    restart: unless-stopped
+    networks:
+      - polybucket-network
 
   lgtm:
     image: grafana/otel-lgtm:latest

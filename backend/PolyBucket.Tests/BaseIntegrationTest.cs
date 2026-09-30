@@ -115,6 +115,14 @@ namespace PolyBucket.Tests
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Reports\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelModeration\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModerationAuditLogs\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"EmailMessages\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserAuditLogs\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"PasswordResetTokens\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"EmailVerificationTokens\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RefreshTokens\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"CommentReactions\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"EnhancedComments\" CASCADE"); } catch { }
+                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Notifications\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserRoles\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RolePermissions\" CASCADE"); } catch { }
                 try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserPermissions\" CASCADE"); } catch { }

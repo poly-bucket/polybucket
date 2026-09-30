@@ -70,10 +70,13 @@ public class Program
                 .AddPolyBucketCors(builder.Configuration)
                 .AddPolyBucketHealthChecks()
                 .AddPolyBucketOpenApi()
-                .AddPolyBucketOpenTelemetry(builder.Configuration);
+                .AddPolyBucketOpenTelemetry(builder.Configuration)
+                .AddPolyBucketForwardedHeaders(builder.Configuration)
+                .AddPolyBucketRateLimiting(builder.Configuration);
 
             // Add object storage
             builder.Services.AddObjectStorage(builder.Configuration);
+            builder.Services.AddEmail(builder.Configuration);
 
             var app = builder.Build();
 

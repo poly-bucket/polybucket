@@ -34,7 +34,7 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Domain
             }
 
             // Revoke the current refresh token
-            await _authRepository.RevokeRefreshTokenAsync(command.RefreshToken, "Replaced by new token", "127.0.0.1");
+            await _authRepository.RevokeRefreshTokenAsync(command.RefreshToken, "Replaced by new token", command.Client.IpAddress);
 
             // Generate new authentication response
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
@@ -47,7 +47,7 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Domain
                 UserId = user.Id,
                 ExpiresAt = authResponse.RefreshTokenExpiresAt,
                 CreatedAt = DateTime.UtcNow,
-                CreatedByIp = "127.0.0.1", // TODO: Get from request
+                CreatedByIp = command.Client.IpAddress,
                 ReplacedByToken = authResponse.RefreshToken
             };
 

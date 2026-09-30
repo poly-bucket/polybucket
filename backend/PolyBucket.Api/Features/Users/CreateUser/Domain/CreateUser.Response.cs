@@ -10,7 +10,8 @@ namespace PolyBucket.Api.Features.Users.CreateUser.Domain
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Country { get; set; }
-        public string GeneratedPassword { get; set; } = string.Empty;
+        public string? GeneratedPassword { get; set; }
+        public bool InviteEmailQueued { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool EmailVerificationRequired { get; set; }
     }

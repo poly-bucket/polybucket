@@ -30,6 +30,8 @@ namespace PolyBucket.Api.Common.Models
         public string? Avatar { get; set; }
         public string? ProfilePictureUrl { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public DateTime? EmailVerifiedAt { get; set; }
+        public string? PendingEmail { get; set; }
         
         // Social media links
         public string? WebsiteUrl { get; set; }

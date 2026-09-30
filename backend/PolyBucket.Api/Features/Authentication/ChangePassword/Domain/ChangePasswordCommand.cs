@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using MediatR;
+using PolyBucket.Api.Common.Http;
 
 namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
 {
@@ -15,6 +17,9 @@ namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
         [Required(ErrorMessage = "Password confirmation is required")]
         [Compare("NewPassword", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; } = string.Empty;
+
+        [JsonIgnore]
+        public ClientRequestInfo Client { get; set; } = ClientRequestInfo.Unknown;
     }
 
     public class ChangePasswordResponse

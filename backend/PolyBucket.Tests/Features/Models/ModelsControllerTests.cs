@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Http;
-using PolyBucket.Api.Features.Models.AddModelToCollection.Http;
 using PolyBucket.Api.Features.Models.AddTagToModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
@@ -20,7 +19,6 @@ using PolyBucket.Api.Features.Models.GetModelByUserId.Http;
 using PolyBucket.Api.Features.Models.GetModelVersions.Http;
 using PolyBucket.Api.Features.Models.LikeModel.Http;
 using PolyBucket.Api.Features.Models.RemoveCategoryFromModel.Http;
-using PolyBucket.Api.Features.Models.RemoveModelFromCollection.Http;
 using PolyBucket.Api.Features.Models.RemoveTagFromModel.Http;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Http;
@@ -36,7 +34,6 @@ public class ModelsControllerTests : IDisposable
         return new List<object[]>
         {
             new object[] { typeof(AddCategoryToModelController) },
-            new object[] { typeof(AddModelToCollectionController) },
             new object[] { typeof(AddTagToModelController) },
             new object[] { typeof(CreateModelController) },
             new object[] { typeof(CreateModelVersionController) },
@@ -53,7 +50,6 @@ public class ModelsControllerTests : IDisposable
             new object[] { typeof(GetModelVersionsController) },
             new object[] { typeof(LikeModelController) },
             new object[] { typeof(RemoveCategoryFromModelController) },
-            new object[] { typeof(RemoveModelFromCollectionController) },
             new object[] { typeof(RemoveTagFromModelController) },
             new object[] { typeof(UpdateModelController) },
             new object[] { typeof(UpdateModelVersionController) }

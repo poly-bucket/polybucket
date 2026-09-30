@@ -54,6 +54,12 @@ public static class UsersDependencyInjectionMapping
         services.AddScoped<GetBannedUsers.Domain.IGetBannedUsersService, GetBannedUsers.Domain.GetBannedUsersService>();
         services.AddTransient<GetBannedUsers.Repository.IGetBannedUsersRepository, GetBannedUsers.Repository.GetBannedUsersRepository>();
 
+        services.AddScoped<MarkEmailVerified.Domain.IMarkEmailVerifiedService, MarkEmailVerified.Domain.MarkEmailVerifiedService>();
+        services.AddTransient<MarkEmailVerified.Repository.IMarkEmailVerifiedRepository, MarkEmailVerified.Repository.MarkEmailVerifiedRepository>();
+
+        services.AddScoped<GeneratePasswordResetLink.Domain.IGeneratePasswordResetLinkService, GeneratePasswordResetLink.Domain.GeneratePasswordResetLinkService>();
+        services.AddTransient<GeneratePasswordResetLink.Repository.IGeneratePasswordResetLinkRepository, GeneratePasswordResetLink.Repository.GeneratePasswordResetLinkRepository>();
+
         return services;
     }
 }

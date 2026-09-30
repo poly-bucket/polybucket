@@ -9,6 +9,9 @@ using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.SystemSettings.Plugins;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ModelModeration;
+using PolyBucket.Api.Features.Email;
+using PolyBucket.Api.Features.Comments;
+using PolyBucket.Api.Features.Notifications;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -20,6 +23,8 @@ public static class FeatureServiceCollectionExtensions
 
         services.AddModelsFeature();
         services.AddModelModerationFeature();
+        services.AddEmailFeature();
+        services.AddNotificationsFeature();
 
         // Collections
         services.AddTransient<Features.Collections.CreateCollection.Repository.ICollectionRepository, Features.Collections.CreateCollection.Repository.CollectionRepository>();
@@ -50,7 +55,6 @@ public static class FeatureServiceCollectionExtensions
         // Authentication
         services.AddTransient<Features.Authentication.Repository.IAuthenticationRepository, Features.Authentication.Repository.AuthenticationRepository>();
         services.AddTransient<Features.Authentication.Services.ITokenService, Features.Authentication.Services.TokenService>();
-        services.AddTransient<Features.Authentication.Services.IEmailService, Features.Authentication.Services.EmailService>();
         // Two-Factor Authentication Services (Feature-specific)
         services.AddTransient<Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Domain.IInitializeTwoFactorAuthService, Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Domain.InitializeTwoFactorAuthService>();
         services.AddTransient<Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Repository.IInitializeTwoFactorAuthRepository, Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Repository.InitializeTwoFactorAuthRepository>();
@@ -80,6 +84,12 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain.DisableTwoFactorAuthCommandHandler>();
         services.AddTransient<Features.Authentication.TwoFactorAuth.GetTwoFactorAuthStatus.Domain.GetTwoFactorAuthStatusQueryHandler>();
         services.AddTransient<Features.Authentication.RefreshToken.Domain.RefreshTokenCommandHandler>();
+        services.AddTransient<Features.Authentication.ForgotPassword.Domain.ForgotPasswordCommandHandler>();
+        services.AddTransient<Features.Authentication.ResetPassword.Domain.ResetPasswordCommandHandler>();
+        services.AddTransient<Features.Authentication.VerifyEmail.Domain.VerifyEmailCommandHandler>();
+        services.AddTransient<Features.Authentication.ResendVerificationEmail.Domain.ResendVerificationEmailCommandHandler>();
+        services.AddTransient<Features.Authentication.RequestEmailChange.Domain.RequestEmailChangeCommandHandler>();
+        services.AddScoped<Features.Authentication.Services.IEmailVerificationGate, Features.Authentication.Services.EmailVerificationGate>();
         
         // System Settings
         services.AddTransient<Features.SystemSettings.Services.IAuthenticationSettingsService, Features.SystemSettings.Services.AuthenticationSettingsService>();
@@ -120,7 +130,7 @@ public static class FeatureServiceCollectionExtensions
         // services.AddTransient<Features.Plugins.Services.MarketplaceClient>();
 
         // Register default plugins
-        services.AddScoped<Features.Comments.Domain.ICommentsPlugin, Features.Comments.Plugins.DefaultCommentsPlugin>();
+        services.AddCommentsFeature();
         services.AddScoped<Features.Reports.GetAllReports.Domain.IGetAllReportsService, Features.Reports.GetAllReports.Domain.GetAllReportsService>();
         services.AddTransient<Features.Reports.GetAllReports.Repository.IGetAllReportsRepository, Features.Reports.GetAllReports.Repository.GetAllReportsRepository>();
         services.AddScoped<Features.Reports.GetReport.Domain.IGetReportService, Features.Reports.GetReport.Domain.GetReportService>();
@@ -146,9 +156,6 @@ public static class FeatureServiceCollectionExtensions
         services.AddScoped<IPasswordGenerator, PasswordGenerator>();
 
         // Email Settings
-        services.AddTransient<Features.SystemSettings.Domain.UpdateEmailSettingsCommandHandler>();
-        services.AddTransient<Features.SystemSettings.Domain.TestEmailConfigurationCommandHandler>();
-        
         // System Setup
         services.AddTransient<Features.SystemSettings.CheckFirstTimeSetup.Domain.CheckFirstTimeSetupQueryHandler>();
         services.AddTransient<Features.SystemSettings.UpdateSiteSettings.Domain.UpdateSiteSettingsCommandHandler>();
@@ -175,6 +182,8 @@ public static class FeatureServiceCollectionExtensions
 
         // Search
         services.AddTransient<Features.Search.Repository.ISearchRepository, Features.Search.Repository.SearchRepository>();
+        services.AddSingleton<Features.Search.Repository.ISearchCapabilities, Features.Search.Repository.SearchCapabilities>();
+        services.AddHostedService<Features.Search.Repository.SearchCapabilityStartupCheck>();
 
         // Federation
         services.AddTransient<Features.Federation.Repository.IFederationRepository, Features.Federation.Repository.FederationRepository>();

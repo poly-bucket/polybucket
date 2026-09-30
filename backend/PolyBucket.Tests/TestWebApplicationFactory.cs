@@ -2,12 +2,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Settings;
+using PolyBucket.Api.Common.Email;
+using PolyBucket.Tests.Email;
+using PolyBucket.Tests.Previews;
+using PolyBucket.Api.Features.Models.GenerateModelPreview.Services;
 
 namespace PolyBucket.Tests
 {
@@ -79,7 +84,8 @@ namespace PolyBucket.Tests
                     ["AppSettings:Security:JwtIssuer"] = "polybucket-test-api",
                     ["AppSettings:Security:JwtAudience"] = "polybucket-test-client",
                     ["AppSettings:Security:AccessTokenExpiryMinutes"] = "60",
-                    ["AppSettings:Security:RefreshTokenExpiryDays"] = "7"
+                    ["AppSettings:Security:RefreshTokenExpiryDays"] = "7",
+                    ["ModelPreviews:WorkerEnabled"] = "false"
                 });
             });
             
@@ -103,6 +109,18 @@ namespace PolyBucket.Tests
                 services.AddLogging();
                 services.AddHttpClient();
             });
+
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton(EmailTransport);
+                services.AddSingleton<IEmailTransport>(EmailTransport);
+                services.AddSingleton(PreviewGenerator);
+                services.AddSingleton<IModelPreviewGenerationService>(PreviewGenerator);
+            });
         }
+
+        public CapturingEmailTransport EmailTransport { get; } = new();
+
+        public FakeModelPreviewGenerator PreviewGenerator { get; } = new();
     }
 }

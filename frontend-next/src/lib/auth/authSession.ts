@@ -17,6 +17,7 @@ export interface AuthUser {
   setupStep?: string;
   avatar?: string;
   profilePictureUrl?: string;
+  isEmailVerified?: boolean;
 }
 
 type AuthSessionListener = (user: AuthUser | null) => void;
@@ -93,6 +94,7 @@ export function mapAuthenticationResponseToAuthUser(
       setupStep: previous?.setupStep,
       avatar: u?.avatar ?? previous?.avatar,
       profilePictureUrl: profileFromApi ?? previous?.profilePictureUrl,
+      isEmailVerified: decoded.isEmailVerified,
     };
   }
   if (u?.id && u.email && u.username) {
@@ -107,6 +109,7 @@ export function mapAuthenticationResponseToAuthUser(
       setupStep: previous?.setupStep,
       avatar: u.avatar ?? previous?.avatar,
       profilePictureUrl: profileFromApi ?? previous?.profilePictureUrl,
+      isEmailVerified: u.isEmailVerified ?? previous?.isEmailVerified,
     };
   }
   return null;

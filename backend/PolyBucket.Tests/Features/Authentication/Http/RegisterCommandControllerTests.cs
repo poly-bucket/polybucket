@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using PolyBucket.Api.Common.Email;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Register.Domain;
 using PolyBucket.Api.Features.Authentication.Register.Http;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.Email.Domain;
 using PolyBucket.Api.Features.Users.Domain;
 using Shouldly;
 using System;
@@ -17,7 +18,6 @@ using System.Threading.Tasks;
 using Xunit;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.ACL.Domain;
-using PolyBucket.Api.Features.SystemSettings.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace PolyBucket.Tests.Features.Authentication.Http
@@ -26,9 +26,9 @@ namespace PolyBucket.Tests.Features.Authentication.Http
     {
         private readonly Mock<IAuthenticationRepository> _authRepositoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
-        private readonly Mock<IEmailService> _emailServiceMock;
+        private readonly Mock<IEmailSettingsResolver> _emailSettingsResolverMock;
+        private readonly Mock<IAccountEmailService> _accountEmailServiceMock;
         private readonly Mock<IPasswordHasher> _passwordHasherMock;
-        private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<ILogger<RegisterCommandHandler>> _loggerMock;
         private readonly PolyBucketDbContext _dbContext;
         private readonly RegisterController _controller;
@@ -38,9 +38,9 @@ namespace PolyBucket.Tests.Features.Authentication.Http
         {
             _authRepositoryMock = new Mock<IAuthenticationRepository>();
             _tokenServiceMock = new Mock<ITokenService>();
-            _emailServiceMock = new Mock<IEmailService>();
+            _emailSettingsResolverMock = new Mock<IEmailSettingsResolver>();
+            _accountEmailServiceMock = new Mock<IAccountEmailService>();
             _passwordHasherMock = new Mock<IPasswordHasher>();
-            _configurationMock = new Mock<IConfiguration>();
             _loggerMock = new Mock<ILogger<RegisterCommandHandler>>();
             var dbOptions = new DbContextOptionsBuilder<PolyBucketDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -59,12 +59,16 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             });
             _dbContext.SaveChanges();
 
+            _emailSettingsResolverMock
+                .Setup(x => x.GetEffectiveSettingsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new EffectiveEmailSettings());
+
             _handler = new RegisterCommandHandler(
                 _authRepositoryMock.Object,
                 _tokenServiceMock.Object,
-                _emailServiceMock.Object,
+                _emailSettingsResolverMock.Object,
+                _accountEmailServiceMock.Object,
                 _passwordHasherMock.Object,
-                _configurationMock.Object,
                 _loggerMock.Object,
                 _dbContext);
 
@@ -75,6 +79,19 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                     HttpContext = new DefaultHttpContext()
                 }
             };
+        }
+
+        private void SetupEmailSettings(bool requireVerification)
+        {
+            _emailSettingsResolverMock
+                .Setup(x => x.GetEffectiveSettingsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new EffectiveEmailSettings
+                {
+                    Transport = EmailTransportKind.Log,
+                    FromAddress = "noreply@example.com",
+                    PublicBaseUrl = "http://localhost:3000",
+                    RequireEmailVerification = requireVerification
+                });
         }
 
         [Fact(DisplayName = "When registering with a valid command, the register controller returns Ok with authentication data.")]
@@ -118,14 +135,10 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 .Returns(Task.CompletedTask);
             _tokenServiceMock.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
                 .Returns(authResponse);
-            _emailServiceMock.Setup(x => x.IsEmailServiceConfiguredAsync()).ReturnsAsync(true);
-            _emailServiceMock.Setup(x => x.GetEmailSettingsAsync()).ReturnsAsync(new EmailSettings
-            {
-                Enabled = true,
-                RequireEmailVerification = false
-            });
-            _emailServiceMock.Setup(x => x.SendWelcomeEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.CompletedTask);
+            SetupEmailSettings(requireVerification: false);
+            _accountEmailServiceMock
+                .Setup(x => x.SendWelcomeAsync(It.IsAny<User>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(EmailEnqueueOutcome.Queued);
 
             // Act
             var result = await _controller.Register(command, CancellationToken.None);
@@ -143,11 +156,14 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.IsUsernameTakenAsync(command.Username), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once);
-            _emailServiceMock.Verify(x => x.SendWelcomeEmailAsync(command.Email, command.Username), Times.Once);
+            _accountEmailServiceMock.Verify(x => x.SendWelcomeAsync(
+                It.Is<User>(u => u.Email == command.Email && u.Username == command.Username),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Fact(DisplayName = "When registering while email verification is enabled, the register controller returns Ok with a verification token.")]
-        public async Task Register_WithEmailVerificationEnabled_ShouldReturnOkWithVerificationToken()
+        [Fact(DisplayName = "When registering while email verification is enabled, the register controller returns Ok without exposing the verification token.")]
+        public async Task Register_WithEmailVerificationEnabled_ShouldReturnOkWithoutVerificationToken()
         {
             // Arrange
             var command = new RegisterCommand
@@ -182,16 +198,10 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 .Returns(authResponse);
             _tokenServiceMock.Setup(x => x.GenerateEmailVerificationToken())
                 .Returns(verificationToken);
-            _emailServiceMock.Setup(x => x.IsEmailServiceConfiguredAsync()).ReturnsAsync(true);
-            _emailServiceMock.Setup(x => x.GetEmailSettingsAsync()).ReturnsAsync(new EmailSettings
-            {
-                Enabled = true,
-                RequireEmailVerification = true
-            });
-            _configurationMock.Setup(x => x["AppSettings:Frontend:BaseUrl"])
-                .Returns("http://localhost:3000");
-            _emailServiceMock.Setup(x => x.SendEmailVerificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.CompletedTask);
+            SetupEmailSettings(requireVerification: true);
+            _accountEmailServiceMock
+                .Setup(x => x.SendVerificationAsync(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(EmailEnqueueOutcome.Queued);
 
             // Act
             var result = await _controller.Register(command, CancellationToken.None);
@@ -201,14 +211,84 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             var okResult = (OkObjectResult)result;
             var response = okResult.Value.ShouldBeOfType<RegisterCommandResponse>();
             response.RequiresEmailVerification.ShouldBeTrue();
-            response.EmailVerificationToken.ShouldBe(verificationToken);
+            typeof(RegisterCommandResponse).GetProperty("EmailVerificationToken").ShouldBeNull();
+            System.Text.Json.JsonSerializer.Serialize(response).ShouldNotContain(verificationToken);
 
-            // Verify verification email was sent
-            _emailServiceMock.Verify(x => x.SendEmailVerificationAsync(
-                command.Email, 
-                verificationToken, 
-                "http://localhost:3000/verify-email"), Times.Once);
-            _authRepositoryMock.Verify(x => x.CreateEmailVerificationTokenAsync(It.IsAny<EmailVerificationToken>()), Times.Once);
+            // Verify verification email was queued
+            _accountEmailServiceMock.Verify(x => x.SendVerificationAsync(
+                It.Is<User>(u => u.Email == command.Email),
+                verificationToken,
+                RegisterCommandHandler.EmailVerificationLifetime,
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+            _authRepositoryMock.Verify(x => x.CreateEmailVerificationTokenAsync(It.Is<EmailVerificationToken>(t =>
+                t.Token == TokenHasher.Hash(verificationToken)
+                && t.Token != verificationToken
+                && t.Purpose == EmailVerificationPurpose.VerifyAddress)), Times.Once);
+        }
+
+        [Fact(DisplayName = "When registering, the register controller persists the issued refresh token so it can be refreshed later.")]
+        public async Task Register_ValidCommand_ShouldPersistRefreshToken()
+        {
+            // Arrange
+            var command = new RegisterCommand
+            {
+                Email = "test@example.com",
+                Username = "testuser",
+                Password = "Password123!",
+                ConfirmPassword = "Password123!",
+                UserAgent = "Test User Agent"
+            };
+
+            _authRepositoryMock.Setup(x => x.IsEmailTakenAsync(command.Email)).ReturnsAsync(false);
+            _authRepositoryMock.Setup(x => x.IsUsernameTakenAsync(command.Username)).ReturnsAsync(false);
+            _authRepositoryMock.Setup(x => x.CreateUserAsync(It.IsAny<User>())).ReturnsAsync(It.IsAny<User>());
+            _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>())).Returns(Task.CompletedTask);
+            _tokenServiceMock.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
+                .Returns(new AuthenticationResponse
+                {
+                    AccessToken = "token",
+                    RefreshToken = "refresh-token",
+                    RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
+                    User = new UserInfo { Id = Guid.NewGuid() }
+                });
+
+            // Act
+            var result = await _controller.Register(command, CancellationToken.None);
+
+            // Assert
+            result.ShouldBeOfType<OkObjectResult>();
+            _authRepositoryMock.Verify(x => x.CreateRefreshTokenAsync(It.Is<RefreshToken>(t => t.Token == "refresh-token")), Times.Once);
+            _authRepositoryMock.Verify(x => x.CreateUserAsync(It.Is<User>(u => u.EmailVerifiedAt == null)), Times.Once);
+        }
+
+        [Fact(DisplayName = "When registering while email delivery is disabled, the register controller returns Ok and queues no email.")]
+        public async Task Register_WithEmailDisabled_ShouldNotQueueEmail()
+        {
+            // Arrange
+            var command = new RegisterCommand
+            {
+                Email = "test@example.com",
+                Username = "testuser",
+                Password = "Password123!",
+                ConfirmPassword = "Password123!",
+                UserAgent = "Test User Agent"
+            };
+
+            _authRepositoryMock.Setup(x => x.IsEmailTakenAsync(command.Email)).ReturnsAsync(false);
+            _authRepositoryMock.Setup(x => x.IsUsernameTakenAsync(command.Username)).ReturnsAsync(false);
+            _authRepositoryMock.Setup(x => x.CreateUserAsync(It.IsAny<User>())).ReturnsAsync(It.IsAny<User>());
+            _authRepositoryMock.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>())).Returns(Task.CompletedTask);
+            _tokenServiceMock.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
+                .Returns(new AuthenticationResponse { AccessToken = "token", User = new UserInfo { Id = Guid.NewGuid() } });
+
+            // Act
+            var result = await _controller.Register(command, CancellationToken.None);
+
+            // Assert
+            var response = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<RegisterCommandResponse>();
+            response.RequiresEmailVerification.ShouldBeFalse();
+            _accountEmailServiceMock.VerifyNoOtherCalls();
         }
 
         [Fact(DisplayName = "When registering with an email that is already taken, the register controller returns Conflict.")]
@@ -377,7 +457,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(It.IsAny<User>()), Times.Once);
         }
 
-        [Fact(DisplayName = "When registering and the email service throws an exception, the register controller returns InternalServerError.")]
+        [Fact(DisplayName = "When registering and queueing the email throws an exception, the register controller returns InternalServerError.")]
         public async Task Register_EmailServiceThrowsException_ShouldReturnInternalServerError()
         {
             // Arrange
@@ -407,13 +487,9 @@ namespace PolyBucket.Tests.Features.Authentication.Http
                 .Returns(Task.CompletedTask);
             _tokenServiceMock.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
                 .Returns(authResponse);
-            _emailServiceMock.Setup(x => x.IsEmailServiceConfiguredAsync()).ReturnsAsync(true);
-            _emailServiceMock.Setup(x => x.GetEmailSettingsAsync()).ReturnsAsync(new EmailSettings
-            {
-                Enabled = true,
-                RequireEmailVerification = false
-            });
-            _emailServiceMock.Setup(x => x.SendWelcomeEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
+            SetupEmailSettings(requireVerification: false);
+            _accountEmailServiceMock
+                .Setup(x => x.SendWelcomeAsync(It.IsAny<User>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Exception("Email service failed"));
 
             // Act
@@ -431,7 +507,7 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Once);
             _authRepositoryMock.Verify(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()), Times.Once);
             _tokenServiceMock.Verify(x => x.GenerateAuthenticationResponse(It.IsAny<User>()), Times.Once);
-            _emailServiceMock.Verify(x => x.SendWelcomeEmailAsync(command.Email, command.Username), Times.Once);
+            _accountEmailServiceMock.Verify(x => x.SendWelcomeAsync(It.IsAny<User>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         public void Dispose()
@@ -439,4 +515,4 @@ namespace PolyBucket.Tests.Features.Authentication.Http
             _dbContext.Dispose();
         }
     }
-} 
+}

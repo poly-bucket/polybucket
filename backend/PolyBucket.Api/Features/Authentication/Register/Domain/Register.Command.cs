@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using PolyBucket.Api.Common.Http;
 
 namespace PolyBucket.Api.Features.Authentication.Register.Domain
 {
@@ -24,5 +26,8 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         public string? LastName { get; set; }
         public string? Country { get; set; }
         public string UserAgent { get; set; } = string.Empty;
+
+        [JsonIgnore]
+        public ClientRequestInfo Client { get; set; } = ClientRequestInfo.Unknown;
     }
 } 

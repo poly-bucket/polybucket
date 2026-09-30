@@ -19,6 +19,8 @@ namespace PolyBucket.Api.Features.Notifications.Domain
         public DateTime? ExpiresAt { get; set; }
         public bool IsSystemNotification { get; set; } = false;
         public string? Metadata { get; set; } // JSON for additional data
+        public Guid? ActorUserId { get; set; }
+        public string? DedupeKey { get; set; }
     }
 
     public enum NotificationType
@@ -35,7 +37,10 @@ namespace PolyBucket.Api.Features.Notifications.Domain
         SystemUpdate,
         SecurityAlert,
         Welcome,
-        Custom
+        Custom,
+        ModelApproved,
+        ModelRejected,
+        CommentReplied
     }
 
     public enum NotificationPriority

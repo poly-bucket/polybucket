@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common.Http;
+using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.Register.Domain;
 using System;
 using System.Threading;
@@ -21,9 +24,11 @@ namespace PolyBucket.Api.Features.Authentication.Register.Http
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Authentication response with tokens</returns>
         [HttpPost("register")]
+        [EnableRateLimiting(RequestSecurityServiceCollectionExtensions.AuthStrictPolicy)]
         [ProducesResponseType(200, Type = typeof(RegisterCommandResponse))]
         [ProducesResponseType(400)]
         [ProducesResponseType(409)]
+        [ProducesResponseType(429)]
         public async Task<IActionResult> Register([FromBody] RegisterCommand command, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -33,6 +38,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Http
 
             try
             {
+                command.Client = ClientRequestInfo.From(HttpContext);
                 var response = await _handler.Handle(command, cancellationToken);
                 return Ok(response);
             }

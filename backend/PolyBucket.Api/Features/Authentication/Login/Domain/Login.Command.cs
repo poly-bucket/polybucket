@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using PolyBucket.Api.Common.Http;
+
 namespace PolyBucket.Api.Features.Authentication.Login.Domain
 {
     public class LoginCommand
@@ -8,5 +11,8 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
         public string? TwoFactorToken { get; set; }
         public string? BackupCode { get; set; }
         public string Email { get; set; } = string.Empty;
+
+        [JsonIgnore]
+        public ClientRequestInfo Client { get; set; } = ClientRequestInfo.Unknown;
     }
-} 
+}

@@ -38,6 +38,28 @@ public class TokenServiceTests
         _tokenService = new TokenService(_configuration, _tokenSettingsService);
     }
 
+    [Fact(DisplayName = "When generating tokens for a user without a verified email, the email_verified claim and user info report false.")]
+    public async Task GenerateAuthenticationResponseAsync_UnverifiedUser_ShouldReportEmailNotVerified()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "unverified@example.com",
+            Username = "unverified",
+            Role = new Role { Name = "User" },
+            EmailVerifiedAt = null
+        };
+
+        // Act
+        var response = await _tokenService.GenerateAuthenticationResponseAsync(user);
+
+        // Assert
+        var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(response.AccessToken);
+        jwtToken.Claims.ShouldContain(c => c.Type == TokenService.EmailVerifiedClaim && c.Value == "false");
+        response.User.IsEmailVerified.ShouldBeFalse();
+    }
+
     [Fact(DisplayName = "When generating an access token, the token service creates a valid JWT containing the expected claims.")]
     public async Task GenerateAccessTokenAsync_ShouldCreateValidJwtWithCorrectClaims()
     {
@@ -47,7 +69,8 @@ public class TokenServiceTests
             Id = Guid.NewGuid(),
             Email = "test@example.com",
             Username = "testuser",
-            Role = new Role { Name = "User" }
+            Role = new Role { Name = "User" },
+            EmailVerifiedAt = DateTime.UtcNow
         };
 
         // Act

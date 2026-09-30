@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Common.Email;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 
@@ -7,9 +8,11 @@ namespace PolyBucket.Api.Features.SystemSettings.Services;
 
 public class AuthenticationSettingsService(
     PolyBucketDbContext context,
+    IEmailSettingsResolver emailSettingsResolver,
     ILogger<AuthenticationSettingsService> logger) : IAuthenticationSettingsService
 {
     private readonly PolyBucketDbContext _context = context;
+    private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
     private readonly ILogger<AuthenticationSettingsService> _logger = logger;
 
     public async Task<AuthenticationSettings> GetAuthenticationSettingsAsync()
@@ -42,11 +45,13 @@ public class AuthenticationSettingsService(
                 authSettings.AllowUsernameLogin = bool.TryParse(allowUsernameStr, out var allowUsername) && allowUsername;
             }
 
+            var emailSettings = await _emailSettingsResolver.GetEffectiveSettingsAsync();
+            authSettings.RequireEmailVerification = emailSettings.CanDeliver && emailSettings.RequireEmailVerification;
+
             // Get other settings from SystemSetup
             var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync();
             if (systemSetup != null)
             {
-                authSettings.RequireEmailVerification = systemSetup.RequireEmailVerification;
                 authSettings.MaxFailedLoginAttempts = systemSetup.MaxFailedLoginAttempts;
                 authSettings.LockoutDurationMinutes = systemSetup.LockoutDurationMinutes;
                 authSettings.RequireStrongPasswords = systemSetup.RequireStrongPasswords;

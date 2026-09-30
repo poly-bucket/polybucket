@@ -18,6 +18,9 @@ namespace PolyBucket.Api.Features.Models.GenerateModelPreview.Domain
         public int Width { get; set; }
         public int Height { get; set; }
         public long FileSizeBytes { get; set; }
+        public int Attempts { get; set; }
+        public DateTime? NextAttemptAt { get; set; }
+        public DateTime? LockedUntil { get; set; }
     }
 
     public enum PreviewStatus
