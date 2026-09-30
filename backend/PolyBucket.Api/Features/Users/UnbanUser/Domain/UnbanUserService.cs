@@ -22,7 +22,7 @@ public class UnbanUserService(IUnbanUserRepository repository) : IUnbanUserServi
 
         user.IsBanned = false;
         user.BannedAt = null;
-        user.BannedById = null;
+        user.BannedByUserId = null;
         user.BanReason = null;
         user.BanExpiresAt = null;
         user.UpdatedAt = DateTime.UtcNow;

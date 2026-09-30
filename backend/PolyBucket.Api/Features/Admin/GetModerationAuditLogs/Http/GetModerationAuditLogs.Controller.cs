@@ -87,11 +87,11 @@ namespace PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Http
                 {
                     Id = log.Id.ToString(),
                     ModelId = log.ModelId.ToString(),
-                    PerformedByUserId = log.PerformedByUserId.ToString(),
+                    PerformedByUserId = log.PerformedByUserId.HasValue ? log.PerformedByUserId.Value.ToString() : string.Empty,
                     PerformedByUser = new UserInfoDto
                     {
-                        Username = log.PerformedByUser.Username,
-                        Email = log.PerformedByUser.Email
+                        Username = log.PerformedByUser != null ? log.PerformedByUser.Username : string.Empty,
+                        Email = log.PerformedByUser != null ? log.PerformedByUser.Email : string.Empty
                     },
                     Action = log.Action.ToString(),
                     PreviousValues = log.PreviousValues,

@@ -21,7 +21,7 @@ namespace PolyBucket.Api.Common.Models
         public string? Country { get; set; }
         public bool IsBanned { get; set; } = false;
         public DateTime? BannedAt { get; set; }
-        public Guid? BannedById { get; set; }
+        public Guid? BannedByUserId { get; set; }
         public virtual User? BannedByUser { get; set; }
         public string? BanReason { get; set; }
         public DateTime? BanExpiresAt { get; set; }

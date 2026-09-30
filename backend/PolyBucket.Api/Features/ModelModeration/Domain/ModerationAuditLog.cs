@@ -7,8 +7,8 @@ namespace PolyBucket.Api.Features.ModelModeration.Domain
     public class ModerationAuditLog : BaseEntity
     {
         public Guid ModelId { get; set; }
-        public Guid PerformedByUserId { get; set; }
-        public User PerformedByUser { get; set; } = null!;
+        public Guid? PerformedByUserId { get; set; }
+        public User? PerformedByUser { get; set; }
         public ModerationAction Action { get; set; }
         public string? PreviousValues { get; set; } // JSON of previous model state
         public string? NewValues { get; set; } // JSON of new model state

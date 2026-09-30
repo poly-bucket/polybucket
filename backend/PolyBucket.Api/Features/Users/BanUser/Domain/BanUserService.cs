@@ -27,7 +27,7 @@ public class BanUserService(IBanUserRepository repository) : IBanUserService
 
         user.IsBanned = true;
         user.BannedAt = DateTime.UtcNow;
-        user.BannedById = currentUserId;
+        user.BannedByUserId = currentUserId;
         user.BanReason = reason;
         user.BanExpiresAt = expiresAt;
         user.UpdatedAt = DateTime.UtcNow;

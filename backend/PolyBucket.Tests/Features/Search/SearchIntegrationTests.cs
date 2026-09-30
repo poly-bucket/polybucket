@@ -66,6 +66,28 @@ public class SearchIntegrationTests : BaseIntegrationTest
         }))!;
     }
 
+    [Fact(DisplayName = "When schema GIN indexes exist, pg_trgm search still returns typo-tolerant model matches.")]
+    public async Task Search_GinIndexes_TypoStillMatches()
+    {
+        // Arrange
+        await ResetStateAsync();
+        await EnableTrigramsAsync();
+        var indexExists = await DbContext.Database
+            .SqlQueryRaw<bool>(@"SELECT EXISTS (
+                SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'IX_Models_Name_trgm') AS ""Value""")
+            .SingleAsync();
+        indexExists.ShouldBeTrue();
+        var author = await CreateAuthorAsync();
+        AddModel(author, "TrigramWidget");
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await SearchAsync("/api/search?query=trigramwdgt&type=Models");
+
+        // Assert
+        result.Results.Select(r => r.Title).ShouldContain("TrigramWidget");
+    }
+
     [Fact(DisplayName = "When pg_trgm is available, a typo in the query still finds the model and the closest name ranks first.")]
     public async Task Search_Typo_MatchesWithTrigrams()
     {

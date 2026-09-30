@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Common.Models.Enums;
 using PolyBucket.Api.Features.Email.Domain;
 using PolyBucket.Api.Features.Users.Domain;
 using PolyBucket.Api.Features.Printers.Domain;
@@ -103,8 +104,20 @@ namespace PolyBucket.Api.Data
                 .HasDefaultValue(0);
 
             modelBuilder.Entity<Collection>()
+                .HasOne(c => c.Owner)
+                .WithMany()
+                .HasForeignKey(c => c.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Collection>()
                 .HasIndex(c => new { c.OwnerId, c.Favorite, c.DisplayOrder })
                 .HasDatabaseName("IX_Collections_OwnerId_Favorite_DisplayOrder");
+
+            modelBuilder.Entity<Collection>()
+                .HasIndex(c => new { c.OwnerId, c.CreatedAt })
+                .IsDescending(false, true)
+                .HasFilter("\"DeletedAt\" IS NULL")
+                .HasDatabaseName("IX_Collections_OwnerId_CreatedAt_Active");
 
             modelBuilder.Entity<CollectionModel>()
                 .HasOne(cm => cm.Model)
@@ -136,11 +149,25 @@ namespace PolyBucket.Api.Data
                 .IsUnique();
 
             // ACL Configuration
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.Role)
-                .WithMany(r => r.Users)
-                .HasForeignKey(u => u.RoleId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasOne(u => u.Role)
+                    .WithMany(r => r.Users)
+                    .HasForeignKey(u => u.RoleId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(u => u.BannedByUser)
+                    .WithMany()
+                    .HasForeignKey(u => u.BannedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(u => u.Email).IsUnique();
+                entity.HasIndex(u => u.Username).IsUnique();
+                entity.HasIndex(u => u.BannedAt)
+                    .IsDescending(true)
+                    .HasFilter("\"IsBanned\" = true")
+                    .HasDatabaseName("IX_Users_BannedAt_WhenBanned");
+            });
 
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionId });
@@ -155,6 +182,12 @@ namespace PolyBucket.Api.Data
                 .WithMany(p => p.RolePermissions)
                 .HasForeignKey(rp => rp.PermissionId);
 
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.GrantedByUser)
+                .WithMany()
+                .HasForeignKey(rp => rp.GrantedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<UserPermission>()
                 .HasKey(up => new { up.UserId, up.PermissionId });
 
@@ -167,6 +200,86 @@ namespace PolyBucket.Api.Data
                 .HasOne(up => up.Permission)
                 .WithMany(p => p.UserPermissions)
                 .HasForeignKey(up => up.PermissionId);
+
+            modelBuilder.Entity<UserPermission>()
+                .HasOne(up => up.GrantedByUser)
+                .WithMany()
+                .HasForeignKey(up => up.GrantedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<UserLogin>()
+                .HasOne(l => l.User)
+                .WithMany(u => u.Logins)
+                .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Model>(entity =>
+            {
+                entity.HasOne(m => m.Author)
+                    .WithMany()
+                    .HasForeignKey(m => m.AuthorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(m => new { m.AuthorId, m.CreatedAt })
+                    .IsDescending(false, true)
+                    .HasFilter("\"DeletedAt\" IS NULL")
+                    .HasDatabaseName("IX_Models_AuthorId_CreatedAt_Active");
+
+                entity.HasIndex(m => m.CreatedAt)
+                    .IsDescending(true)
+                    .HasFilter($"\"DeletedAt\" IS NULL AND \"Privacy\" = {(int)PrivacySettings.Public}")
+                    .HasDatabaseName("IX_Models_CreatedAt_PublicActive");
+            });
+
+            modelBuilder.Entity<Like>()
+                .HasIndex(l => new { l.ModelId, l.UserId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL")
+                .HasDatabaseName("IX_Likes_ModelId_UserId_Active");
+
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasIndex(rt => rt.Token).IsUnique();
+                entity.HasIndex(rt => new { rt.UserId, rt.CreatedAt })
+                    .IsDescending(false, true)
+                    .HasFilter("\"RevokedAt\" IS NULL")
+                    .HasDatabaseName("IX_RefreshTokens_UserId_CreatedAt_Active");
+            });
+
+            modelBuilder.Entity<ExternalAuthProvider>()
+                .HasIndex(e => new { e.Provider, e.ExternalId })
+                .IsUnique();
+
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasIndex(t => t.Token).IsUnique();
+                entity.HasIndex(t => new { t.Email, t.IsUsed })
+                    .HasDatabaseName("IX_PasswordResetTokens_Email_IsUsed");
+            });
+
+            modelBuilder.Entity<ReportsDomain.Report>(entity =>
+            {
+                entity.HasIndex(r => new { r.IsResolved, r.CreatedAt })
+                    .IsDescending(false, true)
+                    .HasDatabaseName("IX_Reports_IsResolved_CreatedAt");
+
+                entity.HasIndex(r => new { r.Type, r.TargetId, r.CreatedAt })
+                    .IsDescending(false, false, true)
+                    .HasDatabaseName("IX_Reports_Type_TargetId_CreatedAt");
+            });
+
+            modelBuilder.Entity<FederationAuditLog>()
+                .HasIndex(a => new { a.FederatedInstanceId, a.EventTimestamp })
+                .IsDescending(false, true)
+                .HasDatabaseName("IX_FederationAuditLogs_InstanceId_EventTimestamp");
+
+            modelBuilder.Entity<ModerationAuditLog>(entity =>
+            {
+                entity.HasOne(l => l.PerformedByUser)
+                    .WithMany()
+                    .HasForeignKey(l => l.PerformedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
 
             modelBuilder.Entity<Role>()
                 .HasOne(r => r.ParentRole)
@@ -257,10 +370,6 @@ namespace PolyBucket.Api.Data
                 .Property(u => u.PendingEmail)
                 .HasMaxLength(320);
 
-            modelBuilder.Entity<PasswordResetToken>()
-                .HasIndex(t => t.Token)
-                .IsUnique();
-
             modelBuilder.Entity<EmailVerificationToken>(entity =>
             {
                 entity.Property(t => t.Purpose).HasConversion<string>().HasMaxLength(32);
@@ -275,6 +384,14 @@ namespace PolyBucket.Api.Data
                 entity.Property(a => a.Details).HasMaxLength(2000);
                 entity.Property(a => a.IpAddress).HasMaxLength(64);
                 entity.HasIndex(a => new { a.UserId, a.CreatedAt });
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(a => a.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(a => a.PerformedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<CommentDomain.EnhancedComment>(entity =>
@@ -287,6 +404,10 @@ namespace PolyBucket.Api.Data
                 entity.HasOne(c => c.ModeratedByUser).WithMany().HasForeignKey(c => c.ModeratedByUserId).OnDelete(DeleteBehavior.SetNull);
                 entity.HasOne(c => c.ParentComment).WithMany().HasForeignKey(c => c.ParentCommentId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(c => new { c.TargetType, c.TargetId, c.CreatedAt });
+                entity.HasIndex(c => new { c.TargetType, c.TargetId, c.CreatedAt })
+                    .IsDescending(false, false, true)
+                    .HasFilter("\"ParentCommentId\" IS NULL AND NOT \"IsHidden\"")
+                    .HasDatabaseName("IX_EnhancedComments_Target_Thread_Active");
                 entity.HasIndex(c => c.ParentCommentId);
                 entity.HasIndex(c => c.AuthorId);
             });
