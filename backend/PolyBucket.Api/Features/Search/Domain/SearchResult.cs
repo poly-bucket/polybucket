@@ -36,6 +36,7 @@ namespace PolyBucket.Api.Features.Search.Domain
         public DateTime UpdatedAt { get; set; }
         public int? Downloads { get; set; }
         public int? Likes { get; set; }
+        public int? Dislikes { get; set; }
         public int? ModelCount { get; set; }
         public string? Username { get; set; }
         public string? Email { get; set; }

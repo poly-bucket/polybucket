@@ -8,6 +8,8 @@ using PolyBucket.Api.Features.Printers.Domain;
 using CommentDomain = PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.LikeModel.Domain;
+using PolyBucket.Api.Features.Models.RecordModelView.Domain;
+using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 using PolyBucket.Api.Features.Models.AddTagToModel.Domain;
@@ -43,6 +45,8 @@ namespace PolyBucket.Api.Data
         public DbSet<Model> Models { get; set; } = null!;
         public DbSet<ModelFile> ModelFiles { get; set; } = null!;
         public DbSet<Like> Likes { get; set; } = null!;
+        public DbSet<ModelViewDedup> ModelViewDedups { get; set; } = null!;
+        public DbSet<ModelDownloadDedup> ModelDownloadDedups { get; set; } = null!;
         public DbSet<ModelVersion> ModelVersions { get; set; } = null!;
         public DbSet<Category> Categories { get; set; } = null!;
         public DbSet<Tag> Tags { get; set; } = null!;
@@ -236,6 +240,30 @@ namespace PolyBucket.Api.Data
                 .IsUnique()
                 .HasFilter("\"DeletedAt\" IS NULL")
                 .HasDatabaseName("IX_Likes_ModelId_UserId_Active");
+
+            modelBuilder.Entity<ModelViewDedup>(entity =>
+            {
+                entity.Property(d => d.ViewerKey).HasMaxLength(128);
+                entity.HasIndex(d => new { d.ModelId, d.ViewerKey })
+                    .IsUnique()
+                    .HasDatabaseName("IX_ModelViewDedups_ModelId_ViewerKey");
+                entity.HasOne(d => d.Model)
+                    .WithMany()
+                    .HasForeignKey(d => d.ModelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ModelDownloadDedup>(entity =>
+            {
+                entity.Property(d => d.ViewerKey).HasMaxLength(128);
+                entity.HasIndex(d => new { d.ModelId, d.ViewerKey })
+                    .IsUnique()
+                    .HasDatabaseName("IX_ModelDownloadDedups_ModelId_ViewerKey");
+                entity.HasOne(d => d.Model)
+                    .WithMany()
+                    .HasForeignKey(d => d.ModelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             modelBuilder.Entity<RefreshToken>(entity =>
             {

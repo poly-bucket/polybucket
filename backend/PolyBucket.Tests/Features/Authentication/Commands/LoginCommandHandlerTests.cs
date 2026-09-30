@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Api.Common.Models;
+using PolyBucket.Api.Features.ACL.Domain;
 using Shouldly;
 using Xunit;
 
@@ -111,6 +112,52 @@ public class LoginCommandHandlerTests
         result.TokenExpiresAt.ShouldBe(authResponse.AccessTokenExpiresAt);
         result.RefreshTokenExpiresAt.ShouldBe(authResponse.RefreshTokenExpiresAt);
         result.RequiresPasswordChange.ShouldBeFalse();
+        result.RequiresFirstTimeSetup.ShouldBeFalse();
+    }
+
+    [Fact(DisplayName = "When a non-admin user has not completed first-time setup, login does not require setup.")]
+    public async Task Handle_NonAdminWithIncompleteFirstTimeSetup_ShouldNotRequireFirstTimeSetup()
+    {
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "user@example.com",
+            Password = "password123"
+        };
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "user@example.com",
+            Username = "regularuser",
+            PasswordHash = "hashedpassword",
+            RequiresPasswordChange = false,
+            HasCompletedFirstTimeSetup = false,
+            Role = new Role { Name = "User" }
+        };
+
+        var authResponse = new AuthenticationResponse
+        {
+            AccessToken = "access-token",
+            RefreshToken = "refresh-token",
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(60),
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7)
+        };
+
+        _mockAuthRepository.Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
+        _mockTokenService.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
+            .Returns(authResponse);
+        _mockAuthRepository.Setup(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshToken>()))
+            .ReturnsAsync(new RefreshToken());
+        _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
+            .Returns(Task.CompletedTask);
+        _mockLoginTwoFactorAuthRepository.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((PolyBucket.Api.Features.Authentication.Domain.TwoFactorAuth?)null);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
         result.RequiresFirstTimeSetup.ShouldBeFalse();
     }
 

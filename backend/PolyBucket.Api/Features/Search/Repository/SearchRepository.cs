@@ -108,6 +108,7 @@ namespace PolyBucket.Api.Features.Search.Repository
                     UpdatedAt = s.Entity.UpdatedAt ?? s.Entity.CreatedAt,
                     Downloads = s.Entity.Downloads,
                     Likes = s.Entity.Likes,
+                    Dislikes = s.Entity.Dislikes,
                     RelevanceScore = s.Score
                 })
                 .ToListAsync(cancellationToken);

@@ -31,6 +31,7 @@ export interface SearchResult {
   updatedAt?: Date;
   downloads?: number;
   likes?: number;
+  dislikes?: number;
   modelCount?: number;
   relevanceScore: number;
 }
@@ -71,6 +72,7 @@ function mapItem(item: SearchResultItem): SearchResult {
     updatedAt: item.updatedAt,
     downloads: item.downloads ?? undefined,
     likes: item.likes ?? undefined,
+    dislikes: (item as SearchResultItem & { dislikes?: number }).dislikes ?? undefined,
     modelCount: item.modelCount ?? undefined,
     relevanceScore: item.relevanceScore ?? 0,
   };

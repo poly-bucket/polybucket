@@ -34,8 +34,14 @@ public class DislikeCommentController(ICommentReactionService reactionService) :
         }
 
         var outcome = await reactionService.ReactAsync(commentId, userId.Value, CommentReactionType.Dislike, cancellationToken);
-        return outcome.Change == CommentReactionChange.NotFound
-            ? NotFound()
-            : Ok(CommentReactionResponse.From(outcome));
+        return MapOutcome(outcome);
     }
+
+    private IActionResult MapOutcome(CommentReactionOutcome outcome) =>
+        outcome.Change switch
+        {
+            CommentReactionChange.NotFound => NotFound(),
+            CommentReactionChange.Forbidden => Forbid(),
+            _ => Ok(CommentReactionResponse.From(outcome))
+        };
 }

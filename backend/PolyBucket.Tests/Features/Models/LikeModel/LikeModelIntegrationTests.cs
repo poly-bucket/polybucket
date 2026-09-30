@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -16,8 +17,8 @@ public class LikeModelIntegrationTests : BaseIntegrationTest
     {
     }
 
-    [Fact(DisplayName = "When liking a model with a valid request, the like model endpoint returns NoContent and persists the like.")]
-    public async Task LikeModel_WithValidRequest_ReturnsNoContentAndPersistsLike()
+    [Fact(DisplayName = "When liking a model with a valid request, the like model endpoint returns Ok and persists the like.")]
+    public async Task LikeModel_WithValidRequest_ReturnsOkAndPersistsLike()
     {
         await ResetStateAsync();
         var client = Factory.CreateClient();
@@ -30,7 +31,9 @@ public class LikeModelIntegrationTests : BaseIntegrationTest
 
         var response = await client.PostAsync($"/api/models/{model.Id}/like", null);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        doc.RootElement.GetProperty("likes").GetInt32().ShouldBe(1);
 
         var updatedModel = await DbContext.Models.AsNoTracking().FirstAsync(m => m.Id == model.Id);
         updatedModel.Likes.ShouldBe(1);
@@ -51,8 +54,8 @@ public class LikeModelIntegrationTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact(DisplayName = "When unliking a liked model, the unlike model endpoint returns NoContent and decrements the counter.")]
-    public async Task UnlikeModel_WithExistingLike_ReturnsNoContent()
+    [Fact(DisplayName = "When unliking a liked model, the unlike model endpoint returns Ok and decrements the counter.")]
+    public async Task UnlikeModel_WithExistingLike_ReturnsOk()
     {
         await ResetStateAsync();
         var client = Factory.CreateClient();
@@ -67,7 +70,7 @@ public class LikeModelIntegrationTests : BaseIntegrationTest
 
         var unlikeResponse = await client.DeleteAsync($"/api/models/{model.Id}/like");
 
-        unlikeResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        unlikeResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var updatedModel = await DbContext.Models.AsNoTracking().FirstAsync(m => m.Id == model.Id);
         updatedModel.Likes.ShouldBe(0);

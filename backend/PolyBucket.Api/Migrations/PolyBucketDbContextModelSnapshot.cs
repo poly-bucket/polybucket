@@ -99,6 +99,9 @@ namespace Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Dislikes")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Downloads")
                         .HasColumnType("integer");
 
@@ -156,6 +159,9 @@ namespace Api.Migrations
 
                     b.Property<Guid>("UpdatedById")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Views")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("WIP")
                         .HasColumnType("boolean");
@@ -2029,6 +2035,9 @@ namespace Api.Migrations
                     b.Property<Guid>("ModelId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2048,6 +2057,58 @@ namespace Api.Migrations
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("Likes");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.RecordModelDownload.Domain.ModelDownloadDedup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("LastCountedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ViewerKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelId", "ViewerKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ModelDownloadDedups_ModelId_ViewerKey");
+
+                    b.ToTable("ModelDownloadDedups");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.RecordModelView.Domain.ModelViewDedup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("LastCountedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ViewerKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelId", "ViewerKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ModelViewDedups_ModelId_ViewerKey");
+
+                    b.ToTable("ModelViewDedups");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.Notifications.Domain.Notification", b =>
@@ -3489,6 +3550,28 @@ namespace Api.Migrations
                     b.Navigation("Model");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.RecordModelDownload.Domain.ModelDownloadDedup", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("PolyBucket.Api.Features.Models.RecordModelView.Domain.ModelViewDedup", b =>
+                {
+                    b.HasOne("PolyBucket.Api.Common.Models.Model", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Model");
                 });
 
             modelBuilder.Entity("PolyBucket.Api.Features.Notifications.Domain.Notification", b =>

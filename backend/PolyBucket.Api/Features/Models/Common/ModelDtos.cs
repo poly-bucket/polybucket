@@ -108,7 +108,9 @@ namespace PolyBucket.Api.Features.Models.Common
         public string? ThumbnailUrl { get; set; }
         public string? FileUrl { get; set; }
         public int Downloads { get; set; }
+        public int Views { get; set; }
         public int Likes { get; set; }
+        public int Dislikes { get; set; }
         public LicenseTypes? License { get; set; }
         public PrivacySettings Privacy { get; set; }
         public bool AIGenerated { get; set; }
@@ -135,6 +137,7 @@ namespace PolyBucket.Api.Features.Models.Common
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsLikedByCurrentUser { get; set; }
+        public bool IsDislikedByCurrentUser { get; set; }
     }
 
     public static class ModelDtoMapper
@@ -149,7 +152,9 @@ namespace PolyBucket.Api.Features.Models.Common
                 ThumbnailUrl = model.ThumbnailUrl,
                 FileUrl = model.FileUrl,
                 Downloads = model.Downloads,
+                Views = model.Views,
                 Likes = model.Likes,
+                Dislikes = model.Dislikes,
                 License = model.License,
                 Privacy = model.Privacy,
                 AIGenerated = model.AIGenerated,

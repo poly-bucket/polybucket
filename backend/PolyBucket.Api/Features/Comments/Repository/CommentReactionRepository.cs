@@ -15,6 +15,15 @@ public class CommentReactionRepository(PolyBucketDbContext context, TimeProvider
     public Task<bool> IsReactableAsync(Guid commentId, CancellationToken cancellationToken = default) =>
         context.EnhancedComments.AnyAsync(c => c.Id == commentId && !c.IsHidden, cancellationToken);
 
+    public async Task<Guid?> GetAuthorIdAsync(Guid commentId, CancellationToken cancellationToken = default)
+    {
+        return await context.EnhancedComments
+            .AsNoTracking()
+            .Where(c => c.Id == commentId && !c.IsHidden)
+            .Select(c => (Guid?)c.AuthorId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<CommentReactionType?> GetUserReactionAsync(Guid commentId, Guid userId, CancellationToken cancellationToken = default)
     {
         return await context.CommentReactions

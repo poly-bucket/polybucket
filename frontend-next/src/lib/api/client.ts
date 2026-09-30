@@ -145,7 +145,7 @@ export interface IApiClient {
     getSupportedExtensions_GetSupportedExtensions( cancelToken?: CancelToken): Promise<string[]>;
     getSupportedExtensionsByType_GetSupportedExtensionsForType(fileType: string,  cancelToken?: CancelToken): Promise<string[]>;
     streamFile_StreamFile(fileId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    streamFile_StreamModelFile(modelId: string, fileName: string,  cancelToken?: CancelToken): Promise<FileResponse>;
+    streamFile_StreamModelFile(modelId: string, fileName: string, recordDownload: boolean | undefined,  cancelToken?: CancelToken): Promise<FileResponse>;
     createFilament_Create(command: CreateFilamentCommand,  cancelToken?: CancelToken): Promise<FileResponse>;
     getAllFilaments_GetAll( cancelToken?: CancelToken): Promise<FileResponse>;
     deleteFilament_Delete(id: string,  cancelToken?: CancelToken): Promise<FileResponse>;
@@ -9137,14 +9137,18 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    streamFile_StreamModelFile(modelId: string, fileName: string, cancelToken?: CancelToken): Promise<FileResponse> {
-        let url_ = this.baseUrl + "/api/files/stream/model/{modelId}/{fileName}";
+    streamFile_StreamModelFile(modelId: string, fileName: string, recordDownload: boolean | undefined, cancelToken?: CancelToken): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/files/stream/model/{modelId}/{fileName}?";
         if (modelId === undefined || modelId === null)
             throw new globalThis.Error("The parameter 'modelId' must be defined.");
         url_ = url_.replace("{modelId}", encodeURIComponent("" + modelId));
         if (fileName === undefined || fileName === null)
             throw new globalThis.Error("The parameter 'fileName' must be defined.");
         url_ = url_.replace("{fileName}", encodeURIComponent("" + fileName));
+        if (recordDownload === null)
+            throw new globalThis.Error("The parameter 'recordDownload' cannot be null.");
+        else if (recordDownload !== undefined)
+            url_ += "recordDownload=" + encodeURIComponent("" + recordDownload) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -24454,6 +24458,7 @@ export class Model extends Auditable implements IModel {
     thumbnailUrl?: string | undefined;
     fileUrl?: string | undefined;
     downloads?: number;
+    views?: number;
     likes?: number;
     license?: LicenseTypes | undefined;
     privacy?: PrivacySettings;
@@ -24477,6 +24482,8 @@ export class Model extends Auditable implements IModel {
     remoteAuthorId?: string | undefined;
     isFederated?: boolean;
     lastFederationSync?: Date | undefined;
+    isLikedByCurrentUser?: boolean;
+    isDislikedByCurrentUser?: boolean;
 
     constructor(data?: IModel) {
         super(data);
@@ -24491,7 +24498,11 @@ export class Model extends Auditable implements IModel {
             this.thumbnailUrl = _data["thumbnailUrl"];
             this.fileUrl = _data["fileUrl"];
             this.downloads = _data["downloads"];
+            this.views = _data["views"];
             this.likes = _data["likes"];
+            this.dislikes = _data["dislikes"];
+            this.isLikedByCurrentUser = _data["isLikedByCurrentUser"];
+            this.isDislikedByCurrentUser = _data["isDislikedByCurrentUser"];
             this.license = _data["license"];
             this.privacy = _data["privacy"];
             this.aiGenerated = _data["aiGenerated"];
@@ -24556,7 +24567,9 @@ export class Model extends Auditable implements IModel {
         data["thumbnailUrl"] = this.thumbnailUrl;
         data["fileUrl"] = this.fileUrl;
         data["downloads"] = this.downloads;
+        data["views"] = this.views;
         data["likes"] = this.likes;
+        data["dislikes"] = this.dislikes;
         data["license"] = this.license;
         data["privacy"] = this.privacy;
         data["aiGenerated"] = this.aiGenerated;
@@ -24568,6 +24581,8 @@ export class Model extends Auditable implements IModel {
         data["isFeatured"] = this.isFeatured;
         data["authorId"] = this.authorId;
         data["author"] = this.author ? this.author.toJSON() : undefined as any;
+        data["isLikedByCurrentUser"] = this.isLikedByCurrentUser;
+        data["isDislikedByCurrentUser"] = this.isDislikedByCurrentUser;
         if (Array.isArray(this.files)) {
             data["files"] = [];
             for (let item of this.files)
@@ -24615,7 +24630,9 @@ export interface IModel extends IAuditable {
     thumbnailUrl?: string | undefined;
     fileUrl?: string | undefined;
     downloads?: number;
+    views?: number;
     likes?: number;
+    dislikes?: number;
     license?: LicenseTypes | undefined;
     privacy?: PrivacySettings;
     aiGenerated?: boolean;
@@ -24638,6 +24655,8 @@ export interface IModel extends IAuditable {
     remoteAuthorId?: string | undefined;
     isFederated?: boolean;
     lastFederationSync?: Date | undefined;
+    isLikedByCurrentUser?: boolean;
+    isDislikedByCurrentUser?: boolean;
 }
 
 export enum LicenseTypes {

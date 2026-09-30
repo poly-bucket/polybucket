@@ -59,19 +59,4 @@ public class DownloadModelRepository(PolyBucketDbContext context) : IDownloadMod
         };
     }
 
-    public async Task<bool> TryIncrementDownloadCountAsync(
-        Guid modelId,
-        CancellationToken cancellationToken = default)
-    {
-        var model = await _context.Set<ModelEntity>()
-            .FirstOrDefaultAsync(m => m.Id == modelId, cancellationToken);
-        if (model == null)
-        {
-            return false;
-        }
-
-        model.Downloads++;
-        await _context.SaveChangesAsync(cancellationToken);
-        return true;
-    }
 }

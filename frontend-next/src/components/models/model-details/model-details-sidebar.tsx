@@ -7,6 +7,12 @@ import { Button } from "@/components/primitives/button";
 import { formatNumber } from "@/lib/utils/modelUtils";
 import { useModelSidebarCards, PluginBoundary } from "@/lib/plugins";
 import type { Model } from "@/lib/api/client";
+import type { ModelReactionResult } from "@/lib/services/modelReactionsService";
+import {
+  getModelReactionsState,
+  type ModelWithReactions,
+} from "@/lib/types/modelReactions";
+import { ModelReactions } from "./model-reactions";
 import { LicenseTypes } from "@/lib/api/client";
 import { Download, Pencil, Trash2, Share2, GitCommitHorizontal } from "lucide-react";
 import { AddToCollectionPopover } from "./add-to-collection-popover";
@@ -25,7 +31,7 @@ const LICENSE_LABELS: Record<string, string> = {
 };
 
 interface ModelDetailsSidebarProps {
-  model: Model;
+  model: ModelWithReactions;
   isOwner: boolean;
   isFederated: boolean;
   isAuthenticated: boolean;
@@ -35,6 +41,7 @@ interface ModelDetailsSidebarProps {
   onShare: () => void;
   onEdit?: () => void;
   onCreateVersion?: () => void;
+  onReactionUpdate?: (result: ModelReactionResult) => void;
 }
 
 export function ModelDetailsSidebar({
@@ -48,8 +55,10 @@ export function ModelDetailsSidebar({
   onShare,
   onEdit,
   onCreateVersion,
+  onReactionUpdate,
 }: ModelDetailsSidebarProps) {
   const downloads = model.downloads ?? 0;
+  const views = model.views ?? 0;
   const authorName = model.author?.username ?? "Unknown";
   const licenseLabel =
     model.license && LICENSE_LABELS[model.license]
@@ -160,6 +169,17 @@ export function ModelDetailsSidebar({
             )}
           </div>
 
+          {onReactionUpdate && (
+            <ModelReactions
+              modelId={model.id!}
+              reactions={getModelReactionsState(model)}
+              isOwner={isOwner}
+              isFederated={isFederated}
+              isAuthenticated={isAuthenticated}
+              onUpdate={onReactionUpdate}
+            />
+          )}
+
           <div className="space-y-3">
             <Button
               variant="glass"
@@ -243,7 +263,7 @@ export function ModelDetailsSidebar({
             <div className="flex justify-between">
               <span className="text-white/60">Views</span>
               <span className="font-semibold text-white">
-                {formatNumber(downloads * 3)}
+                {formatNumber(views)}
               </span>
             </div>
             <div className="flex justify-between">

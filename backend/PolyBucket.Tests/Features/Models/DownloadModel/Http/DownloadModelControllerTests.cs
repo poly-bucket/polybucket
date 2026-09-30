@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Models.DownloadModel.Domain;
 using PolyBucket.Api.Features.Models.DownloadModel.Http;
+using PolyBucket.Api.Features.Models.Http;
+using Shouldly;
 using Xunit;
 
 namespace PolyBucket.Tests.Features.Models.DownloadModel.Http;
@@ -64,6 +66,30 @@ public class DownloadModelControllerTests
         var file = Assert.IsType<FileStreamResult>(result);
         Assert.Equal("model/stl", file.ContentType);
         Assert.Equal("x.stl", file.FileDownloadName);
+    }
+
+    [Fact(DisplayName = "When the download outcome includes counts, the controller sets download count headers.")]
+    public async Task DownloadModel_WhenOutcomeHasCounts_SetsHeaders()
+    {
+        var stream = new MemoryStream([1, 2, 3]);
+        var mock = new Mock<IDownloadModelService>();
+        mock
+            .Setup(s => s.DownloadAsync(It.IsAny<Guid>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DownloadModelOutcome.OkSingle(stream, "model/stl", "x.stl", ownerDisposes: true, downloads: 9, counted: true));
+
+        var controller = new DownloadModelController(mock.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "Test"))
+            }
+        };
+
+        await controller.DownloadModel(Guid.NewGuid(), CancellationToken.None);
+
+        controller.Response.Headers[ModelDownloadCountHeaders.Downloads].ToString().ShouldBe("9");
+        controller.Response.Headers[ModelDownloadCountHeaders.Counted].ToString().ShouldBe("true");
     }
 
     [Fact(DisplayName = "When downloading a model and the service returns Forbid, the download model controller returns 403.")]

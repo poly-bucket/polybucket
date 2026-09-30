@@ -14,6 +14,12 @@ public class CommentReactionService(ICommentReactionRepository repository) : ICo
             return CommentReactionOutcome.NotFound;
         }
 
+        var authorId = await repository.GetAuthorIdAsync(commentId, cancellationToken);
+        if (authorId == userId)
+        {
+            return CommentReactionOutcome.Forbidden;
+        }
+
         var existing = await repository.GetUserReactionAsync(commentId, userId, cancellationToken);
         var applied = existing switch
         {
@@ -30,6 +36,12 @@ public class CommentReactionService(ICommentReactionRepository repository) : ICo
         if (!await repository.IsReactableAsync(commentId, cancellationToken))
         {
             return CommentReactionOutcome.NotFound;
+        }
+
+        var authorId = await repository.GetAuthorIdAsync(commentId, cancellationToken);
+        if (authorId == userId)
+        {
+            return CommentReactionOutcome.Forbidden;
         }
 
         var existing = await repository.GetUserReactionAsync(commentId, userId, cancellationToken);

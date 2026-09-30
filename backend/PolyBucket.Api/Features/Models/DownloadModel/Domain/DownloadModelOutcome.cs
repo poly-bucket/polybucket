@@ -22,6 +22,8 @@ public sealed class DownloadModelOutcome
     public byte[]? ZipBytes { get; init; }
     public string? ZipFileName { get; init; }
     public bool FileStreamOwnerDisposes { get; init; }
+    public int Downloads { get; init; }
+    public bool Counted { get; init; }
 
     public static DownloadModelOutcome NotFound() =>
         new() { Kind = DownloadModelOutcomeKind.NotFound, Message = "Model not found" };
@@ -36,18 +38,33 @@ public sealed class DownloadModelOutcome
         Stream stream,
         string contentType,
         string fileName,
-        bool ownerDisposes) =>
+        bool ownerDisposes,
+        int downloads = 0,
+        bool counted = false) =>
         new()
         {
             Kind = DownloadModelOutcomeKind.OkSingleFile,
             FileStream = stream,
             FileContentType = contentType,
             FileName = fileName,
-            FileStreamOwnerDisposes = ownerDisposes
+            FileStreamOwnerDisposes = ownerDisposes,
+            Downloads = downloads,
+            Counted = counted
         };
 
-    public static DownloadModelOutcome OkZipFile(byte[] zipBytes, string zipFileName) =>
-        new() { Kind = DownloadModelOutcomeKind.OkZip, ZipBytes = zipBytes, ZipFileName = zipFileName };
+    public static DownloadModelOutcome OkZipFile(
+        byte[] zipBytes,
+        string zipFileName,
+        int downloads = 0,
+        bool counted = false) =>
+        new()
+        {
+            Kind = DownloadModelOutcomeKind.OkZip,
+            ZipBytes = zipBytes,
+            ZipFileName = zipFileName,
+            Downloads = downloads,
+            Counted = counted
+        };
 }
 
 public sealed class DownloadModelBundle

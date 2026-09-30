@@ -15,6 +15,7 @@ using System;
 using System.Linq;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Api.Features.Models.ModelReactions.Domain;
 
 namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 {
@@ -98,8 +99,10 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
                 var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var currentUserId))
                 {
-                    modelDto.IsLikedByCurrentUser = model.LikeCollection?.Any(l =>
-                        l.UserId == currentUserId && l.DeletedAt == null) ?? false;
+                    var userReaction = model.LikeCollection?
+                        .FirstOrDefault(l => l.UserId == currentUserId && l.DeletedAt == null);
+                    modelDto.IsLikedByCurrentUser = userReaction?.Type == ModelReactionType.Like;
+                    modelDto.IsDislikedByCurrentUser = userReaction?.Type == ModelReactionType.Dislike;
                 }
 
                 return new GetModelByIdResponse

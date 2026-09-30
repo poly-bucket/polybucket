@@ -19,6 +19,7 @@ public class CommentReactionServiceTests
     {
         _repository.Setup(r => r.IsReactableAsync(_commentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _repository.Setup(r => r.GetCountsAsync(_commentId, It.IsAny<CancellationToken>())).ReturnsAsync((3, 1));
+        _repository.Setup(r => r.GetAuthorIdAsync(_commentId, It.IsAny<CancellationToken>())).ReturnsAsync(Guid.NewGuid());
     }
 
     private CommentReactionService CreateService() => new(_repository.Object);
@@ -124,6 +125,17 @@ public class CommentReactionServiceTests
         outcome.Change.ShouldBe(CommentReactionChange.Unchanged);
         outcome.UserReaction.ShouldBe(CommentReactionType.Dislike);
         _repository.Verify(r => r.TryRemoveAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CommentReactionType>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "When the comment author reacts to their own comment, the outcome is Forbidden.")]
+    public async Task React_SelfReaction_ReturnsForbidden()
+    {
+        _repository.Setup(r => r.GetAuthorIdAsync(_commentId, It.IsAny<CancellationToken>())).ReturnsAsync(_userId);
+
+        var outcome = await CreateService().ReactAsync(_commentId, _userId, CommentReactionType.Like);
+
+        outcome.Change.ShouldBe(CommentReactionChange.Forbidden);
+        _repository.Verify(r => r.TryAddAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CommentReactionType>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "When the comment is missing or hidden, reacting returns not found without writing.")]

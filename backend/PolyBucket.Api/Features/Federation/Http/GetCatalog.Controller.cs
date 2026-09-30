@@ -108,6 +108,7 @@ namespace PolyBucket.Api.Features.Federation.Http
                     FileCount = 0, // TODO: Calculate from versions
                     Downloads = m.Downloads,
                     Likes = m.Likes,
+                    Dislikes = m.Dislikes,
                     CreatedAt = m.CreatedAt,
                     UpdatedAt = m.UpdatedAt ?? m.CreatedAt
                 })
@@ -210,6 +211,7 @@ namespace PolyBucket.Api.Features.Federation.Http
         public int FileCount { get; set; }
         public int Downloads { get; set; }
         public int Likes { get; set; }
+        public int Dislikes { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

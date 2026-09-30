@@ -26,6 +26,7 @@ function toModel(result: SearchResult): Model {
     authorId: result.authorId ?? "",
     downloads: result.downloads ?? 0,
     likes: result.likes ?? 0,
+    dislikes: result.dislikes ?? 0,
     createdAt: result.createdAt,
   } as Model;
 }

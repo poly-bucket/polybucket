@@ -4,7 +4,8 @@ public enum CommentReactionChange
 {
     Applied,
     Unchanged,
-    NotFound
+    NotFound,
+    Forbidden
 }
 
 public sealed record CommentReactionOutcome(
@@ -14,4 +15,5 @@ public sealed record CommentReactionOutcome(
     CommentReactionType? UserReaction)
 {
     public static CommentReactionOutcome NotFound { get; } = new(CommentReactionChange.NotFound, 0, 0, null);
+    public static CommentReactionOutcome Forbidden { get; } = new(CommentReactionChange.Forbidden, 0, 0, null);
 }

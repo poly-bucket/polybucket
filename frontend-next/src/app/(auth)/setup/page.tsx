@@ -50,10 +50,16 @@ export default function SetupPage() {
     }
   };
 
+  const isAdmin = !!user?.roles?.some((r) => r?.toLowerCase() === "admin");
+
   useEffect(() => {
     if (isAuthLoading) return;
     if (!user?.accessToken) {
       router.replace("/login");
+      return;
+    }
+    if (!isAdmin) {
+      router.replace("/");
       return;
     }
 
@@ -100,7 +106,7 @@ export default function SetupPage() {
     };
 
     checkStatus();
-  }, [user?.accessToken, isAuthLoading, router]);
+  }, [user?.accessToken, isAuthLoading, isAdmin, router]);
 
   const handleAdminAccountComplete = (data: Record<string, unknown>) => {
     setSetupData((prev) => ({ ...prev, ...data }));

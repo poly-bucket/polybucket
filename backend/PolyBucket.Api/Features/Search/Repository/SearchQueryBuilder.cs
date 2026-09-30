@@ -141,6 +141,8 @@ public static class SearchQueryBuilder
             "createdat" => descending ? query.OrderByDescending(s => s.Entity.CreatedAt) : query.OrderBy(s => s.Entity.CreatedAt),
             "downloads" => descending ? query.OrderByDescending(s => s.Entity.Downloads) : query.OrderBy(s => s.Entity.Downloads),
             "likes" => descending ? query.OrderByDescending(s => s.Entity.Likes) : query.OrderBy(s => s.Entity.Likes),
+            "dislikes" => descending ? query.OrderByDescending(s => s.Entity.Dislikes) : query.OrderBy(s => s.Entity.Dislikes),
+            "score" => descending ? query.OrderByDescending(s => s.Entity.Likes - s.Entity.Dislikes) : query.OrderBy(s => s.Entity.Likes - s.Entity.Dislikes),
             _ => query.OrderByDescending(s => s.Score)
         };
         return ordered.ThenByDescending(s => s.Entity.CreatedAt).ThenBy(s => s.Entity.Id);

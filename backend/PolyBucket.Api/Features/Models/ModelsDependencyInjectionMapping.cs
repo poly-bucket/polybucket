@@ -140,12 +140,26 @@ public static class ModelsDependencyInjectionMapping
             DownloadModel.Domain.IDownloadModelService,
             DownloadModel.Domain.DownloadModelService>();
 
-        services.AddScoped<
-            LikeModel.Domain.ILikeModelService,
-            LikeModel.Domain.LikeModelService>();
         services.AddTransient<
-            LikeModel.Repository.ILikeModelRepository,
-            LikeModel.Repository.LikeModelRepository>();
+            RecordModelView.Repository.IRecordModelViewRepository,
+            RecordModelView.Repository.RecordModelViewRepository>();
+        services.AddTransient<
+            RecordModelView.Domain.IRecordModelViewService,
+            RecordModelView.Domain.RecordModelViewService>();
+
+        services.AddTransient<
+            RecordModelDownload.Repository.IModelDownloadCounterRepository,
+            RecordModelDownload.Repository.ModelDownloadCounterRepository>();
+        services.AddTransient<
+            RecordModelDownload.Domain.IModelDownloadCounter,
+            RecordModelDownload.Domain.ModelDownloadCounter>();
+
+        services.AddScoped<
+            ModelReactions.Domain.IModelReactionService,
+            ModelReactions.Domain.ModelReactionService>();
+        services.AddTransient<
+            ModelReactions.Repository.IModelReactionRepository,
+            ModelReactions.Repository.ModelReactionRepository>();
 
         return services;
     }

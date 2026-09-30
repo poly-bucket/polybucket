@@ -157,8 +157,12 @@ describe("LoginPage", () => {
     });
   });
 
-  it("redirects to setup when first-time setup is required", async () => {
-    const login = vi.fn().mockResolvedValue({ success: true, requiresFirstTimeSetup: true });
+  it("redirects to setup when first-time setup is required for an admin", async () => {
+    const login = vi.fn().mockResolvedValue({
+      success: true,
+      requiresFirstTimeSetup: true,
+      isAdmin: true,
+    });
     const user = userEvent.setup();
 
     render(<LoginPage />, { mockAuth: { user: null, login } });
@@ -169,6 +173,25 @@ describe("LoginPage", () => {
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/setup");
+    });
+  });
+
+  it("does not redirect non-admins to setup when first-time setup flag is set", async () => {
+    const login = vi.fn().mockResolvedValue({
+      success: true,
+      requiresFirstTimeSetup: true,
+      isAdmin: false,
+    });
+    const user = userEvent.setup();
+
+    render(<LoginPage />, { mockAuth: { user: null, login } });
+
+    await user.type(screen.getByPlaceholderText(/email or username/i), "user@test.com");
+    await user.type(screen.getByPlaceholderText(/password/i), "secret");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/");
     });
   });
 

@@ -19,7 +19,9 @@ public class Model : Auditable
     public string? ThumbnailUrl { get; set; }
     public string? FileUrl { get; set; }
     public int Downloads { get; set; }
+    public int Views { get; set; }
     public int Likes { get; set; }
+    public int Dislikes { get; set; }
     public LicenseTypes? License { get; set; }
     public PrivacySettings Privacy { get; set; }
     public bool AIGenerated { get; set; }

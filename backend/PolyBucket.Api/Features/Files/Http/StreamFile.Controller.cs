@@ -13,6 +13,9 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Settings;
 using Microsoft.Extensions.Options;
+using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Api.Features.Models.Http;
+using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
 using System;
 using System.IO;
 using System.Linq;
@@ -29,17 +32,20 @@ namespace PolyBucket.Api.Features.Files.Http
         private readonly IPermissionService _permissionService;
         private readonly IStorageService _storageService;
         private readonly StorageSettings _storageSettings;
+        private readonly IModelDownloadCounter _downloadCounter;
 
         public StreamFileController(
             PolyBucketDbContext context,
             IPermissionService permissionService,
             IStorageService storageService,
-            IOptions<StorageSettings> storageOptions)
+            IOptions<StorageSettings> storageOptions,
+            IModelDownloadCounter downloadCounter)
         {
             _context = context;
             _permissionService = permissionService;
             _storageService = storageService;
             _storageSettings = storageOptions.Value;
+            _downloadCounter = downloadCounter;
         }
 
         [HttpGet("stream/{fileId}")]
@@ -88,7 +94,7 @@ namespace PolyBucket.Api.Features.Files.Http
 
         [HttpGet("stream/model/{modelId}/{fileName}")]
         [ServiceFilter(typeof(PublicModelAuthorizationFilter))]
-        public async Task<IActionResult> StreamModelFile(Guid modelId, string fileName)
+        public async Task<IActionResult> StreamModelFile(Guid modelId, string fileName, [FromQuery] bool recordDownload = false)
         {
             try
             {
@@ -156,14 +162,19 @@ namespace PolyBucket.Api.Features.Files.Http
                     return NotFound("File not found in storage");
                 }
 
-                // Set appropriate headers
-                Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{file.Name}\"");
-                Response.Headers.Add("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+                Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{file.Name}\"");
+                Response.Headers.Append("Cache-Control", "public, max-age=3600");
 
-                // Return the file stream
+                if (recordDownload)
+                {
+                    var viewerKey = ModelEngagementViewerKey.Build(HttpContext, User);
+                    var (downloads, counted) = await _downloadCounter.TryRecordDownloadAsync(modelId, viewerKey);
+                    Response.ApplyModelDownloadCountHeaders(downloads, counted);
+                }
+
                 return File(fileStream, file.MimeType ?? "application/octet-stream");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, "An error occurred while streaming the file");
             }

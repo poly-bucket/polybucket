@@ -11,6 +11,13 @@ import { fetchModelById } from "@/lib/services/modelsService";
 import { getApiConfig } from "@/lib/api/config";
 import { isMarkdownFile, isImageUrl } from "@/lib/utils/modelUtils";
 import type { Model, ModelFile } from "@/lib/api/client";
+import { applyModelReaction, type ModelWithReactions } from "@/lib/types/modelReactions";
+import {
+  modelViewSessionKey,
+  recordModelView,
+} from "@/lib/services/modelViewsService";
+import { applyDownloadCountToModel } from "@/lib/services/modelDownloadsService";
+import type { ModelReactionResult } from "@/lib/services/modelReactionsService";
 import { ModelDetailsCarousel, type CarouselItem } from "./model-details-carousel";
 import { ModelDetailsSidebar } from "./model-details-sidebar";
 import { ModelDetailsFiles } from "./model-details-files";
@@ -90,7 +97,7 @@ export function ModelDetailsPage() {
   const id = params?.id as string | undefined;
   const { user, isAuthenticated } = useAuth();
 
-  const [model, setModel] = useState<Model | null>(null);
+  const [model, setModel] = useState<ModelWithReactions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -138,6 +145,36 @@ export function ModelDetailsPage() {
     loadModel();
   }, [loadModel]);
 
+  useEffect(() => {
+    const modelId = model?.id;
+    if (!modelId) {
+      return;
+    }
+    const sessionKey = modelViewSessionKey(modelId);
+    try {
+      if (sessionStorage.getItem(sessionKey)) {
+        return;
+      }
+    } catch {
+      return;
+    }
+
+    void recordModelView(modelId)
+      .then((result) => {
+        try {
+          sessionStorage.setItem(sessionKey, "1");
+        } catch {
+          return;
+        }
+        if (result.counted) {
+          setModel((current) =>
+            current ? { ...current, views: result.views } : current
+          );
+        }
+      })
+      .catch(() => {});
+  }, [model?.id]);
+
   const carouselItems = useMemo(
     () => (model ? buildCarouselItems(model) : []),
     [model]
@@ -166,6 +203,11 @@ export function ModelDetailsPage() {
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(url), 5000);
+        setModel((current) =>
+          current
+            ? applyDownloadCountToModel(current, response.headers)
+            : current
+        );
       } else {
         toast.error("Download failed: No file data received");
       }
@@ -187,7 +229,8 @@ export function ModelDetailsPage() {
         const client = ApiClientFactory.getApiClient();
         const response = await client.streamFile_StreamModelFile(
           model.id,
-          file.name
+          file.name,
+          true
         );
         if (response?.data instanceof Blob) {
           const url = URL.createObjectURL(response.data);
@@ -198,6 +241,11 @@ export function ModelDetailsPage() {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
+          setModel((current) =>
+            current
+              ? applyDownloadCountToModel(current, response.headers)
+              : current
+          );
         }
       } catch {
         toast.error("File download failed");
@@ -232,6 +280,10 @@ export function ModelDetailsPage() {
       setShowDeleteConfirm(false);
     }
   }, [model?.id, user?.accessToken, router]);
+
+  const handleReactionUpdate = useCallback((result: ModelReactionResult) => {
+    setModel((prev) => (prev ? applyModelReaction(prev, result) : prev));
+  }, []);
 
   const handleShare = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -409,6 +461,7 @@ export function ModelDetailsPage() {
             onShare={handleShare}
             onEdit={handleOpenEditDetails}
             onCreateVersion={handleOpenCreateVersion}
+            onReactionUpdate={handleReactionUpdate}
           />
         </div>
       </div>

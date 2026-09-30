@@ -1,14 +1,12 @@
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
-using PolyBucket.Api.Features.Models.LikeModel.Domain;
+using PolyBucket.Api.Features.Models.Http;
 using PolyBucket.Api.Features.Models.LikeModel.Http;
+using PolyBucket.Api.Features.Models.ModelReactions.Domain;
+using PolyBucket.Tests.Features.Comments;
 using Shouldly;
 using Xunit;
 
@@ -16,43 +14,34 @@ namespace PolyBucket.Tests.Features.Models.LikeModel;
 
 public class LikeModelControllerTests
 {
-    private readonly Mock<ILikeModelService> _mockService;
-    private readonly Mock<ILogger<LikeModelController>> _mockLogger;
-    private readonly LikeModelController _controller;
+    private readonly Mock<IModelReactionService> _service = new();
+    private readonly Guid _userId = Guid.NewGuid();
 
-    public LikeModelControllerTests()
-    {
-        _mockService = new Mock<ILikeModelService>();
-        _mockLogger = new Mock<ILogger<LikeModelController>>();
-        _controller = new LikeModelController(_mockService.Object, _mockLogger.Object);
-    }
-
-    [Fact(DisplayName = "When liking a model with a valid request, the like model controller returns NoContent.")]
-    public async Task LikeModel_WithValidRequest_ReturnsNoContent()
+    [Fact(DisplayName = "When liking a model, the controller returns Ok with reaction counts.")]
+    public async Task LikeModel_ReturnsOkWithBody()
     {
         var modelId = Guid.NewGuid();
-        _mockService
-            .Setup(s => s.LikeModelAsync(modelId, It.IsAny<System.Security.Claims.ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        _service.Setup(s => s.ReactAsync(modelId, It.IsAny<System.Security.Claims.ClaimsPrincipal>(), ModelReactionType.Like, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ModelReactionOutcome(ModelReactionChange.Applied, 1, 0, ModelReactionType.Like));
+        var controller = new LikeModelController(_service.Object).WithUser(_userId);
 
-        var result = await _controller.LikeModel(modelId, CancellationToken.None);
+        var result = await controller.LikeModel(modelId, CancellationToken.None);
 
-        result.ShouldBeOfType<NoContentResult>();
+        var body = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<ModelReactionResponse>();
+        body.Likes.ShouldBe(1);
+        body.UserHasLiked.ShouldBeTrue();
     }
 
-    [Fact(DisplayName = "When inspecting like model actions, ProducesResponseType attributes are applied.")]
-    public void LikeModelActions_ShouldHaveProducesResponseTypeAttributes()
+    [Fact(DisplayName = "When the author likes their own model, the controller returns Forbid.")]
+    public async Task LikeModel_SelfReaction_ReturnsForbid()
     {
-        var likeMethod = typeof(LikeModelController).GetMethod(nameof(LikeModelController.LikeModel));
-        likeMethod.ShouldNotBeNull();
-        likeMethod!.GetCustomAttributes<ProducesResponseTypeAttribute>()
-            .Any(a => a.StatusCode == StatusCodes.Status204NoContent)
-            .ShouldBeTrue();
+        var modelId = Guid.NewGuid();
+        _service.Setup(s => s.ReactAsync(modelId, It.IsAny<System.Security.Claims.ClaimsPrincipal>(), ModelReactionType.Like, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ModelReactionOutcome.Forbidden);
+        var controller = new LikeModelController(_service.Object).WithUser(_userId);
 
-        var unlikeMethod = typeof(LikeModelController).GetMethod(nameof(LikeModelController.UnlikeModel));
-        unlikeMethod.ShouldNotBeNull();
-        unlikeMethod!.GetCustomAttributes<ProducesResponseTypeAttribute>()
-            .Any(a => a.StatusCode == StatusCodes.Status204NoContent)
-            .ShouldBeTrue();
+        var result = await controller.LikeModel(modelId, CancellationToken.None);
+
+        result.ShouldBeOfType<ForbidResult>();
     }
 }

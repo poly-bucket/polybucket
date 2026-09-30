@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Card } from "@/components/primitives/card";
-import { Heart, Download, MessageCircle } from "lucide-react";
+import { Heart, Download, MessageCircle, ThumbsDown } from "lucide-react";
+import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import type { Model } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { isImageUrl } from "@/lib/utils/modelUtils";
@@ -15,7 +16,7 @@ function formatNumber(num: number | undefined): string {
 }
 
 interface ModelCardProps {
-  model: Model;
+  model: ModelWithReactions;
   onClick?: (model: Model) => void;
   className?: string;
 }
@@ -26,6 +27,7 @@ export function ModelCard({ model, onClick, className }: ModelCardProps) {
     : undefined;
   const authorName = model.author?.username ?? "Unknown";
   const totalLikes = model.likes ?? 0;
+  const totalDislikes = model.dislikes ?? 0;
   const downloads = model.downloads ?? 0;
   const commentsCount = model.comments?.length ?? 0;
 
@@ -84,6 +86,10 @@ export function ModelCard({ model, onClick, className }: ModelCardProps) {
           <span className="flex items-center gap-1">
             <Heart className="h-3 w-3 fill-current text-red-400" />
             {formatNumber(totalLikes)}
+          </span>
+          <span className="flex items-center gap-1">
+            <ThumbsDown className="h-3 w-3 text-orange-400" />
+            {formatNumber(totalDislikes)}
           </span>
           <span className="flex items-center gap-1">
             <Download className="h-3 w-3 text-green-400" />

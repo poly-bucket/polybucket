@@ -168,43 +168,44 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
 
             // Check if user requires password change or first-time setup
             var requiresPasswordChange = user.RequiresPasswordChange;
-            var requiresFirstTimeSetup = user.HasCompletedFirstTimeSetup == false;
+            var requiresFirstTimeSetup = false;
             var setupStep = (string?)null;
 
-            // If admin user, also check system setup status
-            if (user.Role?.Name == "Admin" && _context != null)
+            if (user.Role?.Name == "Admin")
             {
-                try
+                requiresFirstTimeSetup = !user.HasCompletedFirstTimeSetup;
+
+                if (_context != null)
                 {
-                    var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync(cancellationToken);
-                    if (systemSetup != null && systemSetup.IsFirstTimeSetup)
+                    try
                     {
-                        requiresFirstTimeSetup = true;
-                        
-                        // Determine the current step based on what's been completed
-                        if (!systemSetup.IsAdminConfigured)
+                        var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync(cancellationToken);
+                        if (systemSetup != null && systemSetup.IsFirstTimeSetup)
                         {
-                            setupStep = "password"; // First step is password change
-                        }
-                        else if (!systemSetup.IsSiteConfigured)
-                        {
-                            setupStep = "site"; // Site configuration
-                        }
-                        else if (!systemSetup.IsEmailConfigured)
-                        {
-                            setupStep = "email"; // Email configuration
-                        }
-                        else if (!systemSetup.IsModerationConfigured)
-                        {
-                            setupStep = "moderation"; // Moderation settings
+                            requiresFirstTimeSetup = true;
+
+                            if (!systemSetup.IsAdminConfigured)
+                            {
+                                setupStep = "password";
+                            }
+                            else if (!systemSetup.IsSiteConfigured)
+                            {
+                                setupStep = "site";
+                            }
+                            else if (!systemSetup.IsEmailConfigured)
+                            {
+                                setupStep = "email";
+                            }
+                            else if (!systemSetup.IsModerationConfigured)
+                            {
+                                setupStep = "moderation";
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    // In test environments or when database is not available, 
-                    // we'll skip the setup check and assume setup is not required
-                    _logger.LogWarning(ex, "Could not check system setup status, assuming setup is not required");
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Could not check system setup status, assuming setup is not required");
+                    }
                 }
             }
 

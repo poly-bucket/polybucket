@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.DownloadModel.Domain;
+using PolyBucket.Api.Features.Models.Http;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,9 +36,15 @@ public class DownloadModelController : ControllerBase
             DownloadModelOutcomeKind.Forbid => StatusCode(403, outcome.Message),
             DownloadModelOutcomeKind.Error => StatusCode(500, outcome.Message),
             DownloadModelOutcomeKind.OkSingleFile when outcome.FileStream != null && outcome.FileName != null && outcome.FileContentType != null
-                => File(outcome.FileStream, outcome.FileContentType, outcome.FileName),
+                => this.WithModelDownloadCountHeaders(
+                    File(outcome.FileStream, outcome.FileContentType, outcome.FileName),
+                    outcome.Downloads,
+                    outcome.Counted),
             DownloadModelOutcomeKind.OkZip when outcome.ZipBytes != null && outcome.ZipFileName != null
-                => File(outcome.ZipBytes, "application/zip", outcome.ZipFileName),
+                => this.WithModelDownloadCountHeaders(
+                    File(outcome.ZipBytes, "application/zip", outcome.ZipFileName),
+                    outcome.Downloads,
+                    outcome.Counted),
             _ => StatusCode(500, "An error occurred while downloading the model")
         };
     }

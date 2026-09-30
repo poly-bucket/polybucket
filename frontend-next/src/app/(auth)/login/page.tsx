@@ -59,7 +59,7 @@ export default function LoginPage() {
   }, [phase, useBackupCode]);
 
   const navigateAfterSuccess = (result: LoginResult) => {
-    if (result.requiresFirstTimeSetup) {
+    if (result.requiresFirstTimeSetup && result.isAdmin) {
       router.push("/setup");
     } else if (redirectTo?.startsWith("/")) {
       router.push(redirectTo);

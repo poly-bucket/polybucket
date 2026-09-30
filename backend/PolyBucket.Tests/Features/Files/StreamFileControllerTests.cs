@@ -7,6 +7,7 @@ using Moq;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Files.Http;
+using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Settings;
 using PolyBucket.Tests.Testing;
@@ -34,7 +35,8 @@ public class StreamFileControllerTests : IDisposable
             _context,
             Mock.Of<IPermissionService>(),
             Mock.Of<IStorageService>(),
-            Options.Create(new StorageSettings()));
+            Options.Create(new StorageSettings()),
+            Mock.Of<IModelDownloadCounter>());
         controller.WithUser(Guid.NewGuid());
 
         // Act

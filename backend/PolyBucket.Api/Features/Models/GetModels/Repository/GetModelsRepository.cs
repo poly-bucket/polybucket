@@ -43,6 +43,8 @@ namespace PolyBucket.Api.Features.Models.GetModels.Repository
             {
                 "downloads" => query.OrderByDescending(m => m.Downloads).ThenByDescending(m => m.CreatedAt),
                 "likes" => query.OrderByDescending(m => m.Likes).ThenByDescending(m => m.CreatedAt),
+                "dislikes" => query.OrderByDescending(m => m.Dislikes).ThenByDescending(m => m.CreatedAt),
+                "score" => query.OrderByDescending(m => m.Likes - m.Dislikes).ThenByDescending(m => m.CreatedAt),
                 "name" => query.OrderBy(m => m.Name).ThenByDescending(m => m.CreatedAt),
                 _ => query.OrderByDescending(m => m.CreatedAt)
             };

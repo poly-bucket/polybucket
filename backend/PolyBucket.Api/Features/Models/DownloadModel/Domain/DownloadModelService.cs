@@ -1,11 +1,14 @@
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Features.Models.DownloadModel.Repository;
+using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
 using PolyBucket.Api.Common.Models.Enums;
 using PolyBucket.Api.Settings;
 
@@ -16,6 +19,8 @@ public class DownloadModelService(
     IPermissionService permissionService,
     IStorageService storageService,
     IOptions<StorageSettings> storageOptions,
+    IHttpContextAccessor httpContextAccessor,
+    IModelDownloadCounter downloadCounter,
     ILogger<DownloadModelService> logger) : IDownloadModelService
 {
     private readonly StorageSettings _storageSettings = storageOptions.Value;
@@ -39,12 +44,6 @@ public class DownloadModelService(
                 return DownloadModelOutcome.Forbid();
             }
 
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdClaim, out _))
-            {
-                await repository.TryIncrementDownloadCountAsync(id, cancellationToken);
-            }
-
             var needsZip = bundle.Files.Count > 1 || bundle.Previews.Count > 0;
             if (!needsZip && bundle.Files.Count == 1)
             {
@@ -60,7 +59,14 @@ public class DownloadModelService(
                 {
                     var fileStream = await storageService.DownloadAsync(objectKey);
                     _logger.LogInformation("Successfully downloaded single file {FileName} for model {ModelId}", file.Name, bundle.Id);
-                    return DownloadModelOutcome.OkSingle(fileStream, file.MimeType, file.Name, ownerDisposes: true);
+                    var (downloads, counted) = await RecordDownloadAsync(id, user, cancellationToken);
+                    return DownloadModelOutcome.OkSingle(
+                        fileStream,
+                        file.MimeType,
+                        file.Name,
+                        ownerDisposes: true,
+                        downloads,
+                        counted);
                 }
                 catch (Exception ex)
                 {
@@ -238,13 +244,29 @@ public class DownloadModelService(
                 return DownloadModelOutcome.Error500("Failed to create valid ZIP archive structure");
             }
 
-            return DownloadModelOutcome.OkZipFile(zipBytes, zipFileName);
+            var (zipDownloads, zipCounted) = await RecordDownloadAsync(id, user, cancellationToken);
+            return DownloadModelOutcome.OkZipFile(zipBytes, zipFileName, zipDownloads, zipCounted);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Critical error occurred while downloading model {ModelId}: {ErrorMessage}", id, ex.Message);
             return DownloadModelOutcome.Error500("An error occurred while downloading the model");
         }
+    }
+
+    private async Task<(int Downloads, bool Counted)> RecordDownloadAsync(
+        Guid modelId,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
+    {
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext == null)
+        {
+            return (0, false);
+        }
+
+        var viewerKey = ModelEngagementViewerKey.Build(httpContext, user);
+        return await downloadCounter.TryRecordDownloadAsync(modelId, viewerKey, cancellationToken);
     }
 
     private async Task<bool> CanUserAccessModelAsync(ClaimsPrincipal user, DownloadModelBundle model)

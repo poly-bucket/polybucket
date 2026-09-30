@@ -137,17 +137,38 @@ public class CommentReactionsIntegrationTests : BaseIntegrationTest
         afterRemove.ShouldBe((0, 0));
     }
 
-    [Fact(DisplayName = "When a user comments and likes through the API, the listing shows the comment with the user's like.")]
-    public async Task Api_CreateAndLike_ShowsUserReaction()
+    [Fact(DisplayName = "When the comment author likes their own comment through the API, the request is forbidden.")]
+    public async Task Api_SelfLike_ReturnsForbidden()
     {
-        // Arrange
         await ResetStateAsync();
-        var user = await CreateTestUser("commenter@polybucket.test", "Password123!");
-        var model = await ModelFactory.CreateTestModel("Commented model", "desc", user.Id);
+        var user = await CreateTestUser("commenter-self@polybucket.test", "Password123!");
+        var model = await ModelFactory.CreateTestModel("Self-like model", "desc", user.Id);
         var token = await GetAuthToken(user.Email, "Password123!");
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Act
+        var create = await Client.PostAsJsonAsync("/api/comments", new
+        {
+            target = new { targetId = model.Id, targetType = "Model" },
+            content = "Mine"
+        });
+        using var created = JsonDocument.Parse(await create.Content.ReadAsStringAsync());
+        var commentId = created.RootElement.GetProperty("id").GetGuid();
+        var like = await Client.PostAsync($"/api/comments/{commentId}/like", null);
+
+        create.StatusCode.ShouldBe(HttpStatusCode.OK);
+        like.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact(DisplayName = "When another user likes a comment through the API, the listing shows the user's like.")]
+    public async Task Api_OtherUserLike_ShowsUserReaction()
+    {
+        await ResetStateAsync();
+        var author = await CreateTestUser("author@polybucket.test", "Password123!");
+        var liker = await CreateTestUser("liker@polybucket.test", "Password123!");
+        var model = await ModelFactory.CreateTestModel("Commented model", "desc", author.Id);
+
+        var authorToken = await GetAuthToken(author.Email, "Password123!");
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authorToken);
         var create = await Client.PostAsJsonAsync("/api/comments", new
         {
             target = new { targetId = model.Id, targetType = "Model" },
@@ -155,11 +176,13 @@ public class CommentReactionsIntegrationTests : BaseIntegrationTest
         });
         using var created = JsonDocument.Parse(await create.Content.ReadAsStringAsync());
         var commentId = created.RootElement.GetProperty("id").GetGuid();
+
+        var likerToken = await GetAuthToken(liker.Email, "Password123!");
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", likerToken);
         var like = await Client.PostAsync($"/api/comments/{commentId}/like", null);
         var list = await Client.GetAsync($"/api/comments/target/model/{model.Id}");
         using var listed = JsonDocument.Parse(await list.Content.ReadAsStringAsync());
 
-        // Assert
         create.StatusCode.ShouldBe(HttpStatusCode.OK);
         like.StatusCode.ShouldBe(HttpStatusCode.OK);
         list.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -167,6 +190,5 @@ public class CommentReactionsIntegrationTests : BaseIntegrationTest
         first.GetProperty("content").GetString().ShouldBe("First!");
         first.GetProperty("likes").GetInt32().ShouldBe(1);
         first.GetProperty("userHasLiked").GetBoolean().ShouldBeTrue();
-        first.GetProperty("canEdit").GetBoolean().ShouldBeTrue();
     }
 }

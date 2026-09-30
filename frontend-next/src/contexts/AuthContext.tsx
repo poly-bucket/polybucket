@@ -58,6 +58,7 @@ export interface LoginResult {
   success: boolean;
   requiresTwoFactor?: boolean;
   requiresFirstTimeSetup?: boolean;
+  isAdmin?: boolean;
   setupStep?: string;
   error?: string;
 }
@@ -249,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return { success: false, error: "Invalid authentication token received" };
           }
 
+          const isAdmin = decoded.role?.toLowerCase() === "admin";
           const authUser: AuthUser = {
             id: decoded.id,
             email: decoded.email,
@@ -266,6 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return {
             success: true,
             requiresFirstTimeSetup: response.requiresFirstTimeSetup,
+            isAdmin,
             setupStep: response.setupStep,
           };
         }

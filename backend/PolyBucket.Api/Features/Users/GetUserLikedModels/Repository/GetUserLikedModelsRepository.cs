@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Common.Models.Enums;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Features.Models.ModelReactions.Domain;
 using PolyBucket.Api.Features.Users.GetUserLikedModels.Domain;
 
 namespace PolyBucket.Api.Features.Users.GetUserLikedModels.Repository;
@@ -19,6 +20,7 @@ public class GetUserLikedModelsRepository(PolyBucketDbContext dbContext) : IGetU
             join author in dbContext.Users.AsNoTracking() on model.AuthorId equals author.Id
             where like.UserId == query.UserId
                   && like.DeletedAt == null
+                  && like.Type == ModelReactionType.Like
                   && model.DeletedAt == null
                   && model.Privacy == PrivacySettings.Public
             select new { like, model, author };

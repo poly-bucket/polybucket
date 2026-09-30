@@ -74,7 +74,8 @@ export function ModelDetailsCarousel({
         const client = ApiClientFactory.getApiClient();
         const resp = await client.streamFile_StreamModelFile(
           modelId,
-          item.fileName
+          item.fileName,
+          undefined
         );
         if (resp?.data instanceof Blob) {
           const file = new File([resp.data], item.fileName, {
