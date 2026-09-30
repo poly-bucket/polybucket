@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Models.GetModelById.Domain;
 using PolyBucket.Api.Features.Models.GetModelById.Http;
+using PolyBucket.Tests.Testing;
 using Shouldly;
 using Xunit;
 
@@ -47,5 +48,19 @@ public class GetModelByIdControllerTests
             .ThrowsAsync(new KeyNotFoundException());
         var result = await _controller.GetModel(id);
         result.Result.ShouldBeOfType<NotFoundResult>();
+    }
+
+    [Fact(DisplayName = "When the caller cannot access the model, the get model by id controller returns Forbid.")]
+    public async Task GetModel_ReturnsForbid_WhenUnauthorized()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        _mediator.SetupSendThrows<GetModelByIdQuery, GetModelByIdResponse>(new UnauthorizedAccessException());
+
+        // Act
+        var result = await _controller.GetModel(id);
+
+        // Assert
+        result.Result.ShouldBeOfType<ForbidResult>();
     }
 } 

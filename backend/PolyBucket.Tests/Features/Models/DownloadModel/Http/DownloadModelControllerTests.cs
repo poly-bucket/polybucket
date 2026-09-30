@@ -65,4 +65,49 @@ public class DownloadModelControllerTests
         Assert.Equal("model/stl", file.ContentType);
         Assert.Equal("x.stl", file.FileDownloadName);
     }
+
+    [Fact(DisplayName = "When downloading a model and the service returns Forbid, the download model controller returns 403.")]
+    public async Task DownloadModel_WhenServiceReturnsForbid_Returns403()
+    {
+        // Arrange
+        var mock = new Mock<IDownloadModelService>();
+        mock
+            .Setup(s => s.DownloadAsync(It.IsAny<Guid>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DownloadModelOutcome.Forbid());
+        var controller = new DownloadModelController(mock.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "Test")) }
+        };
+
+        // Act
+        var result = await controller.DownloadModel(Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        var status = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(403, status.StatusCode);
+    }
+
+    [Fact(DisplayName = "When downloading a model and the service returns a zip, the download model controller returns the zip file.")]
+    public async Task DownloadModel_WhenServiceReturnsOkZip_ReturnsZip()
+    {
+        // Arrange
+        var mock = new Mock<IDownloadModelService>();
+        mock
+            .Setup(s => s.DownloadAsync(It.IsAny<Guid>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DownloadModelOutcome.OkZipFile([1, 2, 3], "bundle.zip"));
+        var controller = new DownloadModelController(mock.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "Test")) }
+        };
+
+        // Act
+        var result = await controller.DownloadModel(Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        var file = Assert.IsType<FileContentResult>(result);
+        Assert.Equal("application/zip", file.ContentType);
+        Assert.Equal("bundle.zip", file.FileDownloadName);
+    }
 }

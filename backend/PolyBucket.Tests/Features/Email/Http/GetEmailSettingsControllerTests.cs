@@ -34,5 +34,16 @@ public class GetEmailSettingsControllerTests
         // Assert
         var ok = result.Result.ShouldBeOfType<OkObjectResult>();
         ok.Value.ShouldBe(dto);
+        _service.Verify(s => s.GetAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact(DisplayName = "When the service fails, GetEmailSettings propagates the exception.")]
+    public async Task GetEmailSettings_ServiceThrows_Propagates()
+    {
+        // Arrange
+        _service.Setup(s => s.GetAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new System.InvalidOperationException("db"));
+
+        // Act & Assert
+        await Should.ThrowAsync<System.InvalidOperationException>(() => _controller.GetEmailSettings());
     }
 }

@@ -33,4 +33,19 @@ public class GetEmailOutboxControllerTests
         // Assert
         result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(page);
     }
+
+    [Fact(DisplayName = "When no filter is provided, GetEmailOutbox uses default paging.")]
+    public async Task GetEmailOutbox_DefaultPaging_CallsService()
+    {
+        // Arrange
+        var page = new EmailOutboxPageDto { Page = 1, TotalCount = 0 };
+        _service.Setup(s => s.GetAsync(null, 1, 25, It.IsAny<CancellationToken>())).ReturnsAsync(page);
+
+        // Act
+        var result = await _controller.GetEmailOutbox();
+
+        // Assert
+        result.Result.ShouldBeOfType<OkObjectResult>();
+        _service.Verify(s => s.GetAsync(null, 1, 25, It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

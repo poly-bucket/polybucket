@@ -47,4 +47,30 @@ public class DeleteAllModelsControllerTests
         var body = Assert.IsType<DeleteAllModelsResponse>(ok.Value);
         Assert.Equal(1, body.DeletedCount);
     }
+
+    [Fact(DisplayName = "When the service throws UnauthorizedAccessException, the delete all models controller returns Unauthorized.")]
+    public async Task DeleteAllModels_WhenUnauthorized_ReturnsUnauthorized()
+    {
+        // Arrange
+        var mock = new Mock<IDeleteAllModelsService>();
+        mock
+            .Setup(s => s.DeleteAllModelsAsync(It.IsAny<DeleteAllModelsRequest>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new UnauthorizedAccessException("bad password"));
+        var log = new Mock<ILogger<DeleteAllModelsController>>();
+        var controller = new DeleteAllModelsController(mock.Object, log.Object);
+        var userId = Guid.NewGuid();
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.ToString())], "Test"))
+            }
+        };
+
+        // Act
+        var result = await controller.DeleteAllModels(new DeleteAllModelsRequest { AdminPassword = "wrong" }, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<UnauthorizedObjectResult>(result.Result);
+    }
 }

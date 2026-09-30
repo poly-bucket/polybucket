@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Users.GetUserProfile.Domain;
 using PolyBucket.Api.Features.Users.GetUserProfile.Http;
+using PolyBucket.Tests.Testing;
 using Xunit;
 
 namespace PolyBucket.Tests.Features.Users.GetUserProfile;
@@ -20,7 +21,7 @@ public class GetUserProfileControllerTests
     {
         _mockService = new Mock<IGetUserProfileService>();
         _mockLogger = new Mock<ILogger<GetUserProfileController>>();
-        _controller = new GetUserProfileController(_mockService.Object, _mockLogger.Object);
+        _controller = new GetUserProfileController(_mockService.Object, _mockLogger.Object).WithUser(null);
     }
 
     [Fact(DisplayName = "When getting a user profile by a valid id, the get user profile controller returns Ok with the profile.")]

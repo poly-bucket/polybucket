@@ -1,35 +1,84 @@
 using System;
-using System.Collections.Generic;
-using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Files.Http;
+using PolyBucket.Api.Features.SystemSettings.Domain;
+using PolyBucket.Api.Settings;
 using Shouldly;
 using Xunit;
 
 namespace PolyBucket.Tests.Features.Files;
 
-public class FilesControllerTests
+public class FilesControllerTests : IDisposable
 {
-    public static IEnumerable<object[]> ControllerTypes()
+    private readonly PolyBucketDbContext _context;
+
+    public FilesControllerTests()
     {
-        return new List<object[]>
+        _context = new PolyBucketDbContext(new DbContextOptionsBuilder<PolyBucketDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options);
+        _context.FileTypeSettings.Add(new FileTypeSettings
         {
-            new object[] { typeof(GetFileConfigController) },
-            new object[] { typeof(GetSupportedExtensionsByTypeController) },
-            new object[] { typeof(GetSupportedExtensionsController) }
-        };
+            FileExtension = ".stl",
+            DisplayName = "STL",
+            Description = "Mesh",
+            MimeType = "model/stl",
+            MaxFileSizeBytes = 10_000_000,
+            MaxPerUpload = 5,
+            Enabled = true,
+            Category = "3d",
+            Priority = 1
+        });
+        _context.SaveChanges();
     }
 
-    [Theory]
-    [MemberData(nameof(ControllerTypes))]
-    public void Controller_ShouldHaveApiControllerAndRoute(Type controllerType)
+    [Fact(DisplayName = "When file config is requested, GetFileConfig returns Ok with extensions.")]
+    public async Task GetFileConfig_ReturnsOk()
     {
-        // Ensure ApiController attribute exists
-        var apiAttr = controllerType.GetCustomAttribute<ApiControllerAttribute>();
-        apiAttr.ShouldNotBeNull();
+        // Arrange
+        var controller = new GetFileConfigController(_context, Options.Create(new StorageSettings { Provider = "local" }));
 
-        // Ensure RouteAttribute exists
-        var routeAttr = controllerType.GetCustomAttribute<RouteAttribute>();
-        routeAttr.ShouldNotBeNull();
+        // Act
+        var result = await controller.GetFileConfig();
+
+        // Assert
+        var ok = result.Result.ShouldBeOfType<OkObjectResult>();
+        var config = ok.Value.ShouldBeOfType<FileConfigResponse>();
+        config.StorageProvider.ShouldBe("local");
+        config.SupportedExtensions.ShouldContain(".stl");
     }
-} 
+
+    [Fact(DisplayName = "When supported extensions are requested, GetSupportedExtensions returns Ok.")]
+    public async Task GetSupportedExtensions_ReturnsOk()
+    {
+        // Arrange
+        var controller = new GetSupportedExtensionsController(_context);
+
+        // Act
+        var result = await controller.GetSupportedExtensions();
+
+        // Assert
+        var ok = result.Result.ShouldBeOfType<OkObjectResult>();
+        var extensions = ok.Value.ShouldBeOfType<System.Collections.Generic.List<string>>();
+        extensions.ShouldContain(".stl");
+    }
+
+    [Fact(DisplayName = "When extensions by type are requested, GetSupportedExtensionsByType returns Ok.")]
+    public async Task GetSupportedExtensionsByType_ReturnsOk()
+    {
+        // Arrange
+        var controller = new GetSupportedExtensionsByTypeController(_context);
+
+        // Act
+        var result = await controller.GetSupportedExtensionsForType("3d");
+
+        // Assert
+        result.Result.ShouldBeOfType<OkObjectResult>();
+    }
+
+    public void Dispose() => _context.Dispose();
+}

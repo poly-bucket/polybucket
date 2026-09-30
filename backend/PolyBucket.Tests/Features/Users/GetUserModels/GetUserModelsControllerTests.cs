@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Users.GetUserModels.Domain;
 using PolyBucket.Api.Features.Users.GetUserModels.Http;
+using PolyBucket.Tests.Testing;
 using Xunit;
 
 namespace PolyBucket.Tests.Features.Users.GetUserModels;
@@ -57,6 +58,7 @@ public class GetUserModelsControllerTests
         _serviceMock
             .Setup(s => s.GetUserPublicModelsAsync(It.IsAny<GetUserModelsQuery>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new UnauthorizedAccessException("User profile is private"));
+        _controller.WithUser(null);
 
         // Act
         var response = await _controller.GetUserPublicModels("private-user", cancellationToken: CancellationToken.None);
@@ -73,6 +75,7 @@ public class GetUserModelsControllerTests
         _serviceMock
             .Setup(s => s.GetUserPublicModelsAsync(It.IsAny<GetUserModelsQuery>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new KeyNotFoundException("User models not found"));
+        _controller.WithUser(null);
 
         // Act
         var response = await _controller.GetUserPublicModels("missing-user", cancellationToken: CancellationToken.None);

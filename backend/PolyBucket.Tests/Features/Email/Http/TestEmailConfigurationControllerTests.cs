@@ -50,4 +50,18 @@ public class TestEmailConfigurationControllerTests
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
         _service.Verify(s => s.TestAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact(DisplayName = "When the test succeeds, the controller returns 200 with a successful result.")]
+    public async Task TestEmailConfiguration_Success_ReturnsOk()
+    {
+        // Arrange
+        var success = new EmailTestResult(true, "Sent", []);
+        _service.Setup(s => s.TestAsync("admin@example.com", It.IsAny<CancellationToken>())).ReturnsAsync(success);
+
+        // Act
+        var result = await _controller.TestEmailConfiguration(new TestEmailConfigurationRequest { TestEmailAddress = "admin@example.com" });
+
+        // Assert
+        result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(success);
+    }
 }

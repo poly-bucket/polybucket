@@ -10,6 +10,7 @@ using PolyBucket.Api.Data;
 using PolyBucket.Api.Settings;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Images;
 using Testcontainers.PostgreSql;
 using Xunit;
 using LogAbstractions = Microsoft.Extensions.Logging.Abstractions;
@@ -42,7 +43,8 @@ namespace PolyBucket.Tests
                 .WithPassword("postgres")
                 .Build();
             _minioContainer = new ContainerBuilder()
-                .WithImage("minio/minio:RELEASE.2025-04-08T15-41-24Z")
+                .WithImage(TestContainerImages.MinioImage)
+                .WithImagePullPolicy(PullPolicy.Missing)
                 .WithEnvironment("MINIO_ROOT_USER", MinioRootUser)
                 .WithEnvironment("MINIO_ROOT_PASSWORD", MinioRootPassword)
                 .WithCommand("server", "/data", "--console-address", ":9001")

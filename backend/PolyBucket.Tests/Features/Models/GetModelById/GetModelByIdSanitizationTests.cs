@@ -50,6 +50,7 @@ namespace PolyBucket.Tests.Features.Models.GetModelById
                 Id = modelId,
                 Name = "Test",
                 Privacy = PrivacySettings.Public,
+                IsPublic = true,
                 AuthorId = Guid.NewGuid(),
                 ThumbnailUrl = "models/test/preview.png",
                 Author = new User
