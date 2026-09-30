@@ -84,8 +84,8 @@ describe("ModelEditForm", () => {
       <ModelEditForm model={model} onSave={onSave} onCancel={vi.fn()} />
     );
 
-    await user.click(screen.getByRole("button", { name: "Toys" }));
-    await user.click(screen.getByRole("button", { name: "Art" }));
+    await user.click(screen.getByText("Toys"));
+    await user.click(screen.getByText("Art"));
     await user.type(screen.getByPlaceholderText("Add a tag..."), "newtag");
     await user.click(screen.getByRole("button", { name: "Add" }));
     await user.click(screen.getByRole("button", { name: "Remove tag old" }));

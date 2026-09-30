@@ -60,7 +60,8 @@ describe("AdminDashboardPage", () => {
 
     render(<AdminDashboardPage />);
 
-    expect(screen.getByText("Loading analytics...")).toBeInTheDocument();
+    expect(screen.getByText("Analytics Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Model Statistics Overview")).toBeInTheDocument();
   });
 
   it("shows error state when fetch fails", async () => {
@@ -69,7 +70,7 @@ describe("AdminDashboardPage", () => {
     render(<AdminDashboardPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("Failed to load model statistics")).toBeInTheDocument();
+      expect(screen.getByText("Network error")).toBeInTheDocument();
     });
     expect(screen.getByText("Retry")).toBeInTheDocument();
   });

@@ -91,7 +91,7 @@ describe("collectionsService", () => {
   describe("createCollection", () => {
     it("sends create command and returns collection", async () => {
       const created = { id: "c1", name: "New" };
-      mockCreateCollection.mockResolvedValue(createBlobResponse(created));
+      mockCreateCollection.mockResolvedValue(created);
 
       const result = await collectionsService.createCollection({
         name: "New",

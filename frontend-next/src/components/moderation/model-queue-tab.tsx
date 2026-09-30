@@ -32,6 +32,7 @@ export function ModelQueueTab() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<ModelModerationQueueItem | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -149,12 +150,13 @@ export function ModelQueueTab() {
         </div>
       )}
 
-      <DataTablePagination
-        page={page}
-        pageSize={pageSize}
-        totalCount={totalCount}
-        onPageChange={setPage}
-      />
+      {totalPages > 1 && (
+        <DataTablePagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+      )}
 
       <Dialog open={rejectTarget != null} onOpenChange={(open) => !open && setRejectTarget(null)}>
         <DialogContent>
