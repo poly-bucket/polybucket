@@ -24460,6 +24460,7 @@ export class Model extends Auditable implements IModel {
     downloads?: number;
     views?: number;
     likes?: number;
+    dislikes?: number;
     license?: LicenseTypes | undefined;
     privacy?: PrivacySettings;
     aiGenerated?: boolean;

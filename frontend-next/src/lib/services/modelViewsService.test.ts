@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axiosInstance from "@/lib/api/axiosConfig";
-import { modelViewSessionKey, recordModelView } from "./modelViewsService";
+import {
+  applyViewCountToModel,
+  modelViewSessionKey,
+  recordModelView,
+} from "./modelViewsService";
 
 vi.mock("@/lib/api/axiosConfig", () => ({
   default: {
@@ -15,6 +19,11 @@ describe("modelViewsService", () => {
 
   it("builds a stable session storage key per model", () => {
     expect(modelViewSessionKey("abc")).toBe("model-view:abc");
+  });
+
+  it("updates view count on the model object", () => {
+    const model = { id: "m1", views: 1 };
+    expect(applyViewCountToModel(model, 2)).toEqual({ id: "m1", views: 2 });
   });
 
   it("posts to the view endpoint and returns the response", async () => {

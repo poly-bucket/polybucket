@@ -1,10 +1,6 @@
-import type { Model } from "@/lib/api/client";
+import type { IModel } from "@/lib/api/client";
 
-export type ModelWithReactions = Model & {
-  dislikes?: number;
-  isLikedByCurrentUser?: boolean;
-  isDislikedByCurrentUser?: boolean;
-};
+export type ModelWithReactions = IModel;
 
 export function getModelReactionsState(model: ModelWithReactions) {
   return {
@@ -15,15 +11,15 @@ export function getModelReactionsState(model: ModelWithReactions) {
   };
 }
 
-export function applyModelReaction(
-  model: ModelWithReactions,
+export function applyModelReaction<T extends ModelWithReactions>(
+  model: T,
   result: {
     likes: number;
     dislikes: number;
     userHasLiked: boolean;
     userHasDisliked: boolean;
   }
-): ModelWithReactions {
+): T {
   return {
     ...model,
     likes: result.likes,

@@ -10,10 +10,11 @@ import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { fetchModelById } from "@/lib/services/modelsService";
 import { getApiConfig } from "@/lib/api/config";
 import { isMarkdownFile, isImageUrl } from "@/lib/utils/modelUtils";
-import type { Model, ModelFile } from "@/lib/api/client";
+import type { ModelFile } from "@/lib/api/client";
 import { applyModelReaction, type ModelWithReactions } from "@/lib/types/modelReactions";
 import {
   modelViewSessionKey,
+  applyViewCountToModel,
   recordModelView,
 } from "@/lib/services/modelViewsService";
 import { applyDownloadCountToModel } from "@/lib/services/modelDownloadsService";
@@ -27,7 +28,7 @@ import { EditModelModal } from "../edit-model/edit-model-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
 
-export function buildCarouselItems(model: Model): CarouselItem[] {
+export function buildCarouselItems(model: ModelWithReactions): CarouselItem[] {
   const items: CarouselItem[] = [];
   const baseUrl = getApiConfig().baseUrl;
 
@@ -168,7 +169,7 @@ export function ModelDetailsPage() {
         }
         if (result.counted) {
           setModel((current) =>
-            current ? { ...current, views: result.views } : current
+            current ? applyViewCountToModel(current, result.views) : current
           );
         }
       })
@@ -298,7 +299,7 @@ export function ModelDetailsPage() {
     toast.error(`Failed to load preview: ${message}`);
   }, []);
 
-  const handleModelUpdate = useCallback((updated: Model) => {
+  const handleModelUpdate = useCallback((updated: ModelWithReactions) => {
     setModel(updated);
     toast.success("Model updated");
   }, []);
@@ -328,7 +329,7 @@ export function ModelDetailsPage() {
           versions: prev.versions.map((v) =>
             v.id === versionId ? { ...v, ...updated } : v
           ),
-        } as Model;
+        } as ModelWithReactions;
       });
       toast.success("Version updated");
     },

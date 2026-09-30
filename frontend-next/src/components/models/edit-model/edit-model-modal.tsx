@@ -9,18 +9,18 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/primitives/tabs";
-import type { Model } from "@/lib/api/client";
+import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { ModelEditForm } from "./model-edit-form";
 import { ModelVersionManager } from "./model-version-manager";
 import { VersionEditor, type ExtendedModelVersion } from "./version-editor";
 import { Pencil, CloudUpload, FileEdit } from "lucide-react";
 
 interface EditModelModalProps {
-  model: Model;
+  model: ModelWithReactions;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialTab?: "edit" | "version" | "editVersion";
-  onModelUpdate?: (model: Model) => void;
+  onModelUpdate?: (model: ModelWithReactions) => void;
   onVersionCreated?: () => void;
   onVersionUpdate?: (versionId: string, updated: ExtendedModelVersion) => void;
 }
@@ -60,7 +60,7 @@ export function EditModelModal({
   );
 
   const handleModelUpdate = useCallback(
-    (updated: Model) => {
+    (updated: ModelWithReactions) => {
       onModelUpdate?.(updated);
       onOpenChange(false);
     },

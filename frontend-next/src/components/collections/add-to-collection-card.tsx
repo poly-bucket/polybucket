@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { FolderPlus } from "lucide-react";
-import type { Model } from "@/lib/api/client";
+import type { IModel } from "@/lib/api/client";
 import { collectionsService, type Collection } from "@/lib/services/collectionsService";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface AddToCollectionCardProps {
-  model: Model;
+  model: IModel;
   isOwner: boolean;
 }
 

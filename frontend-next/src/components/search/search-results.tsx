@@ -7,7 +7,7 @@ import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { splitAvatarForDisplay } from "@/lib/avatar/minidenticon";
 import type { SearchResult } from "@/lib/services/searchService";
-import type { Model } from "@/lib/api/client";
+import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { formatNumber } from "@/lib/utils/modelUtils";
 import { formatDate } from "@/lib/utils/format";
 
@@ -16,7 +16,7 @@ interface SearchResultsProps {
   loading?: boolean;
 }
 
-function toModel(result: SearchResult): Model {
+function toModel(result: SearchResult): ModelWithReactions {
   return {
     id: result.id,
     name: result.title,
@@ -28,7 +28,7 @@ function toModel(result: SearchResult): Model {
     likes: result.likes ?? 0,
     dislikes: result.dislikes ?? 0,
     createdAt: result.createdAt,
-  } as Model;
+  } as unknown as ModelWithReactions;
 }
 
 function UserResultCard({ result }: { result: SearchResult }) {

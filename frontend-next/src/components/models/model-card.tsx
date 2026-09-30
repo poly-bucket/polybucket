@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Card } from "@/components/primitives/card";
 import { Heart, Download, MessageCircle, ThumbsDown } from "lucide-react";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
-import type { Model } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { isImageUrl } from "@/lib/utils/modelUtils";
 
@@ -17,7 +16,7 @@ function formatNumber(num: number | undefined): string {
 
 interface ModelCardProps {
   model: ModelWithReactions;
-  onClick?: (model: Model) => void;
+  onClick?: (model: ModelWithReactions) => void;
   className?: string;
 }
 

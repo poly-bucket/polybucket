@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import type { Model } from "@/lib/api/client";
+import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { getApiConfig } from "@/lib/api/config";
 import { getStoredUser } from "@/lib/auth/authSession";
 import FileDropZone from "../file-drop-zone";
@@ -40,7 +40,7 @@ const ThumbnailGenerator = dynamic(
 const SUPPORTED_FORMATS = [...SUPPORTED_3D_FORMATS, ...SUPPORTED_IMAGE_FORMATS, ...SUPPORTED_DOCUMENT_FORMATS];
 
 interface ModelVersionManagerProps {
-  model: Model;
+  model: ModelWithReactions;
   onCreateVersion: () => void;
   onCancel: () => void;
 }

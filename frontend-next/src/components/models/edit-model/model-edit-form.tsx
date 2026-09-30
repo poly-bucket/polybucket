@@ -6,11 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
-  type Model,
   LicenseTypes,
   PrivacySettings,
   UpdateModelRequest,
 } from "@/lib/api/client";
+import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { Input } from "@/components/primitives/input";
 import { Textarea } from "@/components/ui/glass/textarea";
@@ -60,8 +60,8 @@ const editModelSchema = z
 type EditModelFormData = z.infer<typeof editModelSchema>;
 
 interface ModelEditFormProps {
-  model: Model;
-  onSave: (model: Model) => void;
+  model: ModelWithReactions;
+  onSave: (model: ModelWithReactions) => void;
   onCancel: () => void;
   onDirtyChange?: (dirty: boolean) => void;
 }
@@ -145,10 +145,10 @@ export function ModelEditForm({
       });
 
       const response = await client.updateModel_UpdateModel(model.id, request);
-      let updatedModel = response?.model;
+      let updatedModel: ModelWithReactions | undefined = response?.model;
 
       if (!updatedModel) {
-        updatedModel = { ...model, ...request } as Model;
+        updatedModel = { ...model, ...request };
       }
 
       const currentTagNames = new Set(model.tags?.map((t) => t.name) ?? []);

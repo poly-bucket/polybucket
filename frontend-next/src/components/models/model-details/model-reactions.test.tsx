@@ -1,20 +1,21 @@
-import { render, screen, within } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ModelReactions } from "./model-reactions";
 
-const mockReact = jest.fn();
-const mockRemove = jest.fn();
+const mockReact = vi.fn();
+const mockRemove = vi.fn();
 
-jest.mock("@/lib/services/modelReactionsService", () => ({
+vi.mock("@/lib/services/modelReactionsService", () => ({
   reactToModel: (...args: unknown[]) => mockReact(...args),
   removeModelReaction: (...args: unknown[]) => mockRemove(...args),
 }));
 
 describe("ModelReactions", () => {
-  const onUpdate = jest.fn();
+  const onUpdate = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockReact.mockResolvedValue({
       likes: 2,
       dislikes: 0,

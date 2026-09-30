@@ -1,6 +1,6 @@
 import type React from "react";
 import type { LucideIcon } from "lucide-react";
-import type { Model } from "@/lib/api/client";
+import type { IModel } from "@/lib/api/client";
 import type { UserProfileData } from "@/lib/services/userProfileService";
 import type { Collection } from "@/lib/services/collectionsService";
 
@@ -120,7 +120,7 @@ export interface ModelDetailTabContribution {
   label: string;
   icon: LucideIcon;
   order: number;
-  component: React.ComponentType<{ model: Model }>;
+  component: React.ComponentType<{ model: IModel }>;
   requiresAuth?: boolean;
   requiredRoles?: string[];
 }
@@ -129,7 +129,7 @@ export interface ModelDetailTabContribution {
 export interface ModelSidebarCardContribution {
   id: string;
   order: number;
-  component: React.ComponentType<{ model: Model; isOwner: boolean }>;
+  component: React.ComponentType<{ model: IModel; isOwner: boolean }>;
   requiresAuth?: boolean;
   requiredRoles?: string[];
 }

@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitive
 import { Button } from "@/components/primitives/button";
 import { formatNumber } from "@/lib/utils/modelUtils";
 import { useModelSidebarCards, PluginBoundary } from "@/lib/plugins";
-import type { Model } from "@/lib/api/client";
 import type { ModelReactionResult } from "@/lib/services/modelReactionsService";
 import {
   getModelReactionsState,

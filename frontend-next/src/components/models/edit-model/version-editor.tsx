@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import {
-  type Model,
   type IModelVersion,
   UpdateModelVersionRequest,
 } from "@/lib/api/client";
+import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { Input } from "@/components/primitives/input";
 import { Textarea } from "@/components/ui/glass/textarea";
@@ -31,7 +31,7 @@ export interface ExtendedModelVersion extends IModelVersion {
 }
 
 interface VersionEditorProps {
-  model: Model;
+  model: ModelWithReactions;
   onVersionUpdate: (versionId: string, updated: ExtendedModelVersion) => void;
   onCancel: () => void;
 }
