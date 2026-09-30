@@ -25,6 +25,8 @@ interface EditModelModalProps {
   onVersionUpdate?: (versionId: string, updated: ExtendedModelVersion) => void;
 }
 
+type EditModelTab = NonNullable<EditModelModalProps["initialTab"]>;
+
 export function EditModelModal({
   model,
   open,
@@ -34,7 +36,7 @@ export function EditModelModal({
   onVersionCreated,
   onVersionUpdate,
 }: EditModelModalProps) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<EditModelTab>(initialTab);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
@@ -93,7 +95,7 @@ export function EditModelModal({
 
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={(value) => setActiveTab(value as EditModelTab)}
           className="flex flex-col flex-1 min-h-0"
         >
           <TabsList
