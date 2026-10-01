@@ -8,12 +8,45 @@ public static class ThemeSeeder
 {
     public static async Task SeedThemesAsync(PolyBucketDbContext context)
     {
-        if (await context.Themes.AnyAsync())
+        var themes = BuildPresetThemes();
+
+        if (!await context.Themes.AnyAsync())
         {
-            return; // Themes already seeded
+            foreach (var theme in themes)
+            {
+                theme.CreatedAt = DateTime.UtcNow;
+                theme.UpdatedAt = DateTime.UtcNow;
+            }
+
+            context.Themes.AddRange(themes);
+            await context.SaveChangesAsync();
+            return;
         }
 
-        var themes = new List<Theme>
+        var existingNames = await context.Themes.Select(t => t.Name).ToListAsync();
+        var added = false;
+        foreach (var theme in themes)
+        {
+            if (existingNames.Contains(theme.Name))
+            {
+                continue;
+            }
+
+            theme.CreatedAt = DateTime.UtcNow;
+            theme.UpdatedAt = DateTime.UtcNow;
+            context.Themes.Add(theme);
+            added = true;
+        }
+
+        if (added)
+        {
+            await context.SaveChangesAsync();
+        }
+    }
+
+    private static List<Theme> BuildPresetThemes()
+    {
+        return new List<Theme>
         {
             new()
             {
@@ -236,14 +269,5 @@ public static class ThemeSeeder
                 }
             }
         };
-
-        foreach (var theme in themes)
-        {
-            theme.CreatedAt = DateTime.UtcNow;
-            theme.UpdatedAt = DateTime.UtcNow;
-        }
-
-        context.Themes.AddRange(themes);
-        await context.SaveChangesAsync();
     }
 }

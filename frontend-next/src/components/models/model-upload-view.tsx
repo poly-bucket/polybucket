@@ -1,22 +1,18 @@
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { uploadModel } from "@/lib/services/modelsService";
+import { linkModelCategories, uploadModel } from "@/lib/services/modelsService";
 import {
   getFileSettings,
   getExtensionsByCategory,
   isFileTypeAllowed,
 } from "@/lib/services/fileTypeSettingsService";
-import {
-  getModelConfigurationSettings,
-} from "@/lib/services/modelConfigurationSettingsService";
+import { getModelConfigurationSettings } from "@/lib/services/modelConfigurationSettingsService";
 import {
   parseModelMarkdown,
   isMarkdownFile,
@@ -29,16 +25,7 @@ import {
 } from "@/lib/utils/zipExtractor";
 import type { FileTypeSettingsData } from "@/lib/api/client";
 import { PrivacySettings } from "@/lib/api/client";
-import FileDropZone from "./file-drop-zone";
-import FileQueue, { type UploadedFile } from "./file-queue";
-import MetadataForm, { type ModelData } from "./metadata-form";
 import ThumbnailGenerator from "./thumbnail-generator";
-import UploadPreviewCarousel from "./upload-preview-carousel";
-import { Button } from "@/components/primitives/button";
-import {
-  Card,
-} from "@/components/primitives/card";
-import { cn } from "@/lib/utils";
 import { getUploadDefaults } from "@/lib/services/contentDefaultsService";
 import {
   MAX_FILES_PER_UPLOAD,
@@ -46,12 +33,38 @@ import {
   getUploadFileType,
   setThumbnailSelection,
 } from "./upload-shared";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { UploadedFile } from "./file-queue";
+import { UploadWizardShell } from "./upload/upload-wizard-shell";
+import { UploadFilesStep } from "./upload/upload-files-step";
+import { UploadDetailsStep } from "./upload/upload-details-step";
+import { UploadReviewStep } from "./upload/upload-review-step";
+import { useUploadWizard } from "./upload/use-upload-wizard";
+import {
+  modelMetadataSchema,
+  parseLicenseDefault,
+  parsePrivacyDefault,
+  type ModelMetadataFormValues,
+} from "@/lib/models/model-metadata";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+
+function buildInitialMetadata(): ModelMetadataFormValues {
+  const localUploadDefaults = getUploadDefaults();
+  return {
+    name: "",
+    description: "",
+    privacy: parsePrivacyDefault(localUploadDefaults.privacy),
+    license: parseLicenseDefault(localUploadDefaults.license),
+    aiGenerated: localUploadDefaults.aiGenerated,
+    wip: localUploadDefaults.workInProgress,
+    nsfw: localUploadDefaults.nsfw,
+    isRemix: localUploadDefaults.remix,
+    remixUrl: "",
+  };
+}
 
 export default function ModelUploadView() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const localUploadDefaults = getUploadDefaults();
   const [fileTypeSettings, setFileTypeSettings] = useState<
     FileTypeSettingsData[] | undefined
   >(undefined);
@@ -59,21 +72,20 @@ export default function ModelUploadView() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
   const [selectedThumbnailFileId, setSelectedThumbnailFileId] = useState<string | null>(null);
-  const [modelData, setModelData] = useState<ModelData>({
-    title: "",
-    description: "",
-    privacy: localUploadDefaults.privacy as PrivacySettings,
-    license: localUploadDefaults.license,
-    categories: [],
-    aiGenerated: localUploadDefaults.aiGenerated,
-    workInProgress: localUploadDefaults.workInProgress,
-    nsfw: localUploadDefaults.nsfw,
-    remix: localUploadDefaults.remix,
-  });
-  const [currentStep, setCurrentStep] = useState(1);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [metadataValid, setMetadataValid] = useState(false);
+  const [metadataDirty, setMetadataDirty] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isExtractingZip, setIsExtractingZip] = useState(false);
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
+
+  const metadataForm = useForm<ModelMetadataFormValues>({
+    resolver: zodResolver(modelMetadataSchema),
+    defaultValues: buildInitialMetadata(),
+    mode: "onChange",
+  });
+
+  const metadataValues = metadataForm.watch();
 
   const default3D = [".stl", ".obj", ".fbx", ".glb", ".gltf", ".3mf", ".step", ".stp"];
   const defaultImage = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
@@ -83,14 +95,14 @@ export default function ModelUploadView() {
   const raw3D = getExtensionsByCategory(fileTypeSettings, "3D").map((e) =>
     e.startsWith(".") ? e : `.${e}`
   );
-  const rawImage = getExtensionsByCategory(fileTypeSettings, "Image").map(
-    (e) => (e.startsWith(".") ? e : `.${e}`)
+  const rawImage = getExtensionsByCategory(fileTypeSettings, "Image").map((e) =>
+    e.startsWith(".") ? e : `.${e}`
   );
-  const rawZip = getExtensionsByCategory(fileTypeSettings, "Archive").map(
-    (e) => (e.startsWith(".") ? e : `.${e}`)
+  const rawZip = getExtensionsByCategory(fileTypeSettings, "Archive").map((e) =>
+    e.startsWith(".") ? e : `.${e}`
   );
-  const rawDoc = getExtensionsByCategory(fileTypeSettings, "Document").map(
-    (e) => (e.startsWith(".") ? e : `.${e}`)
+  const rawDoc = getExtensionsByCategory(fileTypeSettings, "Document").map((e) =>
+    e.startsWith(".") ? e : `.${e}`
   );
 
   const supported3DFormats = raw3D.length ? raw3D : default3D;
@@ -105,12 +117,48 @@ export default function ModelUploadView() {
     ...supportedZipFormats,
   ];
 
+  const formatGroups = useMemo(
+    () => [
+      { label: "3D models", extensions: supported3DFormats },
+      { label: "Images", extensions: supportedImageFormats },
+      { label: "Documents", extensions: supportedDocFormats },
+      { label: "Archives", extensions: supportedZipFormats },
+    ],
+    [supported3DFormats, supportedImageFormats, supportedDocFormats, supportedZipFormats]
+  );
+
   const canAddMoreFiles = uploadedFiles.length < MAX_FILES_PER_UPLOAD;
+
+  const getFileType = useCallback(
+    (fileName: string) => {
+      return getUploadFileType(fileName, supported3DFormats, supportedImageFormats);
+    },
+    [supported3DFormats, supportedImageFormats]
+  );
+
+  const handleAutoTitle = useCallback(
+    (title: string) => {
+      metadataForm.setValue("name", title, { shouldValidate: true, shouldDirty: true });
+    },
+    [metadataForm]
+  );
+
+  const { applyAutoTitleIfNeeded, ...wizard } = useUploadWizard({
+    fileCount: uploadedFiles.length,
+    settingsLoaded: !settingsLoading,
+    metadataValid,
+    isFormDirty: metadataDirty,
+    uploadedFileNames: uploadedFiles.map((f) => f.name),
+    getFileType,
+    currentTitle: metadataValues.name,
+    onAutoTitle: handleAutoTitle,
+  });
+
+  useUnsavedChanges(wizard.isDirty);
 
   useEffect(() => {
     if (!isAuthenticated && !authLoading) {
       router.replace("/");
-      return;
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -124,21 +172,13 @@ export default function ModelUploadView() {
         ]);
         if (fileResp.fileTypes) setFileTypeSettings(fileResp.fileTypes);
         if (configResp.settings?.defaultPrivacySetting) {
-          const p = String(
-            configResp.settings.defaultPrivacySetting
-          ).toLowerCase();
+          const p = String(configResp.settings.defaultPrivacySetting).toLowerCase();
           if (p === "public")
-            setModelData((prev) => ({ ...prev, privacy: PrivacySettings.Public }));
+            metadataForm.setValue("privacy", PrivacySettings.Public);
           else if (p === "private")
-            setModelData((prev) => ({
-              ...prev,
-              privacy: PrivacySettings.Private,
-            }));
+            metadataForm.setValue("privacy", PrivacySettings.Private);
           else if (p === "unlisted")
-            setModelData((prev) => ({
-              ...prev,
-              privacy: PrivacySettings.Unlisted,
-            }));
+            metadataForm.setValue("privacy", PrivacySettings.Unlisted);
         }
       } catch (err) {
         console.error(err);
@@ -148,13 +188,25 @@ export default function ModelUploadView() {
       }
     };
     load();
-  }, []);
+  }, [metadataForm]);
 
-  const getFileType = useCallback(
-    (fileName: string): "3d" | "image" | "pdf" | "markdown" | "unknown" => {
-      return getUploadFileType(fileName, supported3DFormats, supportedImageFormats);
+  const applyMarkdownToForm = useCallback(
+    (parsed: ReturnType<typeof parseModelMarkdown>) => {
+      if (parsed.title) metadataForm.setValue("name", parsed.title, { shouldValidate: true });
+      if (parsed.description)
+        metadataForm.setValue("description", parsed.description, { shouldDirty: true });
+      if (parsed.privacy) metadataForm.setValue("privacy", parsed.privacy);
+      if (parsed.license)
+        metadataForm.setValue("license", parseLicenseDefault(parsed.license));
+      if (parsed.categories) setCategories(parsed.categories);
+      if (parsed.aiGenerated !== undefined)
+        metadataForm.setValue("aiGenerated", parsed.aiGenerated);
+      if (parsed.workInProgress !== undefined)
+        metadataForm.setValue("wip", parsed.workInProgress);
+      if (parsed.nsfw !== undefined) metadataForm.setValue("nsfw", parsed.nsfw);
+      if (parsed.remix !== undefined) metadataForm.setValue("isRemix", parsed.remix);
     },
-    [supported3DFormats, supportedImageFormats]
+    [metadataForm]
   );
 
   const processZipFile = useCallback(
@@ -178,6 +230,7 @@ export default function ModelUploadView() {
         return;
       }
       const files = convertToFiles(result.files);
+      const previousCount = uploadedFiles.length;
       const remaining = MAX_FILES_PER_UPLOAD - uploadedFiles.length;
       const toAdd = files.slice(0, remaining);
       const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
@@ -186,45 +239,33 @@ export default function ModelUploadView() {
         takenNames.add(nextFile.name);
         return nextFile;
       });
-      setUploadedFiles((prev) => [...prev, ...newUploaded]);
-      const firstPreview = newUploaded.find(
-        (fileItem) =>
-          getFileType(fileItem.name) !== "unknown"
-      );
-      if (firstPreview && !previewFile)
-        setPreviewFile(firstPreview);
+      setUploadedFiles((prev) => {
+        const next = [...prev, ...newUploaded];
+        applyAutoTitleIfNeeded(previousCount, next.map((f) => f.name));
+        return next;
+      });
+      const firstPreview = newUploaded.find((fileItem) => getFileType(fileItem.name) !== "unknown");
+      if (firstPreview && !previewFile) setPreviewFile(firstPreview);
       toast.success(
         `Zip extracted: ${toAdd.length} file(s) added. ${files.length - toAdd.length} skipped (max reached).`
       );
     },
-    [canAddMoreFiles, uploadedFiles, previewFile, getFileType]
+    [canAddMoreFiles, uploadedFiles, previewFile, getFileType, applyAutoTitleIfNeeded]
   );
 
-  const processMarkdownFile = useCallback(async (file: File) => {
-    try {
-      const text = await file.text();
-      const parsed = parseModelMarkdown(text);
-      setModelData((prev) => ({
-        ...prev,
-        ...(parsed.title && { title: parsed.title }),
-        ...(parsed.description && { description: parsed.description }),
-        ...(parsed.privacy && { privacy: parsed.privacy }),
-        ...(parsed.license && { license: parsed.license }),
-        ...(parsed.categories && { categories: parsed.categories }),
-        ...(parsed.aiGenerated !== undefined && {
-          aiGenerated: parsed.aiGenerated,
-        }),
-        ...(parsed.workInProgress !== undefined && {
-          workInProgress: parsed.workInProgress,
-        }),
-        ...(parsed.nsfw !== undefined && { nsfw: parsed.nsfw }),
-        ...(parsed.remix !== undefined && { remix: parsed.remix }),
-      }));
-      toast.success(`Model details populated from ${file.name}`);
-    } catch {
-      toast.error("Failed to parse markdown file");
-    }
-  }, []);
+  const processMarkdownFile = useCallback(
+    async (file: File) => {
+      try {
+        const text = await file.text();
+        const parsed = parseModelMarkdown(text);
+        applyMarkdownToForm(parsed);
+        toast.success(`Model details populated from ${file.name}`);
+      } catch {
+        toast.error("Failed to parse markdown file");
+      }
+    },
+    [applyMarkdownToForm]
+  );
 
   const handleFilesSelected = useCallback(
     async (files: File[]) => {
@@ -236,9 +277,7 @@ export default function ModelUploadView() {
           toast.error(`File ${file.name} is not allowed or exceeds size limit`);
           continue;
         }
-        const ext = file.name
-          .toLowerCase()
-          .substring(file.name.lastIndexOf("."));
+        const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
         if (supportedZipFormats.includes(ext)) {
           toProcess.push(file);
           continue;
@@ -247,9 +286,7 @@ export default function ModelUploadView() {
           toProcess.push(file);
           continue;
         }
-        if (
-          uploadedFiles.length + toAdd.length >= MAX_FILES_PER_UPLOAD
-        ) {
+        if (uploadedFiles.length + toAdd.length >= MAX_FILES_PER_UPLOAD) {
           toast.warning(
             `Max ${MAX_FILES_PER_UPLOAD} files. Only first ${
               MAX_FILES_PER_UPLOAD - uploadedFiles.length
@@ -261,35 +298,43 @@ export default function ModelUploadView() {
       }
 
       for (const file of toProcess) {
-        const ext = file.name
-          .toLowerCase()
-          .substring(file.name.lastIndexOf("."));
+        const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
         if (supportedZipFormats.includes(ext)) await processZipFile(file);
         else if (isMarkdownFile(file.name)) await processMarkdownFile(file);
       }
 
+      if (toAdd.length === 0) return;
+
+      const previousCount = uploadedFiles.length;
       const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
       const newFiles = toAdd.map((fileItem) => {
         const nextFile = createUploadedFile(fileItem, takenNames);
         takenNames.add(nextFile.name);
         return nextFile;
       });
-      setUploadedFiles((prev) => [...prev, ...newFiles]);
-      const firstPreviewable = newFiles.find(
-        (f) => getFileType(f.name) !== "unknown"
-      );
+      setUploadedFiles((prev) => {
+        const next = [...prev, ...newFiles];
+        applyAutoTitleIfNeeded(previousCount, next.map((f) => f.name));
+        return next;
+      });
+      const firstPreviewable = newFiles.find((f) => getFileType(f.name) !== "unknown");
       if (firstPreviewable && !previewFile) setPreviewFile(firstPreviewable);
     },
     [
       fileTypeSettings,
       supportedZipFormats,
-      uploadedFiles.length,
+      uploadedFiles,
       previewFile,
       processZipFile,
       processMarkdownFile,
       getFileType,
+      applyAutoTitleIfNeeded,
     ]
   );
+
+  useEffect(() => {
+    setMetadataValid(modelMetadataSchema.safeParse(metadataValues).success);
+  }, [metadataValues]);
 
   const handleSelectFile = (id: string) => {
     const f = uploadedFiles.find((x) => x.id === id);
@@ -302,16 +347,9 @@ export default function ModelUploadView() {
       if (selectedThumbnailFileId === id) {
         setSelectedThumbnailFileId(null);
       }
-      if (previewFile?.id === id)
-        setPreviewFile(next.length > 0 ? next[0] : null);
+      if (previewFile?.id === id) setPreviewFile(next.length > 0 ? next[0] : null);
       return next;
     });
-  };
-
-  const handleThumbnailToggle = (id: string, checked: boolean) => {
-    const selectedId = checked ? id : null;
-    setSelectedThumbnailFileId(selectedId);
-    setUploadedFiles((prev) => setThumbnailSelection(prev, selectedId));
   };
 
   const handleClearAll = () => {
@@ -320,10 +358,9 @@ export default function ModelUploadView() {
     setSelectedThumbnailFileId(null);
   };
 
-  const handleThumbnailSelected = (value: string) => {
-    const selectedId = value === "none" ? null : value;
-    setSelectedThumbnailFileId(selectedId);
-    setUploadedFiles((prev) => setThumbnailSelection(prev, selectedId));
+  const handleSelectThumbnail = (id: string) => {
+    setSelectedThumbnailFileId(id);
+    setUploadedFiles((prev) => setThumbnailSelection(prev, id));
   };
 
   const handleThumbnailGenerated = useCallback(
@@ -342,16 +379,17 @@ export default function ModelUploadView() {
     [uploadedFiles]
   );
 
-  const thumbnailCandidates = uploadedFiles.filter(
-    (fileItem) => getFileType(fileItem.name) === "image"
-  );
+  const imageFiles = uploadedFiles.filter((fileItem) => getFileType(fileItem.name) === "image");
 
   const selectedThumbnailFile = uploadedFiles.find(
     (fileItem) => fileItem.id === selectedThumbnailFileId
   );
 
   useEffect(() => {
-    if (selectedThumbnailFileId && !uploadedFiles.some((fileItem) => fileItem.id === selectedThumbnailFileId)) {
+    if (
+      selectedThumbnailFileId &&
+      !uploadedFiles.some((fileItem) => fileItem.id === selectedThumbnailFileId)
+    ) {
       setSelectedThumbnailFileId(null);
       setUploadedFiles((prev) => setThumbnailSelection(prev, null));
     }
@@ -365,8 +403,7 @@ export default function ModelUploadView() {
 
   const reviewThumbnailPreviewUrl = React.useMemo(() => {
     if (!selectedThumbnailFile) return null;
-    const objectUrl = URL.createObjectURL(selectedThumbnailFile.file);
-    return objectUrl;
+    return URL.createObjectURL(selectedThumbnailFile.file);
   }, [selectedThumbnailFile]);
 
   useEffect(() => {
@@ -381,45 +418,66 @@ export default function ModelUploadView() {
   };
 
   const handleUpload = async () => {
-    if (uploadedFiles.length === 0) return;
+    if (uploadedFiles.length === 0 || !metadataValid) return;
+    const data = metadataForm.getValues();
     setIsUploading(true);
     try {
       const result = await uploadModel({
         modelData: {
-          name: modelData.title,
-          description: modelData.description,
-          privacy: modelData.privacy,
-          license: modelData.license,
-          categories: modelData.categories,
-          aiGenerated: modelData.aiGenerated,
-          workInProgress: modelData.workInProgress,
-          nsfw: modelData.nsfw,
-          remix: modelData.remix,
+          name: data.name.trim(),
+          description: data.description || undefined,
+          privacy: data.privacy,
+          license: data.license,
+          categories,
+          aiGenerated: data.aiGenerated,
+          workInProgress: data.wip,
+          nsfw: data.nsfw,
+          remix: data.isRemix,
+          remixUrl: data.isRemix ? data.remixUrl : undefined,
           thumbnailFileId: getThumbnailFileIdForUpload(),
         },
         files: uploadedFiles.map((f) => f.file),
       });
+
+      if (result.id) {
+        if (categories.length > 0) {
+          const { failed, skipped } = await linkModelCategories(result.id, categories);
+          if (skipped > 0) {
+            toast.warning(`${skipped} category name(s) were not found on the server`);
+          }
+          if (failed > 0) {
+            toast.error(`Some categories could not be linked (${failed})`);
+          }
+        }
+      }
+
       toast.success("Model uploaded successfully");
       router.push(result.id ? `/models/${result.id}` : "/");
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Upload failed"
-      );
+      toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setIsUploading(false);
     }
   };
 
   const downloadMarkdownTemplate = () => {
-    const blob = new Blob([generateMarkdownTemplate()], {
-      type: "text/markdown",
-    });
+    const blob = new Blob([generateMarkdownTemplate()], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "model-template.md";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleCancel = () => {
+    if (wizard.isDirty) {
+      const confirmed = window.confirm(
+        "You have unsaved changes. Are you sure you want to leave?"
+      );
+      if (!confirmed) return;
+    }
+    router.push("/");
   };
 
   if (authLoading || !isAuthenticated) {
@@ -431,199 +489,68 @@ export default function ModelUploadView() {
   }
 
   return (
-    <div
-      className={cn(
-        "mx-auto w-full px-4 py-6 sm:py-8 space-y-6 sm:space-y-8",
-        currentStep === 1 ? "max-w-xl lg:max-w-2xl" : "max-w-4xl"
-      )}
-    >
-      <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
-        Upload New Model
-      </h1>
-      <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
-          {[1, 2, 3].map((step) => (
-            <button
-              key={step}
-              type="button"
-              onClick={() => setCurrentStep(step)}
-              className={`px-2.5 py-1 rounded-full border transition-colors ${
-                currentStep === step
-                  ? "bg-primary border-primary text-primary-foreground"
-                  : "border-white/20 text-muted-foreground hover:border-white/40"
-              }`}
-            >
-              {step === 1 && "Files"}
-              {step === 2 && "Preview & Metadata"}
-              {step === 3 && "Review"}
-            </button>
-          ))}
-        </div>
-
-        {currentStep === 1 && (
-          <div className="space-y-6">
-            {settingsLoading ? (
-              <Card variant="glass" className="p-12 text-center">
-                <p className="text-muted-foreground">
-                  Loading file type settings...
-                </p>
-              </Card>
-            ) : (
-              <>
-                <FileDropZone
-                  onFilesSelected={handleFilesSelected}
-                  acceptFormats={allSupportedFormats}
-                  canAddMore={canAddMoreFiles}
-                  maxFiles={MAX_FILES_PER_UPLOAD}
-                  variant={uploadedFiles.length > 0 ? "compact" : "large"}
-                  disabled={isExtractingZip}
-                />
-                <Card variant="glass" className="p-4">
-                  <FileQueue
-                    files={uploadedFiles}
-                    selectedFileId={previewFile?.id ?? null}
-                    onSelectFile={handleSelectFile}
-                    onRemoveFile={handleRemoveFile}
-                    onThumbnailToggle={handleThumbnailToggle}
-                    getFileType={getFileType}
-                    supportedImageFormats={supportedImageFormats}
-                    maxFiles={MAX_FILES_PER_UPLOAD}
-                    onClearAll={handleClearAll}
-                  />
-                </Card>
-                <div className="flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={downloadMarkdownTemplate}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Download markdown template
-                  </button>
-                  {uploadedFiles.length > 0 && (
-                    <Button onClick={() => setCurrentStep(2)}>
-                      Next: Preview & Metadata
-                    </Button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+    <>
+      <UploadWizardShell
+        currentStep={wizard.currentStep}
+        stepCompletion={wizard.stepCompletion}
+        isStepReachable={wizard.isStepReachable}
+        onStepClick={wizard.goToStep}
+        canAdvance={wizard.canAdvanceFromCurrent}
+        isUploading={isUploading}
+        onBack={wizard.goBack}
+        onNext={wizard.goNext}
+        onUpload={handleUpload}
+        onCancel={handleCancel}
+      >
+        {wizard.currentStep === "files" && (
+          <UploadFilesStep
+            settingsLoading={settingsLoading}
+            isExtractingZip={isExtractingZip}
+            uploadedFiles={uploadedFiles}
+            selectedFileId={previewFile?.id ?? null}
+            acceptFormats={allSupportedFormats}
+            formatGroups={formatGroups}
+            canAddMore={canAddMoreFiles}
+            maxFiles={MAX_FILES_PER_UPLOAD}
+            getFileType={getFileType}
+            onFilesSelected={handleFilesSelected}
+            onSelectFile={handleSelectFile}
+            onRemoveFile={handleRemoveFile}
+            onClearAll={handleClearAll}
+            onDownloadMarkdownTemplate={downloadMarkdownTemplate}
+          />
         )}
 
-        {currentStep === 2 && (
-          <div className="space-y-6">
-            <UploadPreviewCarousel
-              files={uploadedFiles}
-              activeFileId={previewFile?.id ?? null}
-              getFileType={getFileType}
-              onActiveFileChange={handleSelectFile}
-              onOpenThumbnailGenerator={() => setShowThumbnailGenerator(true)}
-            />
-
-            <Card variant="glass" className="p-6 space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Thumbnail Selection</h3>
-                <p className="text-sm text-muted-foreground">
-                  Choose which image should be used as the model thumbnail.
-                </p>
-              </div>
-              <Select
-                value={selectedThumbnailFileId ?? "none"}
-                onValueChange={handleThumbnailSelected}
-              >
-                <SelectTrigger variant="glass" className="w-full">
-                  <SelectValue placeholder="Select thumbnail image" />
-                </SelectTrigger>
-                <SelectContent variant="glass">
-                  <SelectItem value="none">No thumbnail selected</SelectItem>
-                  {thumbnailCandidates.map((fileItem) => (
-                    <SelectItem key={fileItem.id} value={fileItem.id}>
-                      {fileItem.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {canGenerateThumbnail && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-fit"
-                  onClick={() => setShowThumbnailGenerator(true)}
-                >
-                  Generate thumbnail from current 3D preview
-                </Button>
-              )}
-              {thumbnailCandidates.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Upload or generate at least one image to select a thumbnail.
-                </p>
-              )}
-            </Card>
-
-            <Card variant="glass" className="p-6">
-              <MetadataForm
-                data={modelData}
-                onChange={(field, value) =>
-                  setModelData((prev) => ({ ...prev, [field]: value }))
-                }
-                onCancel={() => router.push("/")}
-                onSubmit={() => setCurrentStep(3)}
-                isSubmitting={false}
-                submitLabel="Next: Review"
-              />
-            </Card>
-          </div>
+        {wizard.currentStep === "details" && (
+          <UploadDetailsStep
+            uploadedFiles={uploadedFiles}
+            previewFileId={previewFile?.id ?? null}
+            getFileType={getFileType}
+            onSelectPreviewFile={handleSelectFile}
+            imageFiles={imageFiles}
+            selectedThumbnailFileId={selectedThumbnailFileId}
+            onSelectThumbnail={handleSelectThumbnail}
+            canGenerateFrom3d={canGenerateThumbnail}
+            onOpenThumbnailGenerator={() => setShowThumbnailGenerator(true)}
+            metadataForm={metadataForm}
+            categories={categories}
+            onCategoriesChange={setCategories}
+            onMetadataValidityChange={setMetadataValid}
+            onMetadataDirtyChange={setMetadataDirty}
+          />
         )}
 
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <Card variant="glass" className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Review & Upload</h2>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>
-                  <span className="text-foreground font-medium">Title:</span>{" "}
-                  {modelData.title || "(untitled)"}
-                </p>
-                <p>
-                  <span className="text-foreground font-medium">Files:</span>{" "}
-                  {uploadedFiles.length}
-                </p>
-                <p>
-                  <span className="text-foreground font-medium">Thumbnail:</span>{" "}
-                  {selectedThumbnailFile ? selectedThumbnailFile.name : "None selected"}
-                </p>
-                {previewFile && (
-                  <p>
-                    <span className="text-foreground font-medium">
-                      Preview:
-                    </span>{" "}
-                    {previewFile.name}
-                  </p>
-                )}
-              </div>
-              {reviewThumbnailPreviewUrl && (
-                <div className="mt-4 rounded-md border border-white/20 bg-white/5 p-3">
-                  <p className="text-xs text-muted-foreground mb-2">Selected thumbnail preview</p>
-                  <img
-                    src={reviewThumbnailPreviewUrl}
-                    alt="Selected thumbnail preview"
-                    className="h-28 w-28 rounded object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex gap-4 mt-6">
-                <Button variant="outline" onClick={() => setCurrentStep(2)}>
-                  Back
-                </Button>
-                <Button
-                  onClick={handleUpload}
-                  disabled={isUploading || uploadedFiles.length === 0}
-                >
-                  {isUploading ? "Uploading..." : "Upload Model"}
-                </Button>
-              </div>
-            </Card>
-          </div>
+        {wizard.currentStep === "review" && (
+          <UploadReviewStep
+            metadata={metadataValues}
+            categories={categories}
+            files={uploadedFiles}
+            getFileType={getFileType}
+            thumbnailPreviewUrl={reviewThumbnailPreviewUrl}
+            hasThumbnail={selectedThumbnailFileId !== null}
+          />
         )}
+      </UploadWizardShell>
 
       {showThumbnailGenerator && previewFile && canGenerateThumbnail && (
         <ThumbnailGenerator
@@ -633,6 +560,6 @@ export default function ModelUploadView() {
           onThumbnailGenerated={handleThumbnailGenerated}
         />
       )}
-    </div>
+    </>
   );
 }

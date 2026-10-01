@@ -272,20 +272,17 @@ export async function initiateHandshake(
   return client().initiateHandshake_InitiateHandshake(request);
 }
 
-export async function getAvailableThemes(): Promise<
-  import("@/lib/api/client").ThemeDefinition[]
+export async function getPresetThemes(): Promise<
+  import("@/lib/api/client").ThemeListResponse
 > {
-  return client().extensibleTheme_GetAvailableThemes();
+  return client().getThemes_GetThemes();
 }
 
-export async function getActiveTheme(): Promise<
-  import("@/lib/api/client").ThemeDefinition
-> {
-  return client().extensibleTheme_GetActiveTheme();
-}
-
-export async function setActiveTheme(themeId: string): Promise<void> {
-  return client().extensibleTheme_SetActiveTheme(themeId);
+export async function activatePresetTheme(themeId: number): Promise<void> {
+  const result = await client().setActiveTheme_SetActiveTheme(themeId);
+  if (!result.success) {
+    throw new Error(result.message ?? "Failed to activate theme");
+  }
 }
 
 export async function getThemeConfiguration(): Promise<

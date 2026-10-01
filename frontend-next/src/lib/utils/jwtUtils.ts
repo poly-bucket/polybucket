@@ -35,17 +35,29 @@ export const decodeJWT = (token: string): JWTPayload | null => {
   }
 };
 
+const ROLE_CLAIM =
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+
 export const extractUserFromJWT = (token: string): DecodedUser | null => {
   const payload = decodeJWT(token);
   if (!payload) {
     return null;
   }
 
+  const record = payload as JWTPayload & Record<string, unknown>;
+  const rawRole = record.role ?? record[ROLE_CLAIM] ?? record.roles;
+  const role =
+    typeof rawRole === "string"
+      ? rawRole
+      : Array.isArray(rawRole) && typeof rawRole[0] === "string"
+        ? rawRole[0]
+        : undefined;
+
   return {
     id: payload.sub,
     email: payload.email,
     username: payload.name,
-    role: payload.role,
+    role: role ?? "",
     isEmailVerified: payload.email_verified === "true",
   };
 };

@@ -34,6 +34,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -85,13 +93,11 @@ export function UsersTab() {
     isBan: boolean;
     reason: string;
   }>({ open: false, user: null, isBan: true, reason: "" });
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createSheetOpen, setCreateSheetOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     email: "",
     username: "",
     roleId: "",
-    firstName: "",
-    lastName: "",
   });
   const [createResult, setCreateResult] = useState<{
     password?: string;
@@ -190,8 +196,6 @@ export function UsersTab() {
         email: createForm.email.trim(),
         username: createForm.username.trim(),
         roleId: createForm.roleId,
-        firstName: createForm.firstName.trim() || undefined,
-        lastName: createForm.lastName.trim() || undefined,
       });
       const response = await createUser(command);
       setCreateResult({
@@ -208,14 +212,12 @@ export function UsersTab() {
     }
   };
 
-  const closeCreateDialog = () => {
-    setCreateDialogOpen(false);
+  const closeCreateSheet = () => {
+    setCreateSheetOpen(false);
     setCreateForm({
       email: "",
       username: "",
       roleId: "",
-      firstName: "",
-      lastName: "",
     });
     setCreateResult(null);
     setShowPassword(false);
@@ -274,7 +276,7 @@ export function UsersTab() {
         <div className="flex gap-2">
           <Button
             variant="glass"
-            onClick={() => setCreateDialogOpen(true)}
+            onClick={() => setCreateSheetOpen(true)}
             className="text-white/70 hover:text-white border-white/20"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -374,9 +376,18 @@ export function UsersTab() {
             <Table>
               <TableHeader>
                 <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/70">User</TableHead>
-                  <TableHead className="text-white/70">Role</TableHead>
-                  <TableHead className="text-white/70">Status</TableHead>
+                  <TableHead className="text-white/70">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 shrink-0" aria-hidden />
+                      <span>User</span>
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-white/70 w-24">
+                    <span className="inline-block -translate-x-1">Role</span>
+                  </TableHead>
+                  <TableHead className="text-white/70 w-24">
+                    <span className="inline-block -translate-x-1">Status</span>
+                  </TableHead>
                   <TableHead className="text-white/70">Last Login</TableHead>
                   <TableHead className="text-white/70">Created</TableHead>
                   <TableHead className="text-white/70">Actions</TableHead>
@@ -399,13 +410,15 @@ export function UsersTab() {
                       className="border-white/10 hover:bg-white/5"
                     >
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 pl-2">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/30 text-sm font-medium text-white">
                             {user.username?.charAt(0)?.toUpperCase() ?? "?"}
                           </div>
                           <div>
                             <div className="font-medium text-white">
+                            <a href={`/profile/${user.username}`} className="hover:bg-white/5 cursor-pointer">
                               {user.username ?? "Unknown"}
+                              </a>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-white/60">
                               <span>{user.email ?? "No email"}</span>
@@ -421,23 +434,23 @@ export function UsersTab() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-24">
                         <Badge
                           variant={
                             user.roleName === "Admin" ? "destructive" : "secondary"
                           }
-                          className="bg-white/10 text-white border-white/20"
+                          className="-translate-x-1 bg-white/10 text-white border-white/20"
                         >
                           {user.roleName ?? "No Role"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-24">
                         <Badge
                           variant={user.isBanned ? "destructive" : "default"}
                           className={
                             user.isBanned
-                              ? "bg-red-500/30"
-                              : "bg-green-500/30 text-white border-white/20"
+                              ? "-translate-x-1 bg-red-500/30"
+                              : "-translate-x-1 bg-green-500/30 text-white border-white/20"
                           }
                         >
                           {user.isBanned ? "Banned" : "Active"}
@@ -563,13 +576,13 @@ export function UsersTab() {
                   setBanDialog((prev) => ({ ...prev, reason: e.target.value }))
                 }
                 placeholder="Enter ban reason"
-                className="text-white"
+                className="text-white placeholder:text-white/50"
               />
             </div>
           )}
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="glass"
               onClick={() =>
                 setBanDialog({
                   open: false,
@@ -578,16 +591,18 @@ export function UsersTab() {
                   reason: "",
                 })
               }
-              className="border-white/20 text-white"
+              className="text-white"
             >
               Cancel
             </Button>
             <Button
+              variant="glass"
               onClick={handleBanUnban}
               disabled={
                 actionLoading ||
                 (banDialog.isBan && !banDialog.reason.trim())
               }
+              className="text-white"
             >
               {actionLoading
                 ? "Processing..."
@@ -599,64 +614,66 @@ export function UsersTab() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={createDialogOpen} onOpenChange={(open) => !open && closeCreateDialog()}>
-        <DialogContent variant="glass">
-          <DialogHeader>
-            <DialogTitle>Create User</DialogTitle>
-            <DialogDescription>
+      <Sheet open={createSheetOpen} onOpenChange={(open) => !open && closeCreateSheet()}>
+        <SheetContent side="right" variant="glass" className="sm:max-w-md">
+          <SheetHeader className="pr-10">
+            <SheetTitle>Create User</SheetTitle>
+            <SheetDescription>
               {createResult
                 ? createResult.inviteEmailQueued
                   ? "User created. An invite email with a link to set their password is on its way."
                   : "User created. Email delivery isn't configured, so copy the generated password and share it securely."
-                : "Create a new user. They'll get an invite email if email delivery is configured; otherwise a password is generated."}
-            </DialogDescription>
-          </DialogHeader>
+                : "Email, username, and role only. Profile details can be filled in later by the user or an admin."}
+            </SheetDescription>
+          </SheetHeader>
           {createResult?.inviteEmailQueued ? (
-            <DialogFooter>
-              <Button variant="glass" onClick={closeCreateDialog}>
+            <SheetFooter>
+              <Button variant="glass" onClick={closeCreateSheet}>
                 Done
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           ) : createResult ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Input
-                  variant="glass"
-                  type={showPassword ? "text" : "password"}
-                  value={createResult.password ?? ""}
-                  readOnly
-                  className="flex-1 text-white font-mono"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="border-white/20 text-white"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={copyPassword}
-                  className="border-white/20 text-white"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+            <>
+              <div className="space-y-4 px-4">
+                <div className="flex items-center gap-2">
+                  <Input
+                    variant="glass"
+                    type={showPassword ? "text" : "password"}
+                    value={createResult.password ?? ""}
+                    readOnly
+                    className="flex-1 font-mono text-white"
+                  />
+                  <Button
+                    variant="glass"
+                    size="icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-white"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="glass"
+                    size="icon"
+                    onClick={copyPassword}
+                    className="text-white"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <DialogFooter>
-                <Button variant="glass" onClick={closeCreateDialog}>
+              <SheetFooter>
+                <Button variant="glass" onClick={closeCreateSheet}>
                   Done
                 </Button>
-              </DialogFooter>
-            </div>
+              </SheetFooter>
+            </>
           ) : (
             <>
-              <div className="space-y-4">
+              <div className="flex-1 space-y-4 overflow-y-auto px-4">
                 <div>
                   <label className="text-sm font-medium text-white/80">
                     Email (required)
@@ -669,7 +686,7 @@ export function UsersTab() {
                       setCreateForm((prev) => ({ ...prev, email: e.target.value }))
                     }
                     placeholder="user@example.com"
-                    className="mt-1 text-white"
+                    className="mt-1 text-white placeholder:text-white/50"
                   />
                 </div>
                 <div>
@@ -683,7 +700,7 @@ export function UsersTab() {
                       setCreateForm((prev) => ({ ...prev, username: e.target.value }))
                     }
                     placeholder="username"
-                    className="mt-1 text-white"
+                    className="mt-1 text-white placeholder:text-white/50"
                   />
                 </div>
                 <div>
@@ -708,49 +725,15 @@ export function UsersTab() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-white/80">
-                      First name
-                    </label>
-                    <Input
-                      variant="glass"
-                      value={createForm.firstName}
-                      onChange={(e) =>
-                        setCreateForm((prev) => ({
-                          ...prev,
-                          firstName: e.target.value,
-                        }))
-                      }
-                      placeholder="Optional"
-                      className="mt-1 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/80">
-                      Last name
-                    </label>
-                    <Input
-                      variant="glass"
-                      value={createForm.lastName}
-                      onChange={(e) =>
-                        setCreateForm((prev) => ({
-                          ...prev,
-                          lastName: e.target.value,
-                        }))
-                      }
-                      placeholder="Optional"
-                      className="mt-1 text-white"
-                    />
-                  </div>
-                </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={closeCreateDialog} className="border-white/20 text-white">
+              <SheetFooter className="sm:flex-row sm:justify-end">
+                <Button variant="glass" onClick={closeCreateSheet} className="text-white">
                   Cancel
                 </Button>
                 <Button
+                  variant="glass"
                   onClick={handleCreateUser}
+                  className="text-white"
                   disabled={
                     createLoading ||
                     !createForm.email.trim() ||
@@ -760,11 +743,11 @@ export function UsersTab() {
                 >
                   {createLoading ? "Creating..." : "Create User"}
                 </Button>
-              </DialogFooter>
+              </SheetFooter>
             </>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

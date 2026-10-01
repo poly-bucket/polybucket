@@ -100,12 +100,6 @@ export function ModelVersionManager({
     }
   }, [selectedFileId, selectedThumbnailFileId, uploadedFiles]);
 
-  const handleThumbnailToggle = useCallback((id: string, checked: boolean) => {
-    const selectedId = checked ? id : null;
-    setSelectedThumbnailFileId(selectedId);
-    setUploadedFiles((prev) => setThumbnailSelection(prev, selectedId));
-  }, []);
-
   const handleClearAll = useCallback(() => {
     setUploadedFiles([]);
     setSelectedFileId(null);
@@ -262,9 +256,7 @@ export function ModelVersionManager({
           selectedFileId={selectedFileId}
           onSelectFile={handleSelectFile}
           onRemoveFile={handleRemoveFile}
-          onThumbnailToggle={handleThumbnailToggle}
           getFileType={(fileName) => getUploadFileType(fileName, SUPPORTED_3D_FORMATS, SUPPORTED_IMAGE_FORMATS)}
-          supportedImageFormats={SUPPORTED_IMAGE_FORMATS}
           maxFiles={MAX_FILES_PER_UPLOAD}
           onClearAll={handleClearAll}
         />

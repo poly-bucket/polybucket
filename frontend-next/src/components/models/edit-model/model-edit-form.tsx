@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import {
   LicenseTypes,
   PrivacySettings,
   UpdateModelRequest,
 } from "@/lib/api/client";
+import {
+  MODEL_CATEGORIES,
+  modelMetadataSchema,
+  type ModelMetadataFormValues,
+} from "@/lib/models/model-metadata";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { Input } from "@/components/primitives/input";
@@ -27,37 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
-const CATEGORIES = [
-  "Art",
-  "Technology",
-  "Toys",
-  "Tools",
-  "Games",
-  "Household",
-  "Engineering",
-  "Fashion",
-  "Medical",
-  "Other",
-];
-
-const editModelSchema = z
-  .object({
-    name: z.string().min(1, "Name is required").max(255),
-    description: z.string().max(2000).optional().or(z.literal("")),
-    privacy: z.nativeEnum(PrivacySettings),
-    license: z.nativeEnum(LicenseTypes),
-    aiGenerated: z.boolean(),
-    wip: z.boolean(),
-    nsfw: z.boolean(),
-    isRemix: z.boolean(),
-    remixUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
-  })
-  .refine((data) => !data.isRemix || (data.remixUrl && data.remixUrl.length > 0), {
-    message: "Remix URL is required when marking as remix",
-    path: ["remixUrl"],
-  });
-
-type EditModelFormData = z.infer<typeof editModelSchema>;
+type EditModelFormData = ModelMetadataFormValues;
 
 interface ModelEditFormProps {
   model: ModelWithReactions;
@@ -88,7 +62,7 @@ export function ModelEditForm({
     reset,
     watch,
   } = useForm<EditModelFormData>({
-    resolver: zodResolver(editModelSchema),
+    resolver: zodResolver(modelMetadataSchema),
     defaultValues: {
       name: model.name ?? "",
       description: model.description ?? "",
@@ -291,7 +265,7 @@ export function ModelEditForm({
       <div>
         <label className="block text-sm font-medium text-white mb-2">Categories</label>
         <div className="flex flex-wrap gap-2" role="list">
-          {CATEGORIES.map((category) => (
+          {MODEL_CATEGORIES.map((category) => (
             <button
               key={category}
               type="button"

@@ -1,6 +1,7 @@
 import { NavigationBar } from "@/components/layout/navigation-bar";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 import { UserSettingsProvider } from "@/contexts/UserSettingsContext";
+import { SiteThemedShell } from "@/components/theme/site-themed-shell";
 
 export default function MainLayout({
   children,
@@ -9,13 +10,13 @@ export default function MainLayout({
 }) {
   return (
     <UserSettingsProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <SiteThemedShell>
         <NavigationBar />
         <main className="pt-20">
           <EmailVerificationBanner />
           {children}
         </main>
-      </div>
+      </SiteThemedShell>
     </UserSettingsProvider>
   );
 }

@@ -162,7 +162,7 @@ export function NotificationBell() {
             role="dialog"
             aria-label="Notifications"
             style={{ top: position.top, right: position.right }}
-            className="fixed z-[60] w-80 max-w-[calc(100vw-1rem)] rounded-lg border border-white/20 bg-black/90 shadow-xl backdrop-blur"
+            className="fixed z-[60] w-80 max-w-[calc(100vw-1rem)] rounded-lg glass-bg border-white/20 text-white"
           >
             <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
               <h2 className="text-sm font-semibold text-white">Notifications</h2>

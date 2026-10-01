@@ -5,8 +5,11 @@ import type {
   GetModelsResponse,
   GetModelByIdResponse,
   ApiException,
+  LicenseTypes,
 } from "@/lib/api/client";
+import { UpdateModelRequest } from "@/lib/api/client";
 import { AUTH_STORAGE_KEY } from "@/lib/auth/authConstants";
+import type { ModelMetadataFormValues } from "@/lib/models/model-metadata";
 
 export const RECENT_MODELS_PAGE_SIZE = 12;
 export const RECENT_MODELS_SKELETON_COUNT = 8;
@@ -15,12 +18,13 @@ export interface ModelUploadData {
   name: string;
   description?: string;
   privacy: PrivacySettings;
-  license?: string;
+  license: LicenseTypes;
   categories?: string[];
   aiGenerated: boolean;
   workInProgress: boolean;
   nsfw: boolean;
   remix: boolean;
+  remixUrl?: string;
   thumbnailFileId?: string;
 }
 
@@ -28,13 +32,6 @@ export interface ModelUploadRequest {
   modelData: ModelUploadData;
   files: File[];
 }
-
-/*
-Upload contract notes:
-- `thumbnailFileId` must match the uploaded file name sent in `files`.
-- Client-side upload flows normalize duplicate file names before submit.
-- If no thumbnail is selected, `thumbnailFileId` is omitted.
-*/
 
 export interface UploadedModel {
   id: string;
@@ -66,6 +63,55 @@ function getAccessToken(): string | null {
   }
 }
 
+export async function linkModelCategories(
+  modelId: string,
+  categoryNames: string[]
+): Promise<{ failed: number; skipped: number }> {
+  if (!modelId || categoryNames.length === 0) {
+    return { failed: 0, skipped: 0 };
+  }
+
+  const client = ApiClientFactory.getApiClient();
+  const categoryResponse = await client.getCategories_GetCategories(1, 100, null);
+  const nameToId = new Map(
+    (categoryResponse.categories ?? []).map((c) => [c.name ?? "", c.id ?? ""])
+  );
+
+  let skipped = 0;
+  const toLink = categoryNames.filter((name) => {
+    if (!nameToId.get(name)) {
+      skipped += 1;
+      return false;
+    }
+    return true;
+  });
+
+  const results = await Promise.allSettled(
+    toLink.map((name) =>
+      client.addCategoryToModel_AddCategoryToModel(modelId, nameToId.get(name)!)
+    )
+  );
+
+  const failed = results.filter((r) => r.status === "rejected").length;
+  return { failed, skipped };
+}
+
+export async function applyPostCreateModelMetadata(
+  modelId: string,
+  metadata: Pick<ModelMetadataFormValues, "isRemix" | "remixUrl">
+): Promise<void> {
+  if (!metadata.isRemix || !metadata.remixUrl?.trim()) {
+    return;
+  }
+
+  const client = ApiClientFactory.getApiClient();
+  const request = UpdateModelRequest.fromJS({
+    isRemix: true,
+    remixUrl: metadata.remixUrl.trim(),
+  });
+  await client.updateModel_UpdateModel(modelId, request);
+}
+
 export async function uploadModel(request: ModelUploadRequest): Promise<UploadedModel> {
   const token = getAccessToken();
   if (!token) {
@@ -95,8 +141,21 @@ export async function uploadModel(request: ModelUploadRequest): Promise<Uploaded
     );
 
     const model = response.model;
+    const modelId = model?.id ?? "";
+
+    if (modelId && request.modelData.remix && request.modelData.remixUrl?.trim()) {
+      try {
+        await applyPostCreateModelMetadata(modelId, {
+          isRemix: request.modelData.remix,
+          remixUrl: request.modelData.remixUrl ?? "",
+        });
+      } catch {
+        // Model was created; remix URL can be edited later.
+      }
+    }
+
     return {
-      id: model?.id ?? "",
+      id: modelId,
       name: model?.name,
       description: model?.description,
     };

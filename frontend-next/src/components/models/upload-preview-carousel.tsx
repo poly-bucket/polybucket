@@ -15,7 +15,7 @@ interface UploadPreviewCarouselProps {
   activeFileId: string | null;
   getFileType: (fileName: string) => UploadFileType;
   onActiveFileChange: (fileId: string) => void;
-  onOpenThumbnailGenerator: () => void;
+  onOpenThumbnailGenerator?: () => void;
 }
 
 function ImagePreview({ file }: { file: File }) {
@@ -50,7 +50,7 @@ export default function UploadPreviewCarousel({
           <CardTitle>
             Preview {activeFile ? `: ${activeFile.name}` : ""}
           </CardTitle>
-          {activeFileType === "3d" && (
+          {activeFileType === "3d" && onOpenThumbnailGenerator && (
             <Button variant="outline" size="sm" onClick={onOpenThumbnailGenerator}>
               Generate Thumbnail
             </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/primitives/button";
 import {
   Card,
@@ -15,6 +15,7 @@ interface FileDropZoneProps {
   maxFiles: number;
   variant?: "large" | "compact";
   disabled?: boolean;
+  showFormatSummary?: boolean;
 }
 
 export default function FileDropZone({
@@ -24,18 +25,46 @@ export default function FileDropZone({
   maxFiles,
   variant = "large",
   disabled = false,
+  showFormatSummary = true,
 }: FileDropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragDepthRef = useRef(0);
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const canAcceptDrop = canAddMore && !disabled;
+
+  const hasFilePayload = (e: React.DragEvent) =>
+    Array.from(e.dataTransfer.types).includes("Files");
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!canAcceptDrop || !hasFilePayload(e)) return;
+    dragDepthRef.current += 1;
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!canAcceptDrop) return;
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) setIsDragActive(false);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!canAcceptDrop || !hasFilePayload(e)) return;
+    e.dataTransfer.dropEffect = "copy";
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!canAddMore || disabled) return;
+    dragDepthRef.current = 0;
+    setIsDragActive(false);
+    if (!canAcceptDrop) return;
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) onFilesSelected(files);
   };
@@ -62,11 +91,15 @@ export default function FileDropZone({
         "cursor-pointer border border-dashed transition-colors gap-0 py-0 shadow-none",
         !isCompact && "w-full max-w-lg mx-auto",
         canAddMore && !disabled
-          ? "border-white/20 hover:border-white/35"
+          ? isDragActive
+            ? "border-primary bg-primary/10"
+            : "border-white/20 hover:border-white/35"
           : "border-white/10 opacity-60 cursor-not-allowed"
       )}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      onDragEnterCapture={handleDragEnter}
+      onDragLeaveCapture={handleDragLeave}
+      onDragOverCapture={handleDragOver}
+      onDropCapture={handleDrop}
       onClick={handleClick}
     >
       <CardContent
@@ -121,7 +154,7 @@ export default function FileDropZone({
             Choose Files
           </Button>
         )}
-        {!isCompact && (
+        {!isCompact && showFormatSummary && (
           <p className="text-muted-foreground text-[11px] sm:text-xs max-w-sm leading-relaxed">
             Supported: {acceptFormats.slice(0, 8).join(", ")}
             {acceptFormats.length > 8 ? "..." : ""}

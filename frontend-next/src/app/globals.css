@@ -282,6 +282,15 @@
   --sidebar-ring: oklch(0.6 0.2 250); /* Light blue ring - 3:1 contrast */
 }
 
+.site-themed-shell {
+  background: linear-gradient(
+    to bottom right,
+    var(--site-bg-primary, #0f172a),
+    var(--site-bg-secondary, #1e293b),
+    var(--site-bg-tertiary, #0f172a)
+  );
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
