@@ -10,6 +10,7 @@ import { collectionsService, type Collection } from "@/lib/services/collectionsS
 import { CollectionCard, mapCollectionToCardData } from "./collection-card";
 import { SimplePagination } from "./simple-pagination";
 import { DeleteCollectionDialog } from "./delete-collection-dialog";
+import { CollectionCardSkeletonGrid } from "@/components/ui/skeletons";
 import { Input } from "@/components/primitives/input";
 import { Button } from "@/components/primitives/button";
 
@@ -123,14 +124,7 @@ export function CollectionsListPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-80 animate-pulse rounded-xl bg-white/10 sm:h-96"
-            />
-          ))}
-        </div>
+        <CollectionCardSkeletonGrid count={8} />
       ) : collections.length === 0 ? (
         <div className="rounded-xl border border-white/20 bg-white/5 px-8 py-12 text-center">
           <p className="mb-4 text-white/60">

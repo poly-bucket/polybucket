@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Card } from "@/components/primitives/card";
 import { Heart, Download, MessageCircle, ThumbsDown } from "lucide-react";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 import { cn } from "@/lib/utils";
 import { isImageUrl } from "@/lib/utils/modelUtils";
 
@@ -136,14 +137,14 @@ export function ModelCard({ model, onClick, className }: ModelCardProps) {
 export function ModelCardSkeleton() {
   return (
     <Card variant="glass" className="flex h-72 flex-col overflow-hidden border-white/20 py-0 sm:h-80">
-      <div className="h-40 flex-shrink-0 animate-pulse bg-white/10 sm:h-48" />
+      <Skeleton className="h-40 flex-shrink-0 sm:h-48" />
       <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
-        <div className="h-4 w-3/4 animate-pulse rounded bg-white/10" />
-        <div className="h-3 w-1/3 animate-pulse rounded bg-white/10" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/3" />
         <div className="mt-auto flex gap-4">
-          <div className="h-3 w-8 animate-pulse rounded bg-white/10" />
-          <div className="h-3 w-8 animate-pulse rounded bg-white/10" />
-          <div className="h-3 w-8 animate-pulse rounded bg-white/10" />
+          <Skeleton className="h-3 w-8" />
+          <Skeleton className="h-3 w-8" />
+          <Skeleton className="h-3 w-8" />
         </div>
       </div>
     </Card>

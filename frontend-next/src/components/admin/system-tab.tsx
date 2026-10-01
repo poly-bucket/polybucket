@@ -17,6 +17,7 @@ import {
   getSetupStatus,
 } from "@/lib/services/adminService";
 import type { TokenSettings } from "@/lib/api/client";
+import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
 
 export function SystemTab() {
   const [tokenSettings, setTokenSettings] = useState<TokenSettings | null>(null);
@@ -73,10 +74,11 @@ export function SystemTab() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">System Settings</h2>
-        <div className="text-center text-white/60 py-12">Loading settings...</div>
-      </div>
+      <SettingsSectionsSkeleton
+        sections={2}
+        togglesPerSection={4}
+        pageTitleWidth="w-56"
+      />
     );
   }
 

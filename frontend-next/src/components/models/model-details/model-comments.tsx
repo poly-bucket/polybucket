@@ -24,6 +24,7 @@ import {
   type CommentTarget,
 } from "@/lib/services/commentsService";
 import { getAccountApiErrorMessage, isEmailUnverifiedError } from "@/lib/services/accountEmailService";
+import { CommentSkeleton } from "@/components/ui/skeletons";
 
 const PAGE_SIZE = 20;
 
@@ -353,7 +354,7 @@ export function ModelComments({ modelId }: ModelCommentsProps) {
               ))}
             </ul>
 
-            {loading && <p className="text-sm text-white/60">Loading comments...</p>}
+            {loading && <CommentSkeleton count={3} />}
 
             {!loading && page < totalPages && (
               <Button type="button" variant="outline" size="sm" onClick={() => load(page + 1)}>

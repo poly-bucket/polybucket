@@ -1,11 +1,12 @@
 import dynamic from "next/dynamic";
+import { DashboardSkeleton } from "@/components/ui/skeletons";
 
 const DashboardTab = dynamic(
   () =>
     import("@/components/admin/dashboard-tab").then((mod) => ({
       default: mod.DashboardTab,
     })),
-  { loading: () => <div className="text-white/60 py-8">Loading...</div> }
+  { loading: () => <DashboardSkeleton /> }
 );
 
 export default function AdminDashboardPage() {

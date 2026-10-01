@@ -8,6 +8,7 @@ import { CollectionCard, mapPublicUserCollectionDtoToCardData } from "@/componen
 import { SimplePagination } from "@/components/collections/simple-pagination";
 import { fetchUserCollections } from "@/lib/services/userProfileService";
 import type { PublicUserCollectionListItemDto } from "@/lib/api/client";
+import { CollectionCardSkeletonGrid } from "@/components/ui/skeletons";
 
 const PAGE_SIZE = 12;
 const DEBOUNCE_MS = 300;
@@ -75,14 +76,7 @@ export function ProfileCollectionsTab({
         />
       </div>
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-80 animate-pulse rounded-xl bg-white/10 sm:h-96"
-            />
-          ))}
-        </div>
+        <CollectionCardSkeletonGrid count={8} />
       ) : collections.length === 0 ? (
         <div className="rounded-xl border border-white/20 bg-white/5 px-8 py-12 text-center">
           <p className="text-white/60">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminNavItems } from "@/lib/plugins";
 import { PanelLayout } from "@/components/layout/panel-layout";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 
 export default function AdminLayout({
   children,

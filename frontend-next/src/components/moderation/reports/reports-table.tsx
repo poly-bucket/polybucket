@@ -33,6 +33,7 @@ import {
   resolveReport,
 } from "@/lib/services/moderationService";
 import type { Report } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 interface ReportsTableProps {
   canHandleReports: boolean;
@@ -132,11 +133,7 @@ export function ReportsTable({
   };
 
   if (loading && reports.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-white/60">Loading reports...</p>
-      </div>
-    );
+    return <TableRowsSkeleton variant="default" rows={8} />;
   }
 
   return (

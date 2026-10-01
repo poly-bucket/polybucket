@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useUserSettings } from "@/contexts/UserSettingsContext";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsToggle } from "@/components/settings/settings-toggle";
+import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
 
 export default function NotificationsSettingsPage() {
   const { settings, updateSettings } = useUserSettings();
@@ -24,9 +25,7 @@ export default function NotificationsSettingsPage() {
 
   if (!settings) {
     return (
-      <div className="flex min-h-48 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      </div>
+      <SettingsSectionsSkeleton sections={1} togglesPerSection={5} showPageTitle={false} />
     );
   }
 

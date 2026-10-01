@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
 
 interface MarkdownViewerProps {
@@ -40,14 +41,8 @@ export default function MarkdownViewer({
 
   if (loading) {
     return (
-      <div
-        className={cn(
-          "flex items-center justify-center text-muted-foreground glass-bg rounded-lg",
-          className
-        )}
-        style={{ width, height }}
-      >
-        <p className="text-sm">Loading markdown...</p>
+      <div className={cn("glass-bg rounded-lg", className)} style={{ width, height }}>
+        <PreviewPanelSkeleton />
       </div>
     );
   }

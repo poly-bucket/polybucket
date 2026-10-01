@@ -23,6 +23,7 @@ import { useAdminQuery } from "@/lib/hooks/use-admin-query";
 import { useAdminMutation } from "@/lib/hooks/use-admin-mutation";
 import type { FileTypeSettingsData } from "@/lib/api/client";
 import { UpdateFileSettingsCommand } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 function formatBytes(bytes?: number | null): string {
   if (bytes == null || bytes === 0) return "—";
@@ -116,7 +117,7 @@ export function FileTypesSection() {
       )}
 
       {isLoading ? (
-        <div className="text-center text-white/60 py-8">Loading file types...</div>
+        <TableRowsSkeleton variant="default" rows={6} />
       ) : fileTypes.length === 0 ? (
         <div className="text-center text-white/60 py-8 rounded-lg border border-white/10 glass-bg">
           No file types configured.

@@ -35,6 +35,7 @@ import {
 } from "./upload-shared";
 import type { UploadedFile } from "./file-queue";
 import { UploadWizardShell } from "./upload/upload-wizard-shell";
+import { UploadWizardSkeleton } from "@/components/ui/skeletons";
 import { UploadFilesStep } from "./upload/upload-files-step";
 import { UploadDetailsStep } from "./upload/upload-details-step";
 import { UploadReviewStep } from "./upload/upload-review-step";
@@ -481,11 +482,7 @@ export default function ModelUploadView() {
   };
 
   if (authLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <UploadWizardSkeleton />;
   }
 
   return (

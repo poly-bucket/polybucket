@@ -33,6 +33,7 @@ import {
 } from "@/lib/api/client";
 import { toast } from "sonner";
 import type { FederatedInstanceDto } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 const HEALTH_COOLDOWN_MS = 10000;
 
@@ -195,7 +196,7 @@ function InstancesTab() {
       </div>
 
       {isLoading ? (
-        <div className="text-white/60 py-8">Loading instances...</div>
+        <TableRowsSkeleton variant="default" rows={5} />
       ) : list.length === 0 ? (
         <div className="rounded-lg border border-white/10 glass-bg p-8 text-center text-white/60">
           No federated instances. Add one to enable federation.

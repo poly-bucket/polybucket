@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import {
   Box,
   FolderOpen,
-  Loader2,
   Search,
   User,
   ArrowRight,
   Download,
   Heart,
 } from "lucide-react";
+import { ListRowSkeleton } from "@/components/ui/skeletons";
 import {
   CommandDialog,
   CommandEmpty,
@@ -143,11 +143,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         className="text-white placeholder:text-white/40"
       />
       <CommandList className="max-h-[min(60vh,400px)]">
-        {loading && (
-          <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-white/40" />
-          </div>
-        )}
+        {loading && <ListRowSkeleton count={5} />}
 
         {!loading && hasQuery && !hasResults && (
           <CommandEmpty className="text-white/60">

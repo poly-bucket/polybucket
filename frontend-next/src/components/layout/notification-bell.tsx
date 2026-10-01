@@ -9,6 +9,7 @@ import {
   notificationsService,
   type NotificationItem,
 } from "@/lib/services/notificationsService";
+import { ListRowSkeleton } from "@/components/ui/skeletons";
 
 export const NOTIFICATION_POLL_INTERVAL_MS = 60_000;
 const DROPDOWN_PAGE_SIZE = 10;
@@ -185,7 +186,7 @@ export function NotificationBell() {
                 </button>
               </div>
             ) : items === null ? (
-              <p className="p-3 text-sm text-white/60">Loading notifications...</p>
+              <ListRowSkeleton count={3} showIcon={false} className="py-1" />
             ) : items.length === 0 ? (
               <p className="p-3 text-sm text-white/60">You&apos;re all caught up.</p>
             ) : (

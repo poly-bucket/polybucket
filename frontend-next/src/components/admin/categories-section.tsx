@@ -24,6 +24,7 @@ import { useAdminMutation } from "@/lib/hooks/use-admin-mutation";
 import { formatDate } from "@/lib/utils/format";
 import type { CategoryDto } from "@/lib/api/client";
 import { CreateCategoryCommand, UpdateCategoryCommand } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 export function CategoriesSection() {
   const {
@@ -102,7 +103,7 @@ export function CategoriesSection() {
       </div>
 
       {isLoading ? (
-        <div className="text-center text-white/60 py-8">Loading categories...</div>
+        <TableRowsSkeleton variant="default" rows={5} />
       ) : categories.length === 0 ? (
         <div className="text-center text-white/60 py-8 rounded-lg border border-white/10 glass-bg">
           No categories yet. Create one to get started.

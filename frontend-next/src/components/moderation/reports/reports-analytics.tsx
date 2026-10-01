@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReportsAnalytics as ReportsAnalyticsType } from "@/lib/api/client";
+import { ChartBlockSkeleton } from "@/components/ui/skeletons";
 
 interface ReportsAnalyticsProps {
   analytics: ReportsAnalyticsType | null;
@@ -14,11 +15,7 @@ export function ReportsAnalytics({
   loading,
 }: ReportsAnalyticsProps) {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-white/60">Loading analytics...</p>
-      </div>
-    );
+    return <ChartBlockSkeleton />;
   }
 
   return (

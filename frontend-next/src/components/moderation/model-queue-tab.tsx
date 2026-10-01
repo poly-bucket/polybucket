@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTablePagination } from "@/components/primitives/pagination";
+import { ModelQueueCardSkeleton } from "@/components/ui/skeletons";
 import {
   approveModel,
   getModelsAwaitingModeration,
@@ -83,7 +84,7 @@ export function ModelQueueTab() {
   };
 
   if (loading && items.length === 0) {
-    return <p className="text-white/70">Loading model queue…</p>;
+    return <ModelQueueCardSkeleton count={4} />;
   }
 
   return (

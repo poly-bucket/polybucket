@@ -7,6 +7,7 @@ import { Check, FolderPlus, Plus } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { collectionsService, type Collection } from "@/lib/services/collectionsService";
 import { getAccountApiErrorMessage, isEmailUnverifiedError } from "@/lib/services/accountEmailService";
+import { CheckboxListSkeleton } from "@/components/ui/skeletons";
 
 const COLLECTION_PAGE_SIZE = 50;
 
@@ -142,7 +143,9 @@ export function AddToCollectionPopover({ modelId }: AddToCollectionPopoverProps)
               </Button>
             </div>
           ) : collections === null ? (
-            <p className="p-2 text-sm text-white/60">Loading collections...</p>
+            <div className="p-2">
+              <CheckboxListSkeleton rows={4} />
+            </div>
           ) : collections.length === 0 ? (
             <p className="p-2 text-sm text-white/60">You don&apos;t have any collections yet.</p>
           ) : (

@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/userProfileService";
 import { useProfileTabs, PluginBoundary } from "@/lib/plugins";
 import { ProfileHeader } from "./profile-header";
+import { ProfilePageSkeleton } from "@/components/ui/skeletons";
 
 export function ProfilePageContent() {
   const params = useParams();
@@ -71,11 +72,7 @@ export function ProfilePageContent() {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto flex min-h-96 max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      </div>
-    );
+    return <ProfilePageSkeleton />;
   }
 
   if (error) {

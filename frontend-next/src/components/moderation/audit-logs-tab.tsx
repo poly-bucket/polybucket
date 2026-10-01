@@ -23,6 +23,7 @@ import { DataTablePagination } from "@/components/primitives/pagination";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { getModerationAuditLogs } from "@/lib/services/moderationService";
 import type { ModerationAuditDto } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 function formatDate(date?: Date | string): string {
   if (!date) return "-";
@@ -103,11 +104,7 @@ export function AuditLogsTab() {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   if (loading && logs.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-white/60">Loading audit logs...</p>
-      </div>
-    );
+    return <TableRowsSkeleton variant="audit" rows={8} />;
   }
 
   return (

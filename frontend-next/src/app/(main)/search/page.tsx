@@ -144,6 +144,7 @@ export default function SearchPage() {
       <SearchResults
         results={data?.results ?? []}
         loading={loading}
+        searchType={type}
       />
 
       {data && data.totalPages > 1 && (

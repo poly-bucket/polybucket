@@ -7,6 +7,7 @@ import { SettingsSection } from "@/components/settings/settings-section";
 import { Button } from "@/components/primitives/button";
 import { DataTablePagination } from "@/components/primitives/pagination";
 import { Badge } from "@/components/ui/badge";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 import {
   getEmailApiErrorMessage,
   getEmailOutbox,
@@ -107,7 +108,7 @@ export function EmailOutboxSection() {
       )}
 
       {loading && !data ? (
-        <div className="py-6 text-center text-white/60">Loading outbox...</div>
+        <TableRowsSkeleton variant="default" rows={6} />
       ) : data && data.items.length === 0 ? (
         <div className="py-6 text-center text-white/60">No emails match this filter.</div>
       ) : (

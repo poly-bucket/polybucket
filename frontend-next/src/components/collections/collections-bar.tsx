@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, FolderPlus } from "lucide-react";
 import type { CollectionCardData } from "./collection-card";
 import { Button } from "@/components/primitives/button";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 import { cn } from "@/lib/utils";
 
 export const SIDEBAR_STORAGE_KEY = "collectionsSidebarCollapsed";
@@ -64,10 +65,7 @@ export function CollectionsBar({
         {loading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 animate-pulse rounded-md bg-white/10"
-              />
+              <Skeleton key={i} className="h-12 rounded-md" />
             ))}
           </div>
         ) : (

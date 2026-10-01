@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { getModeratorActivity } from "@/lib/services/moderationService";
 import type { ModeratorActivity as ModeratorActivityType } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 interface ModeratorActivityProps {
   dateRange: { from: string; to: string };
@@ -44,11 +45,7 @@ export function ModeratorActivity({ dateRange }: ModeratorActivityProps) {
   }, [dateRange.from, dateRange.to]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-white/60">Loading moderator activity...</p>
-      </div>
-    );
+    return <TableRowsSkeleton variant="audit" rows={8} />;
   }
 
   return (

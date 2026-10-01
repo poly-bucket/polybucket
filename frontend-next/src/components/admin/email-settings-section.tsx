@@ -10,6 +10,7 @@ import { SettingsFooter } from "@/components/settings/settings-footer";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import { Badge } from "@/components/ui/badge";
+import { ProfileSettingsFormSkeleton } from "@/components/ui/skeletons";
 import {
   Select,
   SelectContent,
@@ -250,9 +251,11 @@ export function EmailSettingsSection({
   if (loading || !form) {
     return (
       <SettingsSection title={title} description={description}>
-        <div className="py-6 text-center text-white/60">
-          {error ?? "Loading email settings..."}
-        </div>
+        {error ? (
+          <div className="py-6 text-center text-red-400">{error}</div>
+        ) : (
+          <ProfileSettingsFormSkeleton />
+        )}
       </SettingsSection>
     );
   }

@@ -66,6 +66,7 @@ import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { formatDate } from "@/lib/utils/format";
 import { toast } from "sonner";
 import type { UserListItemDto, RoleDto } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 import { BanUserRequest, CreateUserCommand } from "@/lib/api/client";
 
 export function UsersTab() {
@@ -346,10 +347,8 @@ export function UsersTab() {
       </Card>
 
       {loading && (
-        <Card variant="glass" className="border-white/20">
-          <CardContent className="py-12 text-center text-white/60">
-            Loading users...
-          </CardContent>
+        <Card variant="glass" className="border-white/20 overflow-hidden">
+          <TableRowsSkeleton variant="users" rows={6} />
         </Card>
       )}
 

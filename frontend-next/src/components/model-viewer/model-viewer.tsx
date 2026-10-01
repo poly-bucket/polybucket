@@ -15,6 +15,7 @@ import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ThreeMFLoader } from "three/examples/jsm/loaders/3MFLoader.js";
+import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 
 interface ModelViewerProps {
   file: File;
@@ -380,8 +381,8 @@ export default function ModelViewer({
 
   if (!fileData) {
     return (
-      <div className="flex h-full min-h-[384px] items-center justify-center text-muted-foreground">
-        Loading model...
+      <div className="h-full min-h-[384px] w-full">
+        <PreviewPanelSkeleton minHeight="min-h-[384px]" />
       </div>
     );
   }

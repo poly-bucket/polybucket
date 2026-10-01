@@ -23,6 +23,7 @@ import {
 import { DataTablePagination } from "@/components/primitives/pagination";
 import { getBannedUsers, unbanUser } from "@/lib/services/moderationService";
 import type { BannedUserListItemDto } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 function formatDate(date?: Date | string): string {
   if (!date) return "-";
@@ -106,11 +107,7 @@ export function BannedUsersTab() {
   };
 
   if (loading && bannedUsers.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-white/60">Loading banned users...</p>
-      </div>
-    );
+    return <TableRowsSkeleton variant="users" rows={6} />;
   }
 
   return (

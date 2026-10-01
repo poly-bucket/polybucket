@@ -32,6 +32,7 @@ import {
 } from "@/lib/services/dangerZoneService";
 import { twoFactorAuthService } from "@/services/twoFactorAuthService";
 import { cn } from "@/lib/utils";
+import { ListRowSkeleton } from "@/components/ui/skeletons";
 
 export default function DangerZoneSettingsPage() {
   const { user, logout } = useAuth();
@@ -221,7 +222,7 @@ export default function DangerZoneSettingsPage() {
       >
         <div className="space-y-3">
           {sessionsLoading ? (
-            <p className="text-sm text-white/60">Loading sessions…</p>
+            <ListRowSkeleton count={3} showIcon={false} className="p-0" />
           ) : sessions.length === 0 ? (
             <p className="text-sm text-white/60">No active sessions found.</p>
           ) : (

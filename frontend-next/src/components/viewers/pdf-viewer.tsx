@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
 
 interface PDFViewerProps {
@@ -34,14 +35,8 @@ export default function PDFViewer({
 
   if (loading) {
     return (
-      <div
-        className={cn(
-          "flex items-center justify-center text-muted-foreground glass-bg rounded-lg",
-          className
-        )}
-        style={{ width, height }}
-      >
-        <p className="text-sm">Loading PDF...</p>
+      <div className={cn("glass-bg rounded-lg", className)} style={{ width, height }}>
+        <PreviewPanelSkeleton />
       </div>
     );
   }

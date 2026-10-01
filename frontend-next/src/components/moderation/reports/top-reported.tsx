@@ -9,6 +9,7 @@ import {
   getTopReportedComments,
 } from "@/lib/services/moderationService";
 import type { TopReportedItem } from "@/lib/api/client";
+import { ListRowSkeleton } from "@/components/ui/skeletons";
 
 interface TopReportedProps {
   dateRange: { from: string; to: string };
@@ -41,11 +42,7 @@ export function TopReported({ dateRange }: TopReportedProps) {
   }, [dateRange.from, dateRange.to]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-white/60">Loading top reported items...</p>
-      </div>
-    );
+    return <ListRowSkeleton count={6} className="py-4" />;
   }
 
   return (

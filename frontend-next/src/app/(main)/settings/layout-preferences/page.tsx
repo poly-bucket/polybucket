@@ -14,6 +14,7 @@ import { useUserSettings } from "@/contexts/UserSettingsContext";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { Button } from "@/components/primitives/button";
 import { cn } from "@/lib/utils";
+import { LayoutPreferencesSkeleton } from "@/components/ui/skeletons";
 
 const VIEW_OPTIONS = [
   { value: "grid", label: "Grid", icon: Grid3X3, description: "Display models in a grid" },
@@ -76,11 +77,7 @@ export default function LayoutPreferencesPage() {
   };
 
   if (!settings) {
-    return (
-      <div className="flex min-h-48 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      </div>
-    );
+    return <LayoutPreferencesSkeleton />;
   }
 
   return (

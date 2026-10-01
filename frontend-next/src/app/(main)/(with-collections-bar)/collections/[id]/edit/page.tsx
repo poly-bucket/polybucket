@@ -11,6 +11,7 @@ import {
   type CollectionFormValues,
 } from "@/components/collections/collection-form";
 import { Button } from "@/components/primitives/button";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 
 export default function EditCollectionPage() {
   const params = useParams();
@@ -36,9 +37,12 @@ export default function EditCollectionPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="h-12 w-48 animate-pulse rounded bg-white/10" />
-        <div className="mt-6 h-64 animate-pulse rounded bg-white/10" />
+      <div className="mx-auto max-w-2xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        <Skeleton className="h-12 w-48" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-32 w-full rounded-md" />
+        <Skeleton className="h-10 w-28 rounded-md" />
       </div>
     );
   }

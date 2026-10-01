@@ -7,6 +7,8 @@ import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { splitAvatarForDisplay } from "@/lib/avatar/minidenticon";
 import type { SearchResult } from "@/lib/services/searchService";
+import { SearchType } from "@/lib/services/searchService";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { formatNumber } from "@/lib/utils/modelUtils";
 import { formatDate } from "@/lib/utils/format";
@@ -14,6 +16,21 @@ import { formatDate } from "@/lib/utils/format";
 interface SearchResultsProps {
   results: SearchResult[];
   loading?: boolean;
+  searchType?: SearchType;
+}
+
+function SearchResultRowSkeleton() {
+  return (
+    <Card variant="glass" className="border-white/20 px-4 py-4">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-12 w-12 shrink-0 rounded-lg" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      </div>
+    </Card>
+  );
 }
 
 function toModel(result: SearchResult): ModelWithReactions {
@@ -107,12 +124,28 @@ function CollectionResultCard({ result }: { result: SearchResult }) {
   );
 }
 
-export function SearchResults({ results, loading }: SearchResultsProps) {
+export function SearchResults({
+  results,
+  loading,
+  searchType = SearchType.All,
+}: SearchResultsProps) {
   const models = results.filter((r) => r.kind === "model");
   const users = results.filter((r) => r.kind === "user");
   const collections = results.filter((r) => r.kind === "collection");
 
   if (loading) {
+    if (
+      searchType === SearchType.Users ||
+      searchType === SearchType.Collections
+    ) {
+      return (
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SearchResultRowSkeleton key={i} />
+          ))}
+        </div>
+      );
+    }
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (

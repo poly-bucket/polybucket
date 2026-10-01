@@ -15,6 +15,7 @@ import { AvatarRegenerateSection } from "@/components/settings/avatar-regenerate
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsField } from "@/components/settings/settings-field";
 import { SettingsFooter } from "@/components/settings/settings-footer";
+import { ProfileSettingsFormSkeleton } from "@/components/ui/skeletons";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -100,11 +101,7 @@ export default function ProfileSettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-48 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      </div>
-    );
+    return <ProfileSettingsFormSkeleton />;
   }
 
   if (!profile) {

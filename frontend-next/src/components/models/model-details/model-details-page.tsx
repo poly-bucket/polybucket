@@ -27,6 +27,7 @@ import { ModelComments } from "./model-comments";
 import { EditModelModal } from "../edit-model/edit-model-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
+import { ModelDetailsPageSkeleton } from "@/components/ui/skeletons";
 
 export function buildCarouselItems(model: ModelWithReactions): CarouselItem[] {
   const items: CarouselItem[] = [];
@@ -337,11 +338,7 @@ export function ModelDetailsPage() {
   );
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      </div>
-    );
+    return <ModelDetailsPageSkeleton />;
   }
 
   if (error || !model) {

@@ -10,6 +10,7 @@ import EmailSetupStep from "@/setup/EmailSetupStep";
 import SiteEssentialsStep from "@/setup/SiteEssentialsStep";
 import SetupComplete from "@/setup/SetupComplete";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
+import { AuthCardSkeleton } from "@/components/ui/skeletons";
 
 type StepIndex = 0 | 1 | 2 | 3;
 const STEP_NAMES: Record<StepIndex, string> = {
@@ -143,9 +144,8 @@ export default function SetupPage() {
 
   if (isAuthLoading || isLoadingStatus || isCompletingSetup) {
     return (
-      <div className="flex flex-col items-center gap-4">
-        <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-        <p className="text-white/70">Checking setup status...</p>
+      <div className="flex w-full max-w-md justify-center">
+        <AuthCardSkeleton />
       </div>
     );
   }

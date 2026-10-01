@@ -12,7 +12,7 @@ import { Input } from "@/components/primitives/input";
 import { Textarea } from "@/components/ui/glass/textarea";
 import { Button } from "@/components/primitives/button";
 import { Card, CardContent } from "@/components/primitives/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 import { ImageIcon } from "lucide-react";
 import {
   MAX_FILES_PER_UPLOAD,

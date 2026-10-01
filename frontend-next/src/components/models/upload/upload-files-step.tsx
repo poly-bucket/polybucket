@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { SupportedFormatsDialog } from "./supported-formats-dialog";
 import type { UploadFileType } from "../upload-shared";
+import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 
 interface UploadFilesStepProps {
   settingsLoading: boolean;
@@ -63,8 +64,8 @@ export function UploadFilesStep({
 
   if (settingsLoading) {
     return (
-      <Card variant="glass" className="p-12 text-center">
-        <p className="text-muted-foreground">Loading file type settings...</p>
+      <Card variant="glass" className="overflow-hidden p-0">
+        <PreviewPanelSkeleton minHeight="min-h-[320px]" />
       </Card>
     );
   }

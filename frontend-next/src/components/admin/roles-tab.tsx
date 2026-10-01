@@ -47,6 +47,7 @@ import {
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
 import type { RoleDto, PermissionDto } from "@/lib/api/client";
+import { TableRowsSkeleton } from "@/components/ui/skeletons";
 import {
   CreateRoleRequest,
   UpdateRoleRequest,
@@ -343,10 +344,8 @@ export function RolesTab() {
       </Card>
 
       {loading && (
-        <Card variant="glass" className="border-white/20">
-          <CardContent className="py-12 text-center text-white/60">
-            Loading roles...
-          </CardContent>
+        <Card variant="glass" className="border-white/20 overflow-hidden">
+          <TableRowsSkeleton variant="default" rows={6} />
         </Card>
       )}
 

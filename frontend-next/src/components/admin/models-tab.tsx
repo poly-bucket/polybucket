@@ -35,6 +35,7 @@ import {
 } from "@/lib/api/client";
 import { CategoriesSection } from "./categories-section";
 import { FileTypesSection } from "./file-types-section";
+import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
 import { ModerationActionsSection } from "./moderation-actions-section";
 import { toast } from "sonner";
 
@@ -127,9 +128,7 @@ function ConfigurationTab() {
   };
 
   if (loading) {
-    return (
-      <div className="text-center text-white/60 py-12">Loading settings...</div>
-    );
+    return <SettingsSectionsSkeleton sections={2} togglesPerSection={5} />;
   }
 
   return (

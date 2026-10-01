@@ -9,6 +9,7 @@ import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { UpdateUserProfileRequest } from "@/lib/api/client";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsToggle } from "@/components/settings/settings-toggle";
+import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
 
 export default function PrivacySettingsPage() {
   const { user } = useAuth();
@@ -60,11 +61,7 @@ export default function PrivacySettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-48 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      </div>
-    );
+    return <SettingsSectionsSkeleton sections={1} togglesPerSection={3} showPageTitle={false} />;
   }
 
   if (!profile) {

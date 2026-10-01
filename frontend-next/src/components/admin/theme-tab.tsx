@@ -19,6 +19,7 @@ import {
   siteThemeToExtensibleConfig,
   themeColorsFromDto,
 } from "@/lib/theme/apply-site-theme";
+import { ThemeTabSkeleton } from "@/components/ui/skeletons";
 
 const COLOR_CONFIG_LABELS: Record<string, string> = {
   primaryColor: "Primary",
@@ -134,14 +135,7 @@ export function ThemeTab() {
   }, [localConfig, updateConfigMutation]);
 
   if (loadingThemes) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">Theme</h2>
-        <div className="text-center text-white/60 py-12">
-          Loading theme settings...
-        </div>
-      </div>
-    );
+    return <ThemeTabSkeleton />;
   }
 
   const currentName = activeTheme?.name ?? "Default";

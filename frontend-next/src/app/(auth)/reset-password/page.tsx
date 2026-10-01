@@ -12,6 +12,7 @@ import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/primitives/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 import { Input } from "@/components/primitives/input";
 import {
   getAccountApiErrorMessage,
@@ -88,7 +89,12 @@ export default function ResetPasswordPage() {
           <CardTitle>{phase === "done" ? "Password updated" : title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {phase === "loading" && <p className="text-sm text-white/70">Loading…</p>}
+          {phase === "loading" && (
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+          )}
 
           {phase === "missing" && (
             <div className="space-y-4">

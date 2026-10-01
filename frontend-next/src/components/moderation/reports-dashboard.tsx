@@ -12,6 +12,7 @@ import { ReportsTable } from "./reports/reports-table";
 import { TopReported } from "./reports/top-reported";
 import { ModeratorActivity } from "./reports/moderator-activity";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 
 const SUB_TABS = [
   { id: "analytics", label: "Analytics", icon: BarChart3 },
@@ -70,9 +71,11 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
               <div>
                 <p className="text-sm text-white/60">Total Reports</p>
                 <p className="text-2xl font-semibold text-white">
-                  {analyticsLoading
-                    ? "..."
-                    : analytics?.totalReports ?? 0}
+                  {analyticsLoading ? (
+                    <Skeleton className="inline-block h-8 w-12" />
+                  ) : (
+                    analytics?.totalReports ?? 0
+                  )}
                 </p>
               </div>
               <Flag className="h-8 w-8 text-blue-400/80" />
@@ -85,9 +88,11 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
               <div>
                 <p className="text-sm text-white/60">Active Reports</p>
                 <p className="text-2xl font-semibold text-amber-400">
-                  {analyticsLoading
-                    ? "..."
-                    : analytics?.activeReports ?? 0}
+                  {analyticsLoading ? (
+                    <Skeleton className="inline-block h-8 w-12" />
+                  ) : (
+                    analytics?.activeReports ?? 0
+                  )}
                 </p>
               </div>
               <FileText className="h-8 w-8 text-amber-400/80" />
@@ -100,9 +105,11 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
               <div>
                 <p className="text-sm text-white/60">Resolved</p>
                 <p className="text-2xl font-semibold text-green-400">
-                  {analyticsLoading
-                    ? "..."
-                    : analytics?.resolvedReports ?? 0}
+                  {analyticsLoading ? (
+                    <Skeleton className="inline-block h-8 w-12" />
+                  ) : (
+                    analytics?.resolvedReports ?? 0
+                  )}
                 </p>
               </div>
               <Activity className="h-8 w-8 text-green-400/80" />
@@ -115,9 +122,11 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
               <div>
                 <p className="text-sm text-white/60">Dismissed</p>
                 <p className="text-2xl font-semibold text-white">
-                  {analyticsLoading
-                    ? "..."
-                    : analytics?.dismissedReports ?? 0}
+                  {analyticsLoading ? (
+                    <Skeleton className="inline-block h-8 w-12" />
+                  ) : (
+                    analytics?.dismissedReports ?? 0
+                  )}
                 </p>
               </div>
             </div>

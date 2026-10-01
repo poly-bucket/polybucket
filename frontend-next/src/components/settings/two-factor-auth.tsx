@@ -7,6 +7,7 @@ import QRCode from "react-qr-code";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import { cn } from "@/lib/utils";
+import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
 import {
   twoFactorAuthService,
   type TwoFactorAuthStatus,
@@ -186,9 +187,11 @@ export function TwoFactorAuth() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-6">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-      </div>
+      <SettingsSectionsSkeleton
+        sections={1}
+        togglesPerSection={2}
+        showPageTitle={false}
+      />
     );
   }
 

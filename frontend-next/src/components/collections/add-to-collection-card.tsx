@@ -7,6 +7,7 @@ import type { IModel } from "@/lib/api/client";
 import { collectionsService, type Collection } from "@/lib/services/collectionsService";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
+import { CheckboxListSkeleton } from "@/components/ui/skeletons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,8 +76,8 @@ export function AddToCollectionCard({ model, isOwner }: AddToCollectionCardProps
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="max-h-64 w-56 overflow-y-auto">
             {loading ? (
-              <div className="px-4 py-3 text-sm text-white/60">
-                Loading collections...
+              <div className="px-2 py-1">
+                <CheckboxListSkeleton rows={4} />
               </div>
             ) : collections.length === 0 ? (
               <div className="px-4 py-3 text-sm text-white/60">

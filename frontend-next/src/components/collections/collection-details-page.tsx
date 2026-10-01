@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionDetailTabs, PluginBoundary } from "@/lib/plugins";
 import { collectionsService, type Collection } from "@/lib/services/collectionsService";
 import { ModelCardSkeleton } from "@/components/models/model-card";
+import { Skeleton } from "@/components/ui/glass/skeleton";
 import { CollectionDetailProvider } from "@/contexts/CollectionDetailContext";
 import { CollectionModelsTab } from "./collection-models-tab";
 import { Button } from "@/components/primitives/button";
@@ -126,7 +127,7 @@ export function CollectionDetailsPage() {
   if (loading && !collection) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 h-8 w-48 animate-pulse rounded bg-white/10" />
+        <Skeleton className="mb-6 h-8 w-48" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <ModelCardSkeleton key={i} />

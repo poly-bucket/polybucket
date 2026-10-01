@@ -25,6 +25,10 @@ import { useAdminMutation } from "@/lib/hooks/use-admin-mutation";
 import type { AuthenticationSettings as AuthSettingsType } from "@/lib/api/client";
 import { LoginMethod } from "@/lib/api/client";
 import { toast } from "sonner";
+import {
+  ListRowSkeleton,
+  SettingsSectionsSkeleton,
+} from "@/components/ui/skeletons";
 
 const providerIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   Google: Mail,
@@ -85,12 +89,11 @@ export function AuthTab() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">Authentication</h2>
-        <div className="text-center text-white/60 py-12">
-          Loading authentication settings...
-        </div>
-      </div>
+      <SettingsSectionsSkeleton
+        sections={2}
+        togglesPerSection={4}
+        pageTitleWidth="w-52"
+      />
     );
   }
 
@@ -109,7 +112,7 @@ export function AuthTab() {
         description="Configure external login providers"
       >
         {loadingOAuth ? (
-          <div className="text-white/60 py-4">Loading providers...</div>
+          <ListRowSkeleton count={3} />
         ) : oauthProviders && oauthProviders.length > 0 ? (
           <div className="space-y-4">
             {oauthProviders.map((p) => {

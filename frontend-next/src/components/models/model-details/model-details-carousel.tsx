@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { Card } from "@/components/primitives/card";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
+import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
 
 const ModelViewer = lazy(
@@ -45,14 +46,7 @@ interface ModelDetailsCarouselProps {
 }
 
 function ModelViewerFallback() {
-  return (
-    <div className="flex h-full min-h-[300px] items-center justify-center bg-white/5 text-white/60">
-      <div className="text-center">
-        <div className="mb-2 h-8 w-8 animate-pulse rounded-full bg-white/20" />
-        <p className="text-sm">Loading 3D viewer...</p>
-      </div>
-    </div>
-  );
+  return <PreviewPanelSkeleton />;
 }
 
 export function ModelDetailsCarousel({
@@ -131,11 +125,7 @@ export function ModelDetailsCarousel({
     if (activeItem.type === "3d" && activeItem.fileName) {
       const file = loadedFiles[activeItem.id];
       if (!file) {
-        return (
-          <div className="flex h-full min-h-[300px] items-center justify-center bg-white/5 text-white/60">
-            <p className="text-sm">Loading model...</p>
-          </div>
-        );
+        return <PreviewPanelSkeleton />;
       }
       if (!isModelViewerSupported(activeItem.fileName)) {
         return (
@@ -154,11 +144,7 @@ export function ModelDetailsCarousel({
     if (activeItem.type === "pdf" && activeItem.fileName) {
       const file = loadedFiles[activeItem.id];
       if (!file) {
-        return (
-          <div className="flex h-full min-h-[300px] items-center justify-center bg-white/5 text-white/60">
-            <p className="text-sm">Loading PDF...</p>
-          </div>
-        );
+        return <PreviewPanelSkeleton />;
       }
       return (
         <Suspense fallback={<ModelViewerFallback />}>
@@ -175,11 +161,7 @@ export function ModelDetailsCarousel({
     if (activeItem.type === "markdown" && activeItem.fileName) {
       const file = loadedFiles[activeItem.id];
       if (!file) {
-        return (
-          <div className="flex h-full min-h-[300px] items-center justify-center bg-white/5 text-white/60">
-            <p className="text-sm">Loading markdown...</p>
-          </div>
-        );
+        return <PreviewPanelSkeleton />;
       }
       return (
         <Suspense fallback={<ModelViewerFallback />}>
