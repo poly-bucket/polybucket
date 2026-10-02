@@ -9,18 +9,19 @@ namespace PolyBucket.Api.Common.Storage;
 public class AwsS3StorageService : IStorageService
 {
     private readonly IAmazonS3 _s3;
+    private readonly IAmazonS3 _presignS3;
     private readonly StorageSettings _settings;
 
     public AwsS3StorageService(IOptions<StorageSettings> options)
     {
         _settings = options.Value;
-        var config = new AmazonS3Config
-        {
-            RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(_settings.Region),
-            ServiceURL = string.IsNullOrWhiteSpace(_settings.Endpoint) ? null : _settings.Endpoint,
-            ForcePathStyle = true // support MinIO gateway or custom endpoints
-        };
-        _s3 = new AmazonS3Client(_settings.AccessKey, _settings.SecretKey, config);
+        _s3 = AmazonS3ClientFactory.CreateClient(options, useExternalEndpoint: false);
+        var useExternalPresign = !string.IsNullOrWhiteSpace(_settings.ExternalEndpoint)
+            || _settings.ExternalPort.HasValue
+            || _settings.ExternalUseSSL.HasValue;
+        _presignS3 = useExternalPresign
+            ? AmazonS3ClientFactory.CreateClient(options, useExternalEndpoint: true)
+            : _s3;
     }
 
     private async Task EnsureBucketExistsAsync(CancellationToken ct)
@@ -41,8 +42,13 @@ public class AwsS3StorageService : IStorageService
             InputStream = data,
             ContentType = contentType
         };
+        if (data.CanSeek)
+        {
+            request.Headers.ContentLength = data.Length - data.Position;
+        }
+
         await _s3.PutObjectAsync(request, cancellationToken);
-        return objectName; // Return the object key instead of presigned URL
+        return objectName;
     }
 
     public async Task<Stream> DownloadAsync(string objectName, CancellationToken cancellationToken = default)
@@ -65,9 +71,10 @@ public class AwsS3StorageService : IStorageService
         {
             BucketName = _settings.BucketName,
             Key = objectName,
-            Expires = DateTime.UtcNow.Add(expiry)
+            Expires = DateTime.UtcNow.Add(expiry),
+            Verb = HttpVerb.GET
         };
-        var url = _s3.GetPreSignedURL(request);
+        var url = _presignS3.GetPreSignedURL(request);
         return Task.FromResult(url);
     }
-} 
+}

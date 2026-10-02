@@ -2,14 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Moq;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Files.Http;
 using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
 using PolyBucket.Api.Common.Storage;
-using PolyBucket.Api.Settings;
 using PolyBucket.Tests.Testing;
 using Shouldly;
 using Xunit;
@@ -35,7 +33,7 @@ public class StreamFileControllerTests : IDisposable
             _context,
             Mock.Of<IPermissionService>(),
             Mock.Of<IStorageService>(),
-            Options.Create(new StorageSettings()),
+            Mock.Of<IStorageObjectKeyResolver>(),
             Mock.Of<IModelDownloadCounter>());
         controller.WithUser(Guid.NewGuid());
 

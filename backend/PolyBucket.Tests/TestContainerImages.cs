@@ -2,8 +2,8 @@ namespace PolyBucket.Tests;
 
 public static class TestContainerImages
 {
-    private const string DefaultMinioImage = "minio/minio:RELEASE.2025-04-08T15-41-24Z";
+    private const string DefaultSeaweedfsImage = "chrislusf/seaweedfs:3.79";
 
-    public static string MinioImage =>
-        Environment.GetEnvironmentVariable("POLYBUCKET_TEST_MINIO_IMAGE") ?? DefaultMinioImage;
+    public static string SeaweedfsImage =>
+        Environment.GetEnvironmentVariable("POLYBUCKET_TEST_SEAWEEDFS_IMAGE") ?? DefaultSeaweedfsImage;
 }

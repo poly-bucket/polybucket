@@ -11,8 +11,6 @@ using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Data;
-using PolyBucket.Api.Settings;
-using Microsoft.Extensions.Options;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Features.Models.Http;
 using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
@@ -31,20 +29,20 @@ namespace PolyBucket.Api.Features.Files.Http
         private readonly PolyBucketDbContext _context;
         private readonly IPermissionService _permissionService;
         private readonly IStorageService _storageService;
-        private readonly StorageSettings _storageSettings;
+        private readonly IStorageObjectKeyResolver _objectKeyResolver;
         private readonly IModelDownloadCounter _downloadCounter;
 
         public StreamFileController(
             PolyBucketDbContext context,
             IPermissionService permissionService,
             IStorageService storageService,
-            IOptions<StorageSettings> storageOptions,
+            IStorageObjectKeyResolver objectKeyResolver,
             IModelDownloadCounter downloadCounter)
         {
             _context = context;
             _permissionService = permissionService;
             _storageService = storageService;
-            _storageSettings = storageOptions.Value;
+            _objectKeyResolver = objectKeyResolver;
             _downloadCounter = downloadCounter;
         }
 
@@ -129,30 +127,10 @@ namespace PolyBucket.Api.Features.Files.Http
                     return NotFound($"File '{decodedFileName}' not found. Available files: {availableFiles}");
                 }
 
-                // Extract object key from path - handle both object keys and presigned URLs
-                string objectKey;
-                if (file.Path.StartsWith("http"))
+                var objectKey = _objectKeyResolver.Resolve(file.Path);
+                if (string.IsNullOrEmpty(objectKey))
                 {
-                    // This is a presigned URL, extract the object key
-                    var uri = new Uri(file.Path);
-                    var pathSegments = uri.AbsolutePath.Split('/');
-                    // Find the bucket name and extract everything after it
-                    var bucketIndex = Array.IndexOf(pathSegments, _storageSettings.BucketName);
-                    if (bucketIndex >= 0 && bucketIndex + 1 < pathSegments.Length)
-                    {
-                        objectKey = string.Join("/", pathSegments.Skip(bucketIndex + 1));
-                        // No need to URL decode here - the object key should be used as-is
-                        // The storage service expects the raw object key
-                    }
-                    else
-                    {
-                        return StatusCode(500, "Invalid file path format");
-                    }
-                }
-                else
-                {
-                    // This is already an object key
-                    objectKey = file.Path;
+                    return StatusCode(500, "Invalid file path format");
                 }
 
                 // Get the file stream from storage

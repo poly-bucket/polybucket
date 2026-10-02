@@ -3,9 +3,9 @@ namespace PolyBucket.Api.Settings;
 public class StorageSettings
 {
     /// <summary>
-    /// Provider name: MinIO, S3, AzureBlob (case-insensitive).
+    /// Provider name: S3, SeaweedFS, AzureBlob (case-insensitive).
     /// </summary>
-    public string Provider { get; set; } = "MinIO";
+    public string Provider { get; set; } = "S3";
 
     /// <summary>
     /// Default bucket / container name to store all uploaded objects.
@@ -13,7 +13,7 @@ public class StorageSettings
     public string BucketName { get; set; } = "polybucket-uploads";
 
     /// <summary>
-    /// Endpoint or host (for MinIO / custom S3 implementations).
+    /// Endpoint or host (for SeaweedFS S3 gateway / custom S3 implementations).
     /// Example: "localhost" or "s3.amazonaws.com".
     /// </summary>
     public string Endpoint { get; set; } = string.Empty;

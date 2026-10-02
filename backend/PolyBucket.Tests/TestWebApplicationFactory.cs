@@ -58,7 +58,7 @@ namespace PolyBucket.Tests
                     || !TestEnvironment.StorageUseSsl.HasValue)
                 {
                     throw new InvalidOperationException(
-                        "TestEnvironment storage settings are not set. The Test collection fixture must start MinIO and assign storage settings first.");
+                        "TestEnvironment storage settings are not set. The Test collection fixture must start SeaweedFS and assign storage settings first.");
                 }
 
                 var dbFromContainer = new Dictionary<string, string?>(TestDatabaseConfigurationHelper.GetDatabaseKeysFromConnectionString(TestEnvironment.DefaultConnection))
@@ -69,6 +69,7 @@ namespace PolyBucket.Tests
 
                 var storageFromContainer = new Dictionary<string, string?>
                 {
+                    ["Storage:Provider"] = "S3",
                     ["Storage:Endpoint"] = TestEnvironment.StorageEndpoint,
                     ["Storage:Port"] = TestEnvironment.StoragePort.Value.ToString(),
                     ["Storage:AccessKey"] = TestEnvironment.StorageAccessKey,

@@ -24,6 +24,9 @@ public static class ModelsDependencyInjectionMapping
             GetModelVersions.Domain.GetModelVersionsService>();
 
         services.AddScoped<CreateModel.Domain.CreateModelService>();
+        services.AddScoped<
+            CreateModel.Services.IModelUploadService,
+            CreateModel.Services.ModelUploadService>();
         services.AddTransient<
             CreateModel.Repository.ICreateModelRepository,
             CreateModel.Repository.CreateModelRepository>();

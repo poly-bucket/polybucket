@@ -11,11 +11,11 @@ namespace PolyBucket.Tests.Services;
 
 public class StorageServiceRegistrationTests
 {
-    private static Dictionary<string, string?> MinioSettings(string? provider = "MinIO") => new()
+    private static Dictionary<string, string?> S3Settings(string? provider = "S3") => new()
     {
         ["Storage:Provider"] = provider,
         ["Storage:Endpoint"] = "localhost",
-        ["Storage:Port"] = "9000",
+        ["Storage:Port"] = "8333",
         ["Storage:AccessKey"] = "key",
         ["Storage:SecretKey"] = "secret",
         ["Storage:BucketName"] = "unit-test"
@@ -28,40 +28,43 @@ public class StorageServiceRegistrationTests
             .Build();
 
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddObjectStorage(configuration);
         return services.BuildServiceProvider();
     }
 
     [Theory]
-    [InlineData("MinIO")]
-    [InlineData("minio")]
-    public void AddObjectStorage_RegistersMinioImplementation(string providerValue)
+    [InlineData("S3")]
+    [InlineData("s3")]
+    [InlineData("SeaweedFS")]
+    public void AddObjectStorage_RegistersS3Implementation(string providerValue)
     {
-        var sp = BuildServiceProvider(MinioSettings(providerValue));
+        var sp = BuildServiceProvider(S3Settings(providerValue));
         var storage = sp.GetRequiredService<IStorageService>();
 
         storage.ShouldNotBeNull();
-        storage.ShouldBeOfType<MinioStorageService>();
+        storage.ShouldBeOfType<AwsS3StorageService>();
+        sp.GetRequiredService<IStorageObjectKeyResolver>().ShouldNotBeNull();
     }
 
     [Fact]
-    public void AddObjectStorage_DefaultsToMinio_WhenProviderMissing()
+    public void AddObjectStorage_DefaultsToS3_WhenProviderMissing()
     {
-        var settings = MinioSettings(null);
+        var settings = S3Settings(null);
         settings.Remove("Storage:Provider");
 
         var sp = BuildServiceProvider(settings);
         var storage = sp.GetRequiredService<IStorageService>();
 
-        storage.ShouldBeOfType<MinioStorageService>();
+        storage.ShouldBeOfType<AwsS3StorageService>();
     }
 
     [Theory]
-    [InlineData("S3")]
+    [InlineData("MinIO")]
     [InlineData("Azure")]
-    public void AddObjectStorage_Throws_WhenProviderIsNotMinio(string provider)
+    public void AddObjectStorage_Throws_WhenProviderIsNotSupported(string provider)
     {
-        var settings = MinioSettings(provider);
+        var settings = S3Settings(provider);
         Should.Throw<InvalidOperationException>(() => BuildServiceProvider(settings));
     }
 }

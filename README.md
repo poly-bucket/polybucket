@@ -32,8 +32,8 @@ Polybucket has been in development for many years. I've been working on this pro
 ## Does it work?
 Yes. Expect bugs. 
 
-## Minio
-At the time of writing this, Minio decided to pull out of the community supported Docker image. The stack does work with the latest Minio container. I do still plan to support it as a default. There are plans for supporting other, more commerical object storage solutions.
+## Object storage (SeaweedFS)
+Local Docker stacks use [SeaweedFS](https://github.com/seaweedfs/seaweedfs) with the S3 gateway on port **8333**. Default dev credentials are in `appsettings.Development.json` (`polybucket` / `polybucketsecret`). For presigned URLs in the browser, set `Storage:ExternalEndpoint` to a host reachable from the client (for example `localhost`).
 
 ## Roadmap?
 I am the roadmap.
@@ -51,7 +51,7 @@ Contact me [on Discord](https://discord.gg/EX94hH5RYt) or see the [Contributing]
 
 **Q: Docker containers won't start**
 - Ensure Docker and Docker Compose are properly installed
-- Check that ports 3000, 5000, 5432, and 9000 are not in use
+- Check that ports 3000, 5000, 5432, and 8333 are not in use
 - Review logs: `docker-compose logs`
 
 **Q: Database connection errors**
@@ -60,7 +60,7 @@ Contact me [on Discord](https://discord.gg/EX94hH5RYt) or see the [Contributing]
 - Ensure database exists and migrations have run
 
 **Q: Storage upload failures**
-- Verify MinIO/S3 credentials are correct
+- Verify SeaweedFS/S3 credentials and `Storage:Endpoint` / `Storage:Port` are correct
 - Check storage bucket permissions
 - Ensure storage service is accessible from the API
 
@@ -167,7 +167,7 @@ For more troubleshooting help, visit our [Discord](https://discord.gg/EX94hH5RYt
 
 ### Storage & Files
 
-- **Object Storage**: Flexible storage backend using MinIO (default), AWS S3, or other S3-compatible providers
+- **Object Storage**: S3-compatible backend (SeaweedFS in Docker, or AWS S3 and other providers)
 - **File Upload Management**: Upload, manage, and organize files
 - **Storage Quotas**: Configurable storage quotas per user
 - **File Versioning**: Track file versions and changes
@@ -213,7 +213,7 @@ Access the application at `http://localhost:3000` and complete the first-time se
 - **.NET 8.0 SDK** (for local backend development)
 - **Node.js 18+** and **npm/yarn** (for local frontend development)
 - **PostgreSQL 14+** (if not using Docker)
-- **MinIO** or **S3-compatible storage** (if not using Docker)
+- **SeaweedFS** or **S3-compatible storage** (if not using Docker)
 
 ### Docker Installation (Recommended)
 
@@ -253,7 +253,7 @@ For development or production deployments without Docker:
    - Run migrations: `dotnet ef database update`
 
 4. **Storage Setup**:
-   - Configure MinIO or S3-compatible storage
+   - Configure SeaweedFS or S3-compatible storage
    - Set storage credentials in appsettings.json
 
 See the [documentation](https://github.com/poly-bucket/polybucket/wiki) for detailed setup instructions.
@@ -309,7 +309,7 @@ PolyBucket is perfect for:
 
 - Docker 20.10+ and Docker Compose 2.0+ (for containerized deployment)
 - PostgreSQL 14+ (or use included Docker image)
-- MinIO or S3-compatible storage (or use included Docker image)
+- SeaweedFS or S3-compatible storage (or use included Docker image)
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 
 ## Tech Stack
@@ -318,7 +318,7 @@ PolyBucket is perfect for:
 - **Frontend**: React 18+ with TypeScript and Redux
 - **3D Rendering**: Three.js for interactive model previews
 - **Database**: PostgreSQL 14+
-- **Storage**: MinIO (default), AWS S3, and other S3-compatible providers
+- **Storage**: SeaweedFS (Docker default), AWS S3, and other S3-compatible providers
 - **Deployment**: Docker and Docker Compose
 - **Authentication**: JWT tokens with optional OAuth support
 - **API**: RESTful API with comprehensive documentation

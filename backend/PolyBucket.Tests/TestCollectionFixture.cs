@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Amazon.S3;
+using Amazon.S3.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using Minio;
-using Minio.DataModel.Args;
 using Npgsql;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Settings;
@@ -24,12 +24,12 @@ namespace PolyBucket.Tests
 
     public class TestCollectionFixture : IAsyncLifetime
     {
-        private const string MinioTestBucketName = "polybucket-test-uploads";
-        private const string MinioRootUser = "minioadmin";
-        private const string MinioRootPassword = "minioadmin";
-        private const ushort MinioPort = 9000;
+        private const string TestBucketName = "polybucket-test-uploads";
+        private const string S3AccessKey = "polybucket";
+        private const string S3SecretKey = "polybucketsecret";
+        private const ushort S3Port = 8333;
         private PostgreSqlContainer? _postgresContainer;
-        private IContainer? _minioContainer;
+        private IContainer? _seaweedfsContainer;
 
         public async Task InitializeAsync()
         {
@@ -42,19 +42,19 @@ namespace PolyBucket.Tests
                 .WithUsername("postgres")
                 .WithPassword("postgres")
                 .Build();
-            _minioContainer = new ContainerBuilder()
-                .WithImage(TestContainerImages.MinioImage)
+            _seaweedfsContainer = new ContainerBuilder()
+                .WithImage(TestContainerImages.SeaweedfsImage)
                 .WithImagePullPolicy(PullPolicy.Missing)
-                .WithEnvironment("MINIO_ROOT_USER", MinioRootUser)
-                .WithEnvironment("MINIO_ROOT_PASSWORD", MinioRootPassword)
-                .WithCommand("server", "/data", "--console-address", ":9001")
-                .WithPortBinding(MinioPort, true)
-                .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(MinioPort))
+                .WithEnvironment("AWS_ACCESS_KEY_ID", S3AccessKey)
+                .WithEnvironment("AWS_SECRET_ACCESS_KEY", S3SecretKey)
+                .WithCommand("server", "-dir=/data", "-s3", "-s3.port=8333", "-ip=0.0.0.0")
+                .WithPortBinding(S3Port, true)
+                .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(S3Port))
                 .Build();
 
             using var startCts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
             await _postgresContainer.StartAsync(startCts.Token).ConfigureAwait(false);
-            await _minioContainer.StartAsync(startCts.Token).ConfigureAwait(false);
+            await _seaweedfsContainer.StartAsync(startCts.Token).ConfigureAwait(false);
 
             var builder = new NpgsqlConnectionStringBuilder(_postgresContainer.GetConnectionString())
             {
@@ -62,27 +62,14 @@ namespace PolyBucket.Tests
                 SslMode = SslMode.Disable
             };
             TestEnvironment.DefaultConnection = builder.ConnectionString;
-            TestEnvironment.StorageEndpoint = _minioContainer.Hostname;
-            TestEnvironment.StoragePort = _minioContainer.GetMappedPublicPort(MinioPort);
-            TestEnvironment.StorageAccessKey = MinioRootUser;
-            TestEnvironment.StorageSecretKey = MinioRootPassword;
-            TestEnvironment.StorageBucketName = MinioTestBucketName;
+            TestEnvironment.StorageEndpoint = _seaweedfsContainer.Hostname;
+            TestEnvironment.StoragePort = _seaweedfsContainer.GetMappedPublicPort(S3Port);
+            TestEnvironment.StorageAccessKey = S3AccessKey;
+            TestEnvironment.StorageSecretKey = S3SecretKey;
+            TestEnvironment.StorageBucketName = TestBucketName;
             TestEnvironment.StorageUseSsl = false;
 
-            var minioClient = new MinioClient()
-                .WithEndpoint(TestEnvironment.StorageEndpoint, TestEnvironment.StoragePort.Value)
-                .WithCredentials(TestEnvironment.StorageAccessKey, TestEnvironment.StorageSecretKey)
-                .WithSSL(false)
-                .Build();
-            var bucketExists = await minioClient.BucketExistsAsync(
-                new BucketExistsArgs().WithBucket(MinioTestBucketName),
-                startCts.Token).ConfigureAwait(false);
-            if (!bucketExists)
-            {
-                await minioClient.MakeBucketAsync(
-                    new MakeBucketArgs().WithBucket(MinioTestBucketName),
-                    startCts.Token).ConfigureAwait(false);
-            }
+            await EnsureTestBucketExistsAsync(startCts.Token).ConfigureAwait(false);
 
             var configuration = BuildConfigurationForEnsurer();
             var databaseSettings = configuration.GetSection("Database").Get<DatabaseSettings>()
@@ -95,14 +82,33 @@ namespace PolyBucket.Tests
 
         public async Task DisposeAsync()
         {
-            if (_minioContainer is not null)
+            if (_seaweedfsContainer is not null)
             {
-                await _minioContainer.DisposeAsync().ConfigureAwait(false);
+                await _seaweedfsContainer.DisposeAsync().ConfigureAwait(false);
             }
 
             if (_postgresContainer is not null)
             {
                 await _postgresContainer.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+
+        private async Task EnsureTestBucketExistsAsync(CancellationToken cancellationToken)
+        {
+            var config = new AmazonS3Config
+            {
+                ServiceURL = $"http://{TestEnvironment.StorageEndpoint}:{TestEnvironment.StoragePort}",
+                ForcePathStyle = true,
+                UseHttp = true
+            };
+            using var client = new AmazonS3Client(TestEnvironment.StorageAccessKey, TestEnvironment.StorageSecretKey, config);
+            try
+            {
+                await client.PutBucketAsync(new PutBucketRequest { BucketName = TestBucketName }, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (AmazonS3Exception ex) when (ex.ErrorCode is "BucketAlreadyOwnedByYou" or "BucketAlreadyExists")
+            {
             }
         }
 

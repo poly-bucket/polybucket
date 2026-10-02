@@ -21,15 +21,17 @@ public static class StorageServiceCollectionExtensions
             .Bind(storageSection)
             .ValidateOnStart();
 
-        var provider = storageSection.GetValue<string>("Provider")?.ToLowerInvariant() ?? "minio";
-        if (provider != "minio")
+        var provider = storageSection.GetValue<string>("Provider")?.ToLowerInvariant() ?? "s3";
+        if (provider is not ("s3" or "seaweedfs"))
         {
-            throw new InvalidOperationException($"Storage provider '{provider}' is not supported. Only 'minio' is currently supported.");
+            throw new InvalidOperationException(
+                $"Storage provider '{provider}' is not supported. Supported providers: S3, SeaweedFS.");
         }
 
-        services.AddSingleton<IStorageService, MinioStorageService>();
-        services.AddHostedService<MinioStartupConnectivityCheck>();
+        services.AddSingleton<IStorageObjectKeyResolver, StorageObjectKeyResolver>();
+        services.AddSingleton<IStorageService, AwsS3StorageService>();
+        services.AddHostedService<S3StartupConnectivityCheck>();
 
         return services;
     }
-} 
+}
