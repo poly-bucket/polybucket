@@ -6,11 +6,15 @@ const mockGetEmailSettings = vi.fn();
 const mockGetEmailOutbox = vi.fn();
 const mockGetTokenSettings = vi.fn();
 const mockGetSetupStatus = vi.fn();
+const mockGetSiteSettings = vi.fn();
 
 vi.mock("@/lib/services/adminService", () => ({
   getTokenSettings: () => mockGetTokenSettings(),
   updateTokenSettings: vi.fn(),
   getSetupStatus: () => mockGetSetupStatus(),
+  getSiteSettings: () => mockGetSiteSettings(),
+  updateSiteSettingsMerged: vi.fn(),
+  mergeSiteSettingsPatch: (base: object, patch: object) => ({ ...base, ...patch }),
 }));
 
 vi.mock("@/lib/services/emailService", () => ({
@@ -29,6 +33,7 @@ describe("AdminSystemPage", () => {
     mockGetEmailOutbox.mockReset();
     mockGetTokenSettings.mockReset();
     mockGetSetupStatus.mockReset();
+    mockGetSiteSettings.mockReset();
     mockGetEmailSettings.mockResolvedValue({
       enabled: false,
       transport: "Disabled",
@@ -64,6 +69,11 @@ describe("AdminSystemPage", () => {
       isFirstTimeSetup: false,
       completedSteps: 5,
       totalSteps: 5,
+    });
+    mockGetSiteSettings.mockResolvedValue({
+      siteName: "PolyBucket",
+      allowPublicBrowsing: true,
+      allowUserRegistration: true,
     });
   });
 
@@ -112,6 +122,7 @@ describe("AdminSystemPage", () => {
       expect(mockGetEmailOutbox).toHaveBeenCalled();
       expect(mockGetTokenSettings).toHaveBeenCalled();
       expect(mockGetSetupStatus).toHaveBeenCalled();
+      expect(mockGetSiteSettings).toHaveBeenCalled();
     });
   });
 });

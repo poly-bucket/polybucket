@@ -92,11 +92,14 @@ public class CollectionPasswordProtectionTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        var returnedCollection = JsonSerializer.Deserialize<Collection>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        responseContent.ShouldNotContain("passwordHash", Case.Insensitive);
+        responseContent.ShouldNotContain("salt", Case.Insensitive);
 
-        returnedCollection.ShouldNotBeNull();
-        returnedCollection!.Id.ShouldBe(collection.Id);
-        returnedCollection.Name.ShouldBe("Password Protected Collection");
+        using var document = JsonDocument.Parse(responseContent);
+        var root = document.RootElement;
+        root.GetProperty("id").GetGuid().ShouldBe(collection.Id);
+        root.GetProperty("name").GetString().ShouldBe("Password Protected Collection");
+        root.GetProperty("isPasswordProtected").GetBoolean().ShouldBeTrue();
     }
 
     [Fact]

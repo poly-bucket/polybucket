@@ -1,5 +1,5 @@
 using MediatR;
-using PolyBucket.Api.Features.Collections.Domain;
+using PolyBucket.Api.Features.Collections.AccessCollection.Http;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,7 +17,7 @@ namespace PolyBucket.Api.Features.Collections.AccessCollection.Domain
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        public Collection? Collection { get; set; }
+        public AccessCollectionCollectionDto? Collection { get; set; }
         public bool RequiresPassword { get; set; }
     }
 } 

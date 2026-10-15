@@ -23,6 +23,7 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Http
         /// <response code="403">The user's email address must be verified first.</response>
         [HttpPut("{id}")]
         [RequireVerifiedEmail]
+        [ProducesResponseType(typeof(UpdateCollectionResponseDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateCollection(Guid id, [FromBody] UpdateCollectionCommand command)
         {
             if (id != command.Id)

@@ -60,13 +60,18 @@ function SheetContent({
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay className={overlayClassName} />
+      <SheetOverlay
+        className={cn(
+          variant === "glass" && "bg-black/20 backdrop-blur-sm",
+          overlayClassName
+        )}
+      />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
           "data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
           variant === "glass" &&
-            "glass-bg border-white/20 text-white [&_[data-slot=sheet-title]]:text-white [&_[data-slot=sheet-description]]:text-white/70",
+            "border-white/20 bg-white/10 text-white shadow-lg backdrop-blur-md [&_[data-slot=sheet-title]]:text-white [&_[data-slot=sheet-description]]:text-white/70",
           variant === "default" && "bg-background",
           side === "right" &&
             "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",

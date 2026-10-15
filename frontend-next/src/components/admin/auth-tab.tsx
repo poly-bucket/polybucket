@@ -282,13 +282,11 @@ export function AuthTab() {
                 </SelectContent>
               </Select>
             </SettingsField>
-            <SettingsToggle
-              label="Require email verification"
-              description="Unverified users cannot upload, comment, or create collections. Change this in the Email settings, where delivery can be tested first."
-              checked={merged.requireEmailVerification ?? false}
-              onCheckedChange={() => undefined}
-              disabled
-            />
+            <p className="text-sm text-white/60 rounded-lg border border-white/10 glass-bg p-4">
+              Require email verification is configured under{" "}
+              <strong className="text-white/80">Admin → System → Email Configuration</strong>
+              , where you can test delivery before enabling it.
+            </p>
             <SettingsFooter
               onSave={handleSave}
               isSaving={updateMutation.isLoading}

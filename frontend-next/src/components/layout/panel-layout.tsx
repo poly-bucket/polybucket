@@ -17,8 +17,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/glass/sidebar"
-import { cn } from "@/lib/utils"
-
 export interface PanelNavItem {
   id: string
   label: string
@@ -90,12 +88,7 @@ export function PanelLayout({
                         <SidebarMenuButton asChild isActive={isActive}>
                           <Link
                             href={item.path}
-                            className={cn(
-                              "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                              isActive
-                                ? "bg-white/20 text-white"
-                                : "text-white/70 hover:bg-white/10 hover:text-white"
-                            )}
+                            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors"
                           >
                             <Icon className="h-4 w-4 shrink-0" />
                             <span className="truncate">{item.label}</span>

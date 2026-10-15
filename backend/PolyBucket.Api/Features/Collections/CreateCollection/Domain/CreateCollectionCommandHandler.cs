@@ -1,6 +1,7 @@
 using MediatR;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
+using PolyBucket.Api.Features.Collections.CreateCollection.Http;
 using PolyBucket.Api.Features.Collections.CreateCollection.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using System.Security.Claims;
@@ -14,13 +15,13 @@ namespace PolyBucket.Api.Features.Collections.CreateCollection.Domain
     public class CreateCollectionCommandHandler(
         ICollectionRepository collectionsRepository, 
         IHttpContextAccessor httpContextAccessor,
-        IPasswordHasher passwordHasher) : IRequestHandler<CreateCollectionCommand, Collection>
+        IPasswordHasher passwordHasher) : IRequestHandler<CreateCollectionCommand, CreateCollectionResponseDto>
     {
         private readonly ICollectionRepository _collectionsRepository = collectionsRepository;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
-        public async Task<Collection> Handle(CreateCollectionCommand request, CancellationToken cancellationToken)
+        public async Task<CreateCollectionResponseDto> Handle(CreateCollectionCommand request, CancellationToken cancellationToken)
         {
             var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -48,7 +49,8 @@ namespace PolyBucket.Api.Features.Collections.CreateCollection.Domain
                 collection.PasswordHash = _passwordHasher.HashPassword(request.Password, salt);
             }
 
-            return await _collectionsRepository.CreateCollectionAsync(collection);
+            var created = await _collectionsRepository.CreateCollectionAsync(collection);
+            return CreateCollectionMapper.ToResponseDto(created);
         }
     }
 } 

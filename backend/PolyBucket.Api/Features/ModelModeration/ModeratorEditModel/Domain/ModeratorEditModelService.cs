@@ -1,6 +1,7 @@
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Http;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Repository;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 using PolyBucket.Api.Features.Models.AddTagToModel.Domain;
@@ -19,7 +20,7 @@ public class ModeratorEditModelService(
     private readonly IModeratorEditModelRepository _repository = repository;
     private readonly IModerationAuditLogWriter _auditLogWriter = auditLogWriter;
 
-    public async Task<Model> EditModelAsync(
+    public async Task<ModeratorEditModelResponseDto> EditModelAsync(
         Guid modelId,
         Guid moderatorId,
         ModeratorEditRequest request,
@@ -125,12 +126,14 @@ public class ModeratorEditModelService(
             userAgent,
             cancellationToken);
 
-        return await _repository.GetModelForEditAsync(modelId, cancellationToken)
+        var updated = await _repository.GetModelForEditAsync(modelId, cancellationToken)
             ?? throw new NotFoundException("Model not found");
+        return ModeratorEditModelMapper.ToResponseDto(updated);
     }
 
-    public Task<Model?> GetModelForModerationAsync(Guid modelId, CancellationToken cancellationToken = default)
+    public async Task<ModeratorEditModelResponseDto?> GetModelForModerationAsync(Guid modelId, CancellationToken cancellationToken = default)
     {
-        return _repository.GetModelForEditAsync(modelId, cancellationToken);
+        var model = await _repository.GetModelForEditAsync(modelId, cancellationToken);
+        return model == null ? null : ModeratorEditModelMapper.ToResponseDto(model);
     }
 }

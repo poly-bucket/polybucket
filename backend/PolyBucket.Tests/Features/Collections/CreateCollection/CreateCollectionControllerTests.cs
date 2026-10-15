@@ -9,7 +9,6 @@ using PolyBucket.Api.Features.Collections.CreateCollection.Http;
 using PolyBucket.Tests.Testing;
 using Shouldly;
 using Xunit;
-using CollectionEntity = PolyBucket.Api.Features.Collections.Domain.Collection;
 
 namespace PolyBucket.Tests.Features.Collections.CreateCollection;
 
@@ -25,8 +24,8 @@ public class CreateCollectionControllerTests
     {
         // Arrange
         var command = new CreateCollectionCommand { Name = "Benchies" };
-        var created = new CollectionEntity { Id = Guid.NewGuid(), Name = "Benchies" };
-        _mediator.SetupSend<CreateCollectionCommand, CollectionEntity>(created);
+        var created = new CreateCollectionResponseDto { Id = Guid.NewGuid(), Name = "Benchies" };
+        _mediator.SetupSend<CreateCollectionCommand, CreateCollectionResponseDto>(created);
 
         // Act
         var result = await _controller.CreateCollection(command);
@@ -39,7 +38,7 @@ public class CreateCollectionControllerTests
     public async Task CreateCollection_MediatorThrows_Propagates()
     {
         // Arrange
-        _mediator.SetupSendThrows<CreateCollectionCommand, CollectionEntity>(new InvalidOperationException("fail"));
+        _mediator.SetupSendThrows<CreateCollectionCommand, CreateCollectionResponseDto>(new InvalidOperationException("fail"));
 
         // Act
         var act = () => _controller.CreateCollection(new CreateCollectionCommand { Name = "x" });

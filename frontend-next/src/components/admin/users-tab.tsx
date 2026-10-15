@@ -12,6 +12,7 @@ import {
   Copy,
   MailCheck,
   KeyRound,
+  CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
@@ -204,7 +205,6 @@ export function UsersTab() {
         userId: response.userId,
         inviteEmailQueued: response.inviteEmailQueued ?? false,
       });
-      toast.success("User created");
       await fetchUsers();
     } catch {
       toast.error("Failed to create user");
@@ -617,14 +617,26 @@ export function UsersTab() {
         <SheetContent side="right" variant="glass" className="sm:max-w-md">
           <SheetHeader className="pr-10">
             <SheetTitle>Create User</SheetTitle>
-            <SheetDescription>
-              {createResult
-                ? createResult.inviteEmailQueued
-                  ? "User created. An invite email with a link to set their password is on its way."
-                  : "User created. Email delivery isn't configured, so copy the generated password and share it securely."
-                : "Email, username, and role only. Profile details can be filled in later by the user or an admin."}
-            </SheetDescription>
+            {!createResult && (
+              <SheetDescription>
+                Email, username, and role only. Profile details can be filled in later by
+                the user or an admin.
+              </SheetDescription>
+            )}
           </SheetHeader>
+          {createResult && (
+            <div
+              className="mx-4 flex items-start gap-3 rounded-md border border-green-500/40 bg-green-500/10 px-3 py-3 text-sm text-green-200"
+              role="status"
+            >
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-400" />
+              <p>
+                {createResult.inviteEmailQueued
+                  ? "User created. An invite email with a link to set their password is on its way."
+                  : "User created. Email delivery isn't configured, so copy the generated password and share it securely."}
+              </p>
+            </div>
+          )}
           {createResult?.inviteEmailQueued ? (
             <SheetFooter>
               <Button variant="glass" onClick={closeCreateSheet}>
@@ -640,7 +652,7 @@ export function UsersTab() {
                     type={showPassword ? "text" : "password"}
                     value={createResult.password ?? ""}
                     readOnly
-                    className="flex-1 font-mono text-white"
+                    className="flex-1 font-mono min-w-12 max-w-96 w-72"
                   />
                   <Button
                     variant="glass"

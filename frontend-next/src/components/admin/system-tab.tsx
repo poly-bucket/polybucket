@@ -10,6 +10,7 @@ import { SettingsFooter } from "@/components/settings/settings-footer";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import { EmailSettingsSection } from "@/components/admin/email-settings-section";
+import { SiteSettingsSection } from "@/components/admin/site-settings-section";
 import { EmailOutboxSection } from "@/components/admin/email-outbox-section";
 import {
   getTokenSettings,
@@ -91,6 +92,8 @@ export function SystemTab() {
           {error}
         </div>
       )}
+
+      <SiteSettingsSection />
 
       <SettingsSection title="Setup Status" description="First-time setup progress">
         <div className="space-y-4">

@@ -70,13 +70,13 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-white/60">Total Reports</p>
-                <p className="text-2xl font-semibold text-white">
+                <div className="text-2xl font-semibold text-white">
                   {analyticsLoading ? (
                     <Skeleton className="inline-block h-8 w-12" />
                   ) : (
                     analytics?.totalReports ?? 0
                   )}
-                </p>
+                </div>
               </div>
               <Flag className="h-8 w-8 text-blue-400/80" />
             </div>
@@ -87,13 +87,13 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-white/60">Active Reports</p>
-                <p className="text-2xl font-semibold text-amber-400">
+                <div className="text-2xl font-semibold text-amber-400">
                   {analyticsLoading ? (
                     <Skeleton className="inline-block h-8 w-12" />
                   ) : (
                     analytics?.activeReports ?? 0
                   )}
-                </p>
+                </div>
               </div>
               <FileText className="h-8 w-8 text-amber-400/80" />
             </div>
@@ -104,13 +104,13 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-white/60">Resolved</p>
-                <p className="text-2xl font-semibold text-green-400">
+                <div className="text-2xl font-semibold text-green-400">
                   {analyticsLoading ? (
                     <Skeleton className="inline-block h-8 w-12" />
                   ) : (
                     analytics?.resolvedReports ?? 0
                   )}
-                </p>
+                </div>
               </div>
               <Activity className="h-8 w-8 text-green-400/80" />
             </div>
@@ -121,13 +121,13 @@ export function ReportsDashboard({ canHandleReports = true }: { canHandleReports
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-white/60">Dismissed</p>
-                <p className="text-2xl font-semibold text-white">
+                <div className="text-2xl font-semibold text-white">
                   {analyticsLoading ? (
                     <Skeleton className="inline-block h-8 w-12" />
                   ) : (
                     analytics?.dismissedReports ?? 0
                   )}
-                </p>
+                </div>
               </div>
             </div>
           </CardContent>

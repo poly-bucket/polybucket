@@ -1,5 +1,5 @@
 using MediatR;
-using PolyBucket.Api.Features.Collections.Domain;
+using PolyBucket.Api.Features.Collections.UpdateCollection.Http;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
 {
-    public class UpdateCollectionCommand : IRequest<Collection>
+    public class UpdateCollectionCommand : IRequest<UpdateCollectionResponseDto>
     {
         [Required]
         public Guid Id { get; set; }

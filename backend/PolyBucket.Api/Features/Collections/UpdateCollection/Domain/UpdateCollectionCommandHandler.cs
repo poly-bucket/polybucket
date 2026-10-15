@@ -1,6 +1,7 @@
 using MediatR;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
+using PolyBucket.Api.Features.Collections.UpdateCollection.Http;
 using PolyBucket.Api.Features.Collections.UpdateCollection.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using System.Security.Claims;
@@ -14,13 +15,13 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
     public class UpdateCollectionCommandHandler(
         ICollectionRepository collectionsRepository, 
         IHttpContextAccessor httpContextAccessor,
-        IPasswordHasher passwordHasher) : IRequestHandler<UpdateCollectionCommand, Collection>
+        IPasswordHasher passwordHasher) : IRequestHandler<UpdateCollectionCommand, UpdateCollectionResponseDto>
     {
         private readonly ICollectionRepository _collectionsRepository = collectionsRepository;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
-        public async Task<Collection> Handle(UpdateCollectionCommand request, CancellationToken cancellationToken)
+        public async Task<UpdateCollectionResponseDto> Handle(UpdateCollectionCommand request, CancellationToken cancellationToken)
         {
             var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -65,7 +66,8 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
                 collection.PasswordHash = null;
             }
 
-            return await _collectionsRepository.UpdateCollectionAsync(collection);
+            var updated = await _collectionsRepository.UpdateCollectionAsync(collection);
+            return UpdateCollectionMapper.ToResponseDto(updated);
         }
     }
 } 

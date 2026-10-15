@@ -8,7 +8,6 @@ using PolyBucket.Api.Features.Collections.AccessCollection.Http;
 using PolyBucket.Tests.Testing;
 using Shouldly;
 using Xunit;
-using CollectionEntity = PolyBucket.Api.Features.Collections.Domain.Collection;
 
 namespace PolyBucket.Tests.Features.Collections.AccessCollection;
 
@@ -37,7 +36,7 @@ public class AccessCollectionControllerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        var collection = new CollectionEntity { Id = id, Name = "Secret" };
+        var collection = new AccessCollectionCollectionDto { Id = id, Name = "Secret" };
         _mediator.SetupSend<AccessCollectionCommand, AccessCollectionResponse>(
             new AccessCollectionResponse { Success = true, Collection = collection });
 

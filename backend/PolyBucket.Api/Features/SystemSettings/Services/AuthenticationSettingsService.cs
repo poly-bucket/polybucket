@@ -107,6 +107,16 @@ public class AuthenticationSettingsService(
                 }
             }
 
+            var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync();
+            if (systemSetup != null)
+            {
+                systemSetup.MaxFailedLoginAttempts = settings.MaxFailedLoginAttempts;
+                systemSetup.LockoutDurationMinutes = settings.LockoutDurationMinutes;
+                systemSetup.RequireStrongPasswords = settings.RequireStrongPasswords;
+                systemSetup.PasswordMinLength = settings.PasswordMinLength;
+                systemSetup.UpdatedAt = DateTime.UtcNow;
+            }
+
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Authentication settings updated successfully");

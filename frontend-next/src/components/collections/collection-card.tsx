@@ -216,6 +216,7 @@ export function mapCollectionToCardData(
     favorite?: boolean;
     owner?: { id: string; username: string };
     collectionModels?: Array<{ model?: { thumbnailUrl?: string } }>;
+    modelCount?: number;
     avatar?: string;
   }
 ): CollectionCardData {
@@ -229,7 +230,8 @@ export function mapCollectionToCardData(
     name: collection.name,
     description: collection.description,
     visibility: collection.visibility,
-    modelCount: collection.collectionModels?.length ?? 0,
+    modelCount:
+      collection.modelCount ?? collection.collectionModels?.length ?? 0,
     thumbnailUrl,
     favorite: collection.favorite,
     owner: collection.owner,

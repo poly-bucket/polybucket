@@ -1,4 +1,5 @@
 import { ApiClientFactory } from "@/lib/api/clientFactory";
+import axiosInstance from "@/lib/api/axiosConfig";
 import type {
   GetAdminModelStatisticsResponse,
   GetUsersResult,
@@ -33,9 +34,11 @@ import type {
   DeleteAllModelsRequest,
   DeleteAllModelsResponse,
   AuthenticationSettings,
+  TestLicenseResponse,
 } from "@/lib/api/client";
 import {
   CreateCategoryCommand,
+  TestLicenseRequest,
 } from "@/lib/api/client";
 
 const client = () => ApiClientFactory.getApiClient();
@@ -178,6 +181,19 @@ export async function updateSiteSettings(
   return client().systemSetup_UpdateSiteSettings(command);
 }
 
+export {
+  getSiteSettings,
+  updateSiteSettingsMerged,
+} from "./siteSettingsService";
+export type { SiteSettingsData, SiteSettingsPatch } from "./siteSettingsTypes";
+export { mergeSiteSettingsPatch, siteSettingsToCommand } from "./siteSettingsForm";
+export {
+  getModerationSettings,
+  updateModerationSettings,
+} from "./moderationSettingsService";
+export type { ModerationSettings } from "./moderationSettingsService";
+export { reloadPlugins } from "./pluginsAdminService";
+
 export async function deleteAllModels(
   request: DeleteAllModelsRequest
 ): Promise<DeleteAllModelsResponse> {
@@ -303,20 +319,46 @@ export async function resetThemeToDefault(): Promise<
   return client().extensibleTheme_ResetToDefault();
 }
 
-export async function getFontAwesomeSettings(): Promise<
-  import("@/lib/api/client").FontAwesomeSettings
-> {
-  return client().fontAwesomeSettings_GetSettings();
+export interface AdminFontAwesomeSettings {
+  id?: string;
+  isProEnabled?: boolean;
+  hasProLicenseKey?: boolean;
+  proLicenseKey?: string;
+  proKitUrl?: string;
+  useProIcons?: boolean;
+  fallbackToFree?: boolean;
+  lastLicenseCheck?: string;
+  isLicenseValid?: boolean;
+  licenseErrorMessage?: string;
+}
+
+export async function getFontAwesomeSettings(): Promise<AdminFontAwesomeSettings> {
+  const { data } = await axiosInstance.get<AdminFontAwesomeSettings>(
+    "/api/admin/fontawesome-settings"
+  );
+  return data;
 }
 
 export async function updateFontAwesomeSettings(
-  settings: import("@/lib/api/client").FontAwesomeSettings
-): Promise<import("@/lib/api/client").FontAwesomeSettings> {
-  return client().fontAwesomeSettings_UpdateSettings(settings);
+  settings: AdminFontAwesomeSettings
+): Promise<AdminFontAwesomeSettings> {
+  const { data } = await axiosInstance.post<AdminFontAwesomeSettings>(
+    "/api/admin/fontawesome-settings",
+    {
+      isProEnabled: settings.isProEnabled ?? false,
+      proLicenseKey: settings.proLicenseKey?.trim() || undefined,
+      proKitUrl: settings.proKitUrl,
+      useProIcons: settings.useProIcons ?? true,
+      fallbackToFree: settings.fallbackToFree ?? true,
+    }
+  );
+  return data;
 }
 
-export async function testFontAwesomeLicense(
-  request: import("@/lib/api/client").TestLicenseRequest
-): Promise<import("@/lib/api/client").TestLicenseResponse> {
-  return client().fontAwesomeSettings_TestLicense(request);
+export async function testFontAwesomeLicense(request: {
+  licenseKey?: string;
+}): Promise<TestLicenseResponse> {
+  return client().fontAwesomeSettings_TestLicense(
+    new TestLicenseRequest(request)
+  );
 }

@@ -9,7 +9,9 @@ import {
   activatePresetTheme,
   getThemeConfiguration,
   updateThemeConfiguration,
+  resetThemeToDefault,
 } from "@/lib/services/adminService";
+import { FontAwesomeSettingsSection } from "@/components/admin/fontawesome-settings-section";
 import type { ThemeDto } from "@/lib/api/client";
 import { useAdminQuery } from "@/lib/hooks/use-admin-query";
 import { useAdminMutation } from "@/lib/hooks/use-admin-mutation";
@@ -83,15 +85,15 @@ export function ThemeTab() {
 
   const resetMutation = useAdminMutation(
     async () => {
+      await resetThemeToDefault();
       const defaultTheme =
         themeList.find((t) => t.isDefault) ?? themeList[0] ?? null;
-      if (defaultTheme?.id === undefined) {
-        throw new Error("No default theme found");
-      }
-      await activatePresetTheme(defaultTheme.id);
-      const siteColors = themeColorsFromDto(defaultTheme.colors);
-      if (siteColors) {
-        applySiteThemeColors(siteColors);
+      if (defaultTheme?.id !== undefined) {
+        await activatePresetTheme(defaultTheme.id);
+        const siteColors = themeColorsFromDto(defaultTheme.colors);
+        if (siteColors) {
+          applySiteThemeColors(siteColors);
+        }
       }
     },
     {
@@ -166,7 +168,7 @@ export function ThemeTab() {
             onClick={() => resetMutation.mutate(undefined)}
             disabled={resetMutation.isLoading}
           >
-            {resetMutation.isLoading ? "Resetting..." : "Reset to Defaults"}
+            {resetMutation.isLoading ? "Resetting..." : "Reset theme configuration"}
           </Button>
         </div>
       </SettingsSection>
@@ -285,6 +287,8 @@ export function ThemeTab() {
           </div>
         )}
       </SettingsSection>
+
+      <FontAwesomeSettingsSection />
     </div>
   );
 }

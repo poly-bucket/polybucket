@@ -231,6 +231,7 @@ export const corePlugin: PluginDefinition = {
       { id: "plugins", label: "Plugins", group: "Extensions", icon: Puzzle, path: "/admin/plugins", requiredRoles: ["Admin"] },
     ],
     moderationNavItems: [
+      { id: "settings", label: "Settings", group: "Configuration", icon: Settings, path: "/moderation/settings", requiredRoles: ["Admin", "Moderator"] },
       { id: "models", label: "Model queue", group: "Content", icon: Inbox, path: "/moderation/models", requiredRoles: ["Admin", "Moderator"] },
       { id: "reports", label: "Reports", group: "Content", icon: Flag, path: "/moderation/reports", requiredRoles: ["Admin", "Moderator"] },
       { id: "banned-users", label: "Banned Users", group: "Content", icon: UserMinus, path: "/moderation/banned-users", requiredRoles: ["Admin", "Moderator"] },

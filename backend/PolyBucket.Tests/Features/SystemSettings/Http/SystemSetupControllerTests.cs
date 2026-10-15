@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain;
 using PolyBucket.Api.Features.SystemSettings.CompleteFirstTimeSetup.Domain;
+using PolyBucket.Api.Features.SystemSettings.GetSiteSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.Http;
 using PolyBucket.Tests.Testing;
 using Shouldly;
@@ -30,6 +31,39 @@ public class SystemSetupControllerTests
 
         // Assert
         result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);
+    }
+
+    [Fact(DisplayName = "Get site settings as admin returns Ok with the mediator response.")]
+    public async Task GetSiteSettings_Admin_ReturnsOk()
+    {
+        // Arrange
+        var response = new GetSiteSettingsResponse
+        {
+            Success = true,
+            Settings = new SiteSettingsData { SiteName = "Test" }
+        };
+        _mediator.SetupSend<GetSiteSettingsQuery, GetSiteSettingsResponse>(response);
+        var controller = new SystemSetupController(_mediator.Object).WithUser(Guid.NewGuid(), "Admin");
+
+        // Act
+        var result = await controller.GetSiteSettings();
+
+        // Assert
+        result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);
+    }
+
+    [Fact(DisplayName = "Get site settings without admin role returns Forbid.")]
+    public async Task GetSiteSettings_NonAdmin_ReturnsForbid()
+    {
+        // Arrange
+        var controller = new SystemSetupController(_mediator.Object).WithUser(Guid.NewGuid());
+
+        // Act
+        var result = await controller.GetSiteSettings();
+
+        // Assert
+        result.Result.ShouldBeOfType<ForbidResult>();
+        _mediator.Verify(m => m.Send(It.IsAny<IRequest<GetSiteSettingsResponse>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "Complete setup without admin role returns Forbid.")]

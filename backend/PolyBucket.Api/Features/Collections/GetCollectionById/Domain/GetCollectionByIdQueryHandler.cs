@@ -1,5 +1,5 @@
 using MediatR;
-using PolyBucket.Api.Features.Collections.Domain;
+using PolyBucket.Api.Features.Collections.GetCollectionById.Http;
 using PolyBucket.Api.Features.Collections.GetCollectionById.Repository;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
 using System.Security.Claims;
@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Collections.GetCollectionById.Domain
 {
-    public class GetCollectionByIdQueryHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor) : IRequestHandler<GetCollectionByIdQuery, Collection?>
+    public class GetCollectionByIdQueryHandler(ICollectionRepository repository, IHttpContextAccessor httpContextAccessor) : IRequestHandler<GetCollectionByIdQuery, GetCollectionByIdResponseDto?>
     {
         private readonly ICollectionRepository _repository = repository;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
-        public async Task<Collection?> Handle(GetCollectionByIdQuery request, CancellationToken cancellationToken)
+        public async Task<GetCollectionByIdResponseDto?> Handle(GetCollectionByIdQuery request, CancellationToken cancellationToken)
         {
             var collection = await _repository.GetCollectionByIdAsync(request.Id);
 
@@ -29,12 +29,11 @@ namespace PolyBucket.Api.Features.Collections.GetCollectionById.Domain
                 var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (userId == null || collection.OwnerId != Guid.Parse(userId))
                 {
-                    // For now, only the owner can view private/unlisted. This will be expanded with CollectionMember logic.
                     return null;
                 }
             }
 
-            return collection;
+            return GetCollectionByIdMapper.ToDto(collection);
         }
     }
 } 

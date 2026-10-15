@@ -4,6 +4,7 @@ using MediatR;
 using PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain;
 using PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.CompleteFirstTimeSetup.Domain;
+using PolyBucket.Api.Features.SystemSettings.GetSiteSettings.Domain;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.SystemSettings.Http
@@ -38,6 +39,33 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
         {
             var query = new CheckFirstTimeSetupQuery();
             var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get current site settings for administration
+        /// </summary>
+        /// <returns>Site settings configuration</returns>
+        [HttpGet("site-settings")]
+        [Authorize]
+        [ProducesResponseType(200, Type = typeof(GetSiteSettingsResponse))]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        public async Task<ActionResult<GetSiteSettingsResponse>> GetSiteSettings()
+        {
+            if (!IsAdminRequest())
+            {
+                return Forbid();
+            }
+
+            var query = new GetSiteSettingsQuery();
+            var result = await _mediator.Send(query);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
             return Ok(result);
         }
 

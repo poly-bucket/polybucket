@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Domain;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Http;
@@ -34,7 +33,7 @@ public class ModeratorEditModelControllerTests
     {
         // Arrange
         var modelId = Guid.NewGuid();
-        var model = new Model { Id = modelId, Name = "Updated name" };
+        var model = new ModeratorEditModelResponseDto { Id = modelId, Name = "Updated name" };
         _service
             .Setup(s => s.EditModelAsync(modelId, _moderatorId, It.IsAny<ModeratorEditRequest>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(model);
@@ -81,7 +80,7 @@ public class ModeratorEditModelControllerTests
     {
         // Arrange
         var modelId = Guid.NewGuid();
-        var model = new Model { Id = modelId, Name = "Pending" };
+        var model = new ModeratorEditModelResponseDto { Id = modelId, Name = "Pending" };
         _service.Setup(s => s.GetModelForModerationAsync(modelId, It.IsAny<CancellationToken>())).ReturnsAsync(model);
 
         // Act
@@ -96,7 +95,7 @@ public class ModeratorEditModelControllerTests
     {
         // Arrange
         var modelId = Guid.NewGuid();
-        _service.Setup(s => s.GetModelForModerationAsync(modelId, It.IsAny<CancellationToken>())).ReturnsAsync((Model?)null);
+        _service.Setup(s => s.GetModelForModerationAsync(modelId, It.IsAny<CancellationToken>())).ReturnsAsync((ModeratorEditModelResponseDto?)null);
 
         // Act
         var result = await CreateController(_moderatorId).GetModelForModeration(modelId, CancellationToken.None);

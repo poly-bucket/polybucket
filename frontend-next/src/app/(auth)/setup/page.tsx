@@ -9,10 +9,22 @@ import SiteSecurityStep from "@/setup/SiteSecurityStep";
 import EmailSetupStep from "@/setup/EmailSetupStep";
 import SiteEssentialsStep from "@/setup/SiteEssentialsStep";
 import SetupComplete from "@/setup/SetupComplete";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
+import { Card, CardContent } from "@/components/primitives/card";
 import { AuthCardSkeleton } from "@/components/ui/skeletons";
 
 type StepIndex = 0 | 1 | 2 | 3;
+
+function resumeStepFromStatus(status: {
+  isAdminConfigured?: boolean;
+  isSiteConfigured?: boolean;
+  isEmailConfigured?: boolean;
+}): StepIndex {
+  if (!status.isAdminConfigured) return 0;
+  if (!status.isSiteConfigured) return 1;
+  if (!status.isEmailConfigured) return 2;
+  return 3;
+}
+
 const STEP_NAMES: Record<StepIndex, string> = {
   0: "Admin Account Setup",
   1: "Site security",
@@ -29,27 +41,6 @@ export default function SetupPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [isCompletingSetup, setIsCompletingSetup] = useState(false);
-  const [completeError, setCompleteError] = useState<string | null>(null);
-  const [siteConfiguredPendingComplete, setSiteConfiguredPendingComplete] =
-    useState(false);
-
-  const retryCompleteSetup = async () => {
-    setCompleteError(null);
-    setIsCompletingSetup(true);
-    try {
-      const client = ApiClientFactory.getApiClient();
-      const response = await client.systemSetup_CompleteSetup();
-      if (response?.success) {
-        setIsComplete(true);
-      } else {
-        setCompleteError(response?.message ?? "Failed to complete setup");
-      }
-    } catch {
-      setCompleteError("Failed to complete setup. Please try again.");
-    } finally {
-      setIsCompletingSetup(false);
-    }
-  };
 
   const isAdmin = !!user?.roles?.some((r) => r?.toLowerCase() === "admin");
 
@@ -69,24 +60,15 @@ export default function SetupPage() {
         const client = ApiClientFactory.getApiClient();
         const status = await client.systemSetup_GetSetupStatus();
 
-        if (status?.isModerationConfigured) {
-          router.replace("/");
-          return;
-        }
-
-        if (status?.isSiteConfigured) {
-          setSiteConfiguredPendingComplete(true);
+        if (status?.isFirstTimeSetup && status?.isSiteConfigured) {
           setIsCompletingSetup(true);
-          setCompleteError(null);
           try {
             const response = await client.systemSetup_CompleteSetup();
             if (response?.success) {
               setIsComplete(true);
-            } else {
-              setCompleteError(response?.message ?? "Failed to complete setup");
             }
           } catch {
-            setCompleteError("Failed to complete setup. Please try again.");
+            setCurrentStep(resumeStepFromStatus(status));
           } finally {
             setIsCompletingSetup(false);
             setIsLoadingStatus(false);
@@ -94,11 +76,7 @@ export default function SetupPage() {
           return;
         }
 
-        if (status?.isAdminConfigured) {
-          setCurrentStep(1);
-        } else {
-          setCurrentStep(0);
-        }
+        setCurrentStep(resumeStepFromStatus(status ?? {}));
       } catch {
         setCurrentStep(0);
       } finally {
@@ -147,27 +125,6 @@ export default function SetupPage() {
       <div className="flex w-full max-w-md justify-center">
         <AuthCardSkeleton />
       </div>
-    );
-  }
-
-  if (siteConfiguredPendingComplete && completeError) {
-    return (
-      <Card variant="glass" className="w-full max-w-md border-white/20">
-          <CardHeader>
-            <CardTitle className="text-white">Complete setup</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-red-300">{completeError}</p>
-            <button
-              type="button"
-              onClick={retryCompleteSetup}
-              disabled={isCompletingSetup}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isCompletingSetup ? "Completing..." : "Retry"}
-            </button>
-          </CardContent>
-        </Card>
     );
   }
 

@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 import type { FederatedInstanceDto } from "@/lib/api/client";
 import { TableRowsSkeleton } from "@/components/ui/skeletons";
+import { FederationInstanceSection } from "./federation-instance-section";
 
 const HEALTH_COOLDOWN_MS = 10000;
 
@@ -603,6 +604,8 @@ export function FederationTab() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white">Federation</h2>
+
+      <FederationInstanceSection />
 
       <Tabs defaultValue="instances" className="w-full">
         <TabsList variant="glass">

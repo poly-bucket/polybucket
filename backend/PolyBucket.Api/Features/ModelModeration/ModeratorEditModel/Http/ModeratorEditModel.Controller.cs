@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ModelModeration.Domain;
@@ -25,11 +24,11 @@ public class ModeratorEditModelController(IModeratorEditModelService service) : 
     /// Allows moderators to edit model details and metadata.
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(Model), 200)]
+    [ProducesResponseType(typeof(ModeratorEditModelResponseDto), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(403)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<Model>> EditModel(
+    public async Task<ActionResult<ModeratorEditModelResponseDto>> EditModel(
         Guid id,
         [FromBody] ModeratorEditRequest request,
         CancellationToken cancellationToken = default)
@@ -65,10 +64,10 @@ public class ModeratorEditModelController(IModeratorEditModelService service) : 
     /// Get model details for moderation editing.
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Model), 200)]
+    [ProducesResponseType(typeof(ModeratorEditModelResponseDto), 200)]
     [ProducesResponseType(403)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<Model>> GetModelForModeration(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ModeratorEditModelResponseDto>> GetModelForModeration(Guid id, CancellationToken cancellationToken = default)
     {
         var model = await _service.GetModelForModerationAsync(id, cancellationToken);
         if (model == null)

@@ -4,12 +4,30 @@ import { Puzzle, ChevronDown, ChevronUp } from "lucide-react";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { Button } from "@/components/primitives/button";
 import { getPlugins } from "@/lib/plugins/registry";
+import { reloadPlugins } from "@/lib/services/adminService";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/primitives/tabs";
 
 export function PluginsTab() {
   const plugins = getPlugins();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [reloading, setReloading] = useState(false);
+
+  const handleReload = async () => {
+    if (!window.confirm("Reload all server plugins? This may briefly interrupt plugin features.")) {
+      return;
+    }
+    setReloading(true);
+    try {
+      await reloadPlugins();
+      toast.success("Plugins reloaded");
+    } catch {
+      toast.error("Failed to reload plugins");
+    } finally {
+      setReloading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -29,6 +47,15 @@ export function PluginsTab() {
             title="Installed Plugins"
             description="Plugins loaded in this instance"
           >
+            <div className="mb-4 flex justify-end">
+              <Button
+                variant="outline"
+                onClick={handleReload}
+                disabled={reloading}
+              >
+                {reloading ? "Reloading…" : "Reload plugins"}
+              </Button>
+            </div>
             {plugins.length === 0 ? (
               <div className="rounded-lg border border-white/10 glass-bg p-8 text-center text-white/60">
                 No plugins installed. The core plugin provides default

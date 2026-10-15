@@ -12,8 +12,13 @@ namespace PolyBucket.Api.Features.Collections.GetCollectionById.Http
     {
         private readonly IMediator _mediator = mediator;
 
+        /// <summary>
+        /// Gets a collection by id with owner summary and model thumbnails.
+        /// </summary>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCollectionById(Guid id)
+        [ProducesResponseType(typeof(GetCollectionByIdResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<GetCollectionByIdResponseDto>> GetCollectionById(Guid id)
         {
             var query = new GetCollectionByIdQuery { Id = id };
             var collection = await _mediator.Send(query);

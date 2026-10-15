@@ -27,7 +27,8 @@ export interface Collection {
   collectionModels?: CollectionModel[];
   createdAt?: string;
   updatedAt?: string;
-  passwordHash?: string;
+  isPasswordProtected?: boolean;
+  modelCount?: number;
 }
 
 export interface CollectionModel {
@@ -69,6 +70,48 @@ export interface GetUserCollectionsResponse {
 
 const api = () => ApiClientFactory.getApiClient();
 
+function mapCollectionDto(dto: {
+  id?: string;
+  name?: string;
+  description?: string;
+  visibility?: CollectionVisibility;
+  ownerId?: string;
+  owner?: unknown;
+  avatar?: string;
+  favorite?: boolean;
+  displayOrder?: number;
+  isPasswordProtected?: boolean;
+  modelCount?: number;
+  collectionModels?: unknown;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}): Collection {
+  const createdAt =
+    dto.createdAt instanceof Date
+      ? dto.createdAt.toISOString()
+      : dto.createdAt;
+  const updatedAt =
+    dto.updatedAt instanceof Date
+      ? dto.updatedAt.toISOString()
+      : dto.updatedAt;
+  return {
+    id: dto.id!,
+    name: dto.name!,
+    description: dto.description,
+    visibility: dto.visibility as Collection["visibility"],
+    ownerId: dto.ownerId!,
+    owner: dto.owner as Collection["owner"],
+    avatar: dto.avatar,
+    favorite: dto.favorite,
+    displayOrder: dto.displayOrder,
+    isPasswordProtected: dto.isPasswordProtected,
+    modelCount: dto.modelCount,
+    collectionModels: dto.collectionModels as CollectionModel[] | undefined,
+    createdAt,
+    updatedAt,
+  };
+}
+
 export const collectionsService = {
   async getUserCollections(
     page: number = 1,
@@ -81,18 +124,24 @@ export const collectionsService = {
         pageSize,
         searchQuery ?? null
       );
-    return parseFileResponseAsJson<GetUserCollectionsResponse>(response);
+    return {
+      collections: response.collections?.map((c) => mapCollectionDto(c)),
+      totalCount: response.totalCount,
+      page: response.page,
+      pageSize: response.pageSize,
+      totalPages: response.totalPages,
+    };
   },
 
   async getCollectionById(id: string): Promise<Collection> {
     const response = await api().getCollectionById_GetCollectionById(id);
-    return parseFileResponseAsJson<Collection>(response);
+    return mapCollectionDto(response);
   },
 
   async accessCollection(id: string, password?: string): Promise<Collection> {
     const command = new AccessCollectionCommand({ collectionId: id, password });
     const response = await api().accessCollection_AccessCollection(id, command);
-    return parseFileResponseAsJson<Collection>(response);
+    return mapCollectionDto(response);
   },
 
   async createCollection(
@@ -106,7 +155,7 @@ export const collectionsService = {
       avatar: collection.avatar,
     });
     const response = await api().createCollection_CreateCollection(command);
-    return response as Collection;
+    return mapCollectionDto(response);
   },
 
   async updateCollection(
@@ -124,7 +173,7 @@ export const collectionsService = {
       collection.id,
       command
     );
-    return parseFileResponseAsJson<Collection>(response);
+    return mapCollectionDto(response);
   },
 
   async deleteCollection(id: string): Promise<void> {

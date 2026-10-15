@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,7 +18,7 @@ public class FontAwesomeSettingsControllerTests
     public async Task GetSettings_Success_ReturnsOk()
     {
         // Arrange
-        var settings = new FontAwesomeSettings { IsProEnabled = false };
+        var settings = new FontAwesomeSettings { IsProEnabled = false, ProLicenseKey = "secret-license-key-value-here!!" };
         _service.Setup(s => s.GetSettingsAsync()).ReturnsAsync(settings);
         var controller = new FontAwesomeSettingsController(_service.Object, NullLogger<FontAwesomeSettingsController>.Instance);
 
@@ -25,7 +26,12 @@ public class FontAwesomeSettingsControllerTests
         var result = await controller.GetSettings();
 
         // Assert
-        result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(settings);
+        var ok = result.Result.ShouldBeOfType<OkObjectResult>();
+        var dto = ok.Value.ShouldBeOfType<GetFontAwesomeSettingsResponseDto>();
+        dto.HasProLicenseKey.ShouldBeTrue();
+        var json = JsonSerializer.Serialize(dto);
+        json.ShouldNotContain("secret-license-key");
+        json.ShouldNotContain("proLicenseKey", Case.Insensitive);
     }
 
     [Fact(DisplayName = "When settings body is null, UpdateSettings returns BadRequest.")]

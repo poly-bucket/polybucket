@@ -54,6 +54,12 @@ namespace PolyBucket.Api.Features.SystemSettings.CompleteFirstTimeSetup.Domain
                 {
                     systemSetup.SetupCompletedByUserId = userId;
                     systemSetup.UpdatedById = userId;
+
+                    var completingUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                    if (completingUser != null)
+                    {
+                        completingUser.HasCompletedFirstTimeSetup = true;
+                    }
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);

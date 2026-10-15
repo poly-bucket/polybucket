@@ -1,5 +1,5 @@
-using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Http;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +8,7 @@ namespace PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Domain;
 
 public interface IModeratorEditModelService
 {
-    Task<Model> EditModelAsync(
+    Task<ModeratorEditModelResponseDto> EditModelAsync(
         Guid modelId,
         Guid moderatorId,
         ModeratorEditRequest request,
@@ -16,5 +16,5 @@ public interface IModeratorEditModelService
         string? userAgent,
         CancellationToken cancellationToken = default);
 
-    Task<Model?> GetModelForModerationAsync(Guid modelId, CancellationToken cancellationToken = default);
+    Task<ModeratorEditModelResponseDto?> GetModelForModerationAsync(Guid modelId, CancellationToken cancellationToken = default);
 }

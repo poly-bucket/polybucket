@@ -23,7 +23,7 @@ namespace PolyBucket.Api.Features.Collections.CreateCollection.Http
         /// <response code="403">The user's email address must be verified first.</response>
         [HttpPost]
         [RequireVerifiedEmail]
-        [ProducesResponseType(typeof(PolyBucket.Api.Features.Collections.Domain.Collection), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CreateCollectionResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCollection([FromBody] CreateCollectionCommand command)
         {

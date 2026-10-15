@@ -9,8 +9,6 @@ using PolyBucket.Api.Features.Collections.UpdateCollection.Http;
 using PolyBucket.Tests.Testing;
 using Shouldly;
 using Xunit;
-using CollectionEntity = PolyBucket.Api.Features.Collections.Domain.Collection;
-
 namespace PolyBucket.Tests.Features.Collections.UpdateCollection;
 
 public class UpdateCollectionControllerTests
@@ -40,8 +38,8 @@ public class UpdateCollectionControllerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        var updated = new CollectionEntity { Id = id, Name = "Updated" };
-        _mediator.SetupSend<UpdateCollectionCommand, CollectionEntity>(updated);
+        var updated = new UpdateCollectionResponseDto { Id = id, Name = "Updated" };
+        _mediator.SetupSend<UpdateCollectionCommand, UpdateCollectionResponseDto>(updated);
 
         // Act
         var result = await _controller.UpdateCollection(id, new UpdateCollectionCommand { Id = id, Name = "Updated" });
@@ -55,7 +53,7 @@ public class UpdateCollectionControllerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        _mediator.SetupSendThrows<UpdateCollectionCommand, CollectionEntity>(new InvalidOperationException("fail"));
+        _mediator.SetupSendThrows<UpdateCollectionCommand, UpdateCollectionResponseDto>(new InvalidOperationException("fail"));
 
         // Act
         var act = () => _controller.UpdateCollection(id, new UpdateCollectionCommand { Id = id, Name = "x" });

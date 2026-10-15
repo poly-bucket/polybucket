@@ -10,7 +10,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
+  SidebarMenuButton as BaseSidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
@@ -47,6 +47,21 @@ export function Sidebar({
 
   return (
     <BaseSidebar className={cn(glassClasses, className)} {...props} />
+  )
+}
+
+const glassSidebarMenuButtonClassName =
+  "text-white/70 hover:bg-white/10 hover:text-white active:bg-white/10 active:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white data-[active=true]:font-medium"
+
+function SidebarMenuButton({
+  className,
+  ...props
+}: React.ComponentProps<typeof BaseSidebarMenuButton>) {
+  return (
+    <BaseSidebarMenuButton
+      className={cn(glassSidebarMenuButtonClassName, className)}
+      {...props}
+    />
   )
 }
 

@@ -22,17 +22,20 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
             _logger = logger;
         }
 
+        /// <summary>
+        /// Returns Font Awesome integration settings without exposing the stored license key.
+        /// </summary>
         [HttpGet("fontawesome-settings")]
-        [ProducesResponseType(200, Type = typeof(FontAwesomeSettings))]
+        [ProducesResponseType(200, Type = typeof(GetFontAwesomeSettingsResponseDto))]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
         [ProducesResponseType(500)]
-        public async Task<ActionResult<FontAwesomeSettings>> GetSettings()
+        public async Task<ActionResult<GetFontAwesomeSettingsResponseDto>> GetSettings()
         {
             try
             {
                 var settings = await _fontAwesomeSettingsService.GetSettingsAsync();
-                return Ok(settings);
+                return Ok(GetFontAwesomeSettingsResponseDto.FromEntity(settings));
             }
             catch (Exception ex)
             {
@@ -42,12 +45,12 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
         }
 
         [HttpPost("fontawesome-settings")]
-        [ProducesResponseType(200, Type = typeof(FontAwesomeSettings))]
+        [ProducesResponseType(200, Type = typeof(GetFontAwesomeSettingsResponseDto))]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
         [ProducesResponseType(500)]
-        public async Task<ActionResult<FontAwesomeSettings>> UpdateSettings([FromBody] FontAwesomeSettings settings)
+        public async Task<ActionResult<GetFontAwesomeSettingsResponseDto>> UpdateSettings([FromBody] UpdateFontAwesomeSettingsRequestDto settings)
         {
             try
             {
@@ -56,8 +59,14 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
                     return BadRequest(new { message = "Settings data is required" });
                 }
 
-                var updatedSettings = await _fontAwesomeSettingsService.UpdateSettingsAsync(settings);
-                return Ok(updatedSettings);
+                var current = await _fontAwesomeSettingsService.GetSettingsAsync();
+                var entity = settings.ToEntity(current.Id);
+                if (string.IsNullOrEmpty(settings.ProLicenseKey))
+                {
+                    entity.ProLicenseKey = current.ProLicenseKey;
+                }
+                var updatedSettings = await _fontAwesomeSettingsService.UpdateSettingsAsync(entity);
+                return Ok(GetFontAwesomeSettingsResponseDto.FromEntity(updatedSettings));
             }
             catch (Exception ex)
             {

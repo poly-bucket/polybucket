@@ -1,11 +1,13 @@
-using MediatR;
-using PolyBucket.Api.Features.Collections.Domain;
-using System.Collections.Generic;
+using System;
 
-namespace PolyBucket.Api.Features.Collections.GetUserCollections.Domain
+namespace PolyBucket.Api.Features.Collections.GetUserCollections.Domain;
+
+public class GetUserCollectionsQuery
 {
-    public class GetUserCollectionsQuery : IRequest<IEnumerable<Collection>>
-    {
-        // UserId will be extracted from the HTTP context
-    }
-} 
+    public Guid TargetUserId { get; set; }
+    public Guid? RequestingUserId { get; set; }
+    public bool IsRequestingUserAdmin { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 12;
+    public string? SearchQuery { get; set; }
+}

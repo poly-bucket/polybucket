@@ -12,7 +12,13 @@ namespace PolyBucket.Api.Features.Collections.AccessCollection.Http
     {
         private readonly IMediator _mediator = mediator;
 
+        /// <summary>
+        /// Verifies access to an unlisted or private collection and returns collection details when allowed.
+        /// </summary>
         [HttpPost("{id}/access")]
+        [ProducesResponseType(typeof(AccessCollectionCollectionDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AccessCollection(Guid id, [FromBody] AccessCollectionCommand command)
         {
             if (id != command.CollectionId)

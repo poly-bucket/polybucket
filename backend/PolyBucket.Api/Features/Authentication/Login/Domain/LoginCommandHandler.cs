@@ -171,41 +171,36 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             var requiresFirstTimeSetup = false;
             var setupStep = (string?)null;
 
-            if (user.Role?.Name == "Admin")
+            if (user.Role?.Name == "Admin" && _context != null)
             {
-                requiresFirstTimeSetup = !user.HasCompletedFirstTimeSetup;
-
-                if (_context != null)
+                try
                 {
-                    try
+                    var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync(cancellationToken);
+                    if (systemSetup != null && systemSetup.IsFirstTimeSetup)
                     {
-                        var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync(cancellationToken);
-                        if (systemSetup != null && systemSetup.IsFirstTimeSetup)
-                        {
-                            requiresFirstTimeSetup = true;
+                        requiresFirstTimeSetup = true;
 
-                            if (!systemSetup.IsAdminConfigured)
-                            {
-                                setupStep = "password";
-                            }
-                            else if (!systemSetup.IsSiteConfigured)
-                            {
-                                setupStep = "site";
-                            }
-                            else if (!systemSetup.IsEmailConfigured)
-                            {
-                                setupStep = "email";
-                            }
-                            else if (!systemSetup.IsModerationConfigured)
-                            {
-                                setupStep = "moderation";
-                            }
+                        if (!systemSetup.IsAdminConfigured)
+                        {
+                            setupStep = "password";
+                        }
+                        else if (!systemSetup.IsSiteConfigured)
+                        {
+                            setupStep = "site";
+                        }
+                        else if (!systemSetup.IsEmailConfigured)
+                        {
+                            setupStep = "email";
+                        }
+                        else if (!systemSetup.IsModerationConfigured)
+                        {
+                            setupStep = "moderation";
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Could not check system setup status, assuming setup is not required");
-                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not check system setup status, assuming setup is not required");
                 }
             }
 

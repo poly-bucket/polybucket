@@ -42,7 +42,7 @@ namespace PolyBucket.Api.Features.Collections.AccessCollection.Domain
                 return new AccessCollectionResponse
                 {
                     Success = true,
-                    Collection = collection
+                    Collection = AccessCollectionMapper.ToDto(collection)
                 };
             }
 
@@ -61,7 +61,7 @@ namespace PolyBucket.Api.Features.Collections.AccessCollection.Domain
                 return new AccessCollectionResponse
                 {
                     Success = true,
-                    Collection = collection
+                    Collection = AccessCollectionMapper.ToDto(collection)
                 };
             }
 
@@ -73,7 +73,7 @@ namespace PolyBucket.Api.Features.Collections.AccessCollection.Domain
                     return new AccessCollectionResponse
                     {
                         Success = true,
-                        Collection = collection
+                        Collection = AccessCollectionMapper.ToDto(collection)
                     };
                 }
 
@@ -105,7 +105,7 @@ namespace PolyBucket.Api.Features.Collections.AccessCollection.Domain
                 return new AccessCollectionResponse
                 {
                     Success = true,
-                    Collection = collection
+                    Collection = AccessCollectionMapper.ToDto(collection)
                 };
             }
 

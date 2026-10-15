@@ -9,7 +9,6 @@ using PolyBucket.Api.Features.Collections.GetCollectionById.Http;
 using PolyBucket.Tests.Testing;
 using Shouldly;
 using Xunit;
-using CollectionEntity = PolyBucket.Api.Features.Collections.Domain.Collection;
 
 namespace PolyBucket.Tests.Features.Collections.GetCollectionById;
 
@@ -25,14 +24,14 @@ public class GetCollectionByIdControllerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        var collection = new CollectionEntity { Id = id, Name = "Mine" };
-        _mediator.SetupSend<GetCollectionByIdQuery, CollectionEntity?>(collection);
+        var dto = new GetCollectionByIdResponseDto { Id = id, Name = "Mine" };
+        _mediator.SetupSend<GetCollectionByIdQuery, GetCollectionByIdResponseDto?>(dto);
 
         // Act
         var result = await _controller.GetCollectionById(id);
 
         // Assert
-        result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(collection);
+        result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(dto);
     }
 
     [Fact(DisplayName = "When the collection is missing, GetCollectionById returns NotFound.")]
@@ -41,12 +40,12 @@ public class GetCollectionByIdControllerTests
         // Arrange
         _mediator
             .Setup(m => m.Send(It.IsAny<GetCollectionByIdQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((CollectionEntity?)null);
+            .ReturnsAsync((GetCollectionByIdResponseDto?)null);
 
         // Act
         var result = await _controller.GetCollectionById(Guid.NewGuid());
 
         // Assert
-        result.ShouldBeOfType<NotFoundResult>();
+        result.Result.ShouldBeOfType<NotFoundResult>();
     }
 }

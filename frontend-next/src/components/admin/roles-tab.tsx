@@ -54,6 +54,7 @@ import {
   AssignPermissionsRequest,
   RemovePermissionsRequest,
 } from "@/lib/api/client";
+import { RegistrationDefaultsSection } from "./registration-defaults-section";
 
 const DEFAULT_COLOR = "#3B82F6";
 
@@ -312,6 +313,8 @@ export function RolesTab() {
           Create Role
         </Button>
       </div>
+
+      <RegistrationDefaultsSection />
 
       <Card variant="glass" className="border-white/20">
         <CardContent className="pt-6">

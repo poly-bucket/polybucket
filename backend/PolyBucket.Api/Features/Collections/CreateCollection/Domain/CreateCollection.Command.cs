@@ -1,12 +1,12 @@
 using MediatR;
-using PolyBucket.Api.Features.Collections.Domain;
+using PolyBucket.Api.Features.Collections.CreateCollection.Http;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PolyBucket.Api.Features.Collections.CreateCollection.Domain
 {
-    public class CreateCollectionCommand : IRequest<Collection>
+    public class CreateCollectionCommand : IRequest<CreateCollectionResponseDto>
     {
         [Required]
         [StringLength(100, MinimumLength = 3)]

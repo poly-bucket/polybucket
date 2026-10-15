@@ -37,7 +37,17 @@ import { CategoriesSection } from "./categories-section";
 import { FileTypesSection } from "./file-types-section";
 import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
 import { ModerationActionsSection } from "./moderation-actions-section";
+import { ModelConfigurationAdvancedSection } from "./model-configuration-advanced-section";
+import { getSiteSettings } from "@/lib/services/adminService";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const BULK_DELETE_CONFIRM_TEXT = "DELETE ALL";
 
@@ -52,17 +62,20 @@ function ConfigurationTab() {
   const [configDirty, setConfigDirty] = useState(false);
   const [siteDirty, setSiteDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAdvancedHint, setShowAdvancedHint] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const [configRes, siteRes] = await Promise.all([
+      const [configRes, siteRes, site] = await Promise.all([
         getModelConfigurationSettings(),
         getSiteModelSettings(),
+        getSiteSettings().catch(() => null),
       ]);
       setModelConfig(configRes.settings ?? null);
       setSiteSettings(siteRes.settings ?? null);
+      setShowAdvancedHint(site?.showAdvancedOptions ?? false);
     } catch {
       setError("Failed to load settings");
     } finally {
@@ -139,17 +152,12 @@ function ConfigurationTab() {
         </div>
       )}
 
-      <SettingsSection title="Model Configuration" description="Configure model upload and behavior">
+      <SettingsSection
+        title="Model Configuration"
+        description="Upload behavior and content rules (moderation workflow is under Moderation → Settings)"
+      >
         {modelConfig && (
           <>
-            <SettingsToggle
-              label="Require upload moderation"
-              description="Models must be approved before publication"
-              checked={modelConfig.requireUploadModeration ?? false}
-              onCheckedChange={(v) =>
-                handleConfigChange({ requireUploadModeration: v })
-              }
-            />
             <SettingsToggle
               label="Allow anonymous uploads"
               description="Unauthenticated users can upload models"
@@ -173,6 +181,186 @@ function ConfigurationTab() {
               onCheckedChange={(v) =>
                 handleConfigChange({ enableModelVersioning: v })
               }
+            />
+            <SettingsField
+              label="Default privacy (model records)"
+              description="Default visibility on the model entity"
+            >
+              <Select
+                value={modelConfig.defaultPrivacySetting ?? "Public"}
+                onValueChange={(v) =>
+                  handleConfigChange({ defaultPrivacySetting: v })
+                }
+              >
+                <SelectTrigger variant="glass">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent variant="glass">
+                  <SelectItem value="Public">Public</SelectItem>
+                  <SelectItem value="Private">Private</SelectItem>
+                  <SelectItem value="Unlisted">Unlisted</SelectItem>
+                </SelectContent>
+              </Select>
+            </SettingsField>
+            <SettingsField label="Site-wide model limit">
+              <Input
+                variant="glass"
+                type="number"
+                value={modelConfig.limitTotalModels ?? ""}
+                onChange={(e) =>
+                  handleConfigChange({
+                    limitTotalModels: parseInt(e.target.value, 10) || undefined,
+                  })
+                }
+                className="text-white"
+              />
+            </SettingsField>
+            <SettingsField label="Max models per user">
+              <Input
+                variant="glass"
+                type="number"
+                value={modelConfig.maxModelsPerUser ?? ""}
+                onChange={(e) =>
+                  handleConfigChange({
+                    maxModelsPerUser: parseInt(e.target.value, 10) || undefined,
+                  })
+                }
+                className="text-white"
+              />
+            </SettingsField>
+            <SettingsField label="Min description length">
+              <Input
+                variant="glass"
+                type="number"
+                value={modelConfig.minDescriptionLength ?? ""}
+                onChange={(e) =>
+                  handleConfigChange({
+                    minDescriptionLength: parseInt(e.target.value, 10) || undefined,
+                  })
+                }
+                className="text-white"
+              />
+            </SettingsField>
+            <SettingsField label="Max description length">
+              <Input
+                variant="glass"
+                type="number"
+                value={modelConfig.maxDescriptionLength ?? ""}
+                onChange={(e) =>
+                  handleConfigChange({
+                    maxDescriptionLength: parseInt(e.target.value, 10) || undefined,
+                  })
+                }
+                className="text-white"
+              />
+            </SettingsField>
+            <SettingsField label="Max tags per model">
+              <Input
+                variant="glass"
+                type="number"
+                value={modelConfig.maxTagsPerModel ?? ""}
+                onChange={(e) =>
+                  handleConfigChange({
+                    maxTagsPerModel: parseInt(e.target.value, 10) || undefined,
+                  })
+                }
+                className="text-white"
+              />
+            </SettingsField>
+            <SettingsField label="Max categories per model">
+              <Input
+                variant="glass"
+                type="number"
+                value={modelConfig.maxCategoriesPerModel ?? ""}
+                onChange={(e) =>
+                  handleConfigChange({
+                    maxCategoriesPerModel: parseInt(e.target.value, 10) || undefined,
+                  })
+                }
+                className="text-white"
+              />
+            </SettingsField>
+            <SettingsToggle
+              label="Allow NSFW content"
+              checked={modelConfig.allowNSFWContent ?? false}
+              onCheckedChange={(v) =>
+                handleConfigChange({ allowNSFWContent: v })
+              }
+            />
+            <SettingsToggle
+              label="Allow AI-generated content"
+              checked={modelConfig.allowAIGeneratedContent ?? true}
+              onCheckedChange={(v) =>
+                handleConfigChange({ allowAIGeneratedContent: v })
+              }
+            />
+            <SettingsToggle
+              label="Require model description"
+              checked={modelConfig.requireModelDescription ?? true}
+              onCheckedChange={(v) =>
+                handleConfigChange({ requireModelDescription: v })
+              }
+            />
+            <SettingsToggle
+              label="Require model tags"
+              checked={modelConfig.requireModelTags ?? false}
+              onCheckedChange={(v) =>
+                handleConfigChange({ requireModelTags: v })
+              }
+            />
+            <SettingsToggle
+              label="Require thumbnail"
+              checked={modelConfig.requireThumbnail ?? false}
+              onCheckedChange={(v) =>
+                handleConfigChange({ requireThumbnail: v })
+              }
+            />
+            <SettingsToggle
+              label="Require category selection"
+              checked={modelConfig.requireCategorySelection ?? false}
+              onCheckedChange={(v) =>
+                handleConfigChange({ requireCategorySelection: v })
+              }
+            />
+            <SettingsToggle
+              label="Require license selection"
+              checked={modelConfig.requireLicenseSelection ?? true}
+              onCheckedChange={(v) =>
+                handleConfigChange({ requireLicenseSelection: v })
+              }
+            />
+            <SettingsToggle
+              label="Enable comments"
+              checked={modelConfig.enableModelComments ?? true}
+              onCheckedChange={(v) =>
+                handleConfigChange({ enableModelComments: v })
+              }
+            />
+            <SettingsToggle
+              label="Enable likes"
+              checked={modelConfig.enableModelLikes ?? true}
+              onCheckedChange={(v) =>
+                handleConfigChange({ enableModelLikes: v })
+              }
+            />
+            <SettingsToggle
+              label="Enable downloads"
+              checked={modelConfig.enableModelDownloads ?? true}
+              onCheckedChange={(v) =>
+                handleConfigChange({ enableModelDownloads: v })
+              }
+            />
+            <SettingsToggle
+              label="Enable collections"
+              checked={modelConfig.enableModelCollections ?? true}
+              onCheckedChange={(v) =>
+                handleConfigChange({ enableModelCollections: v })
+              }
+            />
+            <ModelConfigurationAdvancedSection
+              config={modelConfig}
+              onChange={handleConfigChange}
+              showAdvancedHint={showAdvancedHint}
             />
             <SettingsFooter
               onSave={saveModelConfig}
@@ -236,11 +424,32 @@ function ConfigurationTab() {
                 handleSiteChange({ autoGeneratePreviews: v })
               }
             />
+            <SettingsField
+              label="Default privacy (new uploads on site)"
+              description="Site default before per-model overrides"
+            >
+              <Select
+                value={siteSettings.defaultModelPrivacy ?? "Public"}
+                onValueChange={(v) =>
+                  handleSiteChange({ defaultModelPrivacy: v })
+                }
+              >
+                <SelectTrigger variant="glass">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent variant="glass">
+                  <SelectItem value="Public">Public</SelectItem>
+                  <SelectItem value="Private">Private</SelectItem>
+                  <SelectItem value="Unlisted">Unlisted</SelectItem>
+                </SelectContent>
+              </Select>
+            </SettingsField>
             <SettingsToggle
-              label="Require moderation"
-              checked={siteSettings.requireModeration ?? false}
+              label="Allow public browsing"
+              description="When off, the site requires sign-in to browse"
+              checked={siteSettings.allowPublicBrowsing ?? true}
               onCheckedChange={(v) =>
-                handleSiteChange({ requireModeration: v })
+                handleSiteChange({ allowPublicBrowsing: v })
               }
             />
             <SettingsToggle
@@ -250,6 +459,13 @@ function ConfigurationTab() {
                 handleSiteChange({ requireLoginForUpload: v })
               }
             />
+            <p className="text-sm text-white/50">
+              Moderation workflow toggles live in{" "}
+              <Link href="/moderation/settings" className="text-primary hover:underline">
+                Moderation → Settings
+              </Link>
+              .
+            </p>
             <SettingsFooter
               onSave={saveSiteSettings}
               isSaving={savingSite}

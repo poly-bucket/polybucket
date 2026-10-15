@@ -32,6 +32,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Collections.UpdateCollection.Repository.ICollectionRepository, Features.Collections.UpdateCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.DeleteCollection.Repository.ICollectionRepository, Features.Collections.DeleteCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.GetUserCollections.Repository.ICollectionRepository, Features.Collections.GetUserCollections.Repository.CollectionRepository>();
+        services.AddTransient<Features.Collections.GetUserCollections.Domain.IGetUserCollectionsService, Features.Collections.GetUserCollections.Domain.GetUserCollectionsService>();
         services.AddTransient<Features.Collections.GetFavoriteCollections.Repository.IGetFavoriteCollectionsRepository, Features.Collections.GetFavoriteCollections.Repository.GetFavoriteCollectionsRepository>();
         services.AddTransient<Features.Collections.FavoriteCollection.Repository.ICollectionRepository, Features.Collections.FavoriteCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.AddModelToCollection.Repository.ICollectionRepository, Features.Collections.AddModelToCollection.Repository.CollectionRepository>();
@@ -160,6 +161,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.SystemSettings.CheckFirstTimeSetup.Domain.CheckFirstTimeSetupQueryHandler>();
         services.AddTransient<Features.SystemSettings.UpdateSiteSettings.Domain.UpdateSiteSettingsCommandHandler>();
         services.AddTransient<Features.SystemSettings.CompleteFirstTimeSetup.Domain.CompleteFirstTimeSetupCommandHandler>();
+        services.AddTransient<Features.SystemSettings.GetSiteSettings.Domain.GetSiteSettingsQueryHandler>();
 
         // Seeders
         services.AddTransient<PolyBucket.Api.Data.Seeders.AdminSeeder>();
