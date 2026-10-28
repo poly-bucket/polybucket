@@ -14,7 +14,7 @@ export interface MockAuthValue {
     password: string,
     options?: LoginOptions
   ) => Promise<LoginResult>;
-  logout?: () => void;
+  logout?: () => Promise<void>;
   refreshUserFromMe?: () => Promise<void>;
 }
 
@@ -24,7 +24,7 @@ function createMockAuthProvider(mockValue: MockAuthValue) {
     isLoading: mockValue.isLoading ?? false,
     isAuthenticated: mockValue.isAuthenticated ?? !!mockValue.user?.id,
     login: mockValue.login ?? vi.fn().mockResolvedValue({ success: true } as LoginResult),
-    logout: mockValue.logout ?? vi.fn(),
+    logout: mockValue.logout ?? vi.fn().mockResolvedValue(undefined),
     refreshUserFromMe: mockValue.refreshUserFromMe ?? vi.fn().mockResolvedValue(undefined),
   };
 

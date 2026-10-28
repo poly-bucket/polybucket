@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { sealSession, unsealSession } from "./session";
 import { clearEncryptionKeyCacheForTests } from "./sessionKey";

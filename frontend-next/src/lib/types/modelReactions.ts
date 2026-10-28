@@ -1,6 +1,9 @@
 import type { IModel } from "@/lib/api/client";
 
-export type ModelWithReactions = IModel;
+export type ModelWithReactions = IModel & {
+  isLikedByCurrentUser?: boolean;
+  isDislikedByCurrentUser?: boolean;
+};
 
 export function getModelReactionsState(model: ModelWithReactions) {
   return {

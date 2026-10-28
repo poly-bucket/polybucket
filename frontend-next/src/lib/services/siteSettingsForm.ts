@@ -14,7 +14,7 @@ export function siteSettingsToCommand(
     requireEmailVerification: settings.requireEmailVerification ?? false,
     disableEmailSettings: settings.disableEmailSettings ?? false,
     maxFileSizeBytes: settings.maxFileSizeBytes,
-    allowedFileTypes: settings.allowedFileTypes,
+    allowedFileTypes: settings.allowedFileTypes ?? "",
     maxFilesPerUpload: settings.maxFilesPerUpload,
     enableFileCompression: settings.enableFileCompression,
     autoGeneratePreviews: settings.autoGeneratePreviews,
@@ -33,7 +33,7 @@ export function siteSettingsToCommand(
     enableFederation: settings.enableFederation,
     instanceName: settings.instanceName,
     instanceDescription: settings.instanceDescription,
-    adminContact: settings.adminContact,
+    adminContact: settings.adminContact ?? undefined,
   });
 }
 

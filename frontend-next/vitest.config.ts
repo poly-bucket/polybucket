@@ -8,7 +8,6 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
-    environmentMatchGlobs: [["**/session.test.ts", "node"]],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["src/**/hooks.test.tsx"],
   },
