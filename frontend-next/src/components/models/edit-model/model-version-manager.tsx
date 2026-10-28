@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { getApiConfig } from "@/lib/api/config";
-import { getStoredUser } from "@/lib/auth/authSession";
 import FileDropZone from "../file-drop-zone";
 import FileQueue, { type UploadedFile } from "../file-queue";
 import { Input } from "@/components/primitives/input";
@@ -126,12 +125,6 @@ export function ModelVersionManager({
 
     setIsSubmitting(true);
     try {
-      const token = typeof window !== "undefined" ? getStoredUser()?.accessToken : null;
-      if (!token) {
-        toast.error("Authentication required");
-        return;
-      }
-
       const formData = new FormData();
       formData.append("Name", versionName.trim());
       formData.append("Notes", versionNotes.trim());
@@ -152,7 +145,7 @@ export function ModelVersionManager({
       const { baseUrl } = getApiConfig();
       const response = await fetch(`${baseUrl}/api/models/${model.id}/versions`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
         body: formData,
       });
 

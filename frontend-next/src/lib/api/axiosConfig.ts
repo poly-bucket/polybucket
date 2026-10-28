@@ -1,9 +1,5 @@
 import axios, { isAxiosError, type AxiosError, type InternalAxiosRequestConfig } from "axios";
-import {
-  clearSession,
-  getOrCreateRefreshPromise,
-  getStoredUser,
-} from "@/lib/auth/authSession";
+import { clearSession, getOrCreateRefreshPromise, getStoredUser } from "@/lib/auth/authSession";
 import { shouldRedirectToLogin } from "@/lib/auth/privateSiteRedirect";
 import { getApiConfig } from "./config";
 
@@ -19,12 +15,6 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((requestConfig: InternalAxiosRequestConfig) => {
-  if (typeof window !== "undefined") {
-    const parsed = getStoredUser();
-    if (parsed?.accessToken?.trim()) {
-      requestConfig.headers.Authorization = `Bearer ${parsed.accessToken}`;
-    }
-  }
   if (requestConfig.data instanceof FormData && requestConfig.headers) {
     const h = requestConfig.headers;
     h.delete("Content-Type");
@@ -56,31 +46,27 @@ axiosInstance.interceptors.response.use(
     }
     const original = error.config as RequestWithTokenRetry | undefined;
     if (!original) {
-      clearSession();
+      await clearSession();
       redirectToLoginIfPrivateSite(error);
       return Promise.reject(error);
     }
     if (original._tokenRetry) {
-      clearSession();
+      await clearSession();
       redirectToLoginIfPrivateSite(error);
       return Promise.reject(error);
     }
-    if (!getStoredUser()?.refreshToken?.trim()) {
-      clearSession();
+    if (!getStoredUser()) {
+      await clearSession();
       redirectToLoginIfPrivateSite(error);
       return Promise.reject(error);
     }
     const refreshed = await getOrCreateRefreshPromise();
     if (!refreshed) {
-      clearSession();
+      await clearSession();
       redirectToLoginIfPrivateSite(error);
       return Promise.reject(error);
     }
     original._tokenRetry = true;
-    if (!original.headers) {
-      return Promise.reject(error);
-    }
-    original.headers.Authorization = `Bearer ${refreshed.accessToken}`;
     return axiosInstance.request(original);
   }
 );

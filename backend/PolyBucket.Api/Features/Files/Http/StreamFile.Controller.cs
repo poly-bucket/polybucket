@@ -80,13 +80,13 @@ namespace PolyBucket.Api.Features.Files.Http
                 }
 
                 // Set appropriate headers
-                Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{file.Name}\"");
-                Response.Headers.Add("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+                Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{file.Name}\"");
+                Response.Headers.Append("Cache-Control", "public, max-age=3600");
 
                 // Return the file stream
                 return File(fileStream, file.MimeType ?? "application/octet-stream");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, "An error occurred while streaming the file");
             }

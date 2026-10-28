@@ -4,6 +4,7 @@ using PolyBucket.Api.Features.Collections.Domain.Enums;
 using PolyBucket.Api.Features.Collections.UpdateCollection.Http;
 using PolyBucket.Api.Features.Collections.UpdateCollection.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Common.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -15,11 +16,13 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
     public class UpdateCollectionCommandHandler(
         ICollectionRepository collectionsRepository, 
         IHttpContextAccessor httpContextAccessor,
-        IPasswordHasher passwordHasher) : IRequestHandler<UpdateCollectionCommand, UpdateCollectionResponseDto>
+        IPasswordHasher passwordHasher,
+        IAvatarSvgValidator avatarSvgValidator) : IRequestHandler<UpdateCollectionCommand, UpdateCollectionResponseDto>
     {
         private readonly ICollectionRepository _collectionsRepository = collectionsRepository;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
+        private readonly IAvatarSvgValidator _avatarSvgValidator = avatarSvgValidator;
 
         public async Task<UpdateCollectionResponseDto> Handle(UpdateCollectionCommand request, CancellationToken cancellationToken)
         {
@@ -43,7 +46,14 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Domain
             collection.Name = request.Name ?? collection.Name;
             collection.Description = request.Description ?? collection.Description;
             collection.Visibility = request.Visibility ?? collection.Visibility;
-            collection.Avatar = request.Avatar ?? collection.Avatar;
+            if (request.Avatar != null)
+            {
+                if (!_avatarSvgValidator.TryValidate(request.Avatar, out var sanitizedAvatar, out var avatarError))
+                {
+                    throw new ArgumentException(avatarError ?? "Invalid collection avatar.");
+                }
+                collection.Avatar = sanitizedAvatar ?? request.Avatar;
+            }
 
             // Handle password for unlisted collections
             if (request.Visibility == CollectionVisibility.Unlisted || collection.Visibility == CollectionVisibility.Unlisted)

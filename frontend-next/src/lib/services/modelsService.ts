@@ -8,7 +8,6 @@ import type {
   LicenseTypes,
 } from "@/lib/api/client";
 import { UpdateModelRequest } from "@/lib/api/client";
-import { AUTH_STORAGE_KEY } from "@/lib/auth/authConstants";
 import type { ModelMetadataFormValues } from "@/lib/models/model-metadata";
 
 export const RECENT_MODELS_PAGE_SIZE = 12;
@@ -49,18 +48,6 @@ export async function fetchModelById(
 ): Promise<GetModelByIdResponse> {
   const client = ApiClientFactory.getApiClient();
   return client.getModelById_GetModel(id);
-}
-
-function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!stored) return null;
-    const parsed = JSON.parse(stored) as { accessToken?: string };
-    return parsed.accessToken ?? null;
-  } catch {
-    return null;
-  }
 }
 
 export async function linkModelCategories(
@@ -113,11 +100,6 @@ export async function applyPostCreateModelMetadata(
 }
 
 export async function uploadModel(request: ModelUploadRequest): Promise<UploadedModel> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error("Authentication token not found");
-  }
-
   const client = ApiClientFactory.getApiClient();
   const files: FileParameter[] = request.files.map((file) => ({
     data: file,

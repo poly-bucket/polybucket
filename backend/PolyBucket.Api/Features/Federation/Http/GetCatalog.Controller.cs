@@ -101,7 +101,7 @@ namespace PolyBucket.Api.Features.Federation.Http
                         DisplayName = m.Author.Username,
                         AvatarUrl = null // User doesn't have AvatarUrl directly
                     },
-                    License = m.License.ToString(),
+                    License = m.License == null ? string.Empty : m.License.ToString()!,
                     Categories = m.Categories.Select(c => c.Name).ToList(),
                     Tags = m.Tags.Select(t => t.Name).ToList(),
                     FilesSize = 0, // TODO: Calculate from versions

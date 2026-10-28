@@ -17,7 +17,7 @@ import { Input } from "@/components/primitives/input";
 import {
   getAccountApiErrorMessage,
   resetPassword,
-  takeTokenFromUrl,
+  fetchActionTokenFromBff,
 } from "@/lib/services/accountEmailService";
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -38,13 +38,19 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fromUrl = takeTokenFromUrl();
-    if (fromUrl) {
-      setToken(fromUrl);
-      setPhase("form");
-    } else {
-      setPhase((current) => (current === "loading" ? "missing" : current));
-    }
+    let cancelled = false;
+    void fetchActionTokenFromBff().then((fromBff) => {
+      if (cancelled) return;
+      if (fromBff) {
+        setToken(fromBff);
+        setPhase("form");
+      } else {
+        setPhase((current) => (current === "loading" ? "missing" : current));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

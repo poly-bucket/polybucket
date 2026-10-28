@@ -19,7 +19,7 @@ import { Input } from "@/components/primitives/input";
 import {
   getAccountApiErrorMessage,
   resendVerificationEmail,
-  takeTokenFromUrl,
+  fetchActionTokenFromBff,
   verifyEmail,
   type VerifyEmailResult,
 } from "@/lib/services/accountEmailService";
@@ -39,13 +39,19 @@ export default function VerifyEmailPage() {
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
 
   useEffect(() => {
-    const fromUrl = takeTokenFromUrl();
-    if (fromUrl) {
-      setToken(fromUrl);
-      setPhase("ready");
-    } else {
-      setPhase((current) => (current === "loading" ? "missing" : current));
-    }
+    let cancelled = false;
+    void fetchActionTokenFromBff().then((fromBff) => {
+      if (cancelled) return;
+      if (fromBff) {
+        setToken(fromBff);
+        setPhase("ready");
+      } else {
+        setPhase((current) => (current === "loading" ? "missing" : current));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

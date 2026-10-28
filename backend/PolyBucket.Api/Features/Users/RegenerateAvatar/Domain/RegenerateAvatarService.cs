@@ -5,10 +5,14 @@ using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Users.RegenerateAvatar.Domain
 {
-    public class RegenerateAvatarService(IRegenerateAvatarRepository repository, IAvatarService avatarService) : IRegenerateAvatarService
+    public class RegenerateAvatarService(
+        IRegenerateAvatarRepository repository,
+        IAvatarService avatarService,
+        IAvatarSvgValidator avatarSvgValidator) : IRegenerateAvatarService
     {
         private readonly IRegenerateAvatarRepository _repository = repository;
         private readonly IAvatarService _avatarService = avatarService;
+        private readonly IAvatarSvgValidator _avatarSvgValidator = avatarSvgValidator;
 
         public async Task<RegenerateAvatarResponse> RegenerateAvatarAsync(Guid userId, string? salt, string? avatar)
         {
@@ -18,11 +22,20 @@ namespace PolyBucket.Api.Features.Users.RegenerateAvatar.Domain
                 throw new KeyNotFoundException($"User with ID {userId} not found");
             }
 
-            var nextAvatar = string.IsNullOrWhiteSpace(avatar)
-                ? _avatarService.GenerateUserAvatar(userId, salt)
-                : avatar;
+            string nextAvatar;
+            if (string.IsNullOrWhiteSpace(avatar))
+            {
+                nextAvatar = _avatarService.GenerateUserAvatar(userId, salt);
+            }
+            else if (!_avatarSvgValidator.TryValidate(avatar, out var sanitized, out var error))
+            {
+                throw new ArgumentException(error ?? "Invalid avatar.");
+            }
+            else
+            {
+                nextAvatar = sanitized ?? avatar;
+            }
 
-            // Update user's avatar in database
             user.Avatar = nextAvatar;
             await _repository.UpdateUserAsync(user);
 

@@ -22,7 +22,7 @@ function createMockAuthProvider(mockValue: MockAuthValue) {
   const value = {
     user: mockValue.user,
     isLoading: mockValue.isLoading ?? false,
-    isAuthenticated: mockValue.isAuthenticated ?? !!mockValue.user?.accessToken,
+    isAuthenticated: mockValue.isAuthenticated ?? !!mockValue.user?.id,
     login: mockValue.login ?? vi.fn().mockResolvedValue({ success: true } as LoginResult),
     logout: mockValue.logout ?? vi.fn(),
     refreshUserFromMe: mockValue.refreshUserFromMe ?? vi.fn().mockResolvedValue(undefined),

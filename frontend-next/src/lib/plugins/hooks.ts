@@ -28,6 +28,7 @@ import type {
   ProfileTabContribution,
   PluginRouteContribution,
 } from "./types";
+import { hasAnyRole } from "@/lib/security/roles";
 
 function passesAuthFilter<T extends { requiresAuth?: boolean; requiredRoles?: string[] }>(
   item: T,
@@ -37,7 +38,7 @@ function passesAuthFilter<T extends { requiresAuth?: boolean; requiredRoles?: st
   if (item.requiresAuth && !isAuthenticated) return false;
   if (
     item.requiredRoles?.length &&
-    !item.requiredRoles.some((r) => roles.includes(r))
+    !hasAnyRole(roles, item.requiredRoles)
   ) {
     return false;
   }
@@ -186,8 +187,8 @@ export function usePluginRoutes(): PluginRouteContribution[] {
   return useMemo(() => {
     return getPluginRoutes()
       .filter((item) => {
-        if (item.protected !== false && !isAuthenticated) return false;
-        return true;
+        const authItem = { ...item, requiresAuth: item.protected !== false };
+        return passesAuthFilter(authItem, isAuthenticated, roles);
       })
       .sort((a, b) => a.path.localeCompare(b.path));
   }, [isAuthenticated, roles]);

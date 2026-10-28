@@ -5,9 +5,11 @@ export interface ApiConfig {
 }
 
 export const getApiConfig = (): ApiConfig => {
-  const baseUrl = typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:11666")
-    : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:11666");
+  const baseUrl =
+    typeof window !== "undefined"
+      ? "/api/polybucket"
+      : process.env.POLYBUCKET_INTERNAL_BASE_URL?.replace(/\/$/, "") ||
+        `${(process.env.POLYBUCKET_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:11666").replace(/\/$/, "")}/api`;
 
   return {
     baseUrl,

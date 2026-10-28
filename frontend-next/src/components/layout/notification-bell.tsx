@@ -10,6 +10,7 @@ import {
   type NotificationItem,
 } from "@/lib/services/notificationsService";
 import { ListRowSkeleton } from "@/components/ui/skeletons";
+import { safeNotificationHref } from "@/lib/security/safeUrl";
 
 export const NOTIFICATION_POLL_INTERVAL_MS = 60_000;
 const DROPDOWN_PAGE_SIZE = 10;
@@ -211,10 +212,11 @@ export function NotificationBell() {
                     </>
                   );
                   const className = "block w-full px-3 py-2 text-left hover:bg-white/10";
+                  const actionHref = safeNotificationHref(notification.actionUrl);
                   return (
                     <li key={notification.id}>
-                      {notification.actionUrl ? (
-                        <Link href={notification.actionUrl} className={className} onClick={() => handleItemClick(notification)}>
+                      {actionHref ? (
+                        <Link href={actionHref} className={className} onClick={() => handleItemClick(notification)}>
                           {body}
                         </Link>
                       ) : (

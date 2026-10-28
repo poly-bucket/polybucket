@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/glass/textarea";
 import { Card, CardContent } from "@/components/primitives/card";
 import { Switch } from "@/components/primitives/switch";
 import { Package, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { safeExternalHref } from "@/lib/security/safeUrl";
 
 export interface BillOfMaterial {
   id: string;
@@ -57,12 +58,14 @@ function BOMItemForm({
 
   const handleSave = () => {
     if (!name.trim()) return;
+    const trimmedUrl = url.trim();
+    const safeUrl = trimmedUrl ? safeExternalHref(trimmedUrl) : undefined;
     onSave({
       id: item.id ?? Math.random().toString(36).substring(2, 11),
       name: name.trim(),
       quantity: Math.max(1, quantity),
       price: price ? parseFloat(price) : undefined,
-      url: url.trim() || undefined,
+      url: safeUrl ?? undefined,
       required,
       notes: notes.trim() || undefined,
     });
@@ -284,7 +287,7 @@ export function BillOfMaterialsManager({
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {item.url && (
+                      {item.url && safeExternalHref(item.url) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -292,7 +295,7 @@ export function BillOfMaterialsManager({
                           className="min-h-[32px]"
                         >
                           <a
-                            href={item.url}
+                            href={safeExternalHref(item.url)!}
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`Buy ${item.name}`}

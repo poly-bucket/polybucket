@@ -183,6 +183,18 @@ describe("NotificationBell", () => {
     expect(screen.getByRole("button", { name: /mark all read/i })).toBeDisabled();
   });
 
+  it("does not link malicious actionUrl hrefs", async () => {
+    mockGetNotifications.mockResolvedValue(
+      page([notification("bad", "Bad link", { actionUrl: "javascript:alert(1)" })])
+    );
+    const user = userEvent.setup();
+    render(<NotificationBell />, { mockAuth: { user: signedInUser } });
+    await user.click(await screen.findByRole("button", { name: /notifications/i }));
+    const panel = await screen.findByRole("dialog", { name: "Notifications" });
+    expect(within(panel).queryByRole("link", { name: /bad link/i })).not.toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: /bad link/i })).toBeInTheDocument();
+  });
+
   it("closes when Escape is pressed", async () => {
     // Arrange
     const user = userEvent.setup();

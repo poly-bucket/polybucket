@@ -251,7 +251,7 @@ namespace PolyBucket.Api.Features.Plugins.Services
             return _metadataPlugins.ContainsKey(key);
         }
 
-        private async Task UpdateEntityFieldsCacheAsync(string entityType)
+        private Task UpdateEntityFieldsCacheAsync(string entityType)
         {
             try
             {
@@ -263,7 +263,6 @@ namespace PolyBucket.Api.Features.Plugins.Services
                     fields.AddRange(plugin.Fields);
                 }
 
-                // Sort fields by order
                 fields = fields.OrderBy(f => f.Order).ToList();
                 _entityFields[entityType] = fields;
 
@@ -274,6 +273,8 @@ namespace PolyBucket.Api.Features.Plugins.Services
             {
                 _logger.LogError(ex, "Error updating entity fields cache for {EntityType}", entityType);
             }
+
+            return Task.CompletedTask;
         }
     }
 

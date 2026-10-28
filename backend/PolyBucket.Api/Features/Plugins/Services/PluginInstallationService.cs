@@ -249,7 +249,7 @@ namespace PolyBucket.Api.Features.Plugins.Services
             };
         }
 
-        public async Task<bool> UninstallPluginAsync(string pluginId)
+        public Task<bool> UninstallPluginAsync(string pluginId)
         {
             try
             {
@@ -258,16 +258,16 @@ namespace PolyBucket.Api.Features.Plugins.Services
                 {
                     Directory.Delete(pluginPath, true);
                     _logger.LogInformation("Successfully uninstalled plugin {PluginId}", pluginId);
-                    return true;
+                    return Task.FromResult(true);
                 }
                 
                 _logger.LogWarning("Plugin {PluginId} not found for uninstallation", pluginId);
-                return false;
+                return Task.FromResult(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uninstalling plugin {PluginId}", pluginId);
-                return false;
+                return Task.FromResult(false);
             }
         }
 

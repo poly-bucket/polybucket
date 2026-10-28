@@ -117,3 +117,26 @@ export function takeTokenFromUrl(): string | null {
   window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
   return token;
 }
+
+export async function fetchActionTokenFromBff(): Promise<string | null> {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const fromUrl = takeTokenFromUrl();
+  if (fromUrl) {
+    return fromUrl;
+  }
+  try {
+    const res = await fetch("/api/auth/action-token", {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const data = (await res.json()) as { token?: string | null };
+    return data.token?.trim() ? data.token : null;
+  } catch {
+    return null;
+  }
+}

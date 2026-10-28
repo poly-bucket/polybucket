@@ -139,6 +139,24 @@ describe("LoginPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("does not redirect to protocol-relative paths after successful login", async () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "redirect" ? "//evil.example/phish" : null
+    );
+    const login = vi.fn().mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+
+    render(<LoginPage />, { mockAuth: { user: null, login } });
+
+    await user.type(screen.getByPlaceholderText(/email or username/i), "user@test.com");
+    await user.type(screen.getByPlaceholderText(/password/i), "secret");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/");
+    });
+  });
+
   it("redirects to safe redirect query path after successful login", async () => {
     mockSearchParamsGet.mockImplementation((key: string) =>
       key === "redirect" ? "/dashboard" : null

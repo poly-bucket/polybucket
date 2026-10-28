@@ -34,3 +34,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Production container environment
+
+The production image entrypoint replaces the build placeholder `__NEXT_PUBLIC_API_URL__` at startup. Required variables:
+
+- `SESSION_SECRET` — at least 32 characters (BFF session sealing).
+- `POLYBUCKET_API_URL` or `NEXT_PUBLIC_API_URL` — must be an `http://` or `https://` origin reachable from the container.
+
+After substitution, `scripts/validate-next-artifacts.sh` fails fast if any `.next` artifact still contains the placeholder. Prefer immutable images with API URL baked at build time when possible.

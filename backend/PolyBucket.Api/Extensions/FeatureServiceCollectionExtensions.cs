@@ -85,6 +85,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain.DisableTwoFactorAuthCommandHandler>();
         services.AddTransient<Features.Authentication.TwoFactorAuth.GetTwoFactorAuthStatus.Domain.GetTwoFactorAuthStatusQueryHandler>();
         services.AddTransient<Features.Authentication.RefreshToken.Domain.RefreshTokenCommandHandler>();
+        services.AddTransient<Features.Authentication.Logout.Domain.LogoutCommandHandler>();
         services.AddTransient<Features.Authentication.ForgotPassword.Domain.ForgotPasswordCommandHandler>();
         services.AddTransient<Features.Authentication.ResetPassword.Domain.ResetPasswordCommandHandler>();
         services.AddTransient<Features.Authentication.VerifyEmail.Domain.VerifyEmailCommandHandler>();
@@ -113,6 +114,7 @@ public static class FeatureServiceCollectionExtensions
         
         // Avatar Service
         services.AddTransient<Common.Services.IAvatarService, Common.Services.AvatarService>();
+        services.AddSingleton<Common.Services.IAvatarSvgValidator, Common.Services.AvatarSvgValidator>();
         
         // Regenerate Avatar Service is registered in AddUsersFeature
 

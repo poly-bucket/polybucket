@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminNavItems } from "@/lib/plugins";
+import { hasAnyRole } from "@/lib/security/roles";
 import { PanelLayout } from "@/components/layout/panel-layout";
 import { Skeleton } from "@/components/ui/glass/skeleton";
 
@@ -16,9 +17,7 @@ export default function AdminLayout({
   const { user, isLoading } = useAuth();
   const navItems = useAdminNavItems();
 
-  const isAdmin = !!user?.roles?.some(
-    (r) => r?.toLowerCase() === "admin"
-  );
+  const isAdmin = hasAnyRole(user?.roles, ["Admin"]);
 
   useEffect(() => {
     if (isLoading) return;

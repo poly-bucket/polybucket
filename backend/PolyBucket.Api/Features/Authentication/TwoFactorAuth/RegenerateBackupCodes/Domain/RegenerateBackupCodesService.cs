@@ -28,7 +28,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
             _settings = new TwoFactorAuthSettings();
         }
 
-        public async Task<IEnumerable<string>> RegenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, bool existingBackupCodesAlreadyRemovedFromDatabase = false)
+        public Task<IEnumerable<string>> RegenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth, bool existingBackupCodesAlreadyRemovedFromDatabase = false)
         {
             _logger.LogInformation("RegenerateBackupCodesService.RegenerateBackupCodesAsync: Regenerating backup codes for user {UserId}", twoFactorAuth.UserId);
 
@@ -79,7 +79,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
             twoFactorAuth.UpdatedById = twoFactorAuth.UserId;
             
             _logger.LogInformation("RegenerateBackupCodesService.RegenerateBackupCodesAsync: Generated {Count} new backup codes for user {UserId}", backupCodes.Count, twoFactorAuth.UserId);
-            return backupCodes;
+            return Task.FromResult<IEnumerable<string>>(backupCodes);
         }
 
         private string GenerateBackupCode()

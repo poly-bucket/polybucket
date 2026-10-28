@@ -58,7 +58,7 @@ namespace PolyBucket.Api.Features.Plugins.Http
         [ProducesResponseType(401)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<ActionResult<ThemeApplicationResult>> ApplyTheme(string pluginId)
+        public ActionResult<ThemeApplicationResult> ApplyTheme(string pluginId)
         {
             try
             {
@@ -182,7 +182,7 @@ namespace PolyBucket.Api.Features.Plugins.Http
         [ProducesResponseType(401)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<ActionResult<ThemeSettings>> GetThemeSettings(string pluginId)
+        public ActionResult<ThemeSettings> GetThemeSettings(string pluginId)
         {
             try
             {

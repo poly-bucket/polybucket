@@ -78,7 +78,7 @@ export function UserMenu({ isOpen, onClose, anchorRef, ...props }: UserMenuProps
   }, [isOpen, onClose, anchorRef]);
 
   const handleLogout = () => {
-    logout();
+    void logout();
     onClose();
     router.push("/login");
   };

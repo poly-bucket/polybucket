@@ -7,6 +7,6 @@ namespace PolyBucket.Api.Features.Models.GetModelByUserId.Domain
 {
     public interface IGetModelByUserIdService
     {
-        Task<GetModelByUserIdResponse> GetModelsByUserIdAsync(Guid userId, GetModelByUserIdRequest request, ClaimsPrincipal user, CancellationToken cancellationToken);
+        Task<GetModelByUserIdResponse> GetModelsByUserIdAsync(Guid userId, GetModelByUserIdRequest request, ClaimsPrincipal? user, CancellationToken cancellationToken);
     }
 } 

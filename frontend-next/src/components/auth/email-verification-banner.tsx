@@ -22,7 +22,6 @@ export function EmailVerificationBanner() {
   const [resendError, setResendError] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
-  const accessToken = user?.accessToken;
   const knownVerified = user?.isEmailVerified === true;
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export function EmailVerificationBanner() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || !accessToken || knownVerified) {
+    if (!isAuthenticated || knownVerified) {
       setStatus(null);
       return;
     }
@@ -51,7 +50,7 @@ export function EmailVerificationBanner() {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, accessToken, knownVerified]);
+  }, [isAuthenticated, knownVerified]);
 
   if (!status || status.isEmailVerified || !status.emailDeliveryAvailable) {
     return null;

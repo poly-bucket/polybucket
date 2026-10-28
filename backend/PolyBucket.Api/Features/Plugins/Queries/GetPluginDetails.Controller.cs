@@ -27,7 +27,7 @@ namespace PolyBucket.Api.Features.Plugins.Queries
         [HttpGet("{pluginId}/details")]
         [ProducesResponseType(typeof(PluginDetailsResponse), 200)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<PluginDetailsResponse>> GetPluginDetails(string pluginId)
+        public ActionResult<PluginDetailsResponse> GetPluginDetails(string pluginId)
         {
             var plugin = _pluginManager.GetLoadedPlugins().FirstOrDefault(p => p.Id == pluginId);
             if (plugin == null)
@@ -61,7 +61,7 @@ namespace PolyBucket.Api.Features.Plugins.Queries
         /// <returns>List of all plugins</returns>
         [HttpGet("overview")]
         [ProducesResponseType(typeof(PluginOverviewResponse), 200)]
-        public async Task<ActionResult<PluginOverviewResponse>> GetPluginsOverview()
+        public ActionResult<PluginOverviewResponse> GetPluginsOverview()
         {
             var loadedPlugins = _pluginManager.GetLoadedPlugins();
             
@@ -97,7 +97,7 @@ namespace PolyBucket.Api.Features.Plugins.Queries
         /// <returns>Plugin hooks grouped by extension points</returns>
         [HttpGet("hooks")]
         [ProducesResponseType(typeof(PluginHooksResponse), 200)]
-        public async Task<ActionResult<PluginHooksResponse>> GetPluginHooks()
+        public ActionResult<PluginHooksResponse> GetPluginHooks()
         {
             var loadedPlugins = _pluginManager.GetLoadedPlugins();
             var hooksByExtensionPoint = new Dictionary<string, List<PluginHookInfo>>();

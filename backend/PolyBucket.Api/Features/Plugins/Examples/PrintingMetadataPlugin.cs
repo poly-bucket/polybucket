@@ -264,7 +264,12 @@ namespace PolyBucket.Api.Features.Plugins.Examples
             }
         };
 
-        public async Task<MetadataValidationResult> ValidateFieldAsync(string fieldName, object value)
+        public Task<MetadataValidationResult> ValidateFieldAsync(string fieldName, object value)
+        {
+            return Task.FromResult(ValidateField(fieldName, value));
+        }
+
+        private MetadataValidationResult ValidateField(string fieldName, object value)
         {
             try
             {
@@ -372,7 +377,12 @@ namespace PolyBucket.Api.Features.Plugins.Examples
             }
         }
 
-        public async Task<object> TransformFieldValueAsync(string fieldName, object value)
+        public Task<object> TransformFieldValueAsync(string fieldName, object value)
+        {
+            return Task.FromResult(TransformFieldValue(fieldName, value));
+        }
+
+        private object TransformFieldValue(string fieldName, object value)
         {
             try
             {

@@ -33,6 +33,10 @@ namespace PolyBucket.Api.Features.Users.RegenerateAvatar.Http
                 var response = await _regenerateAvatarService.RegenerateAvatarAsync(userId, request.Salt, request.Avatar);
                 return Ok(response);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (Exception)
             {
                 return StatusCode(500, new { message = "An error occurred while regenerating the avatar" });

@@ -50,7 +50,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
             return false;
         }
 
-        public async Task<IEnumerable<string>> GenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth)
+        public Task<IEnumerable<string>> GenerateBackupCodesAsync(TwoFactorAuthDomain.TwoFactorAuth twoFactorAuth)
         {
             _logger.LogInformation("EnableTwoFactorAuthService.GenerateBackupCodesAsync: Generating backup codes for user {UserId}", twoFactorAuth.UserId);
             var backupCodes = new List<string>();
@@ -84,35 +84,34 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
             }
             
             _logger.LogInformation("EnableTwoFactorAuthService.GenerateBackupCodesAsync: Generated {Count} backup codes for user {UserId}", backupCodes.Count, twoFactorAuth.UserId);
-            return backupCodes;
+            return Task.FromResult<IEnumerable<string>>(backupCodes);
         }
 
-        public async Task<bool> ValidateTokenAsync(TwoFactorAuthDomain.TwoFactorAuth? twoFactorAuth, string token, bool allowSetupTime = false)
+        public Task<bool> ValidateTokenAsync(TwoFactorAuthDomain.TwoFactorAuth? twoFactorAuth, string token, bool allowSetupTime = false)
         {
             _logger.LogInformation("EnableTwoFactorAuthService.ValidateTokenAsync: Validating token for user {UserId}", twoFactorAuth?.UserId);
             if (twoFactorAuth is null)
             {
                 _logger.LogWarning("EnableTwoFactorAuthService.ValidateTokenAsync: 2FA not found for user");
-                return false;
+                return Task.FromResult(false);
             }
 
-            // SECURITY FIX: Add rate limiting for token validation
             if (!CheckRateLimit(twoFactorAuth.UserId))
             {
                 _logger.LogWarning("EnableTwoFactorAuthService.ValidateTokenAsync: Rate limit exceeded for user {UserId}", twoFactorAuth.UserId);
-                return false;
+                return Task.FromResult(false);
             }
 
             if (!twoFactorAuth.IsEnabled && !allowSetupTime)
             {
                 _logger.LogWarning("EnableTwoFactorAuthService.ValidateTokenAsync: 2FA not enabled for user {UserId}", twoFactorAuth.UserId);
-                return false;
+                return Task.FromResult(false);
             }
 
             if (string.IsNullOrEmpty(token) || token.Length != 6 || !token.All(char.IsDigit))
             {
                 _logger.LogWarning("EnableTwoFactorAuthService.ValidateTokenAsync: Invalid token format for user {UserId}", twoFactorAuth.UserId);
-                return false;
+                return Task.FromResult(false);
             }
 
             var currentTime = DateTime.UtcNow;
@@ -143,7 +142,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAu
                 _logger.LogWarning("EnableTwoFactorAuthService.ValidateTokenAsync: Invalid 2FA token for user {UserId}", twoFactorAuth.UserId);
             }
 
-            return isValid;
+            return Task.FromResult(isValid);
         }
 
         private bool CheckRateLimit(Guid userId)

@@ -210,7 +210,7 @@ namespace PolyBucket.Api.Features.SystemSettings.Plugins
             };
         }
 
-        public async Task<ThemeComponents> GetThemeComponentsAsync(string themeId)
+        public Task<ThemeComponents> GetThemeComponentsAsync(string themeId)
         {
             if (themeId != "liquid-glass-default")
             {
@@ -288,7 +288,7 @@ namespace PolyBucket.Api.Features.SystemSettings.Plugins
 }
 ";
 
-            return new ThemeComponents
+            return Task.FromResult(new ThemeComponents
             {
                 Css = css,
                 JavaScript = "",
@@ -307,7 +307,7 @@ namespace PolyBucket.Api.Features.SystemSettings.Plugins
                     ["backgroundSecondaryColor"] = "#1a1a2e",
                     ["backgroundTertiaryColor"] = "#16213e"
                 }
-            };
+            });
         }
 
         public ThemeValidationResult ValidateThemeConfiguration(string themeId, Dictionary<string, object> configuration)
@@ -371,40 +371,37 @@ namespace PolyBucket.Api.Features.SystemSettings.Plugins
             };
         }
 
-        public async Task<ThemeApplicationResult> ApplyThemeConfigurationAsync(string themeId, Dictionary<string, object> configuration)
+        public Task<ThemeApplicationResult> ApplyThemeConfigurationAsync(string themeId, Dictionary<string, object> configuration)
         {
             if (themeId != "liquid-glass-default")
             {
-                return new ThemeApplicationResult
+                return Task.FromResult(new ThemeApplicationResult
                 {
                     Success = false,
                     Message = $"Unknown theme: {themeId}"
-                };
+                });
             }
 
-            // Validate configuration first
             var validation = ValidateThemeConfiguration(themeId, configuration);
             if (!validation.IsValid)
             {
-                return new ThemeApplicationResult
+                return Task.FromResult(new ThemeApplicationResult
                 {
                     Success = false,
                     Message = "Invalid theme configuration",
                     Warnings = validation.Errors
-                };
+                });
             }
 
-            // Apply the configuration
-            // In a real implementation, this would update the database and cache
             var appliedConfig = new Dictionary<string, object>(configuration);
 
-            return new ThemeApplicationResult
+            return Task.FromResult(new ThemeApplicationResult
             {
                 Success = true,
                 Message = "Theme configuration applied successfully",
                 AppliedConfiguration = appliedConfig,
                 Warnings = validation.Warnings
-            };
+            });
         }
 
         public async Task InitializeAsync()

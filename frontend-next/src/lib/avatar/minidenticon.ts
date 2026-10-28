@@ -1,4 +1,6 @@
 import { minidenticon } from "minidenticons";
+import { sanitizeSvg } from "@/lib/security/sanitizeSvg";
+import { safeExternalHrefForImage } from "@/lib/security/safeUrl";
 
 const DEFAULT_SAT = 50;
 const DEFAULT_LIGHT = 50;
@@ -12,16 +14,22 @@ export function minidenticonSvg(
 }
 
 export function svgToDataUrl(svg: string): string {
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  const safe = sanitizeSvg(svg);
+  if (!safe) {
+    return "";
+  }
+  return `data:image/svg+xml,${encodeURIComponent(safe)}`;
 }
 
 function looksLikeSvg(s: string): boolean {
   return s.trimStart().toLowerCase().startsWith("<svg");
 }
 
+const allowHttpImages = process.env.NODE_ENV !== "production";
+
 /**
  * Resolves a stored user/collection avatar field to a value suitable for <img src>.
- * Handles http(s) URLs, data: URLs, raw SVG markup, and some legacy encodings.
+ * Handles http(s) URLs, sanitized raw SVG markup, and some legacy encodings.
  */
 export function resolvedImageSrcFromAvatarField(
   value: string | undefined | null
@@ -31,13 +39,14 @@ export function resolvedImageSrcFromAvatarField(
   if (t === "") return null;
 
   if (t.startsWith("http://") || t.startsWith("https://")) {
-    return t;
+    return safeExternalHrefForImage(t, allowHttpImages);
   }
   if (t.startsWith("data:")) {
-    return t;
+    return null;
   }
   if (looksLikeSvg(t)) {
-    return svgToDataUrl(t);
+    const safe = sanitizeSvg(t);
+    return safe ? svgToDataUrl(safe) : null;
   }
 
   if (!t.includes("<") && t.length >= 8 && typeof atob === "function") {
@@ -45,7 +54,8 @@ export function resolvedImageSrcFromAvatarField(
     try {
       const bin = atob(normalized);
       if (bin.trimStart().toLowerCase().startsWith("<svg")) {
-        return `data:image/svg+xml;base64,${normalized}`;
+        const safe = sanitizeSvg(bin);
+        return safe ? `data:image/svg+xml;base64,${btoa(safe)}` : null;
       }
     } catch {
       // not base64
@@ -76,7 +86,8 @@ export function splitAvatarForDisplay(avatar?: string | null): {
   if (avatar == null || !String(avatar).trim()) return {};
   const t = String(avatar).trim();
   if (t.startsWith("http://") || t.startsWith("https://")) {
-    return { profilePictureUrl: t };
+    const url = safeExternalHrefForImage(t, allowHttpImages);
+    return url ? { profilePictureUrl: url } : {};
   }
   return { storedAvatar: t };
 }

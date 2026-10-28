@@ -20,15 +20,15 @@ describe("resolvedImageSrcFromAvatarField", () => {
     expect(resolvedImageSrcFromAvatarField("")).toBeNull();
   });
 
-  it("passes through http(s) URLs", () => {
+  it("passes through https URLs", () => {
     expect(resolvedImageSrcFromAvatarField("https://x.test/a.png")).toBe(
       "https://x.test/a.png"
     );
   });
 
-  it("passes through data URLs", () => {
+  it("rejects arbitrary data URLs", () => {
     const d = "data:image/svg+xml;base64,PHN2Zy8+";
-    expect(resolvedImageSrcFromAvatarField(d)).toBe(d);
+    expect(resolvedImageSrcFromAvatarField(d)).toBeNull();
   });
 
   it("wraps raw svg markup", () => {

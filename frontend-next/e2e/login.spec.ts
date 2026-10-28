@@ -32,4 +32,20 @@ test.describe("Login", () => {
     await expect(page).toHaveURL(/\/(login|auth)(\?|$)/);
     expect(page.url()).toContain("redirect=");
   });
+
+  test("does not treat forgeable session marker cookie as authenticated", async ({
+    page,
+    context,
+  }) => {
+    await context.addCookies([
+      {
+        name: "polybucket-session",
+        value: "1",
+        domain: "localhost",
+        path: "/",
+      },
+    ]);
+    await page.goto("/my-models");
+    await expect(page).toHaveURL(/\/login/);
+  });
 });

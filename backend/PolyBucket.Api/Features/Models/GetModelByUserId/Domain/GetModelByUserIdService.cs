@@ -76,7 +76,7 @@ namespace PolyBucket.Api.Features.Models.GetModelByUserId.Domain
             return await _storageService.GetPresignedUrlAsync(value, expiry, cancellationToken);
         }
 
-        public async Task<GetModelByUserIdResponse> GetModelsByUserIdAsync(Guid userId, GetModelByUserIdRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
+        public async Task<GetModelByUserIdResponse> GetModelsByUserIdAsync(Guid userId, GetModelByUserIdRequest request, ClaimsPrincipal? user, CancellationToken cancellationToken)
         {
             // Handle public access (no authenticated user)
             if (user == null)

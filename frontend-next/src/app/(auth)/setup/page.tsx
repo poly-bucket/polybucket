@@ -46,7 +46,7 @@ export default function SetupPage() {
 
   useEffect(() => {
     if (isAuthLoading) return;
-    if (!user?.accessToken) {
+    if (!user?.id) {
       router.replace("/login");
       return;
     }
@@ -85,7 +85,7 @@ export default function SetupPage() {
     };
 
     checkStatus();
-  }, [user?.accessToken, isAuthLoading, isAdmin, router]);
+  }, [user?.id, isAuthLoading, isAdmin, router]);
 
   const handleAdminAccountComplete = (data: Record<string, unknown>) => {
     setSetupData((prev) => ({ ...prev, ...data }));

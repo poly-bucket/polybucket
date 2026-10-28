@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
+import { securityResponseHeaders } from "./src/lib/security/securityHeaders";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: securityResponseHeaders(),
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: "/upload-model", destination: "/models/upload", permanent: true },

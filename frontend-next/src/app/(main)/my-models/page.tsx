@@ -65,7 +65,7 @@ export default function MyModelsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!user?.accessToken || selectedIds.size === 0) return;
+    if (!user?.id || selectedIds.size === 0) return;
     setIsDeleting(true);
     try {
       const client = ApiClientFactory.getApiClient();

@@ -166,4 +166,6 @@ export interface PluginRouteContribution {
   path: string;
   component: React.ComponentType;
   protected?: boolean;
+  requiresAuth?: boolean;
+  requiredRoles?: string[];
 }

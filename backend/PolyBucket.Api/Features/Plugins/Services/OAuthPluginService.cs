@@ -16,7 +16,7 @@ namespace PolyBucket.Api.Features.Plugins.Services
             _logger = logger;
         }
 
-        public async Task<bool> RegisterOAuthProviderAsync(IOAuthPlugin oauthPlugin)
+        public Task<bool> RegisterOAuthProviderAsync(IOAuthPlugin oauthPlugin)
         {
             try
             {
@@ -26,38 +26,38 @@ namespace PolyBucket.Api.Features.Plugins.Services
                 if (_oauthProviders.ContainsKey(oauthPlugin.ProviderName))
                 {
                     _logger.LogWarning("OAuth provider {ProviderName} is already registered", oauthPlugin.ProviderName);
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 _oauthProviders[oauthPlugin.ProviderName] = oauthPlugin;
                 
                 _logger.LogInformation("Successfully registered OAuth provider {ProviderName}", oauthPlugin.ProviderName);
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error registering OAuth provider {ProviderName}", oauthPlugin.ProviderName);
-                return false;
+                return Task.FromResult(false);
             }
         }
 
-        public async Task<bool> UnregisterOAuthProviderAsync(string providerName)
+        public Task<bool> UnregisterOAuthProviderAsync(string providerName)
         {
             try
             {
                 if (_oauthProviders.Remove(providerName))
                 {
                     _logger.LogInformation("Successfully unregistered OAuth provider {ProviderName}", providerName);
-                    return true;
+                    return Task.FromResult(true);
                 }
                 
                 _logger.LogWarning("OAuth provider {ProviderName} was not registered", providerName);
-                return false;
+                return Task.FromResult(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error unregistering OAuth provider {ProviderName}", providerName);
-                return false;
+                return Task.FromResult(false);
             }
         }
 

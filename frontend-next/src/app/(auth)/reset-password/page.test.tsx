@@ -6,7 +6,7 @@ import ResetPasswordPage from "./page";
 
 const mockSearchParamsGet = vi.fn((_key: string): string | null => null);
 const mockResetPassword = vi.fn();
-const mockTakeToken = vi.fn((): string | null => null);
+const mockFetchActionToken = vi.fn((): Promise<string | null> => Promise.resolve("raw-token"));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -17,14 +17,14 @@ vi.mock("@/lib/services/accountEmailService", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/services/accountEmailService")>()),
   resetPassword: (token: string, newPassword: string, confirmPassword: string) =>
     mockResetPassword(token, newPassword, confirmPassword),
-  takeTokenFromUrl: () => mockTakeToken(),
+  fetchActionTokenFromBff: () => mockFetchActionToken(),
 }));
 
 describe("ResetPasswordPage", () => {
   beforeEach(() => {
     mockSearchParamsGet.mockReset().mockReturnValue(null);
     mockResetPassword.mockReset().mockResolvedValue(undefined);
-    mockTakeToken.mockReset().mockReturnValue("raw-token");
+    mockFetchActionToken.mockReset().mockResolvedValue("raw-token");
   });
 
   it("submits the token with the new password and shows success", async () => {

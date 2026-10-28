@@ -263,7 +263,7 @@ export function ModelDetailsPage() {
   );
 
   const handleDelete = useCallback(async () => {
-    if (!model?.id || !user?.accessToken) {
+    if (!model?.id || !user?.id) {
       toast.error("Unable to delete: Missing authentication");
       return;
     }
@@ -281,7 +281,7 @@ export function ModelDetailsPage() {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
     }
-  }, [model?.id, user?.accessToken, router]);
+  }, [model?.id, user?.id, router]);
 
   const handleReactionUpdate = useCallback((result: ModelReactionResult) => {
     setModel((prev) => (prev ? applyModelReaction(prev, result) : prev));

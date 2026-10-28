@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitive
 import { Input } from "@/components/primitives/input";
 import { cn } from "@/lib/utils";
 import type { LoginResult } from "@/contexts/AuthContext";
+import { isSafeInternalRedirect } from "@/lib/bff/safeRedirect";
 
 type Phase = "credentials" | "twoFactor";
 
@@ -61,7 +62,11 @@ export default function LoginPage() {
   const navigateAfterSuccess = (result: LoginResult) => {
     if (result.requiresFirstTimeSetup && result.isAdmin) {
       router.push("/setup");
-    } else if (redirectTo?.startsWith("/")) {
+    } else if (
+      redirectTo &&
+      typeof window !== "undefined" &&
+      isSafeInternalRedirect(redirectTo, window.location.origin)
+    ) {
       router.push(redirectTo);
     } else {
       router.push("/");

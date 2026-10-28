@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Calendar,
@@ -17,10 +18,35 @@ import { UserAvatar } from "@/components/layout/user-avatar";
 import { formatNumber } from "@/lib/utils/modelUtils";
 import { formatDate } from "@/lib/utils/format";
 import type { UserProfileData } from "@/lib/services/userProfileService";
+import { safeExternalHref } from "@/lib/security/safeUrl";
 
 interface ProfileHeaderProps {
   profile: UserProfileData;
   isOwnProfile: boolean;
+}
+
+function SocialLink({
+  href,
+  label,
+  children,
+}: {
+  href: string | undefined | null;
+  label: string;
+  children: ReactNode;
+}) {
+  const safe = safeExternalHref(href);
+  if (!safe) return null;
+  return (
+    <a
+      href={safe}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-400 transition-colors hover:text-blue-300"
+      aria-label={label}
+    >
+      {children}
+    </a>
+  );
 }
 
 export function ProfileHeader({ profile, isOwnProfile }: ProfileHeaderProps) {
@@ -119,50 +145,18 @@ export function ProfileHeader({ profile, isOwnProfile }: ProfileHeaderProps) {
               profile.instagramUrl ||
               profile.youtubeUrl) && (
               <div className="ml-auto flex items-center gap-2">
-                {profile.websiteUrl && (
-                  <a
-                    href={profile.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 transition-colors hover:text-blue-300"
-                    aria-label="Website"
-                  >
-                    <Link2 className="h-4 w-4" />
-                  </a>
-                )}
-                {profile.twitterUrl && (
-                  <a
-                    href={profile.twitterUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 transition-colors hover:text-blue-300"
-                    aria-label="Twitter"
-                  >
-                    <Twitter className="h-4 w-4" />
-                  </a>
-                )}
-                {profile.instagramUrl && (
-                  <a
-                    href={profile.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 transition-colors hover:text-blue-300"
-                    aria-label="Instagram"
-                  >
-                    <Instagram className="h-4 w-4" />
-                  </a>
-                )}
-                {profile.youtubeUrl && (
-                  <a
-                    href={profile.youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 transition-colors hover:text-blue-300"
-                    aria-label="YouTube"
-                  >
-                    <Youtube className="h-4 w-4" />
-                  </a>
-                )}
+                <SocialLink href={profile.websiteUrl} label="Website">
+                  <Link2 className="h-4 w-4" />
+                </SocialLink>
+                <SocialLink href={profile.twitterUrl} label="Twitter">
+                  <Twitter className="h-4 w-4" />
+                </SocialLink>
+                <SocialLink href={profile.instagramUrl} label="Instagram">
+                  <Instagram className="h-4 w-4" />
+                </SocialLink>
+                <SocialLink href={profile.youtubeUrl} label="YouTube">
+                  <Youtube className="h-4 w-4" />
+                </SocialLink>
               </div>
             )}
           </div>

@@ -2,17 +2,18 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
+  clearSession,
+  fetchSessionFromBff,
   getOrCreateRefreshPromise,
   getStoredUser,
   isSessionRestorable,
+  purgeLegacyTokenStorage,
   type AuthUser,
   persistUser,
   subscribeAuthSession,
 } from "@/lib/auth/authSession";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { isAxiosError } from "axios";
-import { decodeJWT, extractUserFromJWT, isTokenExpired } from "@/lib/utils/jwtUtils";
-import { LoginCommand, type LoginCommandResponse } from "@/lib/api/client";
 
 export type { AuthUser } from "@/lib/auth/authSession";
 
@@ -49,8 +50,7 @@ interface AuthContextValue {
     password: string,
     options?: LoginOptions
   ) => Promise<LoginResult>;
-  logout: () => void;
-  /** Re-fetch /api/auth/me and merge avatar + profilePictureUrl into the session user. */
+  logout: () => Promise<void>;
   refreshUserFromMe: () => Promise<void>;
 }
 
@@ -73,14 +73,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") {
       return;
     }
-    const u = getStoredUser();
-    if (!u?.accessToken?.trim()) {
+    if (!getStoredUser()) {
       return;
     }
     try {
       const me = await ApiClientFactory.getApiClient().me_GetCurrentUser();
       const cur = getStoredUser();
-      if (!cur?.accessToken) {
+      if (!cur) {
         return;
       }
       const next: AuthUser = {
@@ -99,78 +98,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = subscribeAuthSession(setUser);
-    let s = getStoredUser();
-    if (s && !isSessionRestorable(s)) {
-      persistUser(null);
-      s = getStoredUser();
-    }
-    setUser(s);
-    setIsLoading(false);
+    purgeLegacyTokenStorage();
+    void (async () => {
+      const sessionUser = await fetchSessionFromBff();
+      setUser(sessionUser ?? getStoredUser());
+      setIsLoading(false);
+    })();
     return unsubscribe;
   }, []);
 
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading || !user?.accessExpiresAt) {
       return;
     }
-    if (!user) {
-      return;
-    }
-    if (!user.accessToken?.trim()) {
-      return;
-    }
-    if (isTokenExpired(user.accessToken) && user.refreshToken) {
-      void getOrCreateRefreshPromise();
-    }
-  }, [isLoading, user]);
-
-  useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-    if (!user?.accessToken) {
-      return;
-    }
-    if (!user.refreshToken) {
-      return;
-    }
-    const payload = decodeJWT(user.accessToken);
-    if (!payload?.exp) {
-      return;
-    }
-    const expMs = payload.exp * 1000;
-    const runAt = expMs - 60_000;
+    const runAt = user.accessExpiresAt - 60_000;
     const delay = runAt - Date.now();
     if (delay < 0) {
+      void getOrCreateRefreshPromise().then((ok) => {
+        if (ok) {
+          setUser(getStoredUser());
+        }
+      });
       return;
     }
     const t = setTimeout(() => {
-      if (getStoredUser()?.accessToken) {
-        void getOrCreateRefreshPromise().then(() => setUser(getStoredUser()));
-      }
+      void getOrCreateRefreshPromise().then((ok) => {
+        if (ok) {
+          setUser(getStoredUser());
+        }
+      });
     }, delay);
     return () => clearTimeout(t);
-  }, [isLoading, user?.accessToken, user?.refreshToken]);
+  }, [isLoading, user?.accessExpiresAt]);
 
   useEffect(() => {
-    if (typeof document === "undefined" || isLoading) {
-      return;
-    }
-    if (!user?.accessToken) {
-      return;
-    }
-    if (!user.refreshToken) {
+    if (typeof document === "undefined" || isLoading || !user) {
       return;
     }
     const onVisible = () => {
       if (document.visibilityState !== "visible") {
         return;
       }
-      const s = getStoredUser();
-      if (!s?.accessToken) {
-        return;
-      }
-      if (isTokenExpired(s.accessToken)) {
+      const exp = getStoredUser()?.accessExpiresAt;
+      if (exp && exp - Date.now() < 60_000) {
         void getOrCreateRefreshPromise().then((ok) => {
           if (ok) {
             setUser(getStoredUser());
@@ -180,10 +150,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [isLoading, user?.accessToken, user?.refreshToken]);
+  }, [isLoading, user]);
 
   useEffect(() => {
-    if (isLoading || !user?.accessToken) {
+    if (isLoading || !user) {
       return;
     }
     let active = true;
@@ -194,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         const cur = getStoredUser();
-        if (!cur?.accessToken) {
+        if (!cur) {
           return;
         }
         const next: AuthUser = {
@@ -213,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [isLoading, user?.accessToken]);
+  }, [isLoading, user?.id]);
 
   const login = useCallback(
     async (
@@ -221,55 +191,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: string,
       options?: LoginOptions
     ): Promise<LoginResult> => {
-      const apiClient = ApiClientFactory.getApiClient();
       const trimmedBackup = options?.backupCode?.trim() ?? "";
       const trimmedTotp = options?.twoFactorToken?.trim() ?? "";
       const useBackup = trimmedBackup.length > 0;
-      const command = new LoginCommand({
+      const body = {
         emailOrUsername,
         email: emailOrUsername,
         password,
         userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
         twoFactorToken: useBackup ? undefined : trimmedTotp || undefined,
         backupCode: useBackup ? trimmedBackup : undefined,
-      });
+      };
 
       try {
-        const response: LoginCommandResponse = await apiClient.login_Login(command);
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = (await res.json()) as {
+          requiresTwoFactor?: boolean;
+          user?: AuthUser;
+          requiresFirstTimeSetup?: boolean;
+          setupStep?: string;
+          isAdmin?: boolean;
+          message?: string;
+        };
 
-        if (response.requiresTwoFactor) {
-          return {
-            success: false,
-            requiresTwoFactor: true,
-          };
+        if (!res.ok) {
+          return { success: false, error: data.message ?? getThrownLoginMessage(data) };
         }
 
-        if (response.token) {
-          const decoded = extractUserFromJWT(response.token);
-          if (!decoded) {
-            return { success: false, error: "Invalid authentication token received" };
-          }
+        if (data.requiresTwoFactor) {
+          return { success: false, requiresTwoFactor: true };
+        }
 
-          const isAdmin = decoded.role?.toLowerCase() === "admin";
-          const authUser: AuthUser = {
-            id: decoded.id,
-            email: decoded.email,
-            username: decoded.username,
-            accessToken: response.token,
-            refreshToken: response.refreshToken,
-            roles: decoded.role ? [decoded.role] : [],
-            requiresFirstTimeSetup: response.requiresFirstTimeSetup,
-            setupStep: response.setupStep,
-            isEmailVerified: decoded.isEmailVerified,
-          };
-
-          persistUser(authUser);
-
+        if (data.user?.id) {
+          persistUser(data.user);
+          const isAdmin =
+            data.isAdmin ??
+            data.user.roles?.some((r) => r.toLowerCase() === "admin") ??
+            false;
           return {
             success: true,
-            requiresFirstTimeSetup: response.requiresFirstTimeSetup,
+            requiresFirstTimeSetup: data.requiresFirstTimeSetup,
             isAdmin,
-            setupStep: response.setupStep,
+            setupStep: data.setupStep,
           };
         }
 
@@ -281,8 +249,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const logout = useCallback(() => {
-    persistUser(null);
+  const logout = useCallback(async () => {
+    await clearSession();
   }, []);
 
   const value: AuthContextValue = {

@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
+import { MarkdownContent } from "@/components/viewers/markdown-content";
 
 interface MarkdownViewerProps {
   file: File;
@@ -69,7 +68,7 @@ export default function MarkdownViewer({
       )}
       style={{ width, height }}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <MarkdownContent content={content} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useModerationNavItems } from "@/lib/plugins";
+import { hasAnyRole } from "@/lib/security/roles";
 import { PanelLayout } from "@/components/layout/panel-layout";
 import { Skeleton } from "@/components/ui/glass/skeleton";
 
@@ -16,10 +17,7 @@ export default function ModerationLayout({
   const { user, isLoading } = useAuth();
   const navItems = useModerationNavItems();
 
-  const isModeratorOrAdmin = !!user?.roles?.some(
-    (r) =>
-      r?.toLowerCase() === "admin" || r?.toLowerCase() === "moderator"
-  );
+  const isModeratorOrAdmin = hasAnyRole(user?.roles, ["Admin", "Moderator"]);
 
   useEffect(() => {
     if (isLoading) return;

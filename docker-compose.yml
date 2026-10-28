@@ -52,6 +52,8 @@ services:
       - "12001:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:11666
+      - POLYBUCKET_API_URL=http://api:11666
+      - SESSION_SECRET=development-session-secret-min-32-chars!!
     depends_on:
       api:
         condition: service_healthy

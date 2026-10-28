@@ -11,6 +11,13 @@ import { Card } from "@/components/primitives/card";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
+import { safeExternalHrefForImage } from "@/lib/security/safeUrl";
+
+const allowHttpImages = process.env.NODE_ENV !== "production";
+
+function trustedImageSrc(url: string | undefined): string | null {
+  return safeExternalHrefForImage(url, allowHttpImages);
+}
 
 const ModelViewer = lazy(
   () => import("@/components/model-viewer/model-viewer")
@@ -113,9 +120,17 @@ export function ModelDetailsCarousel({
     }
 
     if (activeItem.type === "image" && activeItem.url) {
+      const src = trustedImageSrc(activeItem.url);
+      if (!src) {
+        return (
+          <div className="flex h-full min-h-[300px] items-center justify-center bg-white/5 text-white/60">
+            No preview available
+          </div>
+        );
+      }
       return (
         <img
-          src={activeItem.url}
+          src={src}
           alt=""
           className="h-full w-full object-contain"
         />
@@ -237,9 +252,9 @@ export function ModelDetailsCarousel({
                   : "border-white/20 hover:border-white/40"
               )}
             >
-              {item.type === "image" && item.url ? (
+              {item.type === "image" && item.url && trustedImageSrc(item.url) ? (
                 <img
-                  src={item.url}
+                  src={trustedImageSrc(item.url)!}
                   alt=""
                   className="h-full w-full object-cover"
                 />

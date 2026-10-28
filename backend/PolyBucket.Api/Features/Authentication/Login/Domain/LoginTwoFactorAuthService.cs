@@ -25,25 +25,25 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             _settings = new TwoFactorAuthSettings();
         }
 
-        public async Task<bool> ValidateTokenAsync(TwoFactorAuthDomain.TwoFactorAuth? twoFactorAuth, string token)
+        public Task<bool> ValidateTokenAsync(TwoFactorAuthDomain.TwoFactorAuth? twoFactorAuth, string token)
         {
             _logger.LogInformation("LoginTwoFactorAuthService.ValidateTokenAsync: Validating token for user {UserId}", twoFactorAuth?.UserId);
             if (twoFactorAuth is null)
             {
                 _logger.LogWarning("LoginTwoFactorAuthService.ValidateTokenAsync: 2FA not found for user");
-                return false;
+                return Task.FromResult(false);
             }
 
             if (!twoFactorAuth.IsEnabled)
             {
                 _logger.LogWarning("LoginTwoFactorAuthService.ValidateTokenAsync: 2FA not enabled for user {UserId}", twoFactorAuth.UserId);
-                return false;
+                return Task.FromResult(false);
             }
 
             if (string.IsNullOrEmpty(token) || token.Length != 6 || !token.All(char.IsDigit))
             {
                 _logger.LogWarning("LoginTwoFactorAuthService.ValidateTokenAsync: Invalid token format for user {UserId}", twoFactorAuth.UserId);
-                return false;
+                return Task.FromResult(false);
             }
 
             var currentTime = DateTime.UtcNow;
@@ -74,22 +74,22 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 _logger.LogWarning("LoginTwoFactorAuthService.ValidateTokenAsync: Invalid 2FA token for user {UserId}", twoFactorAuth.UserId);
             }
 
-            return isValid;
+            return Task.FromResult(isValid);
         }
 
-        public async Task<bool> ValidateBackupCodeAsync(TwoFactorAuthDomain.TwoFactorAuth? twoFactorAuth, string backupCode)
+        public Task<bool> ValidateBackupCodeAsync(TwoFactorAuthDomain.TwoFactorAuth? twoFactorAuth, string backupCode)
         {
             _logger.LogInformation("LoginTwoFactorAuthService.ValidateBackupCodeAsync: Validating backup code for user {UserId}", twoFactorAuth?.UserId);
             if (twoFactorAuth is null)
             {
                 _logger.LogWarning("2FA not found for user");
-                return false;
+                return Task.FromResult(false);
             }
 
             if (string.IsNullOrEmpty(backupCode))
             {
                 _logger.LogWarning("LoginTwoFactorAuthService.ValidateBackupCodeAsync: Invalid backup code for user {UserId}", twoFactorAuth?.UserId);
-                return false;
+                return Task.FromResult(false);
             }
 
             var backupCodeEntity = twoFactorAuth.BackupCodes
@@ -98,14 +98,14 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             if (backupCodeEntity == null)
             {
                 _logger.LogWarning("LoginTwoFactorAuthService.ValidateBackupCodeAsync: Invalid or used backup code for user {UserId}", twoFactorAuth.UserId);
-                return false;
+                return Task.FromResult(false);
             }
 
             backupCodeEntity.IsUsed = true;
             backupCodeEntity.UsedAt = DateTime.UtcNow;
             
             _logger.LogInformation("LoginTwoFactorAuthService.ValidateBackupCodeAsync: Valid backup code used for user {UserId}", twoFactorAuth.UserId);
-            return true;
+            return Task.FromResult(true);
         }
 
         private long GetTimeStep(DateTime time, int timeStep)

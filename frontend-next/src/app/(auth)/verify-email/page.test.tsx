@@ -7,7 +7,7 @@ import VerifyEmailPage from "./page";
 const mockSearchParamsGet = vi.fn((_key: string): string | null => null);
 const mockVerifyEmail = vi.fn();
 const mockResend = vi.fn();
-const mockTakeToken = vi.fn((): string | null => null);
+const mockFetchActionToken = vi.fn((): Promise<string | null> => Promise.resolve(null));
 const mockRefreshPromise = vi.fn().mockResolvedValue(true);
 
 vi.mock("next/navigation", () => ({
@@ -24,7 +24,7 @@ vi.mock("@/lib/services/accountEmailService", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/services/accountEmailService")>()),
   verifyEmail: (token: string) => mockVerifyEmail(token),
   resendVerificationEmail: (email: string) => mockResend(email),
-  takeTokenFromUrl: () => mockTakeToken(),
+  fetchActionTokenFromBff: () => mockFetchActionToken(),
 }));
 
 const signedInUser: AuthUser = {
@@ -40,13 +40,13 @@ describe("VerifyEmailPage", () => {
     mockSearchParamsGet.mockReset().mockReturnValue(null);
     mockVerifyEmail.mockReset();
     mockResend.mockReset().mockResolvedValue(undefined);
-    mockTakeToken.mockReset().mockReturnValue(null);
+    mockFetchActionToken.mockReset().mockResolvedValue(null);
     mockRefreshPromise.mockClear();
   });
 
   it("does not verify until the user clicks confirm", async () => {
     // Arrange
-    mockTakeToken.mockReturnValue("raw-token");
+    mockFetchActionToken.mockResolvedValue("raw-token");
 
     // Act
     render(<VerifyEmailPage />, { mockAuth: { user: null } });
@@ -58,7 +58,7 @@ describe("VerifyEmailPage", () => {
 
   it("verifies the token on click and shows the verified address", async () => {
     // Arrange
-    mockTakeToken.mockReturnValue("raw-token");
+    mockFetchActionToken.mockResolvedValue("raw-token");
     mockVerifyEmail.mockResolvedValue({ message: "ok", purpose: "VerifyAddress", email: "maker@example.com" });
     const user = userEvent.setup();
     render(<VerifyEmailPage />, { mockAuth: { user: null } });
@@ -74,7 +74,7 @@ describe("VerifyEmailPage", () => {
 
   it("refreshes the session after a signed-in user verifies", async () => {
     // Arrange
-    mockTakeToken.mockReturnValue("raw-token");
+    mockFetchActionToken.mockResolvedValue("raw-token");
     mockVerifyEmail.mockResolvedValue({ message: "ok", purpose: "VerifyAddress", email: "maker@example.com" });
     const refreshUserFromMe = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
@@ -91,7 +91,7 @@ describe("VerifyEmailPage", () => {
   it("uses email change wording and shows the new address after confirming", async () => {
     // Arrange
     mockSearchParamsGet.mockImplementation((key: string) => (key === "type" ? "email-change" : null));
-    mockTakeToken.mockReturnValue("raw-token");
+    mockFetchActionToken.mockResolvedValue("raw-token");
     mockVerifyEmail.mockResolvedValue({ message: "ok", purpose: "ChangeAddress", email: "new@example.com" });
     const user = userEvent.setup();
     render(<VerifyEmailPage />, { mockAuth: { user: null } });
@@ -105,7 +105,7 @@ describe("VerifyEmailPage", () => {
 
   it("shows the server error and a resend form when verification fails", async () => {
     // Arrange
-    mockTakeToken.mockReturnValue("raw-token");
+    mockFetchActionToken.mockResolvedValue("raw-token");
     mockVerifyEmail.mockRejectedValue({
       isAxiosError: true,
       response: { status: 400, data: { message: "Invalid or expired verification link." } },
@@ -138,7 +138,7 @@ describe("VerifyEmailPage", () => {
 
   it("explains that the link is needed when there is no token", async () => {
     // Arrange
-    mockTakeToken.mockReturnValue(null);
+    mockFetchActionToken.mockResolvedValue(null);
 
     // Act
     render(<VerifyEmailPage />, { mockAuth: { user: null } });

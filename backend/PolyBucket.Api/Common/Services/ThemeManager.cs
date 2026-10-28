@@ -122,19 +122,19 @@ namespace PolyBucket.Api.Common.Services
             }
         }
 
-        public async Task<ThemeValidationResult> ValidateThemeConfigurationAsync(string themeId, Dictionary<string, object> configuration)
+        public Task<ThemeValidationResult> ValidateThemeConfigurationAsync(string themeId, Dictionary<string, object> configuration)
         {
             var plugin = _themePlugins.FirstOrDefault(p => p.GetThemes().Any(t => t.Id == themeId));
             if (plugin == null)
             {
-                return new ThemeValidationResult
+                return Task.FromResult(new ThemeValidationResult
                 {
                     IsValid = false,
                     Errors = new List<string> { $"No plugin found for theme: {themeId}" }
-                };
+                });
             }
 
-            return plugin.ValidateThemeConfiguration(themeId, configuration);
+            return Task.FromResult(plugin.ValidateThemeConfiguration(themeId, configuration));
         }
 
         public async Task<ThemeApplicationResult> ApplyThemeConfigurationAsync(string themeId, Dictionary<string, object> configuration)
@@ -223,7 +223,7 @@ namespace PolyBucket.Api.Common.Services
             return _themePlugins;
         }
 
-        private async Task RefreshThemeCacheAsync()
+        private Task RefreshThemeCacheAsync()
         {
             _themeCache.Clear();
             _componentsCache.Clear();
@@ -246,6 +246,8 @@ namespace PolyBucket.Api.Common.Services
 
             _logger.LogInformation("Theme cache refreshed. Loaded {ThemeCount} themes from {PluginCount} plugins", 
                 _themeCache.Count, _themePlugins.Count());
+
+            return Task.CompletedTask;
         }
 
         private async Task SaveThemeConfigurationAsync(string themeId, Dictionary<string, object> configuration)

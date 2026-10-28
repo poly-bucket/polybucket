@@ -156,7 +156,7 @@ public class CollectionsControllerTests : BaseIntegrationTest
             Name = "Updated Name",
             Description = "Updated Description",
             Visibility = CollectionVisibility.Public,
-            Avatar = "data:image/png;base64,dGVzdA=="
+            Avatar = "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect/></svg>"
         };
 
         var content = new StringContent(JsonSerializer.Serialize(updateCommand), Encoding.UTF8, "application/json");
@@ -173,7 +173,7 @@ public class CollectionsControllerTests : BaseIntegrationTest
         updatedCollection!.Name.ShouldBe("Updated Name");
         updatedCollection.Description.ShouldBe("Updated Description");
         updatedCollection.Visibility.ShouldBe(CollectionVisibility.Public);
-        updatedCollection.Avatar.ShouldBe("data:image/png;base64,dGVzdA==");
+        updatedCollection.Avatar.ShouldBe("<svg xmlns=\"http://www.w3.org/2000/svg\"><rect/></svg>");
     }
 
     [Fact]

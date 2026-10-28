@@ -81,7 +81,7 @@ namespace PolyBucket.Api.Features.Authentication.Me.Http
 
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "An error occurred while retrieving user information" });
             }

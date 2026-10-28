@@ -26,7 +26,8 @@ namespace PolyBucket.Api.Seeders
             }
 
             var adminUser = await _context.Users
-                .Where(u => u.Role.Name == "Admin")
+                .Include(u => u.Role)
+                .Where(u => u.Role != null && u.Role.Name == "Admin")
                 .FirstOrDefaultAsync();
 
             if (adminUser == null)

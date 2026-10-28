@@ -62,7 +62,7 @@ namespace PolyBucket.Api.Features.SystemSettings.Services
                     await _repository.UpdateSettingsAsync(existingSettings);
                 }
                 
-                return await _repository.GetSettingsAsync();
+                return (await _repository.GetSettingsAsync()) ?? settings;
             }
             catch (Exception ex)
             {

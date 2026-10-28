@@ -27,8 +27,24 @@ export function getFileType(fileName: string): ModelFileType {
 }
 
 export function isImageUrl(url: string | undefined | null): boolean {
+  return isTrustedImageUrl(url);
+}
+
+export function isTrustedImageUrl(url: string | undefined | null): boolean {
   if (!url) return false;
-  const path = url.split("?")[0];
+  const trimmed = url.trim();
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+  const path = trimmed.split("?")[0];
   return getFileType(path) === "image";
 }
 

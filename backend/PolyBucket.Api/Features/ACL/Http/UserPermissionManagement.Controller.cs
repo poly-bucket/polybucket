@@ -244,7 +244,7 @@ namespace PolyBucket.Api.Features.ACL.Http
         [HttpGet("permissions")]
         [RequirePermission(PermissionConstants.ADMIN_VIEW_USER_DETAILS)]
         [ProducesResponseType(typeof(List<PermissionDto>), 200)]
-        public async Task<ActionResult<List<PermissionDto>>> GetAllPermissions()
+        public ActionResult<List<PermissionDto>> GetAllPermissions()
         {
             // This would typically come from the permission service
             // For now, return permissions from constants

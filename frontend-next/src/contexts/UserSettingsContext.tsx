@@ -24,7 +24,7 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
-    if (!user?.accessToken) {
+    if (!user?.id) {
       setSettings(null);
       setLoading(false);
       return;
@@ -39,7 +39,7 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [user?.accessToken]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadSettings();
@@ -47,14 +47,14 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
 
   const updateSettings = useCallback(
     async (partial: Partial<UserSettingsData>): Promise<boolean> => {
-      if (!user?.accessToken) return false;
+      if (!user?.id) return false;
       const success = await updateUserSettingsApi(partial);
       if (success && settings) {
         setSettings({ ...settings, ...partial });
       }
       return success;
     },
-    [user?.accessToken, settings]
+    [user?.id, settings]
   );
 
   const updateAutoRotate = useCallback(

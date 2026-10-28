@@ -29,7 +29,7 @@ namespace PolyBucket.Api.Features.Plugins.Commands
         [ProducesResponseType(typeof(UpdatePluginSettingsResponse), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<UpdatePluginSettingsResponse>> UpdatePluginSettings(
+        public ActionResult<UpdatePluginSettingsResponse> UpdatePluginSettings(
             string pluginId, 
             [FromBody] UpdatePluginSettingsRequest request)
         {
@@ -85,7 +85,7 @@ namespace PolyBucket.Api.Features.Plugins.Commands
         [ProducesResponseType(typeof(PluginStatusResponse), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<PluginStatusResponse>> UpdatePluginStatus(
+        public ActionResult<PluginStatusResponse> UpdatePluginStatus(
             string pluginId,
             [FromBody] UpdatePluginStatusRequest request)
         {
@@ -140,7 +140,7 @@ namespace PolyBucket.Api.Features.Plugins.Commands
         [HttpGet("{pluginId}/settings")]
         [ProducesResponseType(typeof(PluginSettingsResponse), 200)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<PluginSettingsResponse>> GetPluginSettings(string pluginId)
+        public ActionResult<PluginSettingsResponse> GetPluginSettings(string pluginId)
         {
             var plugin = _pluginManager.GetLoadedPlugins().FirstOrDefault(p => p.Id == pluginId);
             if (plugin == null)

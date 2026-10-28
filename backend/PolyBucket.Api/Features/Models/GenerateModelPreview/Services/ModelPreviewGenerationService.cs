@@ -32,13 +32,13 @@ namespace PolyBucket.Api.Features.Models.GenerateModelPreview.Services
             _logger = logger;
         }
 
-        public async Task<bool> IsSupportedFileTypeAsync(string fileType)
+        public Task<bool> IsSupportedFileTypeAsync(string fileType)
         {
             var extension = fileType.ToLowerInvariant();
             if (!extension.StartsWith("."))
                 extension = "." + extension;
             
-            return Array.Exists(_supportedFormats, format => format.Equals(extension, StringComparison.OrdinalIgnoreCase));
+            return Task.FromResult(Array.Exists(_supportedFormats, format => format.Equals(extension, StringComparison.OrdinalIgnoreCase)));
         }
 
         public async Task<ModelPreview> GeneratePreviewAsync(

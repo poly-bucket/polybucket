@@ -29,7 +29,8 @@ COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 COPY frontend-next/docker-entrypoint.prod.sh /app/docker-entrypoint.prod.sh
-RUN chmod +x /app/docker-entrypoint.prod.sh
+COPY frontend-next/scripts/validate-next-artifacts.sh /app/scripts/validate-next-artifacts.sh
+RUN chmod +x /app/docker-entrypoint.prod.sh /app/scripts/validate-next-artifacts.sh
 EXPOSE 3000
 ENTRYPOINT ["/app/docker-entrypoint.prod.sh"]
 CMD ["node", "server.js"]

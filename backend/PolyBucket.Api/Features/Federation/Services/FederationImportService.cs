@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Data;
 using PolyBucket.Api.Features.Federation.Repository;
-using PolyBucket.Api.Common.Models;
 using PolyBucket.Api.Common.Models.Enums;
 using System;
 using System.Collections.Generic;
