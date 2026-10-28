@@ -2,7 +2,10 @@ import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import { safeExternalHref } from "@/lib/security/safeUrl";
+import {
+  safeExternalHref,
+  safeExternalHrefForImage,
+} from "@/lib/security/safeUrl";
 
 const allowHttpImages = process.env.NODE_ENV !== "production";
 
@@ -25,12 +28,10 @@ const markdownComponents: Components = {
     );
   },
   img: ({ src, alt, ...props }) => {
-    if (!src) return null;
-    const external = safeExternalHref(src);
-    if (external && (external.startsWith("https:") || (allowHttpImages && external.startsWith("http:")))) {
-      return <img src={external} alt={alt ?? ""} {...props} />;
-    }
-    return null;
+    if (typeof src !== "string") return null;
+    const external = safeExternalHrefForImage(src, allowHttpImages);
+    if (!external) return null;
+    return <img src={external} alt={alt ?? ""} {...props} />;
   },
 };
 
