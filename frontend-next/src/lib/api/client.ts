@@ -69,19 +69,19 @@ export interface IApiClient {
     tokenSettings_GetTokenSettings( cancelToken?: CancelToken): Promise<TokenSettings>;
     tokenSettings_UpdateTokenSettings(settings: TokenSettings,  cancelToken?: CancelToken): Promise<any>;
     search_Search(query: string | undefined, page: number | undefined, pageSize: number | undefined, type: SearchType | undefined, category: string | null | undefined, sortBy: string | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<SearchResponse>;
-    submitReport_SubmitReport(request: SubmitReportRequest,  cancelToken?: CancelToken): Promise<FileResponse>;
+    submitReport_SubmitReport(request: SubmitReportRequest,  cancelToken?: CancelToken): Promise<any>;
     getAllReports_GetAllReports(page: number | undefined, pageSize: number | undefined, isResolved: boolean | null | undefined, type: ReportType | null | undefined,  cancelToken?: CancelToken): Promise<ReportsResponse>;
-    resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest,  cancelToken?: CancelToken): Promise<FileResponse>;
-    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<FileResponse>;
-    getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined,  cancelToken?: CancelToken): Promise<FileResponse>;
+    resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest,  cancelToken?: CancelToken): Promise<any>;
+    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<any>;
+    getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined,  cancelToken?: CancelToken): Promise<any>;
     getReportAnalytics_GetReportsAnalytics(fromDate: Date | null | undefined, toDate: Date | null | undefined,  cancelToken?: CancelToken): Promise<ReportsAnalytics>;
     getReportAnalytics_GetTopReportedModels(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
     getReportAnalytics_GetTopReportedUsers(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
     getReportAnalytics_GetTopReportedComments(limit: number | undefined,  cancelToken?: CancelToken): Promise<TopReportedItem[]>;
     getReportAnalytics_GetReportTrends(period: string | undefined, days: number | undefined,  cancelToken?: CancelToken): Promise<ReportTrend[]>;
     getReportAnalytics_GetModeratorActivity(fromDate: Date | null | undefined, toDate: Date | null | undefined,  cancelToken?: CancelToken): Promise<ModeratorActivity[]>;
-    getReport_GetReport(reportId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    getPrinters_GetPrinters( cancelToken?: CancelToken): Promise<FileResponse>;
+    getReport_GetReport(reportId: string,  cancelToken?: CancelToken): Promise<any>;
+    getPrinters_GetPrinters( cancelToken?: CancelToken): Promise<any>;
     getPluginDetails_GetPluginDetails(pluginId: string,  cancelToken?: CancelToken): Promise<PluginDetailsResponse>;
     getPluginDetails_GetPluginsOverview( cancelToken?: CancelToken): Promise<PluginOverviewResponse>;
     getPluginDetails_GetPluginHooks( cancelToken?: CancelToken): Promise<PluginHooksResponse>;
@@ -107,7 +107,7 @@ export interface IApiClient {
     themePlugin_RemoveTheme(pluginId: string,  cancelToken?: CancelToken): Promise<ThemeApplicationResult2>;
     themePlugin_UpdateThemeSettings(pluginId: string, settings: ThemeSettings,  cancelToken?: CancelToken): Promise<ThemeApplicationResult2>;
     themePlugin_GetThemeSettings(pluginId: string,  cancelToken?: CancelToken): Promise<ThemeSettings>;
-    reloadPlugins_ReloadPlugins( cancelToken?: CancelToken): Promise<FileResponse>;
+    reloadPlugins_ReloadPlugins( cancelToken?: CancelToken): Promise<any>;
     updatePluginSettings_UpdatePluginSettings(pluginId: string, request: UpdatePluginSettingsRequest,  cancelToken?: CancelToken): Promise<UpdatePluginSettingsResponse>;
     updatePluginSettings_GetPluginSettings(pluginId: string,  cancelToken?: CancelToken): Promise<PluginSettingsResponse>;
     updatePluginSettings_UpdatePluginStatus(pluginId: string, request: UpdatePluginStatusRequest,  cancelToken?: CancelToken): Promise<PluginStatusResponse>;
@@ -152,11 +152,11 @@ export interface IApiClient {
     getSupportedExtensionsByType_GetSupportedExtensionsForType(fileType: string,  cancelToken?: CancelToken): Promise<string[]>;
     streamFile_StreamFile(fileId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
     streamFile_StreamModelFile(modelId: string, fileName: string, recordDownload: boolean | undefined,  cancelToken?: CancelToken): Promise<FileResponse>;
-    createFilament_Create(command: CreateFilamentCommand,  cancelToken?: CancelToken): Promise<FileResponse>;
-    getAllFilaments_GetAll( cancelToken?: CancelToken): Promise<FileResponse>;
-    deleteFilament_Delete(id: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    getFilamentById_GetById(id: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    updateFilament_Update(id: string, command: UpdateFilamentCommand,  cancelToken?: CancelToken): Promise<FileResponse>;
+    createFilament_Create(command: CreateFilamentCommand,  cancelToken?: CancelToken): Promise<any>;
+    getAllFilaments_GetAll( cancelToken?: CancelToken): Promise<any>;
+    deleteFilament_Delete(id: string,  cancelToken?: CancelToken): Promise<any>;
+    getFilamentById_GetById(id: string,  cancelToken?: CancelToken): Promise<any>;
+    updateFilament_Update(id: string, command: UpdateFilamentCommand,  cancelToken?: CancelToken): Promise<any>;
     updateEmailSettings_UpdateEmailSettings(request: UpdateEmailSettingsRequest,  cancelToken?: CancelToken): Promise<EmailSettingsDto>;
     getEmailSettings_GetEmailSettings( cancelToken?: CancelToken): Promise<EmailSettingsDto>;
     testEmailConfiguration_TestEmailConfiguration(request: TestEmailConfigurationRequest,  cancelToken?: CancelToken): Promise<EmailTestResult>;
@@ -182,13 +182,13 @@ export interface IApiClient {
     createComment_CreateComment(request: CreateCommentRequest,  cancelToken?: CancelToken): Promise<CommentResponse>;
     updateCollection_UpdateCollection(id: string, command: UpdateCollectionCommand,  cancelToken?: CancelToken): Promise<UpdateCollectionResponseDto>;
     getCollectionById_GetCollectionById(id: string,  cancelToken?: CancelToken): Promise<GetCollectionByIdResponseDto>;
-    deleteCollection_DeleteCollection(id: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    removeModelFromCollection_RemoveModelFromCollection(collectionId: string, modelId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
-    addModelToCollection_AddModelToCollection(collectionId: string, modelId: string,  cancelToken?: CancelToken): Promise<FileResponse>;
+    deleteCollection_DeleteCollection(id: string,  cancelToken?: CancelToken): Promise<any>;
+    removeModelFromCollection_RemoveModelFromCollection(collectionId: string, modelId: string,  cancelToken?: CancelToken): Promise<any>;
+    addModelToCollection_AddModelToCollection(collectionId: string, modelId: string,  cancelToken?: CancelToken): Promise<any>;
     getUserCollections_GetCurrentUserCollections(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined,  cancelToken?: CancelToken): Promise<GetUserCollectionsResponseDto>;
     getUserCollections_GetCollectionsByUserId(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined,  cancelToken?: CancelToken): Promise<GetUserCollectionsResponseDto>;
-    getFavoriteCollections_GetFavoriteCollections( cancelToken?: CancelToken): Promise<FileResponse>;
-    favoriteCollection_ToggleFavorite(id: string, command: FavoriteCollectionCommand,  cancelToken?: CancelToken): Promise<FileResponse>;
+    getFavoriteCollections_GetFavoriteCollections( cancelToken?: CancelToken): Promise<any>;
+    favoriteCollection_ToggleFavorite(id: string, command: FavoriteCollectionCommand,  cancelToken?: CancelToken): Promise<any>;
     createCollection_CreateCollection(command: CreateCollectionCommand,  cancelToken?: CancelToken): Promise<CreateCollectionResponseDto>;
     accessCollection_AccessCollection(id: string, command: AccessCollectionCommand,  cancelToken?: CancelToken): Promise<AccessCollectionCollectionDto>;
     updateCategory_UpdateCategory(id: string, command: UpdateCategoryCommand,  cancelToken?: CancelToken): Promise<UpdateCategoryResponse>;
@@ -210,6 +210,7 @@ export interface IApiClient {
     oAuth_GetAuthorizationUrl(provider: string, redirectUri: string | undefined, state: string | null | undefined,  cancelToken?: CancelToken): Promise<void>;
     oAuth_OAuthCallback(provider: string, command: OAuthCallbackCommand,  cancelToken?: CancelToken): Promise<OAuthCallbackCommandResponse>;
     me_GetCurrentUser( cancelToken?: CancelToken): Promise<MeResponse>;
+    logout_Logout(command: LogoutCommand,  cancelToken?: CancelToken): Promise<void>;
     login_Login(command: LoginCommand,  cancelToken?: CancelToken): Promise<LoginCommandResponse>;
     forgotPassword_ForgotPassword(command: ForgotPasswordCommand,  cancelToken?: CancelToken): Promise<void>;
     changePassword_ChangePassword(command: ChangePasswordCommand,  cancelToken?: CancelToken): Promise<ChangePasswordResponse>;
@@ -4175,7 +4176,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<SearchResponse>(null as any);
     }
 
-    submitReport_SubmitReport(request: SubmitReportRequest, cancelToken?: CancelToken): Promise<FileResponse> {
+    submitReport_SubmitReport(request: SubmitReportRequest, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/reports";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -4183,12 +4184,11 @@ export class ApiClient implements IApiClient {
 
         let options_: AxiosRequestConfig = {
             data: content_,
-            responseType: "blob",
             method: "POST",
             url: url_,
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -4204,7 +4204,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processSubmitReport_SubmitReport(response: AxiosResponse): Promise<FileResponse> {
+    protected processSubmitReport_SubmitReport(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4214,22 +4214,19 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
     getAllReports_GetAllReports(page: number | undefined, pageSize: number | undefined, isResolved: boolean | null | undefined, type: ReportType | null | undefined, cancelToken?: CancelToken): Promise<ReportsResponse> {
@@ -4306,7 +4303,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<ReportsResponse>(null as any);
     }
 
-    resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest, cancelToken?: CancelToken): Promise<FileResponse> {
+    resolveReport_ResolveReport(reportId: string, request: ResolveReportRequest, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/reports/{reportId}/resolve";
         if (reportId === undefined || reportId === null)
             throw new globalThis.Error("The parameter 'reportId' must be defined.");
@@ -4317,12 +4314,11 @@ export class ApiClient implements IApiClient {
 
         let options_: AxiosRequestConfig = {
             data: content_,
-            responseType: "blob",
             method: "POST",
             url: url_,
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -4338,7 +4334,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processResolveReport_ResolveReport(response: AxiosResponse): Promise<FileResponse> {
+    protected processResolveReport_ResolveReport(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4348,34 +4344,30 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<FileResponse> {
+    getUnresolvedReports_GetUnresolvedReports( cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/reports/unresolved";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -4391,7 +4383,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUnresolvedReports_GetUnresolvedReports(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetUnresolvedReports_GetUnresolvedReports(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4401,25 +4393,22 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined, cancelToken?: CancelToken): Promise<FileResponse> {
+    getReportsForTarget_GetReportsForTarget(targetId: string, type: ReportType | undefined, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/reports/target/{targetId}?";
         if (targetId === undefined || targetId === null)
             throw new globalThis.Error("The parameter 'targetId' must be defined.");
@@ -4431,11 +4420,10 @@ export class ApiClient implements IApiClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -4451,7 +4439,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetReportsForTarget_GetReportsForTarget(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetReportsForTarget_GetReportsForTarget(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4461,22 +4449,19 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
     getReportAnalytics_GetReportsAnalytics(fromDate: Date | null | undefined, toDate: Date | null | undefined, cancelToken?: CancelToken): Promise<ReportsAnalytics> {
@@ -4914,7 +4899,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<ModeratorActivity[]>(null as any);
     }
 
-    getReport_GetReport(reportId: string, cancelToken?: CancelToken): Promise<FileResponse> {
+    getReport_GetReport(reportId: string, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/reports/{reportId}";
         if (reportId === undefined || reportId === null)
             throw new globalThis.Error("The parameter 'reportId' must be defined.");
@@ -4922,11 +4907,10 @@ export class ApiClient implements IApiClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -4942,7 +4926,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetReport_GetReport(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetReport_GetReport(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4952,34 +4936,30 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    getPrinters_GetPrinters( cancelToken?: CancelToken): Promise<FileResponse> {
+    getPrinters_GetPrinters( cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/printers";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -4995,7 +4975,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetPrinters_GetPrinters(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetPrinters_GetPrinters(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -5005,22 +4985,19 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
     getPluginDetails_GetPluginDetails(pluginId: string, cancelToken?: CancelToken): Promise<PluginDetailsResponse> {
@@ -6749,16 +6726,15 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<ThemeSettings>(null as any);
     }
 
-    reloadPlugins_ReloadPlugins( cancelToken?: CancelToken): Promise<FileResponse> {
+    reloadPlugins_ReloadPlugins( cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/plugins/reload";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "POST",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -6774,7 +6750,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processReloadPlugins_ReloadPlugins(response: AxiosResponse): Promise<FileResponse> {
+    protected processReloadPlugins_ReloadPlugins(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -6784,22 +6760,19 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
     updatePluginSettings_UpdatePluginSettings(pluginId: string, request: UpdatePluginSettingsRequest, cancelToken?: CancelToken): Promise<UpdatePluginSettingsResponse> {
@@ -8879,6 +8852,24 @@ export class ApiClient implements IApiClient {
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
             return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9736,6 +9727,24 @@ export class ApiClient implements IApiClient {
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
             return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9799,6 +9808,24 @@ export class ApiClient implements IApiClient {
                 fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
             }
             return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            return throwException("A server side error occurred.", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -9806,7 +9833,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<FileResponse>(null as any);
     }
 
-    createFilament_Create(command: CreateFilamentCommand, cancelToken?: CancelToken): Promise<FileResponse> {
+    createFilament_Create(command: CreateFilamentCommand, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/filaments";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -9814,12 +9841,11 @@ export class ApiClient implements IApiClient {
 
         let options_: AxiosRequestConfig = {
             data: content_,
-            responseType: "blob",
             method: "POST",
             url: url_,
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -9835,7 +9861,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processCreateFilament_Create(response: AxiosResponse): Promise<FileResponse> {
+    protected processCreateFilament_Create(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -9845,34 +9871,30 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    getAllFilaments_GetAll( cancelToken?: CancelToken): Promise<FileResponse> {
+    getAllFilaments_GetAll( cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/filaments";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -9888,7 +9910,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetAllFilaments_GetAll(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetAllFilaments_GetAll(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -9898,25 +9920,22 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    deleteFilament_Delete(id: string, cancelToken?: CancelToken): Promise<FileResponse> {
+    deleteFilament_Delete(id: string, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/filaments/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -9924,11 +9943,10 @@ export class ApiClient implements IApiClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "DELETE",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -9944,7 +9962,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processDeleteFilament_Delete(response: AxiosResponse): Promise<FileResponse> {
+    protected processDeleteFilament_Delete(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -9954,25 +9972,22 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    getFilamentById_GetById(id: string, cancelToken?: CancelToken): Promise<FileResponse> {
+    getFilamentById_GetById(id: string, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/filaments/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -9980,11 +9995,10 @@ export class ApiClient implements IApiClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -10000,7 +10014,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetFilamentById_GetById(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetFilamentById_GetById(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -10010,25 +10024,22 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    updateFilament_Update(id: string, command: UpdateFilamentCommand, cancelToken?: CancelToken): Promise<FileResponse> {
+    updateFilament_Update(id: string, command: UpdateFilamentCommand, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/filaments/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -10039,12 +10050,11 @@ export class ApiClient implements IApiClient {
 
         let options_: AxiosRequestConfig = {
             data: content_,
-            responseType: "blob",
             method: "PUT",
             url: url_,
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -10060,7 +10070,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processUpdateFilament_Update(response: AxiosResponse): Promise<FileResponse> {
+    protected processUpdateFilament_Update(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -10070,22 +10080,19 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
     updateEmailSettings_UpdateEmailSettings(request: UpdateEmailSettingsRequest, cancelToken?: CancelToken): Promise<EmailSettingsDto> {
@@ -11815,7 +11822,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<GetCollectionByIdResponseDto>(null as any);
     }
 
-    deleteCollection_DeleteCollection(id: string, cancelToken?: CancelToken): Promise<FileResponse> {
+    deleteCollection_DeleteCollection(id: string, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/collections/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -11823,11 +11830,10 @@ export class ApiClient implements IApiClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "DELETE",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -11843,7 +11849,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processDeleteCollection_DeleteCollection(response: AxiosResponse): Promise<FileResponse> {
+    protected processDeleteCollection_DeleteCollection(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -11853,25 +11859,22 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    removeModelFromCollection_RemoveModelFromCollection(collectionId: string, modelId: string, cancelToken?: CancelToken): Promise<FileResponse> {
+    removeModelFromCollection_RemoveModelFromCollection(collectionId: string, modelId: string, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/collections/{collectionId}/models/{modelId}";
         if (collectionId === undefined || collectionId === null)
             throw new globalThis.Error("The parameter 'collectionId' must be defined.");
@@ -11882,11 +11885,10 @@ export class ApiClient implements IApiClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "DELETE",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -11902,7 +11904,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processRemoveModelFromCollection_RemoveModelFromCollection(response: AxiosResponse): Promise<FileResponse> {
+    protected processRemoveModelFromCollection_RemoveModelFromCollection(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -11912,25 +11914,22 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    addModelToCollection_AddModelToCollection(collectionId: string, modelId: string, cancelToken?: CancelToken): Promise<FileResponse> {
+    addModelToCollection_AddModelToCollection(collectionId: string, modelId: string, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/collections/{collectionId}/models/{modelId}";
         if (collectionId === undefined || collectionId === null)
             throw new globalThis.Error("The parameter 'collectionId' must be defined.");
@@ -11941,11 +11940,10 @@ export class ApiClient implements IApiClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "POST",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -11961,7 +11959,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processAddModelToCollection_AddModelToCollection(response: AxiosResponse): Promise<FileResponse> {
+    protected processAddModelToCollection_AddModelToCollection(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -11971,22 +11969,19 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
     getUserCollections_GetCurrentUserCollections(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, cancelToken?: CancelToken): Promise<GetUserCollectionsResponseDto> {
@@ -12129,16 +12124,15 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<GetUserCollectionsResponseDto>(null as any);
     }
 
-    getFavoriteCollections_GetFavoriteCollections( cancelToken?: CancelToken): Promise<FileResponse> {
+    getFavoriteCollections_GetFavoriteCollections( cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/collections/favorites";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
-            responseType: "blob",
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -12154,7 +12148,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetFavoriteCollections_GetFavoriteCollections(response: AxiosResponse): Promise<FileResponse> {
+    protected processGetFavoriteCollections_GetFavoriteCollections(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -12164,25 +12158,22 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
-    favoriteCollection_ToggleFavorite(id: string, command: FavoriteCollectionCommand, cancelToken?: CancelToken): Promise<FileResponse> {
+    favoriteCollection_ToggleFavorite(id: string, command: FavoriteCollectionCommand, cancelToken?: CancelToken): Promise<any> {
         let url_ = this.baseUrl + "/api/collections/{id}/favorite";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -12193,12 +12184,11 @@ export class ApiClient implements IApiClient {
 
         let options_: AxiosRequestConfig = {
             data: content_,
-            responseType: "blob",
             method: "POST",
             url: url_,
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
+                "Accept": "application/json"
             },
             cancelToken
         };
@@ -12214,7 +12204,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processFavoriteCollection_ToggleFavorite(response: AxiosResponse): Promise<FileResponse> {
+    protected processFavoriteCollection_ToggleFavorite(response: AxiosResponse): Promise<any> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -12224,22 +12214,19 @@ export class ApiClient implements IApiClient {
                 }
             }
         }
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers["content-disposition"] : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return Promise.resolve({ fileName: fileName, status: status, data: new Blob([response.data], { type: response.headers["content-type"] }), headers: _headers });
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return Promise.resolve<any>(result200);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<FileResponse>(null as any);
+        return Promise.resolve<any>(null as any);
     }
 
     createCollection_CreateCollection(command: CreateCollectionCommand, cancelToken?: CancelToken): Promise<CreateCollectionResponseDto> {
@@ -13690,6 +13677,68 @@ export class ApiClient implements IApiClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<MeResponse>(null as any);
+    }
+
+    logout_Logout(command: LogoutCommand, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/auth/logout";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processLogout_Logout(_response);
+        });
+    }
+
+    protected processLogout_Logout(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+
+        } else if (status === 429) {
+            const _responseText = response.data;
+            let result429: any = null;
+            let resultData429  = _responseText;
+            result429 = ProblemDetails.fromJS(resultData429);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result429);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
     }
 
     login_Login(command: LoginCommand, cancelToken?: CancelToken): Promise<LoginCommandResponse> {
@@ -32825,6 +32874,86 @@ export interface IUserSettingsResponse {
     emailNotifications?: boolean;
     measurementSystem?: string;
     timeZone?: string;
+}
+
+export class LogoutCommand implements ILogoutCommand {
+    refreshToken?: string;
+    client?: ClientRequestInfo;
+
+    constructor(data?: ILogoutCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.refreshToken = _data["refreshToken"];
+            this.client = _data["client"] ? ClientRequestInfo.fromJS(_data["client"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): LogoutCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new LogoutCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["refreshToken"] = this.refreshToken;
+        data["client"] = this.client ? this.client.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface ILogoutCommand {
+    refreshToken?: string;
+    client?: ClientRequestInfo;
+}
+
+export class ClientRequestInfo implements IClientRequestInfo {
+    ipAddress?: string;
+    userAgent?: string;
+
+    constructor(data?: IClientRequestInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.ipAddress = _data["ipAddress"];
+            this.userAgent = _data["userAgent"];
+        }
+    }
+
+    static fromJS(data: any): ClientRequestInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new ClientRequestInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["ipAddress"] = this.ipAddress;
+        data["userAgent"] = this.userAgent;
+        return data;
+    }
+}
+
+export interface IClientRequestInfo {
+    ipAddress?: string;
+    userAgent?: string;
 }
 
 export class LoginCommandResponse implements ILoginCommandResponse {

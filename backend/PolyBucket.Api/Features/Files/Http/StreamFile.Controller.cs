@@ -48,9 +48,17 @@ namespace PolyBucket.Api.Features.Files.Http
             _downloadCounter = downloadCounter;
         }
 
+        /// <summary>
+        /// Stream a model file by file identifier when the caller has download permission.
+        /// </summary>
         [HttpGet("stream/{fileId}")]
         [Authorize]
         [RequirePermission(PermissionConstants.MODEL_DOWNLOAD)]
+        [Produces("application/octet-stream", "application/json")]
+        [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> StreamFile(Guid fileId)
         {
             try
@@ -92,8 +100,16 @@ namespace PolyBucket.Api.Features.Files.Http
             }
         }
 
+        /// <summary>
+        /// Stream a named file from a model; optionally records a download when requested.
+        /// </summary>
         [HttpGet("stream/model/{modelId}/{fileName}")]
         [ServiceFilter(typeof(PublicModelAuthorizationFilter))]
+        [Produces("application/octet-stream", "application/json")]
+        [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> StreamModelFile(Guid modelId, string fileName, [FromQuery] bool recordDownload = false)
         {
             try

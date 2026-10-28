@@ -27,6 +27,11 @@ public class DownloadModelController : ControllerBase
     [HttpGet("{id}/download")]
     [Authorize]
     [RequirePermission(PermissionConstants.MODEL_DOWNLOAD)]
+    [Produces("application/octet-stream", "application/zip", "application/json")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DownloadModel(Guid id, CancellationToken cancellationToken = default)
     {
         var outcome = await _downloadModelService.DownloadAsync(id, User, cancellationToken);

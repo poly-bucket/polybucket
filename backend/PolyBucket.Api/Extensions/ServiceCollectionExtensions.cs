@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using PolyBucket.Api.Data;
+using PolyBucket.Api.Common.OpenApi;
 using PolyBucket.Api.Settings;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Reports.Domain;
@@ -181,6 +182,7 @@ public static class ServiceCollectionExtensions
             config.DocumentName = "v1";
             config.Title = "PolyBucket API";
             config.Version = "v1";
+            config.OperationProcessors.Add(new OpenApiJsonResponseDefaultsProcessor());
         });
 
         return services;
