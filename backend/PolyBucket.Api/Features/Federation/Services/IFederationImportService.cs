@@ -1,4 +1,4 @@
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Federation.Services

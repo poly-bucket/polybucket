@@ -6,7 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
+using TwoFactorAuthDomain = PolyBucket.Database.Entities.Authentication;
 using System.Collections.Concurrent;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Domain

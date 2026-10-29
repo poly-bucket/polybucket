@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Users.Domain;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Users;
 
 namespace PolyBucket.Api.Features.Users.MarkEmailVerified.Repository;
 

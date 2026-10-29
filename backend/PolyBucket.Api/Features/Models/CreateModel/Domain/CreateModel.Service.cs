@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.Models.CreateModel.Http;
 using PolyBucket.Api.Features.Models.CreateModel.Repository;
@@ -9,8 +8,8 @@ using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.Common;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Entities.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.IO;

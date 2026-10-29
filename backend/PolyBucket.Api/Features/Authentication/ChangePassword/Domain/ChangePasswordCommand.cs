@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using MediatR;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 
 namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
 {

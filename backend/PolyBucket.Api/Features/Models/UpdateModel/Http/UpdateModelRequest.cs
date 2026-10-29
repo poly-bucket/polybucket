@@ -1,4 +1,4 @@
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace PolyBucket.Api.Features.Models.UpdateModel.Http

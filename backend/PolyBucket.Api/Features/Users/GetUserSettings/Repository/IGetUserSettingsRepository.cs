@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using PolyBucket.Api.Features.Users.Domain;
+using PolyBucket.Database.Entities.Users;
 
 namespace PolyBucket.Api.Features.Users.GetUserSettings.Repository;
 

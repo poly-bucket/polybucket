@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Repository;
-using PolyBucket.Api.Features.Email.Domain;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain
 {

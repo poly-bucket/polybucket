@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Persistence;
 using System;
 using System.Threading.Tasks;
 

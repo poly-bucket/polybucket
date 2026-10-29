@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 
 namespace PolyBucket.Api.Features.Search.Repository;
 

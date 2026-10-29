@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 
 namespace PolyBucket.Api.Features.Authentication.Login.Domain
 {

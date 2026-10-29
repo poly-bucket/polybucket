@@ -1,4 +1,5 @@
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 
 namespace PolyBucket.Api.Features.Authentication.Logout.Domain;
 

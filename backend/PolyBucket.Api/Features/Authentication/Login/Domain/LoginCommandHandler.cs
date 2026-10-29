@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.SystemSettings.Services;
 
-using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
+using RefreshTokenModel = PolyBucket.Database.Entities.Authentication.RefreshToken;
 
 namespace PolyBucket.Api.Features.Authentication.Login.Domain
 {

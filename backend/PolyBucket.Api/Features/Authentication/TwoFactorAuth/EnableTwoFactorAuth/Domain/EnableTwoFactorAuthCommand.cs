@@ -1,4 +1,5 @@
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;

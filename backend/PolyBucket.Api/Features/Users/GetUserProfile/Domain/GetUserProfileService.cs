@@ -42,7 +42,7 @@ public class GetUserProfileService(IGetUserProfileRepository repository) : IGetU
         return BuildResponse(user, statistics);
     }
 
-    private static GetUserProfileResponse BuildResponse(Common.Models.User user, GetUserProfileStatisticsRow statistics)
+    private static GetUserProfileResponse BuildResponse(User user, GetUserProfileStatisticsRow statistics)
     {
         return new GetUserProfileResponse
         {

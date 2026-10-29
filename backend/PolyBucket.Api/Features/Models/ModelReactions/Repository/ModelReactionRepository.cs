@@ -4,9 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Models.LikeModel.Domain;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.ModelReactions.Domain;
 
 namespace PolyBucket.Api.Features.Models.ModelReactions.Repository;

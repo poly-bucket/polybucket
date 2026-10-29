@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
 
 namespace PolyBucket.Api.Features.Models.RecordModelDownload.Repository;

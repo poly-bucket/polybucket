@@ -4,7 +4,6 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.GetModelByUserId.Http;
 using PolyBucket.Api.Features.Models.GetModelByUserId.Repository;
-using PolyBucket.Api.Common.Storage;
 using System;
 using System.Security.Claims;
 using System.Threading;

@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Common.OpenApi;
 using PolyBucket.Api.Settings;
+using PolyBucket.Database.Settings;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Reports.Domain;
 using PolyBucket.Api.Features.Reports.Plugins;
@@ -13,6 +14,9 @@ using PolyBucket.Api.Common.Plugins;
 using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.SystemSettings.Plugins;
 using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Database.DependencyInjection;
+using PolyBucket.Email.DependencyInjection;
+using PolyBucket.Storage.DependencyInjection;
 using System.Security.Claims;
 using System.Linq;
 
@@ -44,15 +48,17 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddPolyBucketDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IValidateOptions<DatabaseSettings>, DatabaseSettingsValidator>();
-        services.AddOptions<DatabaseSettings>()
-            .BindConfiguration("Database")
-            .ValidateOnStart();
-        services.AddDbContext<PolyBucketDbContext>((sp, options) =>
-            options.UseNpgsql(
-                sp.GetRequiredService<IOptions<DatabaseSettings>>().Value.BuildConnectionString()));
+        return DatabaseServiceCollectionExtensions.AddPolyBucketDatabase(services, configuration);
+    }
 
-        return services;
+    public static IServiceCollection AddObjectStorage(this IServiceCollection services, IConfiguration configuration)
+    {
+        return StorageServiceCollectionExtensions.AddObjectStorage(services, configuration);
+    }
+
+    public static IServiceCollection AddEmail(this IServiceCollection services, IConfiguration configuration)
+    {
+        return EmailServiceCollectionExtensions.AddPolyBucketEmail(services, configuration);
     }
 
     public static IServiceCollection AddPolyBucketAuthentication(this IServiceCollection services, IConfiguration configuration)

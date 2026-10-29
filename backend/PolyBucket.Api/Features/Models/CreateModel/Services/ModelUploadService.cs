@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Common.Storage;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Services;
 using System;

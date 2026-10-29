@@ -5,7 +5,13 @@ WORKDIR /app
 # Copy solution and project files
 COPY PolyBucket.sln ./
 COPY backend/PolyBucket.Api/*.csproj ./backend/PolyBucket.Api/
-COPY backend/PolyBucket.Tests/*.csproj ./backend/PolyBucket.Tests/
+COPY backend/PolyBucket.Email/*.csproj ./backend/PolyBucket.Email/
+COPY backend/PolyBucket.Email.Tests/*.csproj ./backend/PolyBucket.Email.Tests/
+COPY backend/PolyBucket.Storage/*.csproj ./backend/PolyBucket.Storage/
+COPY backend/PolyBucket.Storage.Tests/*.csproj ./backend/PolyBucket.Storage.Tests/
+COPY backend/PolyBucket.Database/*.csproj ./backend/PolyBucket.Database/
+COPY backend/PolyBucket.Database.Tests/*.csproj ./backend/PolyBucket.Database.Tests/
+COPY backend/PolyBucket.Api.Tests/*.csproj ./backend/PolyBucket.Api.Tests/
 
 # Restore dependencies
 RUN dotnet restore PolyBucket.sln
@@ -22,7 +28,13 @@ WORKDIR /app
 # Copy solution and project files
 COPY PolyBucket.sln ./
 COPY backend/PolyBucket.Api/*.csproj ./backend/PolyBucket.Api/
-COPY backend/PolyBucket.Tests/*.csproj ./backend/PolyBucket.Tests/
+COPY backend/PolyBucket.Email/*.csproj ./backend/PolyBucket.Email/
+COPY backend/PolyBucket.Email.Tests/*.csproj ./backend/PolyBucket.Email.Tests/
+COPY backend/PolyBucket.Storage/*.csproj ./backend/PolyBucket.Storage/
+COPY backend/PolyBucket.Storage.Tests/*.csproj ./backend/PolyBucket.Storage.Tests/
+COPY backend/PolyBucket.Database/*.csproj ./backend/PolyBucket.Database/
+COPY backend/PolyBucket.Database.Tests/*.csproj ./backend/PolyBucket.Database.Tests/
+COPY backend/PolyBucket.Api.Tests/*.csproj ./backend/PolyBucket.Api.Tests/
 
 # Restore dependencies
 RUN dotnet restore PolyBucket.sln

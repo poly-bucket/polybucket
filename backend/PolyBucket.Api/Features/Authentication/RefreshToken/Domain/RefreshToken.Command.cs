@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 
 namespace PolyBucket.Api.Features.Authentication.RefreshToken.Domain
 {

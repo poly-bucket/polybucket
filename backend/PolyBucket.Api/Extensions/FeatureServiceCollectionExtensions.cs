@@ -9,7 +9,7 @@ using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.SystemSettings.Plugins;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ModelModeration;
-using PolyBucket.Api.Features.Email;
+using PolyBucket.Email.DependencyInjection;
 using PolyBucket.Api.Features.Comments;
 using PolyBucket.Api.Features.Notifications;
 
@@ -23,7 +23,7 @@ public static class FeatureServiceCollectionExtensions
 
         services.AddModelsFeature();
         services.AddModelModerationFeature();
-        services.AddEmailFeature();
+        services.AddEmailFeatureServices();
         services.AddNotificationsFeature();
 
         // Collections
@@ -166,7 +166,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.SystemSettings.GetSiteSettings.Domain.GetSiteSettingsQueryHandler>();
 
         // Seeders
-        services.AddTransient<PolyBucket.Api.Data.Seeders.AdminSeeder>();
+        services.AddTransient<PolyBucket.Api.Seeders.AdminSeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.CategorySeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.FileTypeSettingsSeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.ModelSettingsSeeder>();

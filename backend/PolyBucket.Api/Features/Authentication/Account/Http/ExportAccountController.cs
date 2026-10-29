@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 
 namespace PolyBucket.Api.Features.Authentication.Account.Http;
 

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Models.DownloadModel.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
-using ModelEntity = PolyBucket.Api.Common.Models.Model;
+using ModelEntity = PolyBucket.Database.Entities.Models.Model;
 
 namespace PolyBucket.Api.Features.Models.DownloadModel.Repository;
 

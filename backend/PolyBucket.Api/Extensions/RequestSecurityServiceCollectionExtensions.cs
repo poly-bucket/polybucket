@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Settings;
 
 namespace PolyBucket.Api.Extensions;
@@ -79,7 +80,7 @@ public static class RequestSecurityServiceCollectionExtensions
             return RateLimitPartition.GetNoLimiter("disabled");
         }
 
-        var key = ClientRequestInfo.From(httpContext).IpAddress;
+        var key = ClientRequestInfoMapper.From(httpContext).IpAddress;
         return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = policy.PermitLimit,

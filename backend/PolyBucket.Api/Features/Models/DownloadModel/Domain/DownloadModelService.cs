@@ -4,13 +4,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Features.Models.DownloadModel.Repository;
 using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
-using PolyBucket.Api.Common.Models.Enums;
-using PolyBucket.Api.Settings;
+using PolyBucket.Database.Entities.Models.Enums;
 
 namespace PolyBucket.Api.Features.Models.DownloadModel.Domain;
 

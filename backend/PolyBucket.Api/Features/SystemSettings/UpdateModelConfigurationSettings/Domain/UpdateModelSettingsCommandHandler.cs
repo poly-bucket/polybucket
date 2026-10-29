@@ -1,9 +1,9 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain

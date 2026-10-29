@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Search.Domain;
 

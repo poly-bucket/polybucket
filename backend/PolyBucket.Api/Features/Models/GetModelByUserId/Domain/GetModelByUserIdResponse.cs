@@ -1,4 +1,4 @@
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using System.Collections.Generic;
 
 namespace PolyBucket.Api.Features.Models.GetModelByUserId.Domain

@@ -2,15 +2,14 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Common.Email;
 using PolyBucket.Api.Common.Http;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Email;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
-using PolyBucket.Api.Features.Email.Domain;
 using PolyBucket.Api.Features.Users.CreateUser.Repository;
-using PolyBucket.Api.Features.Users.Domain;
+using PolyBucket.Database.Entities.Users;
 
 namespace PolyBucket.Api.Features.Users.CreateUser.Domain;
 

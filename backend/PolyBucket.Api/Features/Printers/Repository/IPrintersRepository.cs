@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PolyBucket.Api.Features.Printers.Domain;
+using PolyBucket.Database.Entities.Printers;
 
 namespace PolyBucket.Api.Features.Printers.Repository
 {

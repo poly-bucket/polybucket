@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Collections.Domain;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
 using System;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PolyBucket.Api.Data.Seeders
+namespace PolyBucket.Api.Seeders
 {
     public class CollectionSeeder(PolyBucketDbContext context)
     {

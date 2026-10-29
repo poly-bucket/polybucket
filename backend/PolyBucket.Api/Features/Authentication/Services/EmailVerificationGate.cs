@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Email;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using System;
 using System.Linq;
 using System.Security.Claims;

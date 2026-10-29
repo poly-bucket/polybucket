@@ -2,12 +2,13 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Settings;
-using PolyBucket.Api.Data.Seeders;
+using PolyBucket.Database.Settings;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Seeders;
-using PolyBucket.Api.Features.ThemeManagement.Domain;
+using PolyBucket.Database.Entities.Themes;
+using PolyBucket.Database.Infrastructure;
 using PolyBucket.Api.Middleware;
 
 namespace PolyBucket.Api.Extensions;

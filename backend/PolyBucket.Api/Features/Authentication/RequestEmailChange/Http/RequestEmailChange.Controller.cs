@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.RequestEmailChange.Domain;
 using System;
@@ -51,7 +52,7 @@ namespace PolyBucket.Api.Features.Authentication.RequestEmailChange.Http
             try
             {
                 command.UserId = userId;
-                command.Client = ClientRequestInfo.From(HttpContext);
+                command.Client = ClientRequestInfoMapper.From(HttpContext);
                 await _handler.Handle(command, cancellationToken);
                 return Accepted(new { message = "Check your new inbox for a confirmation link", pendingEmail = command.NewEmail.Trim() });
             }

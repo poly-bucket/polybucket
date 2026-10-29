@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
+using TwoFactorAuthDomain = PolyBucket.Database.Entities.Authentication;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Domain
 {

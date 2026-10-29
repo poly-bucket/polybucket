@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Users.GeneratePasswordResetLink.Domain;
@@ -45,7 +46,7 @@ public class GeneratePasswordResetLinkController(IGeneratePasswordResetLinkServi
 
         try
         {
-            var result = await generatePasswordResetLinkService.GenerateAsync(userId, currentUserId, ClientRequestInfo.From(HttpContext), cancellationToken);
+            var result = await generatePasswordResetLinkService.GenerateAsync(userId, currentUserId, ClientRequestInfoMapper.From(HttpContext), cancellationToken);
             Response.Headers.CacheControl = "no-store";
             return Ok(new GeneratePasswordResetLinkResponse
             {

@@ -250,7 +250,10 @@ For development or production deployments without Docker:
 
 3. **Database Setup**:
    - Configure PostgreSQL connection string
-   - Run migrations: `dotnet ef database update`
+   - Run migrations from the repository root:
+     ```bash
+     dotnet ef database update --project backend/PolyBucket.Database --startup-project backend/PolyBucket.Api
+     ```
 
 4. **Storage Setup**:
    - Configure MinIO or S3-compatible storage

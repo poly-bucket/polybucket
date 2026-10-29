@@ -1,31 +1,28 @@
 using Microsoft.AspNetCore.Http;
+using PolyBucket.Email;
 
 namespace PolyBucket.Api.Common.Http;
 
-public sealed record ClientRequestInfo(string IpAddress, string UserAgent)
+public static class ClientRequestInfoMapper
 {
-    public const string UnknownIp = "unknown";
-    public const string UnknownUserAgent = "Unknown";
     private const int MaxUserAgentLength = 512;
-
-    public static ClientRequestInfo Unknown { get; } = new(UnknownIp, UnknownUserAgent);
 
     public static ClientRequestInfo From(HttpContext? httpContext)
     {
         if (httpContext == null)
         {
-            return Unknown;
+            return ClientRequestInfo.Unknown;
         }
 
         var ip = httpContext.Connection.RemoteIpAddress;
         var ipText = ip == null
-            ? UnknownIp
+            ? ClientRequestInfo.UnknownIp
             : (ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip).ToString();
 
         var userAgent = httpContext.Request.Headers.UserAgent.ToString();
         if (string.IsNullOrWhiteSpace(userAgent))
         {
-            userAgent = UnknownUserAgent;
+            userAgent = ClientRequestInfo.UnknownUserAgent;
         }
         else if (userAgent.Length > MaxUserAgentLength)
         {

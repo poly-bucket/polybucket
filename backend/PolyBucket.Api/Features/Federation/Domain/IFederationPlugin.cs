@@ -1,5 +1,5 @@
 using PolyBucket.Api.Common.Plugins;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

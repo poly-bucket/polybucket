@@ -1,0 +1,217 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
+using PolyBucket.Api.Features.Authentication.Domain;
+using PolyBucket.Api.Features.Authentication.Login.Domain;
+using PolyBucket.Api.Features.Authentication.Login.Repository;
+using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.SystemSettings.Services;
+using PolyBucket.Api.Features.SystemSettings.Domain;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Api.Features.ACL.Domain;
+using Shouldly;
+using Xunit;
+
+namespace PolyBucket.Api.Tests.Features.Authentication.Commands;
+
+public class LoginCommandHandlerTests
+{
+    private readonly Mock<IAuthenticationRepository> _mockAuthRepository;
+    private readonly Mock<ITokenService> _mockTokenService;
+    private readonly Mock<IPasswordHasher> _mockPasswordHasher;
+    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<ILogger<LoginCommandHandler>> _mockLogger;
+    private readonly Mock<ILoginTwoFactorAuthService> _mockLoginTwoFactorAuthService;
+    private readonly Mock<ILoginTwoFactorAuthRepository> _mockLoginTwoFactorAuthRepository;
+    private readonly Mock<IAuthenticationSettingsService> _mockAuthenticationSettingsService;
+    private readonly LoginCommandHandler _handler;
+
+    public LoginCommandHandlerTests()
+    {
+        _mockAuthRepository = new Mock<IAuthenticationRepository>();
+        _mockTokenService = new Mock<ITokenService>();
+        _mockPasswordHasher = new Mock<IPasswordHasher>();
+        _mockConfiguration = new Mock<IConfiguration>();
+        _mockLogger = new Mock<ILogger<LoginCommandHandler>>();
+        _mockLoginTwoFactorAuthService = new Mock<ILoginTwoFactorAuthService>();
+        _mockLoginTwoFactorAuthRepository = new Mock<ILoginTwoFactorAuthRepository>();
+        _mockAuthenticationSettingsService = new Mock<IAuthenticationSettingsService>();
+        _mockAuthenticationSettingsService
+            .Setup(x => x.GetAuthenticationSettingsAsync())
+            .ReturnsAsync(new AuthenticationSettings
+            {
+                AllowEmailLogin = true,
+                AllowUsernameLogin = true
+            });
+
+        _handler = new LoginCommandHandler(
+            _mockAuthRepository.Object,
+            _mockTokenService.Object,
+            _mockPasswordHasher.Object,
+            _mockConfiguration.Object,
+            _mockLogger.Object,
+            null, // Context is not needed for this test
+            _mockLoginTwoFactorAuthService.Object,
+            _mockLoginTwoFactorAuthRepository.Object,
+            _mockAuthenticationSettingsService.Object
+        );
+    }
+
+    [Fact(DisplayName = "When handling a login with valid credentials, the login command handler returns a refresh token.")]
+    public async Task Handle_ValidCredentials_ShouldReturnRefreshToken()
+    {
+        // Arrange
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "test@example.com",
+            Password = "password123"
+        };
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@example.com",
+            Username = "testuser",
+            PasswordHash = "hashedpassword",
+            RequiresPasswordChange = false,
+            HasCompletedFirstTimeSetup = true
+        };
+
+        var authResponse = new AuthenticationResponse
+        {
+            AccessToken = "access-token",
+            RefreshToken = "refresh-token",
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(60),
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7)
+        };
+
+        _mockAuthRepository.Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
+        _mockTokenService.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
+            .Returns(authResponse);
+        _mockAuthRepository.Setup(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshToken>()))
+            .ReturnsAsync(new RefreshToken());
+        _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
+            .Returns(Task.CompletedTask);
+        _mockLoginTwoFactorAuthRepository.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((PolyBucket.Database.Entities.Authentication.TwoFactorAuth?)null);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Token.ShouldBe("access-token");
+        result.RefreshToken.ShouldBe("refresh-token");
+        result.TokenExpiresAt.ShouldBe(authResponse.AccessTokenExpiresAt);
+        result.RefreshTokenExpiresAt.ShouldBe(authResponse.RefreshTokenExpiresAt);
+        result.RequiresPasswordChange.ShouldBeFalse();
+        result.RequiresFirstTimeSetup.ShouldBeFalse();
+    }
+
+    [Fact(DisplayName = "When a non-admin user has not completed first-time setup, login does not require setup.")]
+    public async Task Handle_NonAdminWithIncompleteFirstTimeSetup_ShouldNotRequireFirstTimeSetup()
+    {
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "user@example.com",
+            Password = "password123"
+        };
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "user@example.com",
+            Username = "regularuser",
+            PasswordHash = "hashedpassword",
+            RequiresPasswordChange = false,
+            HasCompletedFirstTimeSetup = false,
+            Role = new Role { Name = "User" }
+        };
+
+        var authResponse = new AuthenticationResponse
+        {
+            AccessToken = "access-token",
+            RefreshToken = "refresh-token",
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(60),
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7)
+        };
+
+        _mockAuthRepository.Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
+        _mockTokenService.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
+            .Returns(authResponse);
+        _mockAuthRepository.Setup(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshToken>()))
+            .ReturnsAsync(new RefreshToken());
+        _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
+            .Returns(Task.CompletedTask);
+        _mockLoginTwoFactorAuthRepository.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((PolyBucket.Database.Entities.Authentication.TwoFactorAuth?)null);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.RequiresFirstTimeSetup.ShouldBeFalse();
+    }
+
+    [Fact(DisplayName = "When handling a login with invalid credentials, the login command handler throws an UnauthorizedAccessException.")]
+    public async Task Handle_InvalidCredentials_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "test@example.com",
+            Password = "wrongpassword"
+        };
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@example.com",
+            Username = "testuser",
+            PasswordHash = "hashedpassword"
+        };
+
+        _mockAuthRepository.Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(false);
+        _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
+            .Returns(Task.CompletedTask);
+
+        // Act & Assert
+        await Should.ThrowAsync<UnauthorizedAccessException>(async () =>
+        {
+            await _handler.Handle(command, CancellationToken.None);
+        });
+    }
+
+    [Fact(DisplayName = "When handling a login for a user that is not found, the login command handler throws an UnauthorizedAccessException.")]
+    public async Task Handle_UserNotFound_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "nonexistent@example.com",
+            Password = "password123"
+        };
+
+        _mockAuthRepository.Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((User?)null);
+        _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
+            .Returns(Task.CompletedTask);
+
+        // Act & Assert
+        await Should.ThrowAsync<UnauthorizedAccessException>(async () =>
+        {
+            await _handler.Handle(command, CancellationToken.None);
+        });
+    }
+} 

@@ -1,4 +1,4 @@
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 
 namespace PolyBucket.Api.Features.Models.RemoveCategoryFromModel.Repository;
 

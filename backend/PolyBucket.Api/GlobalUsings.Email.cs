@@ -1,0 +1,9 @@
+global using PolyBucket.Email;
+global using PolyBucket.Email.Domain;
+global using PolyBucket.Email.GetEmailSettings;
+global using PolyBucket.Email.GetEmailOutbox;
+global using PolyBucket.Email.UpdateEmailSettings;
+global using PolyBucket.Email.TestEmailConfiguration;
+global using PolyBucket.Email.RetryEmailMessage;
+global using PolyBucket.Email.PreviewEmailTemplate;
+global using PolyBucket.Email.Templates;

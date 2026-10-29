@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Storage;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
 using PolyBucket.Api.Features.Models.Common;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using System;

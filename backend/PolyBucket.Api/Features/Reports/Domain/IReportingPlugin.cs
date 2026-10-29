@@ -1,24 +1,11 @@
 using PolyBucket.Api.Common.Plugins;
+using PolyBucket.Database.Entities.Reports;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Reports.Domain
 {
-    public enum ReportType
-    {
-        Model,
-        Comment
-    }
-
-    public enum ReportReason
-    {
-        Inappropriate,
-        Spam,
-        Copyright,
-        Other
-    }
-
     public class ReportsResponse
     {
         public IEnumerable<Report> Reports { get; set; } = new List<Report>();

@@ -1,18 +1,18 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Users.Domain;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Users;
 using PolyBucket.Api.Features.ACL.Domain;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Services;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using Microsoft.Extensions.Options;
 using PolyBucket.Api.Settings;
 
-namespace PolyBucket.Api.Data.Seeders
+namespace PolyBucket.Api.Seeders
 {
     public class AdminSeeder(
         PolyBucketDbContext context,

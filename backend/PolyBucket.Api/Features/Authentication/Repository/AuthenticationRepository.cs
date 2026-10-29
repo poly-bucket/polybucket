@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using RefreshTokenModel = PolyBucket.Api.Features.Authentication.Domain.RefreshToken;
+using RefreshTokenModel = PolyBucket.Database.Entities.Authentication.RefreshToken;
 
 namespace PolyBucket.Api.Features.Authentication.Repository
 {

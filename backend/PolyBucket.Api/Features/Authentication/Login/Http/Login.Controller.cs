@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.Login.Domain;
 using System;
@@ -43,7 +44,7 @@ namespace PolyBucket.Api.Features.Authentication.Login.Http
                     return BadRequest(new { message = "Email/username and password are required" });
                 }
 
-                command.Client = ClientRequestInfo.From(HttpContext);
+                command.Client = ClientRequestInfoMapper.From(HttpContext);
                 _logger.LogInformation("Login attempt for {Email}", command.Email);
                 var response = await _handler.Handle(command, cancellationToken);
                 _logger.LogInformation("Login successful for {Email}", command.Email);

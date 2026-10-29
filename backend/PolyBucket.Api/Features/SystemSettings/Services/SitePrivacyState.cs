@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 
 namespace PolyBucket.Api.Features.SystemSettings.Services;
 

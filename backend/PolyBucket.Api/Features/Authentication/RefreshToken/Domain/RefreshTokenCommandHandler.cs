@@ -40,7 +40,7 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Domain
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
 
             // Create new refresh token
-            var newRefreshToken = new PolyBucket.Api.Features.Authentication.Domain.RefreshToken
+            var newRefreshToken = new PolyBucket.Database.Entities.Authentication.RefreshToken
             {
                 Id = Guid.NewGuid(),
                 Token = authResponse.RefreshToken,

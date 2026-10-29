@@ -1,4 +1,4 @@
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 
 namespace PolyBucket.Api.Features.Models.AddCategoryToModel.Repository;

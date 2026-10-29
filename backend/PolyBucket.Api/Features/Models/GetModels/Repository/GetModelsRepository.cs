@@ -1,7 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using System.Collections.Generic;
 using System.Linq;

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Users.MarkEmailVerified.Domain;
@@ -45,7 +46,7 @@ public class MarkEmailVerifiedController(IMarkEmailVerifiedService markEmailVeri
 
         try
         {
-            var verifiedAt = await markEmailVerifiedService.MarkEmailVerifiedAsync(userId, currentUserId, ClientRequestInfo.From(HttpContext), cancellationToken);
+            var verifiedAt = await markEmailVerifiedService.MarkEmailVerifiedAsync(userId, currentUserId, ClientRequestInfoMapper.From(HttpContext), cancellationToken);
             return Ok(new MarkEmailVerifiedResponse { EmailVerifiedAt = verifiedAt });
         }
         catch (NotFoundException ex)

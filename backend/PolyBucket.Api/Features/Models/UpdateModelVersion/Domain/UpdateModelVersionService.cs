@@ -5,7 +5,7 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Http;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Repository;
 using PolyBucket.Api.Features.Models.Common;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using System;
 using System.Security.Claims;
 using System.Threading;

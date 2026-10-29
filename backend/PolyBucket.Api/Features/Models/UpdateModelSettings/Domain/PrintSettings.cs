@@ -1,5 +1,5 @@
-using PolyBucket.Api.Common.Entities;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Common;
+using PolyBucket.Database.Entities.Models;
 using System;
 
 namespace PolyBucket.Api.Features.Models.UpdateModelSettings.Domain

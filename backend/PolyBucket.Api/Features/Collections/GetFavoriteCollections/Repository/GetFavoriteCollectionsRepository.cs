@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Collections.GetFavoriteCollections.Domain;
 using System;
 using System.Collections.Generic;

@@ -3,9 +3,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Common.Models.Enums;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Entities.Models.Enums;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Collections.Domain.Enums;
 
 namespace PolyBucket.Api.Features.Users.GetUserProfile.Repository;

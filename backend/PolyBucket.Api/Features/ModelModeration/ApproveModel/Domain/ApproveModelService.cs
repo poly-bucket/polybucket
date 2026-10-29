@@ -1,5 +1,5 @@
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ModelModeration.ApproveModel.Repository;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.Notifications.Domain;

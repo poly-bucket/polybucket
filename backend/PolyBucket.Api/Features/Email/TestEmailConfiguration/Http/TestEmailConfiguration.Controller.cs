@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
-using PolyBucket.Api.Features.Email.TestEmailConfiguration.Domain;
 
 namespace PolyBucket.Api.Features.Email.TestEmailConfiguration.Http;
 

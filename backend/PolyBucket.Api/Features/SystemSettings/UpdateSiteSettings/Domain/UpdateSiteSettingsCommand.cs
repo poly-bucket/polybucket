@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using MediatR;
 using System.Collections.Generic;
 using System.ComponentModel;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
 {

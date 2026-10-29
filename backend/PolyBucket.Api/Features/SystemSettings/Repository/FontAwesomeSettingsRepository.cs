@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Features.SystemSettings.Domain;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 
 namespace PolyBucket.Api.Features.SystemSettings.Repository
 {

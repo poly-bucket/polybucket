@@ -3,7 +3,7 @@ using PolyBucket.Api.Features.Authentication.Domain;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
+using TwoFactorAuthDomain = PolyBucket.Database.Entities.Authentication;
 using System.Collections.Generic;
 
 namespace PolyBucket.Api.Features.Authentication.Login.Domain

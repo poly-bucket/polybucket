@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PolyBucket.Database.Entities.Collections.Enums;
 
 namespace PolyBucket.Api.Features.Collections.Domain.Enums
 {

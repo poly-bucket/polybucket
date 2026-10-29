@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Comments.Repository;
 using PolyBucket.Api.Common.Plugins;

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.SystemSettings.Services;
 using System.IdentityModel.Tokens.Jwt;

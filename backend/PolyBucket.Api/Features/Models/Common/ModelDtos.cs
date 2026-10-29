@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 using PolyBucket.Api.Features.Models.AddTagToModel.Domain;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
-using PolyBucket.Api.Features.Models.LikeModel.Domain;
+using PolyBucket.Database.Entities.Models;
 
 namespace PolyBucket.Api.Features.Models.Common
 {

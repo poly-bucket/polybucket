@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Email;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using System;
 using System.Threading.Tasks;
 

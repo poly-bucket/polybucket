@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Http;
-using PolyBucket.Api.Features.Users.Domain;
+using PolyBucket.Email;
+using PolyBucket.Database.Entities.Users;
 using PolyBucket.Api.Features.Users.MarkEmailVerified.Repository;
 
 namespace PolyBucket.Api.Features.Users.MarkEmailVerified.Domain;

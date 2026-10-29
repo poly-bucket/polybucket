@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
+using TwoFactorAuthDomain = PolyBucket.Database.Entities.Authentication;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupCodes.Repository
 {

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.ThemeManagement.Domain;
 
 namespace PolyBucket.Api.Features.ThemeManagement.Repository;

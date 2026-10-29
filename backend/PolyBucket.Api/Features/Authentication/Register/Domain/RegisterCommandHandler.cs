@@ -1,13 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Common.Email;
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
-using PolyBucket.Api.Features.Email.Domain;
-using PolyBucket.Api.Features.Users.Domain;
+using PolyBucket.Database.Entities.Users;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,7 +94,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
             // Generate authentication response
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
 
-            await _authRepository.CreateRefreshTokenAsync(new PolyBucket.Api.Features.Authentication.Domain.RefreshToken
+            await _authRepository.CreateRefreshTokenAsync(new PolyBucket.Database.Entities.Authentication.RefreshToken
             {
                 Id = Guid.NewGuid(),
                 Token = authResponse.RefreshToken,

@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Common.Email;
-using PolyBucket.Api.Common.Email.Templates;
-using PolyBucket.Api.Features.Email.Domain;
 using PolyBucket.Api.Features.Notifications.Repository;
 
 namespace PolyBucket.Api.Features.Notifications.Domain;

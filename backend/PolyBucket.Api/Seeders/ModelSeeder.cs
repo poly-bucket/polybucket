@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace PolyBucket.Api.Data.Seeders
+namespace PolyBucket.Api.Seeders
 {
     public class ModelSeeder(PolyBucketDbContext context)
     {

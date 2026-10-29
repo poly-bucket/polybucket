@@ -1,5 +1,5 @@
-using PolyBucket.Api.Common.Models;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ModelModeration.Repository;
 using System;
 using System.Threading;

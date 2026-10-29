@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using ModelEntity = PolyBucket.Api.Common.Models.Model;
+using PolyBucket.Database.Persistence;
+using ModelEntity = PolyBucket.Database.Entities.Models.Model;
 
 namespace PolyBucket.Api.Features.Models.DeleteAllModels.Repository;
 

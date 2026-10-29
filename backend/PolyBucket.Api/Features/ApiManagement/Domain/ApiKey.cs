@@ -1,4 +1,4 @@
-using PolyBucket.Api.Common.Entities;
+using PolyBucket.Database.Common;
 using System;
 
 namespace PolyBucket.Api.Features.ApiManagement.Domain

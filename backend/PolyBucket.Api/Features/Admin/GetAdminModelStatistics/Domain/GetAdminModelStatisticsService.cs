@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Admin.GetAdminModelStatistics.Domain;
 using PolyBucket.Api.Features.Admin.GetAdminModelStatistics.Repository;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 using System;
 using System.Linq;
 using System.Threading;

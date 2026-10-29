@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.ModelReactions.Domain;
 
 namespace PolyBucket.Api.Features.Models.ModelReactions.Repository;

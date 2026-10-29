@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using Microsoft.Extensions.Logging;
 
@@ -33,7 +33,7 @@ namespace PolyBucket.Api.Seeders
                 Id = Guid.NewGuid(),
                 AllowAnonUploads = false,
                 RequireUploadModeration = true,
-                DefaultPrivacySetting = PolyBucket.Api.Common.Models.Enums.PrivacySettings.Public,
+                DefaultPrivacySetting = PolyBucket.Database.Entities.Models.Enums.PrivacySettings.Public,
                 AllowAnonDownloads = true,
                 EnableModelVersioning = true,
                 LimitTotalModels = 1000,

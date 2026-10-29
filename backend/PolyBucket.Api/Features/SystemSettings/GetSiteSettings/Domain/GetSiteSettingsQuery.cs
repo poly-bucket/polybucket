@@ -1,5 +1,5 @@
 using MediatR;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 
 namespace PolyBucket.Api.Features.SystemSettings.GetSiteSettings.Domain;
 

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ACL.Services;
 using System.Security.Claims;
 

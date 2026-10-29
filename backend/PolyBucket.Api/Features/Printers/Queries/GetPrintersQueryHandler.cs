@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using PolyBucket.Api.Features.Printers.Domain;
+using PolyBucket.Database.Entities.Printers;
 using PolyBucket.Api.Features.Printers.Repository;
 using System;
 

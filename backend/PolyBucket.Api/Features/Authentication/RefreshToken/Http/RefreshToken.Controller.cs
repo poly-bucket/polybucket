@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Domain;
 using System;
@@ -38,7 +39,7 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Http
 
             try
             {
-                command.Client = ClientRequestInfo.From(HttpContext);
+                command.Client = ClientRequestInfoMapper.From(HttpContext);
                 var response = await _handler.Handle(command, cancellationToken);
                 return Ok(response);
             }

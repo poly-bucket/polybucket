@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Settings;
+using PolyBucket.Database.Persistence;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;

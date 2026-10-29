@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 using System;
 using System.Threading.Tasks;

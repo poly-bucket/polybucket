@@ -1,5 +1,5 @@
 using System;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 
 namespace PolyBucket.Api.Features.Models.GetModelVersions.Domain;
 

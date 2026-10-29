@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorAuth.Domain;
 using System;
 using System.Threading;
@@ -58,7 +59,7 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.DisableTwoFactorA
                 }
 
                 command.UserId = authenticatedUserId;
-                command.Client = ClientRequestInfo.From(HttpContext);
+                command.Client = ClientRequestInfoMapper.From(HttpContext);
 
                 var response = await _handler.Handle(command, cancellationToken);
                 

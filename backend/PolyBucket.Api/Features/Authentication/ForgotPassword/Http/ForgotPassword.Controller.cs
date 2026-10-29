@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.ForgotPassword.Domain;
 using System;
@@ -37,7 +38,7 @@ namespace PolyBucket.Api.Features.Authentication.ForgotPassword.Http
 
             try
             {
-                command.Client = ClientRequestInfo.From(HttpContext);
+                command.Client = ClientRequestInfoMapper.From(HttpContext);
                 await _handler.Handle(command, cancellationToken);
                 // Always return success to prevent email enumeration
                 return Ok(new { message = "If the email address exists, a password reset link has been sent" });

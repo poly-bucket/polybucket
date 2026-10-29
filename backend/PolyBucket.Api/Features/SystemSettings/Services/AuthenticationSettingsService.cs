@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Common.Email;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 
 namespace PolyBucket.Api.Features.SystemSettings.Services;

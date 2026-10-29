@@ -1,6 +1,6 @@
 using MediatR;
 using PolyBucket.Api.Features.Filaments.Domain;
-using PolyBucket.Api.Features.Printers.Domain.Enums;
+using PolyBucket.Database.Entities.Printers.Enums;
 
 namespace PolyBucket.Api.Features.Filaments.Domain;
 

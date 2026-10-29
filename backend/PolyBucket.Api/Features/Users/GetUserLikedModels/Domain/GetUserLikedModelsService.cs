@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Users.GetUserLikedModels.Repository;
 
 namespace PolyBucket.Api.Features.Users.GetUserLikedModels.Domain;

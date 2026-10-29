@@ -1,6 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Search.Domain;
 
 namespace PolyBucket.Api.Features.Search.Repository;

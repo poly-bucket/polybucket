@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using PolyBucket.Api.Features.Printers.Domain;
+using PolyBucket.Database.Entities.Printers;
 
 namespace PolyBucket.Api.Features.Printers.Queries
 {

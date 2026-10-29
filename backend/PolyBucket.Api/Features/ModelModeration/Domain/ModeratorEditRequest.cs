@@ -1,4 +1,5 @@
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
+using PolyBucket.Database.Entities.ModelModeration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -44,15 +45,4 @@ namespace PolyBucket.Api.Features.ModelModeration.Domain
         [Required]
         public ModerationAction Action { get; set; }
     }
-
-    public enum ModerationAction
-    {
-        Edit,
-        ApproveWithChanges,
-        FlagForReview,
-        FeatureModel,
-        UnfeatureModel,
-        Approve,
-        Reject
-    }
-} 
+}

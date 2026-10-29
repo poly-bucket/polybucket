@@ -1,5 +1,5 @@
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Http;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Repository;

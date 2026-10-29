@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
-using PolyBucket.Api.Features.Email.Domain;
-using PolyBucket.Api.Features.Email.GetEmailSettings.Domain;
 
 namespace PolyBucket.Api.Features.Email.GetEmailSettings.Http;
 

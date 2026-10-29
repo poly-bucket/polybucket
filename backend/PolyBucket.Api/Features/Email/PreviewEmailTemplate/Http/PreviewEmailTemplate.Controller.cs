@@ -3,10 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Common.Email.Templates;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
-using PolyBucket.Api.Features.Email.PreviewEmailTemplate.Domain;
 
 namespace PolyBucket.Api.Features.Email.PreviewEmailTemplate.Http;
 

@@ -2,10 +2,9 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Services;
-using PolyBucket.Api.Features.Email.Domain;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain

@@ -1,4 +1,4 @@
-using PolyBucket.Api.Common.Models;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Http;
 using System.Linq;
 

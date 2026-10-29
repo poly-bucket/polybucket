@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Users.Domain;
+using PolyBucket.Database.Persistence;
+using PolyBucket.Database.Entities.Users;
 using PolyBucket.Api.Features.Users.UpdateUserSettings.Domain;
 
 namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Repository;

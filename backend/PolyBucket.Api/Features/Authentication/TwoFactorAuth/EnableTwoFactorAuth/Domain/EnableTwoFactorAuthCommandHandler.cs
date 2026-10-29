@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Repository;
-using PolyBucket.Api.Data;
-using PolyBucket.Api.Features.Email.Domain;
+using PolyBucket.Database.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System;
@@ -10,7 +9,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TwoFactorAuthDomain = PolyBucket.Api.Features.Authentication.Domain;
+using TwoFactorAuthDomain = PolyBucket.Database.Entities.Authentication;
 
 namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Domain
 {

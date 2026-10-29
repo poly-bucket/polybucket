@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Common.Http;
+using PolyBucket.Email;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.Logout.Domain;
 
@@ -34,7 +35,7 @@ public class LogoutController(LogoutCommandHandler handler, ILogger<LogoutContro
 
         try
         {
-            command.Client = ClientRequestInfo.From(HttpContext);
+            command.Client = ClientRequestInfoMapper.From(HttpContext);
             await _handler.Handle(command, cancellationToken);
             return NoContent();
         }

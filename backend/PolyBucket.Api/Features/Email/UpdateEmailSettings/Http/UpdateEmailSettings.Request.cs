@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using PolyBucket.Api.Common.Email;
 
 namespace PolyBucket.Api.Features.Email.UpdateEmailSettings.Http;
 

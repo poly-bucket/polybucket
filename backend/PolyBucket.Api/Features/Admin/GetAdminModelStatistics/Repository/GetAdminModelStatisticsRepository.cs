@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Data;
+using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Admin.GetAdminModelStatistics.Repository;
-using PolyBucket.Api.Common.Models.Enums;
+using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using System;
 using System.Linq;
