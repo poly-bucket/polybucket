@@ -33,12 +33,12 @@ namespace PolyBucket.Api.Features.SystemSettings.CompleteFirstTimeSetup.Domain
                 }
 
                 // Verify required steps are completed (admin and site configuration are required)
-                if (!systemSetup.IsAdminConfigured || !systemSetup.IsSiteConfigured)
+                if (!systemSetup.IsAdminConfigured || !systemSetup.IsSiteConfigured || !systemSetup.IsStorageConfigured)
                 {
                     return new CompleteFirstTimeSetupResponse
                     {
                         Success = false,
-                        Message = "Admin password change and site settings must be completed before finishing",
+                        Message = "Admin account, site settings, and object storage must be completed before finishing setup",
                         CompletedAt = DateTime.UtcNow
                     };
                 }

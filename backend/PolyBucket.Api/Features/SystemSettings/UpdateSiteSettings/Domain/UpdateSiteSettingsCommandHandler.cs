@@ -41,6 +41,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
                         IsFirstTimeSetup = true,
                         IsAdminConfigured = false,
                         IsSiteConfigured = false,
+                        IsStorageConfigured = false,
                         IsEmailConfigured = false,
                         IsModerationConfigured = false,
                         CreatedAt = DateTime.UtcNow,
@@ -96,6 +97,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
                 
                 // Mark site as configured
                 systemSetup.IsSiteConfigured = true;
+                systemSetup.IsModerationConfigured = true;
                 systemSetup.UpdatedAt = DateTime.UtcNow;
                 
                 // Get current user ID if available
@@ -120,7 +122,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
                 {
                     Success = true,
                     Message = "Site settings updated successfully",
-                    NextStep = "email"
+                    NextStep = "storage"
                 };
             }
             catch (Exception ex)

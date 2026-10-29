@@ -10,6 +10,7 @@ namespace PolyBucket.Database.Entities.SystemSettings
         public bool IsAdminConfigured { get; set; } = false;
         public bool IsSiteConfigured { get; set; } = false;
         public bool IsEmailConfigured { get; set; } = false;
+        public bool IsStorageConfigured { get; set; } = false;
         public bool IsModerationConfigured { get; set; } = false;
         
         // Site Configuration

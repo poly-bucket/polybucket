@@ -10,6 +10,7 @@ import { SettingsFooter } from "@/components/settings/settings-footer";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import { EmailSettingsSection } from "@/components/admin/email-settings-section";
+import { StorageSettingsSection } from "@/components/admin/storage-settings-section";
 import { SiteSettingsSection } from "@/components/admin/site-settings-section";
 import { EmailOutboxSection } from "@/components/admin/email-outbox-section";
 import {
@@ -129,6 +130,8 @@ export function SystemTab() {
           </div>
         </div>
       </SettingsSection>
+
+      <StorageSettingsSection />
 
       <EmailSettingsSection />
 

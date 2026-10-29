@@ -188,13 +188,13 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                         {
                             setupStep = "site";
                         }
+                        else if (!systemSetup.IsStorageConfigured)
+                        {
+                            setupStep = "storage";
+                        }
                         else if (!systemSetup.IsEmailConfigured)
                         {
                             setupStep = "email";
-                        }
-                        else if (!systemSetup.IsModerationConfigured)
-                        {
-                            setupStep = "moderation";
                         }
                     }
                 }

@@ -38,9 +38,21 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddHttpClient();
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+        services.PostConfigure<AppSettings>(options =>
+        {
+            if (string.IsNullOrWhiteSpace(options.Frontend.BaseUrl))
+            {
+                var frontendUrl = configuration["FRONTEND_URL"]
+                    ?? Environment.GetEnvironmentVariable("FRONTEND_URL");
+                if (!string.IsNullOrWhiteSpace(frontendUrl))
+                {
+                    options.Frontend.BaseUrl = frontendUrl.Trim();
+                }
+            }
+        });
+        services.AddSingleton<IValidateOptions<AdminSeedSettings>, AdminSeedSettingsValidator>();
         services.AddOptions<AdminSeedSettings>()
             .BindConfiguration(AdminSeedSettings.SectionName)
-            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return services;
@@ -153,6 +165,13 @@ public static class ServiceCollectionExtensions
                     {
                         var origins = corsOriginsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                         allowedOrigins.AddRange(origins);
+                    }
+
+                    var frontendUrl = configuration["FRONTEND_URL"]
+                        ?? Environment.GetEnvironmentVariable("FRONTEND_URL");
+                    if (!string.IsNullOrWhiteSpace(frontendUrl))
+                    {
+                        allowedOrigins.Add(frontendUrl.Trim());
                     }
                     
                     if (allowedOrigins.Count == 0)

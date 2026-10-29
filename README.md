@@ -230,6 +230,22 @@ docker-compose logs -f
 docker-compose down
 ```
 
+**Minimal API environment (production-style):** The API can start with only database access, JWT signing, CORS/frontend URL, and a bootstrap admin password. Object storage and email are configured in the **setup wizard** (stored in PostgreSQL). Optional bundled MinIO:
+
+```bash
+docker compose --profile object-storage up -d
+```
+
+| Variable | Purpose |
+|----------|---------|
+| `Database__Host`, `Database__Name`, `Database__Username`, `Database__Password` or `Database__ConnectionString` | PostgreSQL |
+| `JWT_SECRET` | Token signing (min 32 characters) |
+| `FRONTEND_URL` or `CORS__ALLOWED_ORIGINS` | Browser CORS |
+| `Admin__Password` | Initial admin login (username/email use defaults) |
+| `ASPNETCORE_URLS` | Listen URL inside the container |
+
+After saving object storage in the wizard, the API **restarts once** so it connects to MinIO/S3 using the database settings.
+
 ### Manual Installation
 
 For development or production deployments without Docker:

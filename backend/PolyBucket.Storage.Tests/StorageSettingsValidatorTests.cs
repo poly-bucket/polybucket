@@ -19,6 +19,14 @@ public class StorageSettingsValidatorTests
     };
 
     [Fact]
+    public void Validate_Succeeds_WhenEnvNotConfigured()
+    {
+        var result = _validator.Validate(Options.DefaultName, new StorageSettings());
+
+        result.Succeeded.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Validate_Succeeds_ForValidMinioSettings()
     {
         var result = _validator.Validate(Options.DefaultName, ValidMinioSettings());

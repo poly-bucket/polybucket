@@ -14,12 +14,12 @@ namespace PolyBucket.Api.Features.Files.Http
     public class GetFileConfigController : ControllerBase
     {
         private readonly PolyBucketDbContext _context;
-        private readonly StorageSettings _storageSettings;
+        private readonly IStorageSettingsResolver _storageSettingsResolver;
 
-        public GetFileConfigController(PolyBucketDbContext context, IOptions<StorageSettings> storageSettings)
+        public GetFileConfigController(PolyBucketDbContext context, IStorageSettingsResolver storageSettingsResolver)
         {
             _context = context;
-            _storageSettings = storageSettings.Value;
+            _storageSettingsResolver = storageSettingsResolver;
         }
 
         /// <summary>
@@ -62,9 +62,11 @@ namespace PolyBucket.Api.Features.Files.Http
                         g => g.OrderBy(ft => ft.Priority).ToList()
                     );
 
+                var storageSettings = await _storageSettingsResolver.GetEffectiveSettingsAsync();
+
                 var response = new FileConfigResponse
                 {
-                    StorageProvider = _storageSettings.Provider,
+                    StorageProvider = storageSettings.IsConfigured ? storageSettings.Provider : "unconfigured",
                     MaxTotalFileSize = fileTypes.Any() ? fileTypes.Max(ft => ft.MaxFileSizeBytes) : 100L * 1024 * 1024, // 100MB default
                     MaxFilesPerUpload = fileTypes.Any() ? fileTypes.Max(ft => ft.MaxPerUpload) : 10,
                     SupportedExtensions = fileTypes.Select(ft => ft.Extension).ToList(),

@@ -10,6 +10,7 @@ using PolyBucket.Api.Features.SystemSettings.Plugins;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ModelModeration;
 using PolyBucket.Email.DependencyInjection;
+using PolyBucket.Storage.DependencyInjection;
 using PolyBucket.Api.Features.Comments;
 using PolyBucket.Api.Features.Notifications;
 
@@ -24,6 +25,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddModelsFeature();
         services.AddModelModerationFeature();
         services.AddEmailFeatureServices();
+        services.AddStorageFeatureServices();
         services.AddNotificationsFeature();
 
         // Collections

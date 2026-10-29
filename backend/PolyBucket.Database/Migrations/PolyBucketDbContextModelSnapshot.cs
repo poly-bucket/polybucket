@@ -2842,6 +2842,9 @@ namespace PolyBucket.Database.Migrations
                     b.Property<bool>("IsSiteConfigured")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsStorageConfigured")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsThemeCustomized")
                         .HasColumnType("boolean");
 

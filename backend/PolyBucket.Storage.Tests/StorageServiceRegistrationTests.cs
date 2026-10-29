@@ -18,39 +18,36 @@ public class StorageServiceRegistrationTests
         ["Storage:BucketName"] = "unit-test"
     };
 
-    private IServiceProvider BuildServiceProvider(Dictionary<string, string?> inMemorySettings)
+    private ServiceCollection BuildServices(Dictionary<string, string?> inMemorySettings)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemorySettings)
             .Build();
 
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddObjectStorage(configuration);
-        return services.BuildServiceProvider();
+        return services;
     }
 
     [Theory]
     [InlineData("MinIO")]
     [InlineData("minio")]
-    public void AddObjectStorage_RegistersMinioImplementation(string providerValue)
+    public void AddObjectStorage_RegistersRoutingStorageService(string providerValue)
     {
-        var sp = BuildServiceProvider(MinioSettings(providerValue));
-        var storage = sp.GetRequiredService<IStorageService>();
+        var services = BuildServices(MinioSettings(providerValue));
 
-        storage.ShouldNotBeNull();
-        storage.ShouldBeOfType<MinioStorageService>();
+        services.ShouldContain(d =>
+            d.ServiceType == typeof(IStorageService) && d.ImplementationType == typeof(RoutingStorageService));
     }
 
     [Fact]
-    public void AddObjectStorage_DefaultsToMinio_WhenProviderMissing()
+    public void AddObjectStorage_AllowsEmptyEnvConfiguration()
     {
-        var settings = MinioSettings(null);
-        settings.Remove("Storage:Provider");
+        var services = BuildServices(new Dictionary<string, string?>());
 
-        var sp = BuildServiceProvider(settings);
-        var storage = sp.GetRequiredService<IStorageService>();
-
-        storage.ShouldBeOfType<MinioStorageService>();
+        services.ShouldContain(d => d.ServiceType == typeof(IStorageSettingsResolver));
+        services.ShouldContain(d => d.ServiceType == typeof(IStorageService));
     }
 
     [Theory]
@@ -59,6 +56,6 @@ public class StorageServiceRegistrationTests
     public void AddObjectStorage_Throws_WhenProviderIsNotMinio(string provider)
     {
         var settings = MinioSettings(provider);
-        Should.Throw<InvalidOperationException>(() => BuildServiceProvider(settings));
+        Should.Throw<InvalidOperationException>(() => BuildServices(settings));
     }
 }

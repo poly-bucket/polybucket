@@ -2,8 +2,9 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using PolyBucket.Database.Persistence;
+using PolyBucket.Storage;
+using PolyBucket.Storage.Settings;
 using PolyBucket.Api.Features.Files.Http;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Api.Settings;
@@ -40,7 +41,12 @@ public class FilesControllerTests : IDisposable
     public async Task GetFileConfig_ReturnsOk()
     {
         // Arrange
-        var controller = new GetFileConfigController(_context, Options.Create(new StorageSettings { Provider = "local" }));
+        var resolver = new MockStorageSettingsResolver(new EffectiveStorageSettings
+        {
+            Provider = "local",
+            IsConfigured = true
+        });
+        var controller = new GetFileConfigController(_context, resolver);
 
         // Act
         var result = await controller.GetFileConfig();
@@ -81,4 +87,14 @@ public class FilesControllerTests : IDisposable
     }
 
     public void Dispose() => _context.Dispose();
+
+    private sealed class MockStorageSettingsResolver(EffectiveStorageSettings settings) : IStorageSettingsResolver
+    {
+        public Task<EffectiveStorageSettings> GetEffectiveSettingsAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(settings);
+
+        public void Invalidate()
+        {
+        }
+    }
 }

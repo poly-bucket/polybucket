@@ -21128,6 +21128,7 @@ export class CheckFirstTimeSetupResponse implements ICheckFirstTimeSetupResponse
     isFirstTimeSetup?: boolean;
     isAdminConfigured?: boolean;
     isSiteConfigured?: boolean;
+    isStorageConfigured?: boolean;
     isEmailConfigured?: boolean;
     isModerationConfigured?: boolean;
     currentStep?: string;
@@ -21148,6 +21149,7 @@ export class CheckFirstTimeSetupResponse implements ICheckFirstTimeSetupResponse
             this.isFirstTimeSetup = _data["isFirstTimeSetup"];
             this.isAdminConfigured = _data["isAdminConfigured"];
             this.isSiteConfigured = _data["isSiteConfigured"];
+            this.isStorageConfigured = _data["isStorageConfigured"];
             this.isEmailConfigured = _data["isEmailConfigured"];
             this.isModerationConfigured = _data["isModerationConfigured"];
             this.currentStep = _data["currentStep"];
@@ -21168,6 +21170,7 @@ export class CheckFirstTimeSetupResponse implements ICheckFirstTimeSetupResponse
         data["isFirstTimeSetup"] = this.isFirstTimeSetup;
         data["isAdminConfigured"] = this.isAdminConfigured;
         data["isSiteConfigured"] = this.isSiteConfigured;
+        data["isStorageConfigured"] = this.isStorageConfigured;
         data["isEmailConfigured"] = this.isEmailConfigured;
         data["isModerationConfigured"] = this.isModerationConfigured;
         data["currentStep"] = this.currentStep;
@@ -21181,6 +21184,7 @@ export interface ICheckFirstTimeSetupResponse {
     isFirstTimeSetup?: boolean;
     isAdminConfigured?: boolean;
     isSiteConfigured?: boolean;
+    isStorageConfigured?: boolean;
     isEmailConfigured?: boolean;
     isModerationConfigured?: boolean;
     currentStep?: string;

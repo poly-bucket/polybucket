@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/primitives/button";
 import { EmailSettingsSection } from "@/components/admin/email-settings-section";
 import type { EmailSettings } from "@/lib/services/emailService";
+import { skipEmailSetup } from "@/lib/services/storageService";
+import { toast } from "sonner";
 
 interface EmailSetupStepProps {
   onComplete: (data: Record<string, unknown>) => void;
@@ -17,8 +19,23 @@ export default function EmailSetupStep({
   defaultTestRecipient,
 }: EmailSetupStepProps) {
   const [saved, setSaved] = useState<EmailSettings | null>(null);
+  const [isSkipping, setIsSkipping] = useState(false);
 
-  return (
+  const handleSkip = async () => {
+    setIsSkipping(true);
+    try {
+      const result = await skipEmailSetup();
+      if (result.success) {
+        onComplete({ emailConfigured: false });
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("Could not skip email setup");
+    } finally {
+      setIsSkipping(false);
+    }
+  };
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-medium text-white mb-2">Email (optional)</h3>
@@ -51,7 +68,8 @@ export default function EmailSetupStep({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => onComplete({ emailConfigured: false })}
+              onClick={handleSkip}
+              disabled={isSkipping}
               className="text-white/80"
             >
               Skip for now

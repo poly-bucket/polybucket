@@ -6,30 +6,34 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import AdminAccountSetupStep from "@/setup/AdminAccountSetupStep";
 import SiteSecurityStep from "@/setup/SiteSecurityStep";
+import StorageSetupStep from "@/setup/StorageSetupStep";
 import EmailSetupStep from "@/setup/EmailSetupStep";
 import SiteEssentialsStep from "@/setup/SiteEssentialsStep";
 import SetupComplete from "@/setup/SetupComplete";
 import { Card, CardContent } from "@/components/primitives/card";
 import { AuthCardSkeleton } from "@/components/ui/skeletons";
 
-type StepIndex = 0 | 1 | 2 | 3;
+type StepIndex = 0 | 1 | 2 | 3 | 4;
 
 function resumeStepFromStatus(status: {
   isAdminConfigured?: boolean;
-  isSiteConfigured?: boolean;
+  isStorageConfigured?: boolean;
   isEmailConfigured?: boolean;
+  isSiteConfigured?: boolean;
 }): StepIndex {
   if (!status.isAdminConfigured) return 0;
-  if (!status.isSiteConfigured) return 1;
-  if (!status.isEmailConfigured) return 2;
-  return 3;
+  if (!status.isStorageConfigured) return 2;
+  if (!status.isEmailConfigured) return 3;
+  if (!status.isSiteConfigured) return 4;
+  return 4;
 }
 
 const STEP_NAMES: Record<StepIndex, string> = {
   0: "Admin Account Setup",
   1: "Site security",
-  2: "Email",
-  3: "Site essentials",
+  2: "Object storage",
+  3: "Email",
+  4: "Site essentials",
 };
 const TOTAL_STEPS = Object.keys(STEP_NAMES).length;
 
@@ -59,23 +63,6 @@ export default function SetupPage() {
       try {
         const client = ApiClientFactory.getApiClient();
         const status = await client.systemSetup_GetSetupStatus();
-
-        if (status?.isFirstTimeSetup && status?.isSiteConfigured) {
-          setIsCompletingSetup(true);
-          try {
-            const response = await client.systemSetup_CompleteSetup();
-            if (response?.success) {
-              setIsComplete(true);
-            }
-          } catch {
-            setCurrentStep(resumeStepFromStatus(status));
-          } finally {
-            setIsCompletingSetup(false);
-            setIsLoadingStatus(false);
-          }
-          return;
-        }
-
         setCurrentStep(resumeStepFromStatus(status ?? {}));
       } catch {
         setCurrentStep(0);
@@ -97,9 +84,14 @@ export default function SetupPage() {
     setCurrentStep(2);
   };
 
-  const handleEmailComplete = (data: Record<string, unknown>) => {
+  const handleStorageComplete = (data: Record<string, unknown>) => {
     setSetupData((prev) => ({ ...prev, ...data }));
     setCurrentStep(3);
+  };
+
+  const handleEmailComplete = (data: Record<string, unknown>) => {
+    setSetupData((prev) => ({ ...prev, ...data }));
+    setCurrentStep(4);
   };
 
   const handleSiteComplete = async (data: Record<string, unknown>) => {
@@ -120,6 +112,8 @@ export default function SetupPage() {
     router.push("/");
   };
 
+  const wideStep = currentStep === 2 || currentStep === 3;
+
   if (isAuthLoading || isLoadingStatus || isCompletingSetup) {
     return (
       <div className="flex w-full max-w-md justify-center">
@@ -139,48 +133,52 @@ export default function SetupPage() {
   }
 
   return (
-    <div className={`w-full space-y-6 ${currentStep === 2 ? "max-w-2xl" : "max-w-lg"}`}>
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-white">
-            Setup Wizard
-          </h1>
-          <p className="mt-1 text-sm text-white/60">
-            Step {currentStep + 1} of {TOTAL_STEPS}: {STEP_NAMES[currentStep]}
-          </p>
-        </div>
+    <div className={`w-full space-y-6 ${wideStep ? "max-w-2xl" : "max-w-lg"}`}>
+      <div className="text-center">
+        <h1 className="text-2xl font-semibold text-white">Setup Wizard</h1>
+        <p className="mt-1 text-sm text-white/60">
+          Step {currentStep + 1} of {TOTAL_STEPS}: {STEP_NAMES[currentStep]}
+        </p>
+      </div>
 
-        <Card variant="glass" className="border-white/20">
-          <CardContent>
-            {currentStep === 0 && (
-              <AdminAccountSetupStep
-                onComplete={handleAdminAccountComplete}
-                onBack={() => setCurrentStep(0)}
-                isFirstStep={true}
-              />
-            )}
-            {currentStep === 1 && (
-              <SiteSecurityStep
-                onComplete={handleSiteSecurityComplete}
-                onBack={() => setCurrentStep(0)}
-                data={setupData}
-              />
-            )}
-            {currentStep === 2 && (
-              <EmailSetupStep
-                onComplete={handleEmailComplete}
-                onBack={() => setCurrentStep(1)}
-                defaultTestRecipient={user?.email ?? ""}
-              />
-            )}
-            {currentStep === 3 && (
-              <SiteEssentialsStep
-                onComplete={handleSiteComplete}
-                onBack={() => setCurrentStep(2)}
-                data={setupData}
-              />
-            )}
-          </CardContent>
-        </Card>
+      <Card variant="glass" className="border-white/20">
+        <CardContent>
+          {currentStep === 0 && (
+            <AdminAccountSetupStep
+              onComplete={handleAdminAccountComplete}
+              onBack={() => setCurrentStep(0)}
+              isFirstStep={true}
+            />
+          )}
+          {currentStep === 1 && (
+            <SiteSecurityStep
+              onComplete={handleSiteSecurityComplete}
+              onBack={() => setCurrentStep(0)}
+              data={setupData}
+            />
+          )}
+          {currentStep === 2 && (
+            <StorageSetupStep
+              onComplete={handleStorageComplete}
+              onBack={() => setCurrentStep(1)}
+            />
+          )}
+          {currentStep === 3 && (
+            <EmailSetupStep
+              onComplete={handleEmailComplete}
+              onBack={() => setCurrentStep(2)}
+              defaultTestRecipient={user?.email ?? ""}
+            />
+          )}
+          {currentStep === 4 && (
+            <SiteEssentialsStep
+              onComplete={handleSiteComplete}
+              onBack={() => setCurrentStep(3)}
+              data={setupData}
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

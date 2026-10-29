@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain;
 using PolyBucket.Api.Features.SystemSettings.CompleteFirstTimeSetup.Domain;
+using PolyBucket.Api.Features.SystemSettings.ApplyStorageSetup.Domain;
+using PolyBucket.Api.Features.SystemSettings.SkipEmailSetup.Domain;
 using PolyBucket.Api.Features.SystemSettings.GetSiteSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.Http;
 using PolyBucket.Api.Tests.Testing;
@@ -78,5 +80,35 @@ public class SystemSetupControllerTests
         // Assert
         result.Result.ShouldBeOfType<ForbidResult>();
         _mediator.Verify(m => m.Send(It.IsAny<IRequest<CompleteFirstTimeSetupResponse>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "Apply storage as admin returns Accepted when successful.")]
+    public async Task ApplyStorage_Admin_ReturnsAccepted()
+    {
+        // Arrange
+        var response = new ApplyStorageSetupResponse { Success = true, RestartScheduled = true };
+        _mediator.SetupSend<ApplyStorageSetupCommand, ApplyStorageSetupResponse>(response);
+        var controller = new SystemSetupController(_mediator.Object).WithUser(Guid.NewGuid(), "Admin");
+
+        // Act
+        var result = await controller.ApplyStorageSetup();
+
+        // Assert
+        result.Result.ShouldBeOfType<AcceptedResult>();
+    }
+
+    [Fact(DisplayName = "Skip email as admin returns Ok when successful.")]
+    public async Task SkipEmail_Admin_ReturnsOk()
+    {
+        // Arrange
+        var response = new SkipEmailSetupResponse { Success = true };
+        _mediator.SetupSend<SkipEmailSetupCommand, SkipEmailSetupResponse>(response);
+        var controller = new SystemSetupController(_mediator.Object).WithUser(Guid.NewGuid(), "Admin");
+
+        // Act
+        var result = await controller.SkipEmailSetup();
+
+        // Assert
+        result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);
     }
 }

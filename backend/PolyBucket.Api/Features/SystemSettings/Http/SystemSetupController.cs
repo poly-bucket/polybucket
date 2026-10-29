@@ -5,6 +5,8 @@ using PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain;
 using PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.CompleteFirstTimeSetup.Domain;
 using PolyBucket.Api.Features.SystemSettings.GetSiteSettings.Domain;
+using PolyBucket.Api.Features.SystemSettings.ApplyStorageSetup.Domain;
+using PolyBucket.Api.Features.SystemSettings.SkipEmailSetup.Domain;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.SystemSettings.Http
@@ -127,6 +129,52 @@ namespace PolyBucket.Api.Features.SystemSettings.Http
             var command = new CompleteFirstTimeSetupCommand();
             var result = await _mediator.Send(command);
             
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Restarts the API so object storage settings loaded from the database take effect.
+        /// </summary>
+        [HttpPost("apply-storage")]
+        [Authorize]
+        [ProducesResponseType(typeof(ApplyStorageSetupResponse), 202)]
+        [ProducesResponseType(typeof(ApplyStorageSetupResponse), 400)]
+        public async Task<ActionResult<ApplyStorageSetupResponse>> ApplyStorageSetup()
+        {
+            if (!IsAdminRequest())
+            {
+                return Forbid();
+            }
+
+            var result = await _mediator.Send(new ApplyStorageSetupCommand());
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Accepted(result);
+        }
+
+        /// <summary>
+        /// Marks the optional email setup step as skipped during first-time setup.
+        /// </summary>
+        [HttpPost("skip-email")]
+        [Authorize]
+        [ProducesResponseType(typeof(SkipEmailSetupResponse), 200)]
+        [ProducesResponseType(typeof(SkipEmailSetupResponse), 400)]
+        public async Task<ActionResult<SkipEmailSetupResponse>> SkipEmailSetup()
+        {
+            if (!IsAdminRequest())
+            {
+                return Forbid();
+            }
+
+            var result = await _mediator.Send(new SkipEmailSetupCommand());
             if (!result.Success)
             {
                 return BadRequest(result);

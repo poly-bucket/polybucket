@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
       target: development
+    restart: unless-stopped
     ports:
       - "11666:11666"
     environment:
@@ -15,18 +16,13 @@ services:
       - Database__Username=postgres
       - Database__Password=postgres
       - JWT_SECRET=development-jwt-secret-key-change-in-production-minimum-32-characters-long
-      - AppSettings__Security__JwtSecret=development-jwt-secret-key-change-in-production-minimum-32-characters-long
-      - Admin__Username=admin
-      - Admin__Email=admin@polybucket.com
+      - FRONTEND_URL=http://localhost:12001
       - Admin__Password=Polybucket123
-      - AppSettings__Frontend__BaseUrl=http://localhost:12001
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
       - OTEL_SERVICE_NAME=polybucket-api
       - OTEL_RESOURCE_ATTRIBUTES=service.name=polybucket-api,service.version=1.0.0,deployment.environment=Development
     depends_on:
       db:
-        condition: service_healthy
-      minio:
         condition: service_healthy
       lgtm:
         condition: service_healthy
@@ -91,6 +87,7 @@ services:
       retries: 5
 
   minio:
+    profiles: ["object-storage"]
     image: pgsty/silo@sha256:7bb2aff6b89efe1cb1303c10fc21d579447434ed06649ac9ec05a5e2dbf30ad7
     container_name: polybucket-minio
     ports:

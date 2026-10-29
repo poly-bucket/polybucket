@@ -1,10 +1,21 @@
 using Microsoft.Extensions.Options;
+using PolyBucket.Storage.Settings;
 
 namespace PolyBucket.Storage.Settings;
 
 public sealed class StorageSettingsValidator : IValidateOptions<StorageSettings>
 {
     public ValidateOptionsResult Validate(string? name, StorageSettings options)
+    {
+        if (!StorageSettingsValidation.IsEnvConfigurationAttempted(options))
+        {
+            return ValidateOptionsResult.Success;
+        }
+
+        return ValidateCompleteMinio(options);
+    }
+
+    internal static ValidateOptionsResult ValidateCompleteMinio(StorageSettings options)
     {
         var provider = (options.Provider ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(provider))

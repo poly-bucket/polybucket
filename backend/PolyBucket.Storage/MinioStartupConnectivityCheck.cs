@@ -1,53 +1,55 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Minio;
-using Minio.DataModel.Args;
-using PolyBucket.Storage.Settings;
 
 namespace PolyBucket.Storage;
 
 public sealed class MinioStartupConnectivityCheck(
-    IOptions<StorageSettings> storageOptions,
+    IStorageSettingsResolver settingsResolver,
     ILogger<MinioStartupConnectivityCheck> logger) : IHostedService
 {
-    private readonly StorageSettings _settings = storageOptions.Value;
-    private readonly ILogger<MinioStartupConnectivityCheck> _logger = logger;
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        var settings = await settingsResolver.GetEffectiveSettingsAsync(cancellationToken).ConfigureAwait(false);
+        if (!settings.IsConfigured)
+        {
+            logger.LogInformation(
+                "Object storage is not configured yet. Skipping connectivity check until storage settings are saved.");
+            return;
+        }
+
+        var errors = settings.GetValidationErrors();
+        if (errors.Count > 0)
+        {
+            logger.LogCritical(
+                "Object storage configuration is incomplete: {Errors}. Fix storage settings and restart the API.",
+                string.Join("; ", errors));
+            throw new InvalidOperationException("Object storage configuration is incomplete.");
+        }
+
         try
         {
-            var client = new MinioClient()
-                .WithEndpoint(_settings.Endpoint, _settings.Port)
-                .WithCredentials(_settings.AccessKey, _settings.SecretKey)
-                .WithSSL(_settings.UseSSL)
-                .Build();
+            await MinioStorageOperations
+                .TestConnectivityAsync(settings.ToStorageSettings(), cancellationToken)
+                .ConfigureAwait(false);
 
-            var existsArgs = new BucketExistsArgs().WithBucket(_settings.BucketName);
-            await client.BucketExistsAsync(existsArgs, cancellationToken).ConfigureAwait(false);
-
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Object storage connectivity check succeeded for MinIO endpoint {Endpoint}:{Port} and bucket {BucketName}.",
-                _settings.Endpoint,
-                _settings.Port,
-                _settings.BucketName);
+                settings.Endpoint,
+                settings.Port,
+                settings.BucketName);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(
+            logger.LogCritical(
                 ex,
-                "Object storage connectivity check failed for MinIO endpoint {Endpoint}:{Port} and bucket {BucketName}. " +
-                "Verify Storage configuration (Endpoint, Port, AccessKey, SecretKey, BucketName), network reachability, and credentials.",
-                _settings.Endpoint,
-                _settings.Port,
-                _settings.BucketName);
+                "Object storage connectivity check failed for MinIO endpoint {Endpoint}:{Port} and bucket {BucketName}.",
+                settings.Endpoint,
+                settings.Port,
+                settings.BucketName);
             throw;
         }
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

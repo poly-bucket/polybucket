@@ -7,6 +7,11 @@ public sealed class DatabaseSettingsValidator : IValidateOptions<DatabaseSetting
 {
     public ValidateOptionsResult Validate(string? name, DatabaseSettings options)
     {
+        if (!string.IsNullOrWhiteSpace(options.ConnectionString))
+        {
+            return ValidateOptionsResult.Success;
+        }
+
         if (string.IsNullOrWhiteSpace((options.Host ?? string.Empty).Trim()))
             return ValidateOptionsResult.Fail("Database:Host (or environment variable Database__Host) is required.");
         if (string.IsNullOrWhiteSpace((options.Name ?? string.Empty).Trim()))

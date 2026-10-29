@@ -41,24 +41,6 @@ public class Program
         {
             Log.Information("Starting PolyBucket API");
             
-            var envAdminUsername = Environment.GetEnvironmentVariable("Admin__Username");
-            var envAdminEmail = Environment.GetEnvironmentVariable("Admin__Email");
-            var envAdminPassword = Environment.GetEnvironmentVariable("Admin__Password");
-            
-            Log.Information("Environment variables at startup - Admin__Username: {Username}, Admin__Email: {Email}, Admin__Password: {PasswordSet}",
-                envAdminUsername ?? "(not set)",
-                envAdminEmail ?? "(not set)",
-                string.IsNullOrWhiteSpace(envAdminPassword) ? "(not set)" : $"(set, length: {envAdminPassword.Length})");
-            
-            var configAdminUsername = builder.Configuration["Admin:Username"];
-            var configAdminEmail = builder.Configuration["Admin:Email"];
-            var configAdminPassword = builder.Configuration["Admin:Password"];
-            
-            Log.Information("IConfiguration at startup - Admin:Username: {Username}, Admin:Email: {Email}, Admin:Password: {PasswordSet}",
-                configAdminUsername ?? "(null)",
-                configAdminEmail ?? "(null)",
-                string.IsNullOrWhiteSpace(configAdminPassword) ? "(null)" : $"(set, length: {configAdminPassword.Length})");
-            
             builder.Host.UseSerilog();
 
             // Configure services using extension methods
@@ -74,9 +56,8 @@ public class Program
                 .AddPolyBucketForwardedHeaders(builder.Configuration)
                 .AddPolyBucketRateLimiting(builder.Configuration);
 
-            // Add object storage
-            builder.Services.AddObjectStorage(builder.Configuration);
             builder.Services.AddEmail(builder.Configuration);
+            builder.Services.AddObjectStorage(builder.Configuration);
 
             var app = builder.Build();
 

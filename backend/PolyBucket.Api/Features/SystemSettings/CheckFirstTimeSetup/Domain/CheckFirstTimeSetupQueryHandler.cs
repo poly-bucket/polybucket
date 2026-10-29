@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.SystemSettings.Domain;
 
 namespace PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain
 {
@@ -19,13 +18,13 @@ namespace PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain
             
             if (systemSetup == null)
             {
-                // Create default system setup if none exists
                 systemSetup = new SystemSetup
                 {
                     Id = Guid.NewGuid(),
                     IsFirstTimeSetup = true,
                     IsAdminConfigured = false,
                     IsSiteConfigured = false,
+                    IsStorageConfigured = false,
                     IsEmailConfigured = false,
                     IsModerationConfigured = false,
                     CreatedAt = DateTime.UtcNow,
@@ -48,16 +47,16 @@ namespace PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain
             if (systemSetup.IsSiteConfigured)
             {
                 completedSteps++;
+                currentStep = "storage";
+            }
+
+            if (systemSetup.IsStorageConfigured)
+            {
+                completedSteps++;
                 currentStep = "email";
             }
 
             if (systemSetup.IsEmailConfigured)
-            {
-                completedSteps++;
-                currentStep = "moderation";
-            }
-
-            if (systemSetup.IsModerationConfigured)
             {
                 completedSteps++;
                 currentStep = "complete";
@@ -68,12 +67,13 @@ namespace PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain
                 IsFirstTimeSetup = systemSetup.IsFirstTimeSetup,
                 IsAdminConfigured = systemSetup.IsAdminConfigured,
                 IsSiteConfigured = systemSetup.IsSiteConfigured,
+                IsStorageConfigured = systemSetup.IsStorageConfigured,
                 IsEmailConfigured = systemSetup.IsEmailConfigured,
                 IsModerationConfigured = systemSetup.IsModerationConfigured,
                 CurrentStep = currentStep,
-                TotalSteps = 4,
+                TotalSteps = 5,
                 CompletedSteps = completedSteps
             };
         }
     }
-} 
+}

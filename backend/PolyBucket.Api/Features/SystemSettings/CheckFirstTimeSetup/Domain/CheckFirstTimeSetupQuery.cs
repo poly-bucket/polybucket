@@ -12,9 +12,10 @@ namespace PolyBucket.Api.Features.SystemSettings.CheckFirstTimeSetup.Domain
         public bool IsAdminConfigured { get; set; }
         public bool IsSiteConfigured { get; set; }
         public bool IsEmailConfigured { get; set; }
+        public bool IsStorageConfigured { get; set; }
         public bool IsModerationConfigured { get; set; }
         public string CurrentStep { get; set; } = string.Empty;
-        public int TotalSteps { get; set; } = 4;
+        public int TotalSteps { get; set; } = 5;
         public int CompletedSteps { get; set; } = 0;
     }
 } 
