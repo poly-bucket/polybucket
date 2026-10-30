@@ -29,6 +29,7 @@ export interface UserProfileData {
   totalDownloads?: number;
   totalFollowers?: number;
   totalFollowing?: number;
+  isFollowedByCurrentUser?: boolean;
   isProfilePublic?: boolean;
   showEmail?: boolean;
   showLastLogin?: boolean;

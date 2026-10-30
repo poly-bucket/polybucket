@@ -34,6 +34,7 @@ public class GetUserProfileResponse
     public int TotalFollowers { get; set; }
     public int TotalFollowing { get; set; }
     public bool IsProfilePublic { get; set; }
+    public bool IsFollowedByCurrentUser { get; set; }
     public bool ShowEmail { get; set; }
     public bool ShowLastLogin { get; set; }
     public bool ShowStatistics { get; set; }

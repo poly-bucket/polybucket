@@ -38,6 +38,7 @@ namespace PolyBucket.Database.Persistence;
         public DbSet<Model> Models { get; set; } = null!;
         public DbSet<ModelFile> ModelFiles { get; set; } = null!;
         public DbSet<Like> Likes { get; set; } = null!;
+        public DbSet<UserFollow> UserFollows { get; set; } = null!;
         public DbSet<ModelViewDedup> ModelViewDedups { get; set; } = null!;
         public DbSet<ModelDownloadDedup> ModelDownloadDedups { get; set; } = null!;
         public DbSet<ModelVersion> ModelVersions { get; set; } = null!;
@@ -233,6 +234,25 @@ namespace PolyBucket.Database.Persistence;
                 .IsUnique()
                 .HasFilter("\"DeletedAt\" IS NULL")
                 .HasDatabaseName("IX_Likes_ModelId_UserId_Active");
+
+            modelBuilder.Entity<UserFollow>(entity =>
+            {
+                entity.HasOne(f => f.Follower)
+                    .WithMany()
+                    .HasForeignKey(f => f.FollowerUserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(f => f.Followed)
+                    .WithMany()
+                    .HasForeignKey(f => f.FollowedUserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(f => new { f.FollowerUserId, f.FollowedUserId })
+                    .IsUnique()
+                    .HasFilter("\"DeletedAt\" IS NULL")
+                    .HasDatabaseName("IX_UserFollows_FollowerUserId_FollowedUserId_Active");
+                entity.HasIndex(f => new { f.FollowedUserId, f.CreatedAt })
+                    .HasFilter("\"DeletedAt\" IS NULL")
+                    .HasDatabaseName("IX_UserFollows_FollowedUserId_CreatedAt_Active");
+            });
 
             modelBuilder.Entity<ModelViewDedup>(entity =>
             {

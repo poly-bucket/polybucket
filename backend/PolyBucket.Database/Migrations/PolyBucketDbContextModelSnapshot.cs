@@ -71,300 +71,6 @@ namespace PolyBucket.Database.Migrations
                     b.ToTable("ModelTag");
                 });
 
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Model", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("AIGenerated")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("AuthorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Dislikes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Downloads")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("FileUrl")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFederated")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsRemix")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastFederationSync")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("License")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Likes")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("NSFW")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Privacy")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RemixUrl")
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("RemoteAuthorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("RemoteInstanceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RemoteModelId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Views")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("WIP")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt")
-                        .IsDescending()
-                        .HasDatabaseName("IX_Models_CreatedAt_PublicActive")
-                        .HasFilter("\"DeletedAt\" IS NULL AND \"Privacy\" = 1");
-
-                    b.HasIndex("AuthorId", "CreatedAt")
-                        .IsDescending(false, true)
-                        .HasDatabaseName("IX_Models_AuthorId_CreatedAt_Active")
-                        .HasFilter("\"DeletedAt\" IS NULL");
-
-                    b.ToTable("Models");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Avatar")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("BanExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("BanReason")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("BannedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("BannedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Bio")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("CanLogin")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Country")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("EmailVerifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FirstName")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("HasCompletedFirstTimeSetup")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("InstagramUrl")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsBanned")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFederated")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsProfilePublic")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastFederationSync")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastName")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PendingEmail")
-                        .HasMaxLength(320)
-                        .HasColumnType("character varying(320)");
-
-                    b.Property<string>("ProfilePictureUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RemoteInstanceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RemoteUserId")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("RequiresPasswordChange")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid?>("RoleId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Salt")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("ShowEmail")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("ShowLastLogin")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("ShowStatistics")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("TwitterUrl")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("WebsiteUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("YouTubeUrl")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BannedAt")
-                        .IsDescending()
-                        .HasDatabaseName("IX_Users_BannedAt_WhenBanned")
-                        .HasFilter("\"IsBanned\" = true");
-
-                    b.HasIndex("BannedByUserId");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("RoleId");
-
-                    b.HasIndex("Username")
-                        .IsUnique();
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.UserLogin", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("text");
-
-                    b.Property<bool?>("Successful")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("UserAgent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserLogins");
-                });
-
             modelBuilder.Entity("PolyBucket.Database.Entities.ACL.Permission", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1795,15 +1501,11 @@ namespace PolyBucket.Database.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Tag", b =>
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Like", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1817,8 +1519,114 @@ namespace PolyBucket.Database.Migrations
                     b.Property<Guid?>("DeletedById")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ModelId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Likes_ModelId_UserId_Active")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.ToTable("Likes");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Model", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AIGenerated")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Dislikes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Downloads")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFederated")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRemix")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFederationSync")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("License")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Likes")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("NSFW")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Privacy")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RemixUrl")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("RemoteAuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RemoteInstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RemoteModelId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailUrl")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1827,9 +1635,51 @@ namespace PolyBucket.Database.Migrations
                     b.Property<Guid>("UpdatedById")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Views")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("WIP")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Tags");
+                    b.HasIndex("CreatedAt")
+                        .IsDescending()
+                        .HasDatabaseName("IX_Models_CreatedAt_PublicActive")
+                        .HasFilter("\"DeletedAt\" IS NULL AND \"Privacy\" = 1");
+
+                    b.HasIndex("AuthorId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_Models_AuthorId_CreatedAt_Active")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.ToTable("Models");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelDownloadDedup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("LastCountedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ViewerKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelId", "ViewerKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ModelDownloadDedups_ModelId_ViewerKey");
+
+                    b.ToTable("ModelDownloadDedups");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelFile", b =>
@@ -1884,58 +1734,6 @@ namespace PolyBucket.Database.Migrations
                     b.HasIndex("ModelVersionId");
 
                     b.ToTable("ModelFiles");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FileUrl")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("VersionNumber")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModelId", "VersionNumber")
-                        .IsUnique();
-
-                    b.ToTable("ModelVersions");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelPreview", b =>
@@ -2014,7 +1812,7 @@ namespace PolyBucket.Database.Migrations
                     b.ToTable("ModelPreviews");
                 });
 
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Like", b =>
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelVersion", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2032,11 +1830,22 @@ namespace PolyBucket.Database.Migrations
                     b.Property<Guid?>("DeletedById")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("text");
+
                     b.Property<Guid>("ModelId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -2044,45 +1853,15 @@ namespace PolyBucket.Database.Migrations
                     b.Property<Guid>("UpdatedById")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ModelId", "VersionNumber")
+                        .IsUnique();
 
-                    b.HasIndex("ModelId", "UserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Likes_ModelId_UserId_Active")
-                        .HasFilter("\"DeletedAt\" IS NULL");
-
-                    b.ToTable("Likes");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelDownloadDedup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("LastCountedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ViewerKey")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModelId", "ViewerKey")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ModelDownloadDedups_ModelId_ViewerKey");
-
-                    b.ToTable("ModelDownloadDedups");
+                    b.ToTable("ModelVersions");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelViewDedup", b =>
@@ -2109,6 +1888,227 @@ namespace PolyBucket.Database.Migrations
                         .HasDatabaseName("IX_ModelViewDedups_ModelId_ViewerKey");
 
                     b.ToTable("ModelViewDedups");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Tag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Avatar")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("BanExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("BanReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("BannedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("BannedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("CanLogin")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EmailVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("HasCompletedFirstTimeSetup")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("InstagramUrl")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFederated")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsProfilePublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFederationSync")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PendingEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RemoteInstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RemoteUserId")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("RequiresPasswordChange")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("RoleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("ShowEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowLastLogin")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowStatistics")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TwitterUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("YouTubeUrl")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BannedAt")
+                        .IsDescending()
+                        .HasDatabaseName("IX_Users_BannedAt_WhenBanned")
+                        .HasFilter("\"IsBanned\" = true");
+
+                    b.HasIndex("BannedByUserId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.UserLogin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("Successful")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserLogins");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.Notifications.Notification", b =>
@@ -3083,6 +3083,50 @@ namespace PolyBucket.Database.Migrations
                     b.ToTable("UserAuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("PolyBucket.Database.Entities.Users.UserFollow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FollowedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FollowerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FollowedUserId", "CreatedAt")
+                        .HasDatabaseName("IX_UserFollows_FollowedUserId_CreatedAt_Active")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.HasIndex("FollowerUserId", "FollowedUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserFollows_FollowerUserId_FollowedUserId_Active")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.ToTable("UserFollows");
+                });
+
             modelBuilder.Entity("PolyBucket.Database.Entities.Users.UserSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3189,44 +3233,6 @@ namespace PolyBucket.Database.Migrations
                         .HasForeignKey("TagsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Model", b =>
-                {
-                    b.HasOne("PolyBucket.Database.Entities.Models.User", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Author");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.User", b =>
-                {
-                    b.HasOne("PolyBucket.Database.Entities.Models.User", "BannedByUser")
-                        .WithMany()
-                        .HasForeignKey("BannedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("PolyBucket.Database.Entities.ACL.Role", "Role")
-                        .WithMany("Users")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("BannedByUser");
-
-                    b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.UserLogin", b =>
-                {
-                    b.HasOne("PolyBucket.Database.Entities.Models.User", "User")
-                        .WithMany("Logins")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.ACL.Role", b =>
@@ -3499,43 +3505,6 @@ namespace PolyBucket.Database.Migrations
                     b.Navigation("PerformedByUser");
                 });
 
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelFile", b =>
-                {
-                    b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
-                        .WithMany("Files")
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PolyBucket.Database.Entities.Models.ModelVersion", null)
-                        .WithMany("Files")
-                        .HasForeignKey("ModelVersionId");
-
-                    b.Navigation("Model");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelVersion", b =>
-                {
-                    b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
-                        .WithMany("Versions")
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Model");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelPreview", b =>
-                {
-                    b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
-                        .WithMany()
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Model");
-                });
-
             modelBuilder.Entity("PolyBucket.Database.Entities.Models.Like", b =>
                 {
                     b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
@@ -3555,10 +3524,58 @@ namespace PolyBucket.Database.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Model", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+                });
+
             modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelDownloadDedup", b =>
                 {
                     b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
                         .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelFile", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
+                        .WithMany("Files")
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PolyBucket.Database.Entities.Models.ModelVersion", null)
+                        .WithMany("Files")
+                        .HasForeignKey("ModelVersionId");
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelPreview", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelVersion", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.Model", "Model")
+                        .WithMany("Versions")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -3575,6 +3592,33 @@ namespace PolyBucket.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.User", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.User", "BannedByUser")
+                        .WithMany()
+                        .HasForeignKey("BannedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PolyBucket.Database.Entities.ACL.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BannedByUser");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.UserLogin", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.User", "User")
+                        .WithMany("Logins")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.Notifications.Notification", b =>
@@ -3611,6 +3655,25 @@ namespace PolyBucket.Database.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PolyBucket.Database.Entities.Users.UserFollow", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.User", "Followed")
+                        .WithMany()
+                        .HasForeignKey("FollowedUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PolyBucket.Database.Entities.Models.User", "Follower")
+                        .WithMany()
+                        .HasForeignKey("FollowerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Followed");
+
+                    b.Navigation("Follower");
+                });
+
             modelBuilder.Entity("PolyBucket.Database.Entities.Users.UserSettings", b =>
                 {
                     b.HasOne("PolyBucket.Database.Entities.Models.User", "User")
@@ -3620,29 +3683,6 @@ namespace PolyBucket.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Model", b =>
-                {
-                    b.Navigation("Comments");
-
-                    b.Navigation("Files");
-
-                    b.Navigation("LikeCollection");
-
-                    b.Navigation("Versions");
-                });
-
-            modelBuilder.Entity("PolyBucket.Database.Entities.Models.User", b =>
-                {
-                    b.Navigation("Logins");
-
-                    b.Navigation("Settings")
-                        .IsRequired();
-
-                    b.Navigation("TwoFactorAuth");
-
-                    b.Navigation("UserPermissions");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.ACL.Permission", b =>
@@ -3680,9 +3720,32 @@ namespace PolyBucket.Database.Migrations
                     b.Navigation("SharedModels");
                 });
 
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.Model", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Files");
+
+                    b.Navigation("LikeCollection");
+
+                    b.Navigation("Versions");
+                });
+
             modelBuilder.Entity("PolyBucket.Database.Entities.Models.ModelVersion", b =>
                 {
                     b.Navigation("Files");
+                });
+
+            modelBuilder.Entity("PolyBucket.Database.Entities.Models.User", b =>
+                {
+                    b.Navigation("Logins");
+
+                    b.Navigation("Settings")
+                        .IsRequired();
+
+                    b.Navigation("TwoFactorAuth");
+
+                    b.Navigation("UserPermissions");
                 });
 
             modelBuilder.Entity("PolyBucket.Database.Entities.Themes.Theme", b =>

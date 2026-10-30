@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Calendar,
   MapPin,
@@ -12,6 +14,7 @@ import {
   Instagram,
   Settings,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { UserAvatar } from "@/components/layout/user-avatar";
@@ -19,10 +22,14 @@ import { formatNumber } from "@/lib/utils/modelUtils";
 import { formatDate } from "@/lib/utils/format";
 import type { UserProfileData } from "@/lib/services/userProfileService";
 import { safeExternalHref } from "@/lib/security/safeUrl";
+import { followUser, unfollowUser } from "@/lib/services/userFollowService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProfileHeaderProps {
   profile: UserProfileData;
   isOwnProfile: boolean;
+  onSelectTab?: (tabId: string) => void;
+  onFollowChange?: () => void;
 }
 
 function SocialLink({
@@ -49,11 +56,83 @@ function SocialLink({
   );
 }
 
-export function ProfileHeader({ profile, isOwnProfile }: ProfileHeaderProps) {
+function StatButton({
+  count,
+  label,
+  tabId,
+  onSelectTab,
+}: {
+  count?: number;
+  label: string;
+  tabId: string;
+  onSelectTab?: (tabId: string) => void;
+}) {
+  const content = (
+    <>
+      <span className="font-semibold text-white">{formatNumber(count)}</span>
+      <span className="text-white/60">{label}</span>
+    </>
+  );
+
+  if (!onSelectTab) {
+    return <div className="flex items-center gap-1">{content}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-1 rounded-md px-1 py-0.5 transition-colors hover:bg-white/10"
+      onClick={() => onSelectTab(tabId)}
+    >
+      {content}
+    </button>
+  );
+}
+
+export function ProfileHeader({
+  profile,
+  isOwnProfile,
+  onSelectTab,
+  onFollowChange,
+}: ProfileHeaderProps) {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(profile.isFollowedByCurrentUser ?? false);
+  const [followPending, setFollowPending] = useState(false);
+
+  useEffect(() => {
+    setIsFollowing(profile.isFollowedByCurrentUser ?? false);
+  }, [profile.isFollowedByCurrentUser, profile.id]);
+
   const displayName =
     profile.firstName && profile.lastName
       ? `${profile.firstName} ${profile.lastName}`
       : profile.username ?? "User";
+
+  const handleFollowClick = async () => {
+    if (!profile.id) return;
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+    setFollowPending(true);
+    try {
+      if (isFollowing) {
+        await unfollowUser(profile.id);
+        setIsFollowing(false);
+        toast.success("Unfollowed");
+      } else {
+        await followUser(profile.id);
+        setIsFollowing(true);
+        toast.success("Following");
+      }
+      onFollowChange?.();
+    } catch {
+      toast.error(isFollowing ? "Could not unfollow" : "Could not follow");
+    } finally {
+      setFollowPending(false);
+    }
+  };
 
   return (
     <Card variant="glass" className="border-white/20 p-4">
@@ -81,14 +160,27 @@ export function ProfileHeader({ profile, isOwnProfile }: ProfileHeaderProps) {
                 <p className="text-sm text-white/70">@{profile.username}</p>
               )}
             </div>
-            {isOwnProfile && (
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/settings">
-                  <Settings className="mr-1 h-4 w-4" />
-                  Edit Profile
-                </Link>
-              </Button>
-            )}
+            <div className="flex flex-wrap gap-2">
+              {!isOwnProfile && profile.isProfilePublic !== false && (
+                <Button
+                  type="button"
+                  variant={isFollowing ? "outline" : "glass"}
+                  size="sm"
+                  disabled={followPending}
+                  onClick={handleFollowClick}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Button>
+              )}
+              {isOwnProfile && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/settings">
+                    <Settings className="mr-1 h-4 w-4" />
+                    Edit Profile
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
           {profile.bio && (
             <p className="mb-3 line-clamp-2 text-sm text-white/90">
@@ -97,24 +189,36 @@ export function ProfileHeader({ profile, isOwnProfile }: ProfileHeaderProps) {
           )}
           {profile.showStatistics && (
             <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-              <div className="flex items-center gap-1">
-                <span className="font-semibold text-white">
-                  {formatNumber(profile.totalModels)}
-                </span>
-                <span className="text-white/60">Models</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="font-semibold text-white">
-                  {formatNumber(profile.totalCollections)}
-                </span>
-                <span className="text-white/60">Collections</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="font-semibold text-white">
-                  {formatNumber(profile.totalLikes)}
-                </span>
-                <span className="text-white/60">Likes</span>
-              </div>
+              <StatButton
+                count={profile.totalModels}
+                label="Models"
+                tabId="models"
+                onSelectTab={onSelectTab}
+              />
+              <StatButton
+                count={profile.totalCollections}
+                label="Collections"
+                tabId="collections"
+                onSelectTab={onSelectTab}
+              />
+              <StatButton
+                count={profile.totalFollowers}
+                label="Followers"
+                tabId="followers"
+                onSelectTab={onSelectTab}
+              />
+              <StatButton
+                count={profile.totalFollowing}
+                label="Following"
+                tabId="following"
+                onSelectTab={onSelectTab}
+              />
+              <StatButton
+                count={profile.totalLikes}
+                label="Likes"
+                tabId="likes"
+                onSelectTab={onSelectTab}
+              />
               <div className="flex items-center gap-1">
                 <span className="font-semibold text-white">
                   {formatNumber(profile.totalDownloads)}

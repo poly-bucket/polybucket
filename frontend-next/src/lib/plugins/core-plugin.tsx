@@ -26,12 +26,16 @@ import {
   Globe,
   Palette,
   Puzzle,
+  Heart,
+  Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecentModelsSection } from "@/components/dashboard/recent-models-section";
 import { ProfileModelsTab } from "@/components/profile/profile-models-tab";
 import { ProfileCollectionsTab } from "@/components/profile/profile-collections-tab";
+import { ProfileLikesTab } from "@/components/profile/profile-likes-tab";
+import { ProfileFollowListTab } from "@/components/profile/profile-follow-list-tab";
 import { AddToCollectionCard } from "@/components/collections/add-to-collection-card";
 import { CollectionModelsTab } from "@/components/collections/collection-models-tab";
 import type { UserProfileData } from "@/lib/services/userProfileService";
@@ -122,6 +126,83 @@ function ProfileCollectionsTabWrapper({
       q={q}
       onPageChange={setPage}
       onSearchChange={setQ}
+    />
+  );
+}
+
+function ProfileLikesTabWrapper({
+  username,
+}: {
+  userId: string;
+  username: string;
+  profile: UserProfileData;
+}): React.ReactElement {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  const setPage = React.useCallback(
+    (p: number) => {
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("page", String(p));
+      router.replace(`?${next.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
+  return <ProfileLikesTab username={username} page={page} onPageChange={setPage} />;
+}
+
+function ProfileFollowersTabWrapper({
+  username,
+}: {
+  userId: string;
+  username: string;
+  profile: UserProfileData;
+}): React.ReactElement {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  const setPage = React.useCallback(
+    (p: number) => {
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("page", String(p));
+      router.replace(`?${next.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
+  return (
+    <ProfileFollowListTab
+      username={username}
+      mode="followers"
+      page={page}
+      onPageChange={setPage}
+    />
+  );
+}
+
+function ProfileFollowingTabWrapper({
+  username,
+}: {
+  userId: string;
+  username: string;
+  profile: UserProfileData;
+}): React.ReactElement {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  const setPage = React.useCallback(
+    (p: number) => {
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("page", String(p));
+      router.replace(`?${next.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
+  return (
+    <ProfileFollowListTab
+      username={username}
+      mode="following"
+      page={page}
+      onPageChange={setPage}
     />
   );
 }
@@ -274,6 +355,30 @@ export const corePlugin: PluginDefinition = {
         order: 10,
         badge: (p) => String(p.totalCollections ?? 0),
         component: ProfileCollectionsTabWrapper,
+      },
+      {
+        id: "likes",
+        label: "Likes",
+        icon: Heart,
+        order: 20,
+        badge: (p) => String(p.totalLikes ?? 0),
+        component: ProfileLikesTabWrapper,
+      },
+      {
+        id: "followers",
+        label: "Followers",
+        icon: Users,
+        order: 30,
+        badge: (p) => String(p.totalFollowers ?? 0),
+        component: ProfileFollowersTabWrapper,
+      },
+      {
+        id: "following",
+        label: "Following",
+        icon: User,
+        order: 40,
+        badge: (p) => String(p.totalFollowing ?? 0),
+        component: ProfileFollowingTabWrapper,
       },
     ],
   },

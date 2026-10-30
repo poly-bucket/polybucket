@@ -60,6 +60,13 @@ public static class UsersDependencyInjectionMapping
         services.AddScoped<GeneratePasswordResetLink.Domain.IGeneratePasswordResetLinkService, GeneratePasswordResetLink.Domain.GeneratePasswordResetLinkService>();
         services.AddTransient<GeneratePasswordResetLink.Repository.IGeneratePasswordResetLinkRepository, GeneratePasswordResetLink.Repository.GeneratePasswordResetLinkRepository>();
 
+        services.AddTransient<Follow.Repository.IUserFollowRepository, Follow.Repository.UserFollowRepository>();
+        services.AddScoped<FollowUser.Domain.IFollowUserService, FollowUser.Domain.FollowUserService>();
+        services.AddScoped<UnfollowUser.Domain.IUnfollowUserService, UnfollowUser.Domain.UnfollowUserService>();
+        services.AddScoped<GetUserFollowers.Domain.IGetUserFollowersService, GetUserFollowers.Domain.GetUserFollowersService>();
+        services.AddScoped<GetUserFollowing.Domain.IGetUserFollowingService, GetUserFollowing.Domain.GetUserFollowingService>();
+        services.AddScoped<GetFollowerHistory.Domain.IGetFollowerHistoryService, GetFollowerHistory.Domain.GetFollowerHistoryService>();
+
         return services;
     }
 }

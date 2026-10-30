@@ -2,10 +2,13 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using PolyBucket.Api.Features.Users.GetUserProfile.Repository;
+using PolyBucket.Database.Entities.Models;
 
 namespace PolyBucket.Api.Features.Users.GetUserProfile.Domain;
 
-public class GetUserProfileService(IGetUserProfileRepository repository) : IGetUserProfileService
+public class GetUserProfileService(
+    IGetUserProfileRepository repository,
+    Follow.Repository.IUserFollowRepository followRepository) : IGetUserProfileService
 {
     public async Task<object> GetUserProfileAsync(GetUserProfileQuery query, CancellationToken cancellationToken = default)
     {
@@ -24,7 +27,7 @@ public class GetUserProfileService(IGetUserProfileRepository repository) : IGetU
             if (canViewPrivateProfile)
             {
                 var privateProfileStatistics = await repository.GetProfileStatisticsAsync(user.Id, includePrivate: true, cancellationToken);
-                return BuildResponse(user, privateProfileStatistics);
+                return await BuildResponseAsync(user, privateProfileStatistics, query, cancellationToken);
             }
 
             return new PrivateProfileResponse
@@ -39,11 +42,25 @@ public class GetUserProfileService(IGetUserProfileRepository repository) : IGetU
         var includePrivate = query.IsRequestingUserAdmin || (query.RequestingUserId.HasValue && query.RequestingUserId.Value == user.Id);
         var statistics = await repository.GetProfileStatisticsAsync(user.Id, includePrivate, cancellationToken);
 
-        return BuildResponse(user, statistics);
+        return await BuildResponseAsync(user, statistics, query, cancellationToken);
     }
 
-    private static GetUserProfileResponse BuildResponse(User user, GetUserProfileStatisticsRow statistics)
+    private async Task<GetUserProfileResponse> BuildResponseAsync(
+        User user,
+        GetUserProfileStatisticsRow statistics,
+        GetUserProfileQuery query,
+        CancellationToken cancellationToken)
     {
+        var isFollowedByCurrentUser = false;
+        if (query.RequestingUserId.HasValue
+            && query.RequestingUserId.Value != user.Id)
+        {
+            isFollowedByCurrentUser = await followRepository.IsActiveFollowerAsync(
+                query.RequestingUserId.Value,
+                user.Id,
+                cancellationToken);
+        }
+
         return new GetUserProfileResponse
         {
             Id = user.Id,
@@ -68,6 +85,7 @@ public class GetUserProfileService(IGetUserProfileRepository repository) : IGetU
             TotalFollowers = statistics.TotalFollowers,
             TotalFollowing = statistics.TotalFollowing,
             IsProfilePublic = user.IsProfilePublic,
+            IsFollowedByCurrentUser = isFollowedByCurrentUser,
             ShowEmail = user.ShowEmail,
             ShowLastLogin = user.ShowLastLogin,
             ShowStatistics = user.ShowStatistics,

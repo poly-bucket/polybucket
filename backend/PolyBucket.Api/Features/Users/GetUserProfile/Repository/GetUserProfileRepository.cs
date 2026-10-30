@@ -71,8 +71,12 @@ public class GetUserProfileRepository(PolyBucketDbContext dbContext) : IGetUserP
             .CountAsync(cancellationToken);
         row.TotalLikes = likesGiven;
 
-        row.TotalFollowers = 0;
-        row.TotalFollowing = 0;
+        row.TotalFollowers = await dbContext.UserFollows
+            .AsNoTracking()
+            .CountAsync(f => f.FollowedUserId == userId && f.DeletedAt == null, cancellationToken);
+        row.TotalFollowing = await dbContext.UserFollows
+            .AsNoTracking()
+            .CountAsync(f => f.FollowerUserId == userId && f.DeletedAt == null, cancellationToken);
 
         return row;
     }

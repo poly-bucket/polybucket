@@ -12,6 +12,7 @@ import {
 import { useProfileTabs, PluginBoundary } from "@/lib/plugins";
 import { ProfileHeader } from "./profile-header";
 import { ProfilePageSkeleton } from "@/components/ui/skeletons";
+import { FollowerHistoryChart } from "./follower-history-chart";
 
 export function ProfilePageContent() {
   const params = useParams();
@@ -44,6 +45,18 @@ export function ProfilePageContent() {
       router.replace(`?${next.toString()}`, { scroll: false });
     },
     [searchParams, router]
+  );
+
+  const refreshProfile = useCallback(() => {
+    if (!idOrUsername) return;
+    fetchUserProfile(idOrUsername).then(setProfile).catch(() => {});
+  }, [idOrUsername]);
+
+  const handleSelectTab = useCallback(
+    (tab: string) => {
+      setUrlState({ tab, page: 1, q: "" });
+    },
+    [setUrlState]
   );
 
   useEffect(() => {
@@ -118,7 +131,13 @@ export function ProfilePageContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-      <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
+      <ProfileHeader
+        profile={profile}
+        isOwnProfile={isOwnProfile}
+        onSelectTab={handleSelectTab}
+        onFollowChange={refreshProfile}
+      />
+      {isOwnProfile && profileId && <FollowerHistoryChart userId={profileId} />}
       <nav
         className="mb-4 mt-4 flex space-x-4 overflow-x-auto"
         role="tablist"
