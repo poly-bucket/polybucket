@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
 import { SimplePagination } from "@/components/collections/simple-pagination";
 import { fetchUserLikedModels } from "@/lib/services/userLikedModelsService";
-import type { Model } from "@/lib/api/client";
-import type { UserModelListItemDto } from "@/lib/api/client";
+import type { Model, UserLikedModelListItemDto } from "@/lib/api/client";
 
 const PAGE_SIZE = 12;
 
@@ -15,7 +14,7 @@ interface ProfileLikesTabProps {
   onPageChange: (page: number) => void;
 }
 
-function mapToModel(userModel: UserModelListItemDto, authorUsername: string): Model {
+function mapToModel(userModel: UserLikedModelListItemDto, authorUsername: string): Model {
   return {
     ...userModel,
     author: { username: authorUsername },
@@ -24,8 +23,9 @@ function mapToModel(userModel: UserModelListItemDto, authorUsername: string): Mo
 }
 
 export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTabProps) {
-  const [models, setModels] = useState<UserModelListItemDto[]>([]);
+  const [models, setModels] = useState<UserLikedModelListItemDto[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,9 +36,11 @@ export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTa
       const response = await fetchUserLikedModels(username, page, PAGE_SIZE);
       setModels(response.models);
       setTotalPages(response.totalPages);
+      setTotalCount(response.totalCount);
     } catch {
       setError("Failed to load liked models.");
       setModels([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,12 @@ export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTa
         ))}
       </div>
       {totalPages > 1 && (
-        <SimplePagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+        <SimplePagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   );

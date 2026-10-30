@@ -27,6 +27,7 @@ export function ProfileFollowListTab({
 }: ProfileFollowListTabProps) {
   const [users, setUsers] = useState<UserFollowListItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,9 +39,11 @@ export function ProfileFollowListTab({
       const response = await fetcher(username, page, PAGE_SIZE);
       setUsers(response.users);
       setTotalPages(response.totalPages);
+      setTotalCount(response.totalCount);
     } catch {
       setError(`Failed to load ${mode}.`);
       setUsers([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -84,7 +87,12 @@ export function ProfileFollowListTab({
         ))}
       </ul>
       {totalPages > 1 && (
-        <SimplePagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+        <SimplePagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   );

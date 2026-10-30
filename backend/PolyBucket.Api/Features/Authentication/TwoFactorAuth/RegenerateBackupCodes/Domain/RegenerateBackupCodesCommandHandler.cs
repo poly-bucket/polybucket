@@ -3,6 +3,7 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using PolyBucket.Database.Persistence;
@@ -33,10 +34,12 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
         {
             _logger.LogInformation("Regenerating backup codes for user {UserId}", command.UserId);
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
 
             try
             {
+                await _regenerateBackupCodesRepository.LockByUserIdAsync(command.UserId, cancellationToken);
+
                 var twoFactorAuth = await _regenerateBackupCodesRepository.GetByUserIdAsync(command.UserId);
                 if (twoFactorAuth is null)
                 {
@@ -69,21 +72,41 @@ namespace PolyBucket.Api.Features.Authentication.TwoFactorAuth.RegenerateBackupC
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await RollbackQuietlyAsync(transaction, command.UserId, cancellationToken);
                 _logger.LogWarning(ex, "RegenerateBackupCodesCommandHandler.Handle: Concurrent modification detected for user {UserId}", command.UserId);
                 throw new InvalidOperationException("The 2FA configuration was modified by another operation. Please try again.");
             }
-            catch (DbUpdateException ex) when (IsPostgresSerializationFailure(ex))
+            catch (Exception ex) when (IsPostgresSerializationOrDeadlock(ex))
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await RollbackQuietlyAsync(transaction, command.UserId, cancellationToken);
                 _logger.LogWarning(ex, "RegenerateBackupCodesCommandHandler.Handle: Serialization conflict for user {UserId}", command.UserId);
                 throw new InvalidOperationException("The 2FA configuration was modified by another operation. Please try again.");
             }
         }
 
-        private static bool IsPostgresSerializationFailure(DbUpdateException ex)
+        private static bool IsPostgresSerializationOrDeadlock(Exception ex)
         {
-            return ex.InnerException is PostgresException pg && pg.SqlState == "40001";
+            for (var current = ex; current != null; current = current.InnerException)
+            {
+                if (current is PostgresException pg && (pg.SqlState == "40001" || pg.SqlState == "40P01"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private async Task RollbackQuietlyAsync(IDbContextTransaction transaction, Guid userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "RegenerateBackupCodesCommandHandler.Handle: Transaction rollback failed for user {UserId}", userId);
+            }
         }
     }
 }

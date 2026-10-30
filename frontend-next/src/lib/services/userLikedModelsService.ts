@@ -1,8 +1,8 @@
 import axiosInstance from "@/lib/api/axiosConfig";
-import type { UserModelListItemDto } from "@/lib/api/client";
+import type { UserLikedModelListItemDto } from "@/lib/api/client";
 
 export interface UserLikedModelsPage {
-  models: UserModelListItemDto[];
+  models: UserLikedModelListItemDto[];
   totalCount: number;
   page: number;
   pageSize: number;
