@@ -32,6 +32,7 @@ namespace PolyBucket.Marketplace.Api.Models
         public MarketplaceUser? Author { get; set; }
         public List<PluginVersion> Versions { get; set; } = new();
         public List<PluginReview> Reviews { get; set; } = new();
+        public List<PluginTag> PluginTags { get; set; } = new();
     }
 
     public class PluginVersion
@@ -134,8 +135,15 @@ namespace PolyBucket.Marketplace.Api.Models
         public string UserId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
 
-        // Navigation properties
         public PluginReview Review { get; set; } = null!;
+    }
+
+    public class PluginTag
+    {
+        public string Id { get; set; } = string.Empty;
+        public string PluginId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public Plugin Plugin { get; set; } = null!;
     }
 
 }

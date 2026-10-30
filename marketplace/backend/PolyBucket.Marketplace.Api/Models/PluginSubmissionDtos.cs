@@ -27,6 +27,9 @@ public class RemotePluginManifest
 
     [JsonPropertyName("license")]
     public string License { get; set; } = string.Empty;
+
+    [JsonPropertyName("tags")]
+    public List<string> Tags { get; set; } = new();
 }
 
 public class RemoteManifestReadResult
@@ -73,4 +76,9 @@ public class ApproveSubmissionResult
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public string? PluginId { get; set; }
+}
+
+public class SetFeaturedRequest
+{
+    public bool IsFeatured { get; set; }
 }

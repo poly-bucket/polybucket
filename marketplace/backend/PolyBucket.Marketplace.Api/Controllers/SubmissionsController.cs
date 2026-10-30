@@ -17,8 +17,10 @@ public class SubmissionsController(
     /// Submit a plugin repository for marketplace review.
     /// </summary>
     [HttpPost]
+    [Authorize(Policy = "RequireAuthenticated")]
     [ProducesResponseType(typeof(SubmissionSummaryDto), 201)]
     [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<SubmissionSummaryDto>> CreateSubmission(
         [FromBody] CreateSubmissionRequest request,
         CancellationToken cancellationToken)
@@ -26,6 +28,11 @@ public class SubmissionsController(
         try
         {
             var submitterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(submitterId))
+            {
+                return Unauthorized(new { message = "Authentication required" });
+            }
+
             var submission = await submissionService.CreateSubmissionAsync(request, submitterId, cancellationToken);
             var dto = new SubmissionSummaryDto
             {
@@ -57,6 +64,7 @@ public class SubmissionsController(
     /// List plugin submissions, optionally filtered by status.
     /// </summary>
     [HttpGet]
+    [Authorize(Policy = "RequireAdmin")]
     [ProducesResponseType(typeof(List<SubmissionSummaryDto>), 200)]
     public async Task<ActionResult<List<SubmissionSummaryDto>>> GetSubmissions(
         [FromQuery] string? status = "pending",

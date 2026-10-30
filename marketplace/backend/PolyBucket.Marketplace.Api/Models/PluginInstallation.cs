@@ -89,4 +89,10 @@ namespace PolyBucket.Marketplace.Api.Models
         public string Description { get; set; } = string.Empty;
         public int PluginCount { get; set; }
     }
+
+    public class PluginDownloadStat
+    {
+        public string Date { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
 }

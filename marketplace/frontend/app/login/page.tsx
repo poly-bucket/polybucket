@@ -2,9 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Github, Loader2 } from "lucide-react"
 import Link from "next/link"
@@ -17,7 +14,6 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       const returnUrl = searchParams.get('returnUrl') || '/';
@@ -46,13 +42,13 @@ export default function LoginPage() {
             <span className="font-semibold text-2xl">Polybucket Marketplace</span>
           </Link>
           <h1 className="text-2xl font-bold mb-2">Welcome back</h1>
-          <p className="text-muted-foreground">Sign in to your account to continue</p>
+          <p className="text-muted-foreground">Sign in with GitHub to submit and review components</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
-            <CardDescription>Choose your preferred sign in method</CardDescription>
+            <CardDescription>GitHub is the only sign-in method for this release</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {error && (
@@ -75,36 +71,14 @@ export default function LoginPage() {
               )}
               Continue with GitHub
             </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@example.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" />
-              </div>
-              <Button className="w-full" size="lg" disabled>
-                Sign In (Coming Soon)
-              </Button>
-            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-2">
             <div className="text-sm text-center text-muted-foreground">
-              Don't have an account?{" "}
+              New here?{" "}
               <Link href="/signup" className="text-primary hover:underline">
-                Sign up
-              </Link>
+                Create an account
+              </Link>{" "}
+              with GitHub
             </div>
           </CardFooter>
         </Card>

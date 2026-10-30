@@ -13,9 +13,9 @@ namespace PolyBucket.Marketplace.Api.Data
         public DbSet<Plugin> Plugins { get; set; }
         public DbSet<PluginVersion> PluginVersions { get; set; }
         public DbSet<PluginCategory> Categories { get; set; }
-        public DbSet<PluginReview> Reviews { get; set; }
         public DbSet<PluginReview> PluginReviews { get; set; }
         public DbSet<ReviewHelpful> ReviewHelpfuls { get; set; }
+        public DbSet<PluginTag> PluginTags { get; set; }
         public DbSet<PluginRating> Ratings { get; set; }
         public DbSet<PluginDownload> Downloads { get; set; }
         public DbSet<PluginSubmission> Submissions { get; set; }
@@ -235,6 +235,21 @@ namespace PolyBucket.Marketplace.Api.Data
                 entity.HasIndex(e => e.PluginId);
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.InstalledAt);
+            });
+
+            modelBuilder.Entity<PluginTag>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PluginId).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+
+                entity.HasOne(e => e.Plugin)
+                      .WithMany(p => p.PluginTags)
+                      .HasForeignKey(e => e.PluginId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.PluginId, e.Name }).IsUnique();
+                entity.HasIndex(e => e.Name);
             });
         }
     }

@@ -1,19 +1,31 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { apiClient, type PluginDownloadStat } from "@/lib/api"
 
-const data = [
-  { month: "Jul", installs: 1200 },
-  { month: "Aug", installs: 1800 },
-  { month: "Sep", installs: 2400 },
-  { month: "Oct", installs: 3200 },
-  { month: "Nov", installs: 4100 },
-  { month: "Dec", installs: 5800 },
-  { month: "Jan", installs: 7200 },
-]
+interface InstallChartProps {
+  pluginId: string
+  days?: number
+}
 
-export function InstallChart() {
+export function InstallChart({ pluginId, days = 30 }: InstallChartProps) {
+  const [data, setData] = useState<PluginDownloadStat[]>([])
+
+  useEffect(() => {
+    apiClient
+      .getPluginDownloadStats(pluginId, days)
+      .then(setData)
+      .catch(() => setData([]))
+  }, [pluginId, days])
+
+  if (data.length === 0) {
+    return <p className="text-sm text-muted-foreground py-8 text-center">No install activity in this period.</p>
+  }
+
+  const chartData = data.map((row) => ({ date: row.date, installs: row.count }))
+
   return (
     <ChartContainer
       config={{
@@ -25,9 +37,9 @@ export function InstallChart() {
       className="h-[300px]"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+        <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis dataKey="month" className="text-xs" />
+          <XAxis dataKey="date" className="text-xs" />
           <YAxis className="text-xs" />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Line

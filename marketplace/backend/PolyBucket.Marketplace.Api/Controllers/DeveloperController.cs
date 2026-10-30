@@ -6,6 +6,7 @@ using PolyBucket.Marketplace.Api.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Marketplace.Api.Controllers
@@ -71,6 +72,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
                 }
 
                 var plugins = await _context.Plugins
+                    .Include(p => p.Reviews)
                     .Where(p => p.AuthorId == userId)
                     .Select(p => new PluginSummaryResponse
                     {
@@ -83,8 +85,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
                         ReviewCount = p.Reviews.Count,
                         Status = p.Status,
                         CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        Revenue = p.Revenue
+                        UpdatedAt = p.UpdatedAt
                     })
                     .ToListAsync();
 
@@ -121,215 +122,22 @@ namespace PolyBucket.Marketplace.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Create a new plugin
-        /// </summary>
-        [HttpPost("plugins")]
-        public async Task<ActionResult<PluginResponse>> CreatePlugin([FromBody] CreatePluginRequest request)
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized();
-                }
-
-                var plugin = new Plugin
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = request.Name,
-                    Description = request.Description,
-                    LongDescription = request.LongDescription,
-                    Category = request.Category,
-                    AuthorId = userId,
-                    Version = request.Version,
-                    RepositoryUrl = request.RepositoryUrl,
-                    License = request.License,
-                    Status = "draft",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                _context.Plugins.Add(plugin);
-                await _context.SaveChangesAsync();
-
-                var response = new PluginResponse
-                {
-                    Id = plugin.Id,
-                    Name = plugin.Name,
-                    Description = plugin.Description,
-                    LongDescription = plugin.LongDescription,
-                    Category = plugin.Category,
-                    Author = plugin.Author?.UserName ?? "Unknown",
-                    Version = plugin.Version,
-                    RepositoryUrl = plugin.RepositoryUrl,
-                    License = plugin.License,
-                    Status = plugin.Status,
-                    CreatedAt = plugin.CreatedAt,
-                    UpdatedAt = plugin.UpdatedAt
-                };
-
-                return CreatedAtAction(nameof(GetPlugin), new { id = plugin.Id }, response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating plugin");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Get a specific plugin
-        /// </summary>
-        [HttpGet("plugins/{id}")]
-        public async Task<ActionResult<PluginResponse>> GetPlugin(string id)
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized();
-                }
-
-                var plugin = await _context.Plugins
-                    .FirstOrDefaultAsync(p => p.Id == id && p.AuthorId == userId);
-
-                if (plugin == null)
-                {
-                    return NotFound();
-                }
-
-                var response = new PluginResponse
-                {
-                    Id = plugin.Id,
-                    Name = plugin.Name,
-                    Description = plugin.Description,
-                    LongDescription = plugin.LongDescription,
-                    Category = plugin.Category,
-                    Author = plugin.Author?.UserName ?? "Unknown",
-                    Version = plugin.Version,
-                    RepositoryUrl = plugin.RepositoryUrl,
-                    License = plugin.License,
-                    Status = plugin.Status,
-                    CreatedAt = plugin.CreatedAt,
-                    UpdatedAt = plugin.UpdatedAt
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting plugin");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Update a plugin
-        /// </summary>
-        [HttpPut("plugins/{id}")]
-        public async Task<ActionResult<PluginResponse>> UpdatePlugin(string id, [FromBody] UpdatePluginRequest request)
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized();
-                }
-
-                var plugin = await _context.Plugins
-                    .FirstOrDefaultAsync(p => p.Id == id && p.AuthorId == userId);
-
-                if (plugin == null)
-                {
-                    return NotFound();
-                }
-
-                plugin.Name = request.Name;
-                plugin.Description = request.Description;
-                plugin.LongDescription = request.LongDescription;
-                plugin.Category = request.Category;
-                plugin.Version = request.Version;
-                plugin.RepositoryUrl = request.RepositoryUrl;
-                plugin.License = request.License;
-                plugin.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
-
-                var response = new PluginResponse
-                {
-                    Id = plugin.Id,
-                    Name = plugin.Name,
-                    Description = plugin.Description,
-                    LongDescription = plugin.LongDescription,
-                    Category = plugin.Category,
-                    Author = plugin.Author?.UserName ?? "Unknown",
-                    Version = plugin.Version,
-                    RepositoryUrl = plugin.RepositoryUrl,
-                    License = plugin.License,
-                    Status = plugin.Status,
-                    CreatedAt = plugin.CreatedAt,
-                    UpdatedAt = plugin.UpdatedAt
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating plugin");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Delete a plugin
-        /// </summary>
-        [HttpDelete("plugins/{id}")]
-        public async Task<ActionResult> DeletePlugin(string id)
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized();
-                }
-
-                var plugin = await _context.Plugins
-                    .FirstOrDefaultAsync(p => p.Id == id && p.AuthorId == userId);
-
-                if (plugin == null)
-                {
-                    return NotFound();
-                }
-
-                _context.Plugins.Remove(plugin);
-                await _context.SaveChangesAsync();
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting plugin");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
         private async Task<DeveloperStatsResponse> CalculateDeveloperStats(string userId)
         {
             var plugins = await _context.Plugins
+                .Include(p => p.Reviews)
                 .Where(p => p.AuthorId == userId)
                 .ToListAsync();
 
+            var pluginIds = plugins.Select(p => p.Id).ToList();
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+            var monthlyDownloads = pluginIds.Count == 0
+                ? 0
+                : await _context.Downloads.CountAsync(d => pluginIds.Contains(d.PluginId) && d.DownloadedAt >= thirtyDaysAgo);
+
             var totalDownloads = plugins.Sum(p => p.Downloads);
-            var totalRevenue = plugins.Sum(p => p.Revenue);
             var averageRating = plugins.Any() ? plugins.Average(p => p.AverageRating) : 0;
             var totalReviews = plugins.Sum(p => p.Reviews.Count);
-            var monthlyDownloads = plugins.Sum(p => p.Downloads); // Simplified - would need date filtering
-            var monthlyRevenue = plugins.Sum(p => p.Revenue); // Simplified - would need date filtering
 
             var topPlugin = plugins
                 .OrderByDescending(p => p.Downloads)
@@ -339,11 +147,9 @@ namespace PolyBucket.Marketplace.Api.Controllers
             {
                 TotalPlugins = plugins.Count,
                 TotalDownloads = totalDownloads,
-                TotalRevenue = totalRevenue,
                 AverageRating = averageRating,
                 TotalReviews = totalReviews,
                 MonthlyDownloads = monthlyDownloads,
-                MonthlyRevenue = monthlyRevenue,
                 TopPlugin = topPlugin != null ? new TopPluginResponse
                 {
                     Id = topPlugin.Id,
@@ -355,14 +161,29 @@ namespace PolyBucket.Marketplace.Api.Controllers
 
         private async Task<DeveloperAnalyticsResponse> CalculateDeveloperAnalytics(string userId)
         {
-            // Simplified analytics - would need more complex date filtering and aggregation
             var plugins = await _context.Plugins
                 .Where(p => p.AuthorId == userId)
                 .ToListAsync();
 
-            var downloads = new List<DateCountResponse>();
-            var revenue = new List<DateAmountResponse>();
-            var topCountries = new List<CountryDownloadsResponse>();
+            var pluginIds = plugins.Select(p => p.Id).ToList();
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+
+            var downloadRows = pluginIds.Count == 0
+                ? new List<PluginDownload>()
+                : await _context.Downloads
+                    .Where(d => pluginIds.Contains(d.PluginId) && d.DownloadedAt >= thirtyDaysAgo)
+                    .ToListAsync();
+
+            var downloads = downloadRows
+                .GroupBy(d => d.DownloadedAt.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new DateCountResponse
+                {
+                    Date = g.Key.ToString("yyyy-MM-dd"),
+                    Count = g.Count()
+                })
+                .ToList();
+
             var topPlugins = plugins
                 .OrderByDescending(p => p.Downloads)
                 .Take(5)
@@ -376,16 +197,13 @@ namespace PolyBucket.Marketplace.Api.Controllers
             return new DeveloperAnalyticsResponse
             {
                 Downloads = downloads,
-                Revenue = revenue,
-                TopCountries = topCountries,
                 TopPlugins = topPlugins
             };
         }
 
         private string? GetCurrentUserId()
         {
-            // This would typically come from JWT token claims
-            return User.FindFirst("sub")?.Value ?? User.FindFirst("user_id")?.Value;
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 

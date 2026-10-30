@@ -161,6 +161,8 @@ namespace PolyBucket.Marketplace.Api.Services
             {
                 var query = _context.Plugins
                     .Include(p => p.Reviews)
+                    .Include(p => p.PluginTags)
+                    .Include(p => p.Author)
                     .Where(p => p.IsActive && p.Status == "published");
 
                 // Apply search filter
@@ -197,6 +199,20 @@ namespace PolyBucket.Marketplace.Api.Services
                     query = query.Where(p => p.AverageRating >= request.MinRating.Value);
                 }
 
+                if (request.Tags != null && request.Tags.Count > 0)
+                {
+                    foreach (var tag in request.Tags)
+                    {
+                        var normalized = tag.Trim().ToLowerInvariant();
+                        if (string.IsNullOrEmpty(normalized))
+                        {
+                            continue;
+                        }
+
+                        query = query.Where(p => p.PluginTags.Any(t => t.Name == normalized));
+                    }
+                }
+
                 // Apply sorting
                 query = request.SortBy?.ToLower() switch
                 {
@@ -210,29 +226,12 @@ namespace PolyBucket.Marketplace.Api.Services
                 // Get total count for pagination
                 var totalCount = await query.CountAsync();
 
-                // Apply pagination
-                var plugins = await query
+                var pageItems = await query
                     .Skip((request.Page - 1) * request.PageSize)
                     .Take(request.PageSize)
-                    .Select(p => new PluginSummary
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Description = p.Description,
-                        Category = p.Category,
-                        Version = p.Version,
-                        Author = p.Author != null ? p.Author.UserName : "Unknown",
-                        AuthorId = p.AuthorId,
-                        Downloads = p.Downloads,
-                        AverageRating = p.AverageRating,
-                        ReviewCount = p.Reviews.Count,
-                        IsVerified = p.IsVerified,
-                        IsFeatured = p.IsFeatured,
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        Tags = new List<string>() // TODO: Implement tags when tag system is added
-                    })
                     .ToListAsync();
+
+                var plugins = pageItems.Select(MapToSummary).ToList();
 
                 var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
 
@@ -260,17 +259,12 @@ namespace PolyBucket.Marketplace.Api.Services
         {
             try
             {
-                // For now, return mock popular tags
-                // TODO: Implement actual tag system with database queries
-                var popularTags = new List<string>
-                {
-                    "react", "typescript", "api", "dashboard", "charts", "forms", 
-                    "tables", "notifications", "authentication", "ui-components",
-                    "data-viz", "productivity", "analytics", "integrations", "themes",
-                    "localization", "security", "performance", "mobile", "responsive"
-                };
-
-                return popularTags.Take(limit).ToList();
+                return await _context.PluginTags
+                    .GroupBy(t => t.Name)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => g.Key)
+                    .Take(limit)
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -283,30 +277,16 @@ namespace PolyBucket.Marketplace.Api.Services
         {
             try
             {
-                var plugins = await _context.Plugins
+                var pageItems = await _context.Plugins
                     .Where(p => p.IsActive && p.Status == "published" && p.IsFeatured)
                     .Include(p => p.Reviews)
+                    .Include(p => p.PluginTags)
+                    .Include(p => p.Author)
                     .OrderByDescending(p => p.Downloads)
                     .Take(limit)
-                    .Select(p => new PluginSummary
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Description = p.Description,
-                        Category = p.Category,
-                        Version = p.Version,
-                        Author = p.Author != null ? p.Author.UserName : "Unknown",
-                        AuthorId = p.AuthorId,
-                        Downloads = p.Downloads,
-                        AverageRating = p.AverageRating,
-                        ReviewCount = p.Reviews.Count,
-                        IsVerified = p.IsVerified,
-                        IsFeatured = p.IsFeatured,
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        Tags = new List<string>()
-                    })
                     .ToListAsync();
+
+                var plugins = pageItems.Select(MapToSummary).ToList();
 
                 _logger.LogInformation("Retrieved {Count} featured plugins", plugins.Count);
                 return plugins;
@@ -322,34 +302,33 @@ namespace PolyBucket.Marketplace.Api.Services
         {
             try
             {
-                // Trending plugins based on recent downloads and ratings
                 var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
-                
-                var plugins = await _context.Plugins
-                    .Where(p => p.IsActive && p.Status == "published" && p.CreatedAt >= thirtyDaysAgo)
-                    .Include(p => p.Reviews)
-                    .OrderByDescending(p => p.Downloads)
-                    .ThenByDescending(p => p.AverageRating)
+
+                var trendingIds = await _context.Downloads
+                    .Where(d => d.DownloadedAt >= thirtyDaysAgo)
+                    .GroupBy(d => d.PluginId)
+                    .OrderByDescending(g => g.Count())
                     .Take(limit)
-                    .Select(p => new PluginSummary
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Description = p.Description,
-                        Category = p.Category,
-                        Version = p.Version,
-                        Author = p.Author != null ? p.Author.UserName : "Unknown",
-                        AuthorId = p.AuthorId,
-                        Downloads = p.Downloads,
-                        AverageRating = p.AverageRating,
-                        ReviewCount = p.Reviews.Count,
-                        IsVerified = p.IsVerified,
-                        IsFeatured = p.IsFeatured,
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        Tags = new List<string>()
-                    })
+                    .Select(g => g.Key)
                     .ToListAsync();
+
+                if (trendingIds.Count == 0)
+                {
+                    return new List<PluginSummary>();
+                }
+
+                var pluginsById = await _context.Plugins
+                    .Where(p => trendingIds.Contains(p.Id) && p.IsActive && p.Status == "published")
+                    .Include(p => p.Reviews)
+                    .Include(p => p.PluginTags)
+                    .Include(p => p.Author)
+                    .ToListAsync();
+
+                var plugins = trendingIds
+                    .Select(id => pluginsById.FirstOrDefault(p => p.Id == id))
+                    .Where(p => p != null)
+                    .Select(p => MapToSummary(p!))
+                    .ToList();
 
                 _logger.LogInformation("Retrieved {Count} trending plugins", plugins.Count);
                 return plugins;
@@ -431,6 +410,7 @@ namespace PolyBucket.Marketplace.Api.Services
                     .Include(p => p.Versions)
                     .Include(p => p.Reviews)
                     .Include(p => p.Author)
+                    .Include(p => p.PluginTags)
                     .FirstOrDefaultAsync(p => p.Id == pluginId && p.IsActive && p.Status == "published");
 
                 if (plugin == null)
@@ -471,7 +451,7 @@ namespace PolyBucket.Marketplace.Api.Services
                         IsActive = v.IsActive,
                         CreatedAt = v.CreatedAt
                     }).ToList(),
-                    Tags = new List<string>() // TODO: Implement tags when tag system is added
+                    Tags = plugin.PluginTags.Select(t => t.Name).ToList()
                 };
             }
             catch (Exception ex)
@@ -657,6 +637,65 @@ namespace PolyBucket.Marketplace.Api.Services
                 _logger.LogError(ex, "Error getting categories for main API");
                 return new List<MarketplaceCategory>();
             }
+        }
+
+        public async Task<List<PluginDownloadStat>> GetPluginDownloadStatsAsync(string pluginId, int days = 30)
+        {
+            if (days < 1 || days > 365)
+            {
+                days = 30;
+            }
+
+            var since = DateTime.UtcNow.AddDays(-days);
+            var rows = await _context.Downloads
+                .Where(d => d.PluginId == pluginId && d.DownloadedAt >= since)
+                .ToListAsync();
+
+            return rows
+                .GroupBy(d => d.DownloadedAt.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new PluginDownloadStat
+                {
+                    Date = g.Key.ToString("yyyy-MM-dd"),
+                    Count = g.Count()
+                })
+                .ToList();
+        }
+
+        public async Task<bool> SetFeaturedAsync(string pluginId, bool isFeatured)
+        {
+            var plugin = await _context.Plugins.FindAsync(pluginId);
+            if (plugin == null)
+            {
+                return false;
+            }
+
+            plugin.IsFeatured = isFeatured;
+            plugin.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private static PluginSummary MapToSummary(Plugin p)
+        {
+            return new PluginSummary
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Category = p.Category,
+                Version = p.Version,
+                Author = p.Author?.UserName ?? "Unknown",
+                AuthorId = p.AuthorId,
+                Downloads = p.Downloads,
+                AverageRating = p.AverageRating,
+                ReviewCount = p.Reviews.Count,
+                IsVerified = p.IsVerified,
+                IsFeatured = p.IsFeatured,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                Tags = p.PluginTags.Select(t => t.Name).ToList()
+            };
         }
     }
 }

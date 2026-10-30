@@ -3,10 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Marketplace.Api.Data;
 using PolyBucket.Marketplace.Api.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace PolyBucket.Marketplace.Api.Controllers
 {
@@ -15,7 +12,6 @@ namespace PolyBucket.Marketplace.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/plugins/{pluginId}/reviews")]
-    [Authorize]
     public class PluginReviewsController : ControllerBase
     {
         private readonly MarketplaceDbContext _context;
@@ -31,6 +27,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
         /// Get reviews for a plugin
         /// </summary>
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<PluginReviewsResponse>> GetReviews(string pluginId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
@@ -99,6 +96,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
         /// Create a new review
         /// </summary>
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<PluginReviewResponse>> CreateReview(string pluginId, [FromBody] CreateReviewRequest request)
         {
             try
@@ -107,6 +105,11 @@ namespace PolyBucket.Marketplace.Api.Controllers
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized();
+                }
+
+                if (request.Rating < 1 || request.Rating > 5)
+                {
+                    return BadRequest("Rating must be between 1 and 5");
                 }
 
                 var plugin = await _context.Plugins.FindAsync(pluginId);
@@ -140,8 +143,12 @@ namespace PolyBucket.Marketplace.Api.Controllers
 
                 _context.PluginReviews.Add(review);
 
-                // Update plugin average rating
-                await UpdatePluginRating(pluginId);
+                var ratings = await _context.PluginReviews
+                    .Where(r => r.PluginId == pluginId)
+                    .Select(r => r.Rating)
+                    .ToListAsync();
+                ratings.Add(review.Rating);
+                plugin!.AverageRating = ratings.Count > 0 ? ratings.Average() : 0;
 
                 await _context.SaveChangesAsync();
 
@@ -171,6 +178,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
         /// Get a specific review
         /// </summary>
         [HttpGet("{reviewId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<PluginReviewResponse>> GetReview(string pluginId, string reviewId)
         {
             try
@@ -209,6 +217,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
         /// Update a review
         /// </summary>
         [HttpPut("{reviewId}")]
+        [Authorize]
         public async Task<ActionResult<PluginReviewResponse>> UpdateReview(string pluginId, string reviewId, [FromBody] UpdateReviewRequest request)
         {
             try
@@ -217,6 +226,11 @@ namespace PolyBucket.Marketplace.Api.Controllers
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized();
+                }
+
+                if (request.Rating < 1 || request.Rating > 5)
+                {
+                    return BadRequest("Rating must be between 1 and 5");
                 }
 
                 var review = await _context.PluginReviews
@@ -232,7 +246,6 @@ namespace PolyBucket.Marketplace.Api.Controllers
                 review.Content = request.Content;
                 review.UpdatedAt = DateTime.UtcNow;
 
-                // Update plugin average rating
                 await UpdatePluginRating(pluginId);
 
                 await _context.SaveChangesAsync();
@@ -263,6 +276,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
         /// Delete a review
         /// </summary>
         [HttpDelete("{reviewId}")]
+        [Authorize]
         public async Task<ActionResult> DeleteReview(string pluginId, string reviewId)
         {
             try
@@ -301,6 +315,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
         /// Mark a review as helpful
         /// </summary>
         [HttpPost("{reviewId}/helpful")]
+        [Authorize]
         public async Task<ActionResult> MarkHelpful(string pluginId, string reviewId)
         {
             try
@@ -356,6 +371,7 @@ namespace PolyBucket.Marketplace.Api.Controllers
         /// Remove helpful mark from a review
         /// </summary>
         [HttpDelete("{reviewId}/helpful")]
+        [Authorize]
         public async Task<ActionResult> RemoveHelpful(string pluginId, string reviewId)
         {
             try
@@ -409,12 +425,14 @@ namespace PolyBucket.Marketplace.Api.Controllers
 
         private string? GetCurrentUserId()
         {
-            return User.FindFirst("sub")?.Value ?? User.FindFirst("user_id")?.Value;
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
 
         private string GetCurrentUsername()
         {
-            return User.FindFirst("name")?.Value ?? User.FindFirst("username")?.Value ?? "Anonymous";
+            return User.FindFirst("github_username")?.Value
+                ?? User.FindFirst(ClaimTypes.Name)?.Value
+                ?? "Anonymous";
         }
     }
 

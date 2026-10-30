@@ -19,7 +19,9 @@ interface UsePluginBrowseState {
 interface UsePluginBrowseActions {
   setSearch: (search: string) => void;
   setCategory: (category: string | null) => void;
+  setTags: (tags: string[]) => void;
   setSortBy: (sortBy: string) => void;
+  sortBy: string;
   setSortOrder: (sortOrder: string) => void;
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
@@ -30,7 +32,9 @@ interface UsePluginBrowseActions {
   resetFilters: () => void;
 }
 
-interface UsePluginBrowseReturn extends UsePluginBrowseState, UsePluginBrowseActions {}
+interface UsePluginBrowseReturn extends UsePluginBrowseState, UsePluginBrowseActions {
+  selectedTags: string[];
+}
 
 const DEFAULT_REQUEST: PluginBrowseRequest = {
   search: '',
@@ -102,6 +106,10 @@ export function usePluginBrowse(): UsePluginBrowseReturn {
     updateRequest({ category: category || undefined, page: 1 });
   }, [updateRequest]);
 
+  const setTags = useCallback((tags: string[]) => {
+    updateRequest({ tags: tags.length ? tags : undefined, page: 1 });
+  }, [updateRequest]);
+
   const setSortBy = useCallback((sortBy: string) => {
     updateRequest({ sortBy, page: 1 });
   }, [updateRequest]);
@@ -140,8 +148,11 @@ export function usePluginBrowse(): UsePluginBrowseReturn {
 
   return {
     ...state,
+    sortBy: request.sortBy ?? SORT_OPTIONS.DOWNLOADS,
+    selectedTags: request.tags ?? [],
     setSearch,
     setCategory,
+    setTags,
     setSortBy,
     setSortOrder,
     setPage,

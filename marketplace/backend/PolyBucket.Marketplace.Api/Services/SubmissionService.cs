@@ -101,7 +101,10 @@ public class SubmissionService(
         var manifest = manifestResult.Manifest;
         var targets = string.Join(',', manifest.Targets.Select(t => t.Trim().ToLowerInvariant()).Distinct());
 
-        var plugin = await context.Plugins.FirstOrDefaultAsync(p => p.Id == manifest.Id, cancellationToken);
+        var plugin = await context.Plugins
+            .Include(p => p.Versions)
+            .Include(p => p.PluginTags)
+            .FirstOrDefaultAsync(p => p.Id == manifest.Id, cancellationToken);
         if (plugin == null)
         {
             plugin = new Plugin
@@ -110,6 +113,16 @@ public class SubmissionService(
                 CreatedAt = DateTime.UtcNow
             };
             context.Plugins.Add(plugin);
+        }
+
+        var versionExists = plugin.Versions.Any(v => v.Version == manifest.Version);
+        if (versionExists)
+        {
+            return new ApproveSubmissionResult
+            {
+                Success = false,
+                Message = $"Version {manifest.Version} is already published for this plugin"
+            };
         }
 
         plugin.Name = manifest.Name;
@@ -125,7 +138,36 @@ public class SubmissionService(
         plugin.Status = "published";
         plugin.IsActive = true;
         plugin.IsVerified = true;
+        plugin.AuthorId = submission.SubmitterId ?? plugin.AuthorId;
         plugin.UpdatedAt = DateTime.UtcNow;
+
+        context.PluginVersions.Add(new PluginVersion
+        {
+            Id = Guid.NewGuid().ToString(),
+            PluginId = plugin.Id,
+            Version = manifest.Version,
+            DownloadUrl = string.Empty,
+            ReleaseNotes = submission.Description,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        var normalizedTags = (manifest.Tags ?? new List<string>())
+            .Select(t => t.Trim().ToLowerInvariant())
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Distinct()
+            .ToList();
+
+        context.PluginTags.RemoveRange(plugin.PluginTags);
+        foreach (var tagName in normalizedTags)
+        {
+            context.PluginTags.Add(new PluginTag
+            {
+                Id = Guid.NewGuid().ToString(),
+                PluginId = plugin.Id,
+                Name = tagName
+            });
+        }
 
         submission.Status = "published";
         submission.ReviewedAt = DateTime.UtcNow;

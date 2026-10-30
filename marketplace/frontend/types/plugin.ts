@@ -1,4 +1,3 @@
-// API types for plugin browsing
 export interface PluginSummary {
   id: string;
   name: string;
@@ -46,7 +45,6 @@ export interface PluginCategory {
   count: number;
 }
 
-// Sort options
 export const SORT_OPTIONS = {
   DOWNLOADS: 'downloads',
   RATING: 'rating',
@@ -63,44 +61,46 @@ export const SORT_ORDER = {
 export type SortOption = typeof SORT_OPTIONS[keyof typeof SORT_OPTIONS];
 export type SortOrder = typeof SORT_ORDER[keyof typeof SORT_ORDER];
 
-// Installation-related types
 export interface PluginDownloadInfo {
-  downloadUrl: string;
+  pluginId: string;
   version: string;
-  size: number;
+  downloadUrl: string;
+  fileName: string;
+  fileSize: number;
   checksum: string;
-  repositoryUrl: string;
-  repositoryType: 'github' | 'gitlab' | 'bitbucket' | 'other';
-  branch?: string;
-  commitHash?: string;
+  createdAt: string;
+  releaseNotes: string;
+}
+
+export interface PluginVersionSummary {
+  id: string;
+  version: string;
+  releaseNotes: string;
+  createdAt: string;
 }
 
 export interface MarketplacePluginDetails {
   id: string;
   name: string;
   description: string;
-  version: string;
-  author: string;
-  repositoryUrl: string;
-  repositoryType: 'github' | 'gitlab' | 'bitbucket' | 'other';
-  downloadUrl: string;
-  size: number;
-  checksum: string;
+  longDescription: string;
   category: string;
-  tags: string[];
+  version: string;
+  repositoryUrl: string;
+  repositoryBranch: string;
+  repositorySubpath: string;
+  targets: string[];
+  license: string;
   isVerified: boolean;
   isFeatured: boolean;
   downloads: number;
   averageRating: number;
   reviewCount: number;
+  author: string;
   createdAt: string;
   updatedAt: string;
-  lastCommitAt?: string;
-  license?: string;
-  readmeUrl?: string;
-  documentationUrl?: string;
-  issuesUrl?: string;
-  releasesUrl?: string;
+  versions: PluginVersionSummary[];
+  tags: string[];
 }
 
 export interface PluginInstallationRequest {
@@ -113,17 +113,13 @@ export interface PluginInstallationRequest {
 
 export interface PluginInstallationResponse {
   success: boolean;
-  installationId: string;
-  downloadUrl: string;
-  version: string;
+  installationId?: string;
   message?: string;
+  installedAt?: string;
 }
 
-// Installation status types
-export type InstallationStatus = 'idle' | 'downloading' | 'installing' | 'success' | 'error';
-
 export interface InstallationState {
-  status: InstallationStatus;
+  status: 'idle' | 'downloading' | 'installing' | 'success' | 'error';
   progress: number;
   error?: string;
   downloadUrl?: string;

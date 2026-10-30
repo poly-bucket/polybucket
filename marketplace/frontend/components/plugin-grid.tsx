@@ -3,11 +3,17 @@
 import { PluginCard } from "@/components/plugin-card"
 import { SortSelect } from "@/components/sort-select"
 import { Pagination } from "@/components/pagination"
-import { usePluginBrowse } from "@/hooks/usePluginBrowse"
 import { SORT_OPTIONS } from "@/types/plugin"
 import { Loader2 } from "lucide-react"
+import type { usePluginBrowse } from "@/hooks/usePluginBrowse"
 
-export function PluginGrid() {
+type BrowseState = ReturnType<typeof usePluginBrowse>
+
+interface PluginGridProps {
+  browse: BrowseState
+}
+
+export function PluginGrid({ browse }: PluginGridProps) {
   const {
     plugins,
     loading,
@@ -17,16 +23,17 @@ export function PluginGrid() {
     totalPages,
     hasNextPage,
     hasPreviousPage,
+    sortBy,
     setSortBy,
     setPage,
-  } = usePluginBrowse()
+  } = browse
 
   if (error) {
     return (
       <div className="text-center py-8">
         <p className="text-red-500 mb-4">Error: {error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="text-blue-500 hover:underline"
         >
           Try again
@@ -41,8 +48,8 @@ export function PluginGrid() {
         <p className="text-sm text-muted-foreground">
           {loading ? "Loading..." : `Showing ${totalCount} components`}
         </p>
-        <SortSelect 
-          value={SORT_OPTIONS.DOWNLOADS} 
+        <SortSelect
+          value={sortBy}
           onValueChange={setSortBy}
           data-testid="sort-select"
         />
@@ -63,7 +70,7 @@ export function PluginGrid() {
               <PluginCard key={plugin.id} plugin={plugin} data-testid="plugin-card" />
             ))}
           </div>
-          
+
           <Pagination
             currentPage={page}
             totalPages={totalPages}

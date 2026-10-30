@@ -2,36 +2,37 @@
 
 import { ModerationQueue } from "@/components/moderation-queue"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { useAuth } from "@/context/AuthContext"
 import Link from "next/link"
-import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { MarketplaceHeader } from "@/components/marketplace-header"
 
 export default function ModerationPage() {
   const [pendingCount, setPendingCount] = useState(0)
+  const { isAdmin, isLoading, isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isLoading) {
+      return
+    }
+    if (!isAuthenticated || !isAdmin()) {
+      router.replace("/")
+    }
+  }, [isAdmin, isAuthenticated, isLoading, router])
+
+  if (isLoading || !isAuthenticated || !isAdmin()) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading…</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary" />
-              <span className="font-semibold text-xl">Polybucket Marketplace</span>
-            </Link>
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <Badge variant="secondary">Moderator</Badge>
-              <Link href="/login">
-                <Button variant="outline" size="sm">
-                  Sign Out
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <MarketplaceHeader showModeratorBadge />
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">

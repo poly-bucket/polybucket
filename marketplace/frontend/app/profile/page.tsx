@@ -1,11 +1,10 @@
 'use client';
 
-import { useAuth } from '@/context/AuthContext';
 import { UserProfile } from '@/components/user-profile';
+import { MarketplaceHeader } from '@/components/marketplace-header';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -34,41 +33,10 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-primary" />
-                <span className="font-semibold text-xl">Polybucket Marketplace</span>
-              </Link>
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Marketplace
-                </Button>
-              </Link>
-            </div>
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <MarketplaceHeader />
       <main className="container mx-auto px-4 py-8">
         <UserProfile />
       </main>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
