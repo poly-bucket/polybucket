@@ -26,7 +26,7 @@ namespace PolyBucket.Api.Tests.Factories
                 return existingUser;
             }
 
-            var salt = BCrypt.Net.BCrypt.GenerateSalt();
+            var salt = BCrypt.Net.BCrypt.GenerateSalt(TestPasswordHashing.BcryptWorkFactor);
             
             // Get or create the User role
             var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");

@@ -24,8 +24,7 @@ public abstract class DatabaseIntegrationTestBase : IAsyncLifetime
 
     protected async Task ResetDatabaseAsync()
     {
-        await DbContext.Database.EnsureDeletedAsync();
-        await DbContext.Database.MigrateAsync();
+        await DbContext.Database.ExecuteSqlRawAsync(DatabaseIntegrationTestReset.TruncateMutableDataSql);
     }
 
     protected async Task<User> SeedUserAsync(string? email = null)

@@ -1,5 +1,7 @@
+using DotNet.Testcontainers.Images;
 using Npgsql;
 using Testcontainers.PostgreSql;
+using Xunit;
 using Xunit;
 
 namespace PolyBucket.Database.Tests;
@@ -16,6 +18,7 @@ public class DatabaseTestCollectionFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _postgresContainer = new PostgreSqlBuilder("postgres:16-alpine")
+            .WithImagePullPolicy(PullPolicy.Missing)
             .WithDatabase("postgres")
             .WithUsername("postgres")
             .WithPassword("postgres")

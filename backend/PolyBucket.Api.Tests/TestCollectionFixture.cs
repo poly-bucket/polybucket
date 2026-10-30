@@ -32,14 +32,21 @@ namespace PolyBucket.Api.Tests
         private const ushort MinioPort = 9000;
         private PostgreSqlContainer? _postgresContainer;
         private IContainer? _minioContainer;
+        private TestWebApplicationFactory? _factory;
+
+        public TestWebApplicationFactory Factory =>
+            _factory ?? throw new InvalidOperationException("Test collection fixture is not initialized.");
 
         public async Task InitializeAsync()
         {
             Environment.SetEnvironmentVariable("AppSettings__Security__JwtSecret", "test-jwt-secret-key-for-testing-purposes-only-32-chars");
             Environment.SetEnvironmentVariable("AppSettings__Security__JwtIssuer", "polybucket-test-api");
             Environment.SetEnvironmentVariable("AppSettings__Security__JwtAudience", "polybucket-test-client");
+            Environment.SetEnvironmentVariable("OTEL_SDK_DISABLED", "true");
+            Environment.SetEnvironmentVariable("POLYBUCKET_TEST_HOST", "true");
 
             _postgresContainer = new PostgreSqlBuilder("postgres:16-alpine")
+                .WithImagePullPolicy(PullPolicy.Missing)
                 .WithDatabase("postgres")
                 .WithUsername("postgres")
                 .WithPassword("postgres")
@@ -93,10 +100,20 @@ namespace PolyBucket.Api.Tests
             var logger = LogAbstractions.NullLogger<PostgresAppDatabaseEnsurer>.Instance;
             await ensurer.EnsureAppDatabaseExistsOrValidateForMigrationAsync(logger).ConfigureAwait(false);
             await TestDatabaseManager.EnsureTestDatabaseCreatedAsync().ConfigureAwait(false);
+
+            _factory = new TestWebApplicationFactory();
+            using (_factory.CreateClient())
+            {
+            }
         }
 
         public async Task DisposeAsync()
         {
+            if (_factory is not null)
+            {
+                await _factory.DisposeAsync().ConfigureAwait(false);
+            }
+
             if (_minioContainer is not null)
             {
                 await _minioContainer.DisposeAsync().ConfigureAwait(false);

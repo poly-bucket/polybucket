@@ -12,6 +12,7 @@ using PolyBucket.Api.Settings;
 using PolyBucket.Email;
 using PolyBucket.Api.Tests.Email;
 using PolyBucket.Api.Tests.Previews;
+using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Services;
 
 namespace PolyBucket.Api.Tests
@@ -101,6 +102,13 @@ namespace PolyBucket.Api.Tests
 
             builder.ConfigureTestServices(services =>
             {
+                var passwordHasherDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IPasswordHasher));
+                if (passwordHasherDescriptor is not null)
+                {
+                    services.Remove(passwordHasherDescriptor);
+                }
+
+                services.AddScoped<IPasswordHasher, FastTestPasswordHasher>();
                 services.AddSingleton(EmailTransport);
                 services.AddSingleton<IEmailTransport>(EmailTransport);
                 services.AddSingleton(PreviewGenerator);

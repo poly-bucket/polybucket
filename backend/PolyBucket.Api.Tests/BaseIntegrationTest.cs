@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api;
@@ -88,11 +87,13 @@ namespace PolyBucket.Api.Tests
         protected BaseIntegrationTest(TestCollectionFixture testFixture)
         {
             TestFixture = testFixture;
-            Factory = new TestWebApplicationFactory();
+            Factory = testFixture.Factory;
         }
 
         protected virtual async Task ResetStateAsync()
         {
+            Factory.EmailTransport.Clear();
+            Factory.PreviewGenerator.Reset();
             await CleanupDatabaseAsync();
         }
 
@@ -102,44 +103,7 @@ namespace PolyBucket.Api.Tests
             {
                 EnsureTestHost();
                 var ctx = _dbContext!;
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Users\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Models\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelVersions\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelFiles\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Collections\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"CollectionModels\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Comments\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserSettings\" CASCADE");
-                await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"SystemSettings\" CASCADE");
-                
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Filaments\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Printers\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Reports\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModelModeration\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ModerationAuditLogs\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"EmailMessages\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserAuditLogs\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"PasswordResetTokens\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"EmailVerificationTokens\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RefreshTokens\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"CommentReactions\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"EnhancedComments\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Notifications\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserRoles\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"RolePermissions\" CASCADE"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"UserPermissions\" CASCADE"); } catch { }
-
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Users_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Models_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"ModelVersions_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"ModelFiles_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Collections_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Comments_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Filaments_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Printers_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"Reports_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"UserSettings_Id_seq\" RESTART WITH 1"); } catch { }
-                try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"SystemSettings_Id_seq\" RESTART WITH 1"); } catch { }
+                await ctx.Database.ExecuteSqlRawAsync(IntegrationTestDatabaseReset.TruncateMutableDataSql);
 
                 await TestDatabaseManager.ReseedRolePermissionsIfEmptyAsync(ctx);
                 await TestStorageSettingsSeeder.SeedAsync(ctx);
@@ -243,21 +207,11 @@ namespace PolyBucket.Api.Tests
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        public async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
-            if (_httpClient is not null)
-            {
-                _httpClient.Dispose();
-            }
+            _httpClient?.Dispose();
             _serviceScope?.Dispose();
-            if (Factory is IAsyncDisposable ad)
-            {
-                await ad.DisposeAsync();
-            }
-            else
-            {
-                Factory?.Dispose();
-            }
+            return ValueTask.CompletedTask;
         }
     }
 }

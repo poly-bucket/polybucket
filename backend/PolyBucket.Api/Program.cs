@@ -11,9 +11,13 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
-        // Configure Serilog
-        Log.Logger = new LoggerConfiguration()
+
+        var skipFileLog = string.Equals(
+            Environment.GetEnvironmentVariable("POLYBUCKET_TEST_HOST"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+        var loggerConfiguration = new LoggerConfiguration()
 #if DEBUG
             .MinimumLevel.Debug()
 #else
@@ -30,12 +34,18 @@ public class Program
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
 #endif
-            .WriteTo.File(
+            ;
+
+        if (!skipFileLog)
+        {
+            loggerConfiguration = loggerConfiguration.WriteTo.File(
                 path: "Logs/.log",
                 rollingInterval: RollingInterval.Day,
                 restrictedToMinimumLevel: LoggingExtensions.SetLogLevel(builder.Configuration["Logging:LogLevel:Default"] ?? "Information"),
-                outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-            .CreateLogger();
+                outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+        }
+
+        Log.Logger = loggerConfiguration.CreateLogger();
 
         try
         {

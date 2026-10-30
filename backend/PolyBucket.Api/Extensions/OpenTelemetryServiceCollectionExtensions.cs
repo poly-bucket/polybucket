@@ -18,6 +18,10 @@ public static class OpenTelemetryServiceCollectionExtensions
             ?? Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") 
             ?? "http://localhost:4317";
         var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development";
+        var otelDisabled = string.Equals(
+            Environment.GetEnvironmentVariable("OTEL_SDK_DISABLED"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
 
         services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
@@ -29,42 +33,56 @@ public static class OpenTelemetryServiceCollectionExtensions
                 {
                     ["deployment.environment"] = environment
                 }))
-            .WithTracing(tracing => tracing
-                .AddAspNetCoreInstrumentation(options =>
-                {
-                    options.RecordException = true;
-                    options.EnrichWithHttpRequest = (activity, request) =>
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation(options =>
                     {
-                        activity.SetTag("http.request.method", request.Method);
-                        activity.SetTag("http.request.path", request.Path);
-                    };
-                    options.EnrichWithHttpResponse = (activity, response) =>
+                        options.RecordException = true;
+                        options.EnrichWithHttpRequest = (activity, request) =>
+                        {
+                            activity.SetTag("http.request.method", request.Method);
+                            activity.SetTag("http.request.path", request.Path);
+                        };
+                        options.EnrichWithHttpResponse = (activity, response) =>
+                        {
+                            activity.SetTag("http.response.status_code", response.StatusCode);
+                        };
+                        options.EnrichWithException = (activity, exception) =>
+                        {
+                            activity.SetTag("exception.type", exception.GetType().Name);
+                            activity.SetTag("exception.message", exception.Message);
+                        };
+                    })
+                    .AddEntityFrameworkCoreInstrumentation(options =>
                     {
-                        activity.SetTag("http.response.status_code", response.StatusCode);
-                    };
-                    options.EnrichWithException = (activity, exception) =>
+                        options.SetDbStatementForText = true;
+                        options.SetDbStatementForStoredProcedure = true;
+                    });
+
+                if (!otelDisabled)
+                {
+                    tracing.AddOtlpExporter(options =>
                     {
-                        activity.SetTag("exception.type", exception.GetType().Name);
-                        activity.SetTag("exception.message", exception.Message);
-                    };
-                })
-                .AddEntityFrameworkCoreInstrumentation(options =>
-                {
-                    options.SetDbStatementForText = true;
-                    options.SetDbStatementForStoredProcedure = true;
-                })
-                .AddOtlpExporter(options =>
-                {
-                    options.Endpoint = new Uri(otlpEndpoint);
-                    options.Protocol = OtlpExportProtocol.Grpc;
-                }))
-            .WithMetrics(metrics => metrics
+                        options.Endpoint = new Uri(otlpEndpoint);
+                        options.Protocol = OtlpExportProtocol.Grpc;
+                    });
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics
                 .AddAspNetCoreInstrumentation()
-                .AddMeter(EmailMetrics.MeterName)
-                .AddOtlpExporter(options =>
+                .AddMeter(EmailMetrics.MeterName);
+
+                if (!otelDisabled)
                 {
-                    options.Endpoint = new Uri(otlpEndpoint);
-                }));
+                    metrics.AddOtlpExporter(options =>
+                    {
+                        options.Endpoint = new Uri(otlpEndpoint);
+                    });
+                }
+            });
 
         return services;
     }
