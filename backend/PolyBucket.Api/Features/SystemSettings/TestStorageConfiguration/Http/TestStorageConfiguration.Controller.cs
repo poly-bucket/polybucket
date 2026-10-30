@@ -43,7 +43,8 @@ public class TestStorageConfigurationController(ITestStorageConfigurationService
                 ExternalEndpoint = request.ExternalEndpoint,
                 ExternalPort = request.ExternalPort,
                 ExternalUseSsl = request.ExternalUseSsl,
-                Region = request.Region
+                Region = request.Region,
+                ForcePathStyle = request.ForcePathStyle
             };
         }
 

@@ -1,8 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Database.Entities.SystemSettings;
-using PolyBucket.Storage.Settings;
-using Fields = PolyBucket.Storage.EffectiveStorageSettings.Fields;
 
 namespace PolyBucket.Storage.UpdateStorageSettings;
 
@@ -15,14 +13,7 @@ public class UpdateStorageSettingsService(
     public async Task<StorageSettingsDto> UpdateAsync(StorageSettingsUpdate update, CancellationToken cancellationToken = default)
     {
         var current = await settingsResolver.GetEffectiveSettingsAsync(cancellationToken);
-        var normalized = Normalize(update);
-
-        var conflicts = FindEnvironmentConflicts(current, normalized);
-        if (conflicts.Count > 0)
-        {
-            throw new StorageSettingsConflictException(
-                $"These settings are managed by environment variables and cannot be changed here: {string.Join(", ", conflicts)}.");
-        }
+        var normalized = Normalize(update, current);
 
         var secretAfterUpdate = normalized.ClearSecretKey
             ? string.Empty
@@ -41,6 +32,7 @@ public class UpdateStorageSettingsService(
             ExternalPort = normalized.ExternalPort,
             ExternalUseSsl = normalized.ExternalUseSsl,
             Region = normalized.Region,
+            ForcePathStyle = normalized.ForcePathStyle,
             IsConfigured = true,
             Sources = current.Sources
         };
@@ -55,46 +47,28 @@ public class UpdateStorageSettingsService(
         await repository.UpsertAsync(values, cancellationToken);
         settingsResolver.Invalidate();
 
-        logger.LogInformation("Storage settings updated for MinIO endpoint {Endpoint}:{Port}", normalized.Endpoint, normalized.Port);
+        logger.LogInformation(
+            "Storage settings updated for provider {Provider} at {Endpoint}:{Port}",
+            normalized.Provider,
+            normalized.Endpoint,
+            normalized.Port);
 
         return StorageSettingsDto.From(await settingsResolver.GetEffectiveSettingsAsync(cancellationToken));
     }
 
-    private static StorageSettingsUpdate Normalize(StorageSettingsUpdate update) =>
-        update with
+    private static StorageSettingsUpdate Normalize(StorageSettingsUpdate update, EffectiveStorageSettings current)
+    {
+        var provider = string.IsNullOrWhiteSpace(update.Provider) ? current.Provider : update.Provider.Trim();
+
+        return update with
         {
-            Provider = string.IsNullOrWhiteSpace(update.Provider) ? "minio" : update.Provider.Trim(),
+            Provider = provider,
             Endpoint = update.Endpoint?.Trim() ?? string.Empty,
             BucketName = update.BucketName?.Trim() ?? string.Empty,
             AccessKey = update.AccessKey?.Trim() ?? string.Empty,
             ExternalEndpoint = string.IsNullOrWhiteSpace(update.ExternalEndpoint) ? null : update.ExternalEndpoint.Trim(),
             Region = string.IsNullOrWhiteSpace(update.Region) ? "us-east-1" : update.Region.Trim()
         };
-
-    private static List<string> FindEnvironmentConflicts(EffectiveStorageSettings current, StorageSettingsUpdate update)
-    {
-        var conflicts = new List<string>();
-
-        void Check(string field, bool differs)
-        {
-            if (differs && current.IsManagedByEnvironment(field))
-            {
-                conflicts.Add(field);
-            }
-        }
-
-        Check(Fields.Provider, !string.Equals(update.Provider, current.Provider, StringComparison.OrdinalIgnoreCase));
-        Check(Fields.Endpoint, !string.Equals(update.Endpoint, current.Endpoint, StringComparison.Ordinal));
-        Check(Fields.Port, update.Port != current.Port);
-        Check(Fields.UseSsl, update.UseSsl != current.UseSsl);
-        Check(Fields.BucketName, !string.Equals(update.BucketName, current.BucketName, StringComparison.Ordinal));
-        Check(Fields.AccessKey, !string.Equals(update.AccessKey, current.AccessKey, StringComparison.Ordinal));
-        Check(Fields.ExternalEndpoint, !string.Equals(update.ExternalEndpoint, current.ExternalEndpoint, StringComparison.Ordinal));
-        Check(Fields.ExternalPort, update.ExternalPort != current.ExternalPort);
-        Check(Fields.ExternalUseSsl, update.ExternalUseSsl != current.ExternalUseSsl);
-        Check(Fields.Region, !string.Equals(update.Region, current.Region, StringComparison.OrdinalIgnoreCase));
-
-        return conflicts;
     }
 
     private Dictionary<string, string> BuildValues(
@@ -110,7 +84,8 @@ public class UpdateStorageSettingsService(
             [StorageSystemSettingKeys.UseSsl] = update.UseSsl.ToString(),
             [StorageSystemSettingKeys.BucketName] = update.BucketName,
             [StorageSystemSettingKeys.AccessKey] = update.AccessKey,
-            [StorageSystemSettingKeys.Region] = update.Region
+            [StorageSystemSettingKeys.Region] = update.Region,
+            [StorageSystemSettingKeys.ForcePathStyle] = update.ForcePathStyle.ToString()
         };
 
         if (update.ExternalEndpoint != null)
@@ -136,7 +111,7 @@ public class UpdateStorageSettingsService(
         {
             values[StorageSystemSettingKeys.SecretKey] = secretProtector.Protect(update.SecretKey);
         }
-        else if (!string.IsNullOrEmpty(current.SecretKey) && current.Sources.TryGetValue(Fields.SecretKey, out var source)
+        else if (!string.IsNullOrEmpty(current.SecretKey) && current.Sources.TryGetValue(EffectiveStorageSettings.Fields.SecretKey, out var source)
                  && source == StorageSettingSource.Database)
         {
             // keep existing encrypted value — do not re-write

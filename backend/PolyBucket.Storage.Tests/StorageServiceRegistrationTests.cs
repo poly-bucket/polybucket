@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PolyBucket.Storage;
 using PolyBucket.Storage.DependencyInjection;
 using Shouldly;
 
@@ -8,7 +9,7 @@ namespace PolyBucket.Storage.Tests;
 
 public class StorageServiceRegistrationTests
 {
-    private static Dictionary<string, string?> MinioSettings(string? provider = "MinIO") => new()
+    private static Dictionary<string, string?> CompleteEnvSettings(string provider) => new()
     {
         ["Storage:Provider"] = provider,
         ["Storage:Endpoint"] = "localhost",
@@ -31,11 +32,11 @@ public class StorageServiceRegistrationTests
     }
 
     [Theory]
-    [InlineData("MinIO")]
-    [InlineData("minio")]
+    [InlineData(StorageProviderIds.Minio)]
+    [InlineData(StorageProviderIds.Silo)]
     public void AddObjectStorage_RegistersRoutingStorageService(string providerValue)
     {
-        var services = BuildServices(MinioSettings(providerValue));
+        var services = BuildServices(CompleteEnvSettings(providerValue));
 
         services.ShouldContain(d =>
             d.ServiceType == typeof(IStorageService) && d.ImplementationType == typeof(RoutingStorageService));
@@ -50,12 +51,11 @@ public class StorageServiceRegistrationTests
         services.ShouldContain(d => d.ServiceType == typeof(IStorageService));
     }
 
-    [Theory]
-    [InlineData("S3")]
-    [InlineData("Azure")]
-    public void AddObjectStorage_Throws_WhenProviderIsNotMinio(string provider)
+    [Fact]
+    public void AddObjectStorage_DoesNotThrow_ForUnsupportedLegacyEnvProvider()
     {
-        var settings = MinioSettings(provider);
-        Should.Throw<InvalidOperationException>(() => BuildServices(settings));
+        var services = BuildServices(CompleteEnvSettings("S3"));
+
+        services.ShouldContain(d => d.ServiceType == typeof(IStorageService));
     }
 }

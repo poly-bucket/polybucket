@@ -151,6 +151,8 @@ namespace PolyBucket.Api.Tests
                 await context.SaveChangesAsync();
             }
 
+            await TestStorageSettingsSeeder.SeedAsync(context);
+
 
         }
 

@@ -3,9 +3,8 @@ using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Images;
 using Minio;
 using Minio.DataModel.Args;
-using PolyBucket.Storage.DependencyInjection;
+using PolyBucket.Storage.Settings;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace PolyBucket.Storage.Tests;
 
@@ -83,10 +82,22 @@ public class StorageTestCollectionFixture : IAsyncLifetime
             .Build();
     }
 
-    public static IStorageService CreateStorageService(IConfiguration? configuration = null)
+    public static IStorageService CreateStorageService(string provider = StorageProviderIds.Silo)
     {
-        var services = new ServiceCollection();
-        services.AddObjectStorage(configuration ?? BuildConfiguration());
-        return services.BuildServiceProvider().GetRequiredService<IStorageService>();
+        var settings = new StorageSettings
+        {
+            Provider = provider,
+            Endpoint = StorageTestEnvironment.Endpoint ?? "localhost",
+            Port = StorageTestEnvironment.Port ?? 9000,
+            AccessKey = StorageTestEnvironment.AccessKey ?? MinioRootUser,
+            SecretKey = StorageTestEnvironment.SecretKey ?? MinioRootPassword,
+            BucketName = StorageTestEnvironment.BucketName ?? MinioTestBucketName,
+            UseSSL = false,
+            ExternalEndpoint = StorageTestEnvironment.Endpoint,
+            ExternalPort = StorageTestEnvironment.Port,
+            ExternalUseSSL = false
+        };
+
+        return new MinioStorageService(settings);
     }
 }

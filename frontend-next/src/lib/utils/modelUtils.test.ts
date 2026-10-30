@@ -31,6 +31,8 @@ describe("isImageUrl", () => {
     expect(isImageUrl("javascript:alert(1).png")).toBe(false);
     expect(isImageUrl("/preview.png")).toBe(false);
   });
+
+  it("returns false for empty or missing values", () => {
     expect(isImageUrl(undefined)).toBe(false);
     expect(isImageUrl(null)).toBe(false);
     expect(isImageUrl("")).toBe(false);

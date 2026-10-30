@@ -16,7 +16,7 @@ namespace PolyBucket.Api.Features.SystemSettings.GetStorageSettings.Http;
 public class GetStorageSettingsController(IGetStorageSettingsService service) : ControllerBase
 {
     /// <summary>
-    /// Gets the effective object storage configuration, including where each value comes from and which fields are managed by environment variables.
+    /// Gets the effective object storage configuration stored in the database.
     /// </summary>
     /// <remarks>The secret key is never returned; <c>hasSecretKey</c> indicates whether one is stored.</remarks>
     /// <response code="200">The effective storage settings.</response>

@@ -14,4 +14,5 @@ public sealed record StorageSettingsUpdate
     public int? ExternalPort { get; init; }
     public bool? ExternalUseSsl { get; init; }
     public string Region { get; init; } = "us-east-1";
+    public bool ForcePathStyle { get; init; }
 }

@@ -30,4 +30,24 @@ public class MinioStorageServiceIntegrationTests
 
         await storage.DeleteAsync(objectKey);
     }
+
+    [Fact(DisplayName = "When provider is minio, upload and download still succeed against Silo.")]
+    public async Task UploadDownload_Works_ForMinioProviderId()
+    {
+        // Arrange
+        var storage = StorageTestCollectionFixture.CreateStorageService(StorageProviderIds.Minio);
+        var objectKey = $"tests/{Guid.NewGuid():N}.txt";
+        var content = "minio provider label";
+        await using var uploadStream = new MemoryStream(Encoding.UTF8.GetBytes(content));
+
+        // Act
+        await storage.UploadAsync(objectKey, uploadStream, "text/plain");
+        await using var downloaded = await storage.DownloadAsync(objectKey);
+        using var reader = new StreamReader(downloaded, Encoding.UTF8, leaveOpen: true);
+        var downloadedText = await reader.ReadToEndAsync();
+
+        // Assert
+        downloadedText.ShouldBe(content);
+        await storage.DeleteAsync(objectKey);
+    }
 }

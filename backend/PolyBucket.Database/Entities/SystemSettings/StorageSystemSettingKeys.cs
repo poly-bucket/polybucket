@@ -13,5 +13,6 @@ public static class StorageSystemSettingKeys
     public const string ExternalPort = "Storage:ExternalPort";
     public const string ExternalUseSsl = "Storage:ExternalUseSsl";
     public const string Region = "Storage:Region";
+    public const string ForcePathStyle = "Storage:ForcePathStyle";
     public const string LastSuccessfulTestAt = "Storage:LastSuccessfulTestAt";
 }

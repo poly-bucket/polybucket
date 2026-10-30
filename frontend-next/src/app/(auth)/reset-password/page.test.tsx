@@ -106,7 +106,7 @@ describe("ResetPasswordPage", () => {
 
   it("offers a new link when there is no token", async () => {
     // Arrange
-    mockTakeToken.mockReturnValue(null);
+    mockFetchActionToken.mockResolvedValue(null);
 
     // Act
     render(<ResetPasswordPage />, { mockAuth: { user: null } });

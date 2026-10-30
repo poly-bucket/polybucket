@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using PolyBucket.Database.Entities.Models;
 using System.Net.Http.Headers;
+using PolyBucket.Storage;
 using Xunit;
 
 namespace PolyBucket.Api.Tests
@@ -141,6 +142,9 @@ namespace PolyBucket.Api.Tests
                 try { await ctx.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS \"SystemSettings_Id_seq\" RESTART WITH 1"); } catch { }
 
                 await TestDatabaseManager.ReseedRolePermissionsIfEmptyAsync(ctx);
+                await TestStorageSettingsSeeder.SeedAsync(ctx);
+                var storageResolver = _serviceScope!.ServiceProvider.GetService<IStorageSettingsResolver>();
+                storageResolver?.Invalidate();
                 ctx.ChangeTracker.Clear();
             }
             catch (Exception ex)

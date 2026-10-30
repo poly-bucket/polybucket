@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using PolyBucket.Storage;
 using PolyBucket.Storage.Settings;
 using Shouldly;
 
@@ -8,9 +9,9 @@ public class StorageSettingsValidatorTests
 {
     private readonly StorageSettingsValidator _validator = new();
 
-    private static StorageSettings ValidMinioSettings() => new()
+    private static StorageSettings ValidSettings(string provider = StorageProviderIds.Minio) => new()
     {
-        Provider = "MinIO",
+        Provider = provider,
         Endpoint = "localhost",
         Port = 9000,
         AccessKey = "key",
@@ -26,19 +27,24 @@ public class StorageSettingsValidatorTests
         result.Succeeded.ShouldBeTrue();
     }
 
-    [Fact]
-    public void Validate_Succeeds_ForValidMinioSettings()
+    [Theory]
+    [InlineData(StorageProviderIds.Minio)]
+    [InlineData(StorageProviderIds.Silo)]
+    [InlineData(StorageProviderIds.SeaweedFs)]
+    public void Validate_Succeeds_ForSupportedProviders(string provider)
     {
-        var result = _validator.Validate(Options.DefaultName, ValidMinioSettings());
+        var result = _validator.Validate(Options.DefaultName, ValidSettings(provider));
 
         result.Succeeded.ShouldBeTrue();
     }
 
-    [Fact]
-    public void Validate_Fails_WhenProviderIsUnsupported()
+    [Theory]
+    [InlineData("S3")]
+    [InlineData("azure")]
+    public void Validate_Fails_WhenProviderIsUnsupported(string provider)
     {
-        var settings = ValidMinioSettings();
-        settings.Provider = "S3";
+        var settings = ValidSettings();
+        settings.Provider = provider;
 
         var result = _validator.Validate(Options.DefaultName, settings);
 
@@ -49,19 +55,19 @@ public class StorageSettingsValidatorTests
     [Fact]
     public void Validate_Fails_WhenEndpointMissing()
     {
-        var settings = ValidMinioSettings();
+        var settings = ValidSettings();
         settings.Endpoint = "";
 
         var result = _validator.Validate(Options.DefaultName, settings);
 
         result.Failed.ShouldBeTrue();
-        result.FailureMessage.ShouldContain("Endpoint");
+        result.FailureMessage.ShouldContain("endpoint");
     }
 
     [Fact]
     public void Validate_Fails_WhenPortInvalid()
     {
-        var settings = ValidMinioSettings();
+        var settings = ValidSettings();
         settings.Port = 0;
 
         var result = _validator.Validate(Options.DefaultName, settings);

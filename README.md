@@ -32,8 +32,19 @@ Polybucket has been in development for many years. I've been working on this pro
 ## Does it work?
 Yes. Expect bugs. 
 
-## Minio
-At the time of writing this, Minio decided to pull out of the community supported Docker image. The stack does work with the latest Minio container. I do still plan to support it as a default. There are plans for supporting other, more commerical object storage solutions.
+## Object storage
+
+PolyBucket supports **MinIO**, **Silo**, and **SeaweedFS** (S3-compatible APIs). Choose your provider in the setup wizard; connection settings are stored in PostgreSQL (not environment variables).
+
+For local development, optional bundled **Silo** (S3-compatible):
+
+```bash
+docker compose --profile object-storage up -d
+```
+
+The compose service is named `silo` (port 9000). In the wizard, select **Silo** and set the internal endpoint to `silo` when the API runs in Docker on the same network.
+
+**SeaweedFS** defaults to port **8333**; enable path-style URLs in the wizard if your S3 gateway requires it.
 
 ## Roadmap?
 I am the roadmap.
@@ -60,7 +71,7 @@ Contact me [on Discord](https://discord.gg/EX94hH5RYt) or see the [Contributing]
 - Ensure database exists and migrations have run
 
 **Q: Storage upload failures**
-- Verify MinIO/S3 credentials are correct
+- Verify object storage credentials and internal/external endpoints in the setup wizard
 - Check storage bucket permissions
 - Ensure storage service is accessible from the API
 
@@ -167,7 +178,7 @@ For more troubleshooting help, visit our [Discord](https://discord.gg/EX94hH5RYt
 
 ### Storage & Files
 
-- **Object Storage**: Flexible storage backend using MinIO (default), AWS S3, or other S3-compatible providers
+- **Object Storage**: MinIO, Silo, or SeaweedFS (configured in the setup wizard)
 - **File Upload Management**: Upload, manage, and organize files
 - **Storage Quotas**: Configurable storage quotas per user
 - **File Versioning**: Track file versions and changes
@@ -213,7 +224,7 @@ Access the application at `http://localhost:3000` and complete the first-time se
 - **.NET 8.0 SDK** (for local backend development)
 - **Node.js 18+** and **npm/yarn** (for local frontend development)
 - **PostgreSQL 14+** (if not using Docker)
-- **MinIO** or **S3-compatible storage** (if not using Docker)
+- **S3-compatible object storage** (MinIO, Silo, or SeaweedFS) if not using Docker
 
 ### Docker Installation (Recommended)
 
@@ -230,7 +241,7 @@ docker-compose logs -f
 docker-compose down
 ```
 
-**Minimal API environment (production-style):** The API can start with only database access, JWT signing, CORS/frontend URL, and a bootstrap admin password. Object storage and email are configured in the **setup wizard** (stored in PostgreSQL). Optional bundled MinIO:
+**Minimal API environment (production-style):** The API can start with only database access, JWT signing, CORS/frontend URL, and a bootstrap admin password. Object storage and email are configured in the **setup wizard** (stored in PostgreSQL). Optional bundled Silo:
 
 ```bash
 docker compose --profile object-storage up -d
@@ -244,7 +255,7 @@ docker compose --profile object-storage up -d
 | `Admin__Password` | Initial admin login (username/email use defaults) |
 | `ASPNETCORE_URLS` | Listen URL inside the container |
 
-After saving object storage in the wizard, the API **restarts once** so it connects to MinIO/S3 using the database settings.
+After saving object storage in the wizard, the API **restarts once** so it connects using the database settings.
 
 ### Manual Installation
 
@@ -272,7 +283,7 @@ For development or production deployments without Docker:
      ```
 
 4. **Storage Setup**:
-   - Configure MinIO or S3-compatible storage
+   - Select MinIO, Silo, or SeaweedFS and enter connection details
    - Set storage credentials in appsettings.json
 
 See the [documentation](https://github.com/poly-bucket/polybucket/wiki) for detailed setup instructions.
@@ -328,7 +339,7 @@ PolyBucket is perfect for:
 
 - Docker 20.10+ and Docker Compose 2.0+ (for containerized deployment)
 - PostgreSQL 14+ (or use included Docker image)
-- MinIO or S3-compatible storage (or use included Docker image)
+- S3-compatible storage (MinIO, Silo, or SeaweedFS) or use the optional Silo compose profile
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 
 ## Tech Stack
@@ -337,7 +348,7 @@ PolyBucket is perfect for:
 - **Frontend**: React 18+ with TypeScript and Redux
 - **3D Rendering**: Three.js for interactive model previews
 - **Database**: PostgreSQL 14+
-- **Storage**: MinIO (default), AWS S3, and other S3-compatible providers
+- **Storage**: MinIO, Silo, or SeaweedFS (setup wizard)
 - **Deployment**: Docker and Docker Compose
 - **Authentication**: JWT tokens with optional OAuth support
 - **API**: RESTful API with comprehensive documentation

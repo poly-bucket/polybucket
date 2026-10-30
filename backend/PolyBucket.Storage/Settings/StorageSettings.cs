@@ -3,14 +3,14 @@ namespace PolyBucket.Storage.Settings;
 public class StorageSettings
 {
     /// <summary>
-    /// Provider name: MinIO, S3, AzureBlob (case-insensitive).
+    /// Provider id: minio, silo, or seaweedfs (case-insensitive).
     /// </summary>
-    public string Provider { get; set; } = "MinIO";
+    public string Provider { get; set; } = "minio";
 
     /// <summary>
     /// Default bucket / container name to store all uploaded objects.
     /// </summary>
-    public string BucketName { get; set; } = "polybucket-uploads";
+    public string BucketName { get; set; } = string.Empty;
 
     /// <summary>
     /// Endpoint or host (for MinIO / custom S3 implementations).
@@ -54,4 +54,9 @@ public class StorageSettings
     /// For Azure Blob Storage we prefer a single connection string.
     /// </summary>
     public string? ConnectionString { get; set; }
+
+    /// <summary>
+    /// Use path-style S3 URLs (often required for SeaweedFS S3 gateway).
+    /// </summary>
+    public bool ForcePathStyle { get; set; }
 } 

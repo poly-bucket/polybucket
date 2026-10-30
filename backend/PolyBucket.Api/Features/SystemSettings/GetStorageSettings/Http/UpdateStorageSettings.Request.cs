@@ -5,7 +5,7 @@ namespace PolyBucket.Api.Features.SystemSettings.GetStorageSettings.Http;
 public class UpdateStorageSettingsRequest
 {
     [Required]
-    public string Provider { get; set; } = "minio";
+    public string Provider { get; set; } = string.Empty;
 
     [Required]
     public string Endpoint { get; set; } = string.Empty;
@@ -33,4 +33,6 @@ public class UpdateStorageSettingsRequest
     public bool? ExternalUseSsl { get; set; }
 
     public string Region { get; set; } = "us-east-1";
+
+    public bool ForcePathStyle { get; set; }
 }

@@ -38,11 +38,19 @@ public class TestStorageConfigurationService(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Storage connectivity test failed");
+            logger.LogWarning(
+                ex,
+                "Storage connectivity test failed for provider {Provider} at {Endpoint}:{Port}, bucket {BucketName}",
+                candidate.Provider,
+                candidate.Endpoint,
+                candidate.Port,
+                candidate.BucketName);
+
             return new TestStorageConfigurationResult
             {
                 Success = false,
-                Message = "Could not connect to object storage with the provided settings."
+                Message =
+                    $"Could not connect to {candidate.Provider} at {candidate.Endpoint}:{candidate.Port} (bucket: {candidate.BucketName}). Check the internal hostname, port, credentials, and that the service is running."
             };
         }
 
@@ -88,6 +96,7 @@ public class TestStorageConfigurationService(
             ExternalPort = proposed.ExternalPort,
             ExternalUseSsl = proposed.ExternalUseSsl,
             Region = string.IsNullOrWhiteSpace(proposed.Region) ? current.Region : proposed.Region.Trim(),
+            ForcePathStyle = proposed.ForcePathStyle,
             IsConfigured = true,
             Sources = current.Sources
         };

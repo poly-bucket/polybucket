@@ -19,17 +19,11 @@ public static class StorageServiceCollectionExtensions
         services.AddOptions<StorageSettings>()
             .Bind(storageSection);
 
-        var provider = storageSection.GetValue<string>("Provider")?.ToLowerInvariant() ?? "minio";
-        if (provider != "minio" && !string.IsNullOrWhiteSpace(storageSection.GetValue<string>("Provider")))
-        {
-            throw new InvalidOperationException($"Storage provider '{provider}' is not supported. Only 'minio' is currently supported.");
-        }
-
         services.AddMemoryCache();
         services.AddSingleton<IStorageSecretProtector, StorageSecretProtector>();
-        services.AddSingleton<IStorageSettingsResolver, StorageSettingsResolver>();
-        services.AddSingleton<IStorageService, RoutingStorageService>();
-        services.AddHostedService<MinioStartupConnectivityCheck>();
+        services.AddScoped<IStorageSettingsResolver, StorageSettingsResolver>();
+        services.AddScoped<IStorageService, RoutingStorageService>();
+        services.AddHostedService<StorageStartupConnectivityCheck>();
 
         return services;
     }

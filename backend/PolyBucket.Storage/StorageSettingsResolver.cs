@@ -1,19 +1,14 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using PolyBucket.Database.Entities.SystemSettings;
 using PolyBucket.Database.Persistence;
-using PolyBucket.Storage.Settings;
 
 namespace PolyBucket.Storage;
 
 public class StorageSettingsResolver(
     PolyBucketDbContext context,
-    IOptionsMonitor<StorageSettings> envOptions,
-    IConfiguration configuration,
     IStorageSecretProtector secretProtector,
     IMemoryCache cache,
     ILogger<StorageSettingsResolver> logger) : IStorageSettingsResolver
@@ -32,7 +27,7 @@ public class StorageSettingsResolver(
             .Where(s => s.Key.StartsWith("Storage:"))
             .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
 
-        var settings = await BuildAsync(envOptions.CurrentValue, dbSettings, cancellationToken);
+        var settings = await BuildAsync(dbSettings, cancellationToken);
         cache.Set(CacheKey, settings, CacheDuration);
         return settings;
     }
@@ -43,92 +38,33 @@ public class StorageSettingsResolver(
     }
 
     private async Task<EffectiveStorageSettings> BuildAsync(
-        StorageSettings env,
         IReadOnlyDictionary<string, string> db,
         CancellationToken cancellationToken)
     {
         var sources = new Dictionary<string, StorageSettingSource>();
 
-        var provider = PickString(
-            EffectiveStorageSettings.Fields.Provider,
-            NullIfBlank(env.Provider),
-            Get(db, StorageSystemSettingKeys.Provider),
-            "minio",
-            sources);
-
-        var endpoint = PickString(
-            EffectiveStorageSettings.Fields.Endpoint,
-            NullIfBlank(env.Endpoint),
-            Get(db, StorageSystemSettingKeys.Endpoint),
-            string.Empty,
-            sources);
-
-        var port = PickInt(
-            EffectiveStorageSettings.Fields.Port,
-            env.Port > 0 ? env.Port : null,
-            ParseInt(Get(db, StorageSystemSettingKeys.Port)),
-            0,
-            sources);
-
-        var useSsl = ResolveBool(
-            EffectiveStorageSettings.Fields.UseSsl,
-            configuration.GetSection("Storage").GetValue<bool?>("UseSSL")
-                ?? configuration.GetSection("AppSettings:Storage").GetValue<bool?>("UseSSL"),
-            ParseBool(Get(db, StorageSystemSettingKeys.UseSsl)),
-            false,
-            sources);
-
-        var bucket = PickString(
-            EffectiveStorageSettings.Fields.BucketName,
-            NullIfBlank(env.BucketName),
-            Get(db, StorageSystemSettingKeys.BucketName),
-            string.Empty,
-            sources);
-
-        var accessKey = PickString(
-            EffectiveStorageSettings.Fields.AccessKey,
-            NullIfBlank(env.AccessKey),
-            Get(db, StorageSystemSettingKeys.AccessKey),
-            string.Empty,
-            sources);
-
-        var secretKey = await ResolveSecretKeyAsync(env, db, sources, cancellationToken);
-
-        var externalEndpoint = PickStringNullable(
-            EffectiveStorageSettings.Fields.ExternalEndpoint,
-            NullIfBlank(env.ExternalEndpoint),
-            Get(db, StorageSystemSettingKeys.ExternalEndpoint),
-            sources);
-
-        var externalPort = PickIntNullable(
-            EffectiveStorageSettings.Fields.ExternalPort,
-            env.ExternalPort,
-            ParseInt(Get(db, StorageSystemSettingKeys.ExternalPort)),
-            sources);
-
-        var externalUseSsl = ResolveBoolNullable(
-            EffectiveStorageSettings.Fields.ExternalUseSsl,
-            configuration.GetSection("Storage").GetValue<bool?>("ExternalUseSSL")
-                ?? configuration.GetSection("AppSettings:Storage").GetValue<bool?>("ExternalUseSSL"),
-            ParseBool(Get(db, StorageSystemSettingKeys.ExternalUseSsl)),
-            sources);
-
-        var region = PickString(
-            EffectiveStorageSettings.Fields.Region,
-            NullIfBlank(env.Region),
-            Get(db, StorageSystemSettingKeys.Region),
-            "us-east-1",
-            sources);
+        var provider = GetDbString(db, StorageSystemSettingKeys.Provider, StorageProviderIds.Minio, sources);
+        var endpoint = GetDbString(db, StorageSystemSettingKeys.Endpoint, string.Empty, sources);
+        var port = GetDbInt(db, StorageSystemSettingKeys.Port, 0, sources);
+        var useSsl = GetDbBool(db, StorageSystemSettingKeys.UseSsl, false, sources);
+        var bucket = GetDbString(db, StorageSystemSettingKeys.BucketName, string.Empty, sources);
+        var accessKey = GetDbString(db, StorageSystemSettingKeys.AccessKey, string.Empty, sources);
+        var secretKey = await ResolveSecretKeyAsync(db, sources, cancellationToken);
+        var externalEndpoint = GetDbStringNullable(db, StorageSystemSettingKeys.ExternalEndpoint, sources);
+        var externalPort = GetDbIntNullable(db, StorageSystemSettingKeys.ExternalPort, sources);
+        var externalUseSsl = GetDbBoolNullable(db, StorageSystemSettingKeys.ExternalUseSsl, sources);
+        var region = GetDbString(db, StorageSystemSettingKeys.Region, "us-east-1", sources);
+        var forcePathStyle = ResolveForcePathStyle(db, provider, sources);
 
         DateTime? lastTest = DateTime.TryParse(
-            Get(db, StorageSystemSettingKeys.LastSuccessfulTestAt),
+            GetRaw(db, StorageSystemSettingKeys.LastSuccessfulTestAt),
             CultureInfo.InvariantCulture,
             DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
             out var parsedLastTest)
             ? parsedLastTest
             : null;
 
-        var candidate = new StorageSettings
+        var candidate = new Settings.StorageSettings
         {
             Provider = provider,
             Endpoint = endpoint,
@@ -140,13 +76,12 @@ public class StorageSettingsResolver(
             ExternalEndpoint = externalEndpoint,
             ExternalPort = externalPort,
             ExternalUseSSL = externalUseSsl,
-            Region = region
+            Region = region,
+            ForcePathStyle = forcePathStyle
         };
 
-        var envComplete = StorageSettingsValidation.IsEnvConfigurationAttempted(env)
-            && StorageSettingsValidation.IsCompleteMinioProfile(env);
-        var dbComplete = HasDbStorageKeys(db) && StorageSettingsValidation.IsCompleteMinioProfile(candidate);
-        var isConfigured = envComplete || dbComplete;
+        var dbComplete = HasDbStorageKeys(db)
+            && StorageSettingsValidation.IsCompleteS3CompatibleProfile(candidate);
 
         return new EffectiveStorageSettings
         {
@@ -161,8 +96,9 @@ public class StorageSettingsResolver(
             ExternalPort = externalPort,
             ExternalUseSsl = externalUseSsl,
             Region = region,
+            ForcePathStyle = forcePathStyle,
             LastSuccessfulTestAt = lastTest,
-            IsConfigured = isConfigured,
+            IsConfigured = dbComplete,
             Sources = sources
         };
     }
@@ -171,20 +107,35 @@ public class StorageSettingsResolver(
         db.ContainsKey(StorageSystemSettingKeys.Endpoint)
         || db.ContainsKey(StorageSystemSettingKeys.BucketName);
 
+    private static bool ResolveForcePathStyle(
+        IReadOnlyDictionary<string, string> db,
+        string provider,
+        Dictionary<string, StorageSettingSource> sources)
+    {
+        var stored = GetRaw(db, StorageSystemSettingKeys.ForcePathStyle);
+        if (bool.TryParse(stored, out var parsed))
+        {
+            sources[EffectiveStorageSettings.Fields.ForcePathStyle] = StorageSettingSource.Database;
+            return parsed;
+        }
+
+        if (StorageProviderCatalog.TryGetDefaultForcePathStyle(provider, out var defaultValue))
+        {
+            sources[EffectiveStorageSettings.Fields.ForcePathStyle] = StorageSettingSource.Default;
+            return defaultValue;
+        }
+
+        sources[EffectiveStorageSettings.Fields.ForcePathStyle] = StorageSettingSource.Default;
+        return false;
+    }
+
     private async Task<string> ResolveSecretKeyAsync(
-        StorageSettings env,
         IReadOnlyDictionary<string, string> db,
         Dictionary<string, StorageSettingSource> sources,
         CancellationToken cancellationToken)
     {
         const string field = EffectiveStorageSettings.Fields.SecretKey;
-        if (!string.IsNullOrWhiteSpace(env.SecretKey))
-        {
-            sources[field] = StorageSettingSource.Environment;
-            return env.SecretKey;
-        }
-
-        var stored = Get(db, StorageSystemSettingKeys.SecretKey);
+        var stored = GetRaw(db, StorageSystemSettingKeys.SecretKey);
         if (string.IsNullOrEmpty(stored))
         {
             sources[field] = StorageSettingSource.Default;
@@ -229,143 +180,124 @@ public class StorageSettingsResolver(
         }
     }
 
-    private static string PickString(
-        string field,
-        string? environmentValue,
-        string? databaseValue,
+    private static string GetDbString(
+        IReadOnlyDictionary<string, string> db,
+        string key,
         string defaultValue,
         Dictionary<string, StorageSettingSource> sources)
     {
-        if (!string.IsNullOrWhiteSpace(environmentValue))
+        var value = NullIfBlank(GetRaw(db, key));
+        if (value != null)
         {
-            sources[field] = StorageSettingSource.Environment;
-            return environmentValue;
+            sources[FieldForKey(key)] = StorageSettingSource.Database;
+            return value;
         }
 
-        if (!string.IsNullOrWhiteSpace(databaseValue))
-        {
-            sources[field] = StorageSettingSource.Database;
-            return databaseValue;
-        }
-
-        sources[field] = StorageSettingSource.Default;
+        sources[FieldForKey(key)] = StorageSettingSource.Default;
         return defaultValue;
     }
 
-    private static string? PickStringNullable(
-        string field,
-        string? environmentValue,
-        string? databaseValue,
+    private static string? GetDbStringNullable(
+        IReadOnlyDictionary<string, string> db,
+        string key,
         Dictionary<string, StorageSettingSource> sources)
     {
-        if (!string.IsNullOrWhiteSpace(environmentValue))
+        var value = NullIfBlank(GetRaw(db, key));
+        if (value != null)
         {
-            sources[field] = StorageSettingSource.Environment;
-            return environmentValue;
+            sources[FieldForKey(key)] = StorageSettingSource.Database;
+            return value;
         }
 
-        if (!string.IsNullOrWhiteSpace(databaseValue))
-        {
-            sources[field] = StorageSettingSource.Database;
-            return databaseValue;
-        }
-
-        sources[field] = StorageSettingSource.Default;
+        sources[FieldForKey(key)] = StorageSettingSource.Default;
         return null;
     }
 
-    private static int PickInt(
-        string field,
-        int? environmentValue,
-        int? databaseValue,
+    private static int GetDbInt(
+        IReadOnlyDictionary<string, string> db,
+        string key,
         int defaultValue,
         Dictionary<string, StorageSettingSource> sources)
     {
-        if (environmentValue is > 0)
+        var parsed = ParseInt(GetRaw(db, key));
+        if (parsed is > 0)
         {
-            sources[field] = StorageSettingSource.Environment;
-            return environmentValue.Value;
+            sources[FieldForKey(key)] = StorageSettingSource.Database;
+            return parsed.Value;
         }
 
-        if (databaseValue is > 0)
-        {
-            sources[field] = StorageSettingSource.Database;
-            return databaseValue.Value;
-        }
-
-        sources[field] = StorageSettingSource.Default;
+        sources[FieldForKey(key)] = StorageSettingSource.Default;
         return defaultValue;
     }
 
-    private static int? PickIntNullable(
-        string field,
-        int? environmentValue,
-        int? databaseValue,
+    private static int? GetDbIntNullable(
+        IReadOnlyDictionary<string, string> db,
+        string key,
         Dictionary<string, StorageSettingSource> sources)
     {
-        if (environmentValue.HasValue)
+        var parsed = ParseInt(GetRaw(db, key));
+        if (parsed.HasValue)
         {
-            sources[field] = StorageSettingSource.Environment;
-            return environmentValue;
+            sources[FieldForKey(key)] = StorageSettingSource.Database;
+            return parsed;
         }
 
-        if (databaseValue.HasValue)
-        {
-            sources[field] = StorageSettingSource.Database;
-            return databaseValue;
-        }
-
-        sources[field] = StorageSettingSource.Default;
+        sources[FieldForKey(key)] = StorageSettingSource.Default;
         return null;
     }
 
-    private static bool ResolveBool(
-        string field,
-        bool? environmentValue,
-        bool? databaseValue,
+    private static bool GetDbBool(
+        IReadOnlyDictionary<string, string> db,
+        string key,
         bool defaultValue,
         Dictionary<string, StorageSettingSource> sources)
     {
-        if (environmentValue.HasValue)
+        var parsed = ParseBool(GetRaw(db, key));
+        if (parsed.HasValue)
         {
-            sources[field] = StorageSettingSource.Environment;
-            return environmentValue.Value;
+            sources[FieldForKey(key)] = StorageSettingSource.Database;
+            return parsed.Value;
         }
 
-        if (databaseValue.HasValue)
-        {
-            sources[field] = StorageSettingSource.Database;
-            return databaseValue.Value;
-        }
-
-        sources[field] = StorageSettingSource.Default;
+        sources[FieldForKey(key)] = StorageSettingSource.Default;
         return defaultValue;
     }
 
-    private static bool? ResolveBoolNullable(
-        string field,
-        bool? environmentValue,
-        bool? databaseValue,
+    private static bool? GetDbBoolNullable(
+        IReadOnlyDictionary<string, string> db,
+        string key,
         Dictionary<string, StorageSettingSource> sources)
     {
-        if (environmentValue.HasValue)
+        var parsed = ParseBool(GetRaw(db, key));
+        if (parsed.HasValue)
         {
-            sources[field] = StorageSettingSource.Environment;
-            return environmentValue;
+            sources[FieldForKey(key)] = StorageSettingSource.Database;
+            return parsed;
         }
 
-        if (databaseValue.HasValue)
-        {
-            sources[field] = StorageSettingSource.Database;
-            return databaseValue;
-        }
-
-        sources[field] = StorageSettingSource.Default;
+        sources[FieldForKey(key)] = StorageSettingSource.Default;
         return null;
     }
 
-    private static string? Get(IReadOnlyDictionary<string, string> db, string key) =>
-        db.TryGetValue(key, out var value) ? NullIfBlank(value) : null;
+    private static string FieldForKey(string storageKey) => storageKey switch
+    {
+        StorageSystemSettingKeys.Provider => EffectiveStorageSettings.Fields.Provider,
+        StorageSystemSettingKeys.Endpoint => EffectiveStorageSettings.Fields.Endpoint,
+        StorageSystemSettingKeys.Port => EffectiveStorageSettings.Fields.Port,
+        StorageSystemSettingKeys.UseSsl => EffectiveStorageSettings.Fields.UseSsl,
+        StorageSystemSettingKeys.BucketName => EffectiveStorageSettings.Fields.BucketName,
+        StorageSystemSettingKeys.AccessKey => EffectiveStorageSettings.Fields.AccessKey,
+        StorageSystemSettingKeys.SecretKey => EffectiveStorageSettings.Fields.SecretKey,
+        StorageSystemSettingKeys.ExternalEndpoint => EffectiveStorageSettings.Fields.ExternalEndpoint,
+        StorageSystemSettingKeys.ExternalPort => EffectiveStorageSettings.Fields.ExternalPort,
+        StorageSystemSettingKeys.ExternalUseSsl => EffectiveStorageSettings.Fields.ExternalUseSsl,
+        StorageSystemSettingKeys.Region => EffectiveStorageSettings.Fields.Region,
+        StorageSystemSettingKeys.ForcePathStyle => EffectiveStorageSettings.Fields.ForcePathStyle,
+        _ => storageKey
+    };
+
+    private static string? GetRaw(IReadOnlyDictionary<string, string> db, string key) =>
+        db.TryGetValue(key, out var value) ? value : null;
 
     private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 

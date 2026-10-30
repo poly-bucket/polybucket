@@ -36,6 +36,8 @@ export default function EmailSetupStep({
       setIsSkipping(false);
     }
   };
+
+  return (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-medium text-white mb-2">Email (optional)</h3>

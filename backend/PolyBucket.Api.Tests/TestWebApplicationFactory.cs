@@ -67,17 +67,6 @@ namespace PolyBucket.Api.Tests
                 };
                 config.AddInMemoryCollection(dbFromContainer);
 
-                var storageFromContainer = new Dictionary<string, string?>
-                {
-                    ["Storage:Endpoint"] = TestEnvironment.StorageEndpoint,
-                    ["Storage:Port"] = TestEnvironment.StoragePort.Value.ToString(),
-                    ["Storage:AccessKey"] = TestEnvironment.StorageAccessKey,
-                    ["Storage:SecretKey"] = TestEnvironment.StorageSecretKey,
-                    ["Storage:BucketName"] = TestEnvironment.StorageBucketName,
-                    ["Storage:UseSSL"] = TestEnvironment.StorageUseSsl.Value.ToString()
-                };
-                config.AddInMemoryCollection(storageFromContainer);
-
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AppSettings:Security:JwtSecret"] = "test-jwt-secret-key-for-testing-purposes-only-32-chars",

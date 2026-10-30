@@ -83,7 +83,6 @@ describe("ProfileSettingsPage", () => {
       mockAuth: { user: mockUser },
     });
 
-    const spinner = document.querySelector(".animate-spin");
-    expect(spinner).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /save changes/i })).not.toBeInTheDocument();
   });
 });

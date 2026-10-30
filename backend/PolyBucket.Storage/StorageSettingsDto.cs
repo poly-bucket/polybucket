@@ -2,7 +2,7 @@ namespace PolyBucket.Storage;
 
 public class StorageSettingsDto
 {
-    public string Provider { get; set; } = "minio";
+    public string Provider { get; set; } = StorageProviderIds.Minio;
     public string Endpoint { get; set; } = string.Empty;
     public int Port { get; set; }
     public bool UseSsl { get; set; }
@@ -13,6 +13,7 @@ public class StorageSettingsDto
     public int? ExternalPort { get; set; }
     public bool? ExternalUseSsl { get; set; }
     public string Region { get; set; } = "us-east-1";
+    public bool ForcePathStyle { get; set; }
     public bool IsConfigured { get; set; }
     public DateTime? LastSuccessfulTestAt { get; set; }
     public List<string> ValidationErrors { get; set; } = [];
@@ -34,6 +35,7 @@ public class StorageSettingsDto
             ExternalPort = settings.ExternalPort,
             ExternalUseSsl = settings.ExternalUseSsl,
             Region = settings.Region,
+            ForcePathStyle = settings.ForcePathStyle,
             IsConfigured = settings.IsConfigured,
             LastSuccessfulTestAt = settings.LastSuccessfulTestAt,
             ValidationErrors = [.. settings.GetValidationErrors()],
@@ -60,6 +62,33 @@ public static class StorageSettingsFields
         EffectiveStorageSettings.Fields.ExternalEndpoint,
         EffectiveStorageSettings.Fields.ExternalPort,
         EffectiveStorageSettings.Fields.ExternalUseSsl,
-        EffectiveStorageSettings.Fields.Region
+        EffectiveStorageSettings.Fields.Region,
+        EffectiveStorageSettings.Fields.ForcePathStyle
     ];
+}
+
+public sealed class StorageProviderDefaultsDto
+{
+    public string Endpoint { get; set; } = string.Empty;
+    public int Port { get; set; } = 9000;
+    public bool UseSsl { get; set; }
+    public string BucketName { get; set; } = "polybucket-uploads";
+    public string ExternalEndpoint { get; set; } = "localhost";
+    public int ExternalPort { get; set; } = 9000;
+    public bool ExternalUseSsl { get; set; }
+    public string Region { get; set; } = "us-east-1";
+    public bool ForcePathStyle { get; set; }
+}
+
+public sealed class StorageProviderCatalogEntryDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public StorageProviderDefaultsDto Defaults { get; set; } = new();
+}
+
+public sealed class StorageProvidersResponseDto
+{
+    public List<StorageProviderCatalogEntryDto> Providers { get; set; } = [];
 }

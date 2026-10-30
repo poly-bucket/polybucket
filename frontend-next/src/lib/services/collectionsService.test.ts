@@ -46,7 +46,7 @@ describe("collectionsService", () => {
   describe("getUserCollections", () => {
     it("returns parsed collections from API response", async () => {
       const response = { collections: [{ id: "c1", name: "Test" }], totalCount: 1, page: 1, totalPages: 1 };
-      mockGetUserCollections.mockResolvedValue(createBlobResponse(response));
+      mockGetUserCollections.mockResolvedValue(response);
 
       const result = await collectionsService.getUserCollections(1, 12, null);
 
@@ -66,7 +66,7 @@ describe("collectionsService", () => {
   describe("getCollectionById", () => {
     it("returns parsed collection", async () => {
       const collection = { id: "c1", name: "Test", visibility: "Public" };
-      mockGetCollectionById.mockResolvedValue(createBlobResponse(collection));
+      mockGetCollectionById.mockResolvedValue(collection);
 
       const result = await collectionsService.getCollectionById("c1");
 
@@ -79,7 +79,7 @@ describe("collectionsService", () => {
   describe("accessCollection", () => {
     it("sends password and returns collection", async () => {
       const collection = { id: "c1", name: "Locked" };
-      mockAccessCollection.mockResolvedValue(createBlobResponse(collection));
+      mockAccessCollection.mockResolvedValue(collection);
 
       const result = await collectionsService.accessCollection("c1", "secret");
 
@@ -107,7 +107,7 @@ describe("collectionsService", () => {
   describe("updateCollection", () => {
     it("sends update command and returns collection", async () => {
       const updated = { id: "c1", name: "Updated" };
-      mockUpdateCollection.mockResolvedValue(createBlobResponse(updated));
+      mockUpdateCollection.mockResolvedValue(updated);
 
       const result = await collectionsService.updateCollection({
         id: "c1",

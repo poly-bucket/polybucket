@@ -69,10 +69,10 @@ services:
       timeout: 5s
       retries: 5
 
-  minio:
+  silo:
     profiles: ["object-storage"]
     image: pgsty/silo@sha256:7bb2aff6b89efe1cb1303c10fc21d579447434ed06649ac9ec05a5e2dbf30ad7
-    container_name: polybucket-minio
+    container_name: polybucket-silo
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -80,7 +80,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - minio-data:/data
+      - silo-data:/data
     command: server /data --console-address ":9001"
     restart: unless-stopped
     networks:
@@ -162,5 +162,5 @@ networks:
 
 volumes:
   postgres-data:
-  minio-data:
+  silo-data:
   redis_data:

@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 describe("session cookies", () => {
   beforeEach(() => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SESSION_SECRET", "test-session-secret-at-least-32-chars");
   });
 
   it("sets httpOnly and secure on session cookie", async () => {

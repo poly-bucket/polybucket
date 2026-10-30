@@ -17,6 +17,12 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+const mockSkipEmailSetup = vi.fn();
+
+vi.mock("@/lib/services/storageService", () => ({
+  skipEmailSetup: () => mockSkipEmailSetup(),
+}));
+
 const logSettings = {
   enabled: true,
   transport: "Log",
@@ -40,8 +46,10 @@ describe("EmailSetupStep", () => {
   beforeEach(() => {
     mockGetEmailSettings.mockReset();
     mockUpdateEmailSettings.mockReset();
+    mockSkipEmailSetup.mockReset();
     mockGetEmailSettings.mockResolvedValue(logSettings);
     mockUpdateEmailSettings.mockResolvedValue(logSettings);
+    mockSkipEmailSetup.mockResolvedValue({ success: true, message: "ok" });
   });
 
   it("lets the admin skip email setup before saving", async () => {
@@ -54,7 +62,9 @@ describe("EmailSetupStep", () => {
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
 
     // Assert
-    expect(onComplete).toHaveBeenCalledWith({ emailConfigured: false });
+    await waitFor(() =>
+      expect(onComplete).toHaveBeenCalledWith({ emailConfigured: false })
+    );
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });
 

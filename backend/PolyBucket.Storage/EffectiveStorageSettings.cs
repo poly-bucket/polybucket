@@ -26,9 +26,10 @@ public sealed class EffectiveStorageSettings
         public const string ExternalPort = nameof(ExternalPort);
         public const string ExternalUseSsl = nameof(ExternalUseSsl);
         public const string Region = nameof(Region);
+        public const string ForcePathStyle = nameof(ForcePathStyle);
     }
 
-    public string Provider { get; init; } = "minio";
+    public string Provider { get; init; } = StorageProviderIds.Minio;
     public string Endpoint { get; init; } = string.Empty;
     public int Port { get; init; }
     public bool UseSsl { get; init; }
@@ -39,6 +40,7 @@ public sealed class EffectiveStorageSettings
     public int? ExternalPort { get; init; }
     public bool? ExternalUseSsl { get; init; }
     public string Region { get; init; } = "us-east-1";
+    public bool ForcePathStyle { get; init; }
     public DateTime? LastSuccessfulTestAt { get; init; }
     public bool IsConfigured { get; init; }
     public IReadOnlyDictionary<string, StorageSettingSource> Sources { get; init; } =
@@ -49,7 +51,7 @@ public sealed class EffectiveStorageSettings
         get
         {
             var raw =
-                $"{Provider}|{Endpoint}|{Port}|{UseSsl}|{BucketName}|{AccessKey}|{SecretKey}|{ExternalEndpoint}|{ExternalPort}|{ExternalUseSsl}|{Region}";
+                $"{Provider}|{Endpoint}|{Port}|{UseSsl}|{BucketName}|{AccessKey}|{SecretKey}|{ExternalEndpoint}|{ExternalPort}|{ExternalUseSsl}|{Region}|{ForcePathStyle}";
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
         }
     }
@@ -69,47 +71,17 @@ public sealed class EffectiveStorageSettings
         ExternalEndpoint = ExternalEndpoint,
         ExternalPort = ExternalPort,
         ExternalUseSSL = ExternalUseSsl,
-        Region = Region
+        Region = Region,
+        ForcePathStyle = ForcePathStyle
     };
 
     public IReadOnlyList<string> GetValidationErrors()
     {
-        var errors = new List<string>();
         if (!IsConfigured)
         {
-            return errors;
+            return [];
         }
 
-        if (!Provider.Equals("minio", StringComparison.OrdinalIgnoreCase))
-        {
-            errors.Add($"Storage provider '{Provider}' is not supported. Only MinIO is currently supported.");
-        }
-
-        if (string.IsNullOrWhiteSpace(Endpoint))
-        {
-            errors.Add("Storage endpoint is required.");
-        }
-
-        if (Port is <= 0 or > 65535)
-        {
-            errors.Add("Storage port must be between 1 and 65535.");
-        }
-
-        if (string.IsNullOrWhiteSpace(AccessKey))
-        {
-            errors.Add("Storage access key is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(SecretKey))
-        {
-            errors.Add("Storage secret key is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(BucketName))
-        {
-            errors.Add("Storage bucket name is required.");
-        }
-
-        return errors;
+        return StorageSettingsValidation.GetProfileValidationErrors(ToStorageSettings());
     }
 }

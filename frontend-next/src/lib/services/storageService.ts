@@ -3,6 +3,29 @@ import axiosInstance from "@/lib/api/axiosConfig";
 
 export type StorageSettingSource = "Default" | "Database" | "Environment";
 
+export interface StorageProviderDefaults {
+  endpoint: string;
+  port: number;
+  useSsl: boolean;
+  bucketName: string;
+  externalEndpoint: string;
+  externalPort: number;
+  externalUseSsl: boolean;
+  region: string;
+  forcePathStyle: boolean;
+}
+
+export interface StorageProviderCatalogEntry {
+  id: string;
+  displayName: string;
+  description: string;
+  defaults: StorageProviderDefaults;
+}
+
+export interface StorageProvidersResponse {
+  providers: StorageProviderCatalogEntry[];
+}
+
 export interface StorageSettings {
   provider: string;
   endpoint: string;
@@ -15,6 +38,7 @@ export interface StorageSettings {
   externalPort?: number | null;
   externalUseSsl?: boolean | null;
   region: string;
+  forcePathStyle: boolean;
   isConfigured: boolean;
   lastSuccessfulTestAt?: string | null;
   validationErrors: string[];
@@ -35,6 +59,7 @@ export interface UpdateStorageSettingsRequest {
   externalPort?: number;
   externalUseSsl?: boolean;
   region: string;
+  forcePathStyle: boolean;
 }
 
 export interface TestStorageConfigurationResult {
@@ -47,6 +72,54 @@ export interface ApplyStorageSetupResponse {
   success: boolean;
   message: string;
   restartScheduled?: boolean;
+}
+
+export function formFromProviderDefaults(
+  providerId: string,
+  defaults: StorageProviderDefaults
+): UpdateStorageSettingsRequest {
+  return {
+    provider: providerId,
+    endpoint: defaults.endpoint,
+    port: defaults.port,
+    useSsl: defaults.useSsl,
+    bucketName: defaults.bucketName,
+    accessKey: "",
+    secretKey: "",
+    clearSecretKey: false,
+    externalEndpoint: defaults.externalEndpoint,
+    externalPort: defaults.externalPort,
+    externalUseSsl: defaults.externalUseSsl,
+    region: defaults.region,
+    forcePathStyle: defaults.forcePathStyle,
+  };
+}
+
+export function formFromStorageSettings(
+  settings: StorageSettings
+): UpdateStorageSettingsRequest {
+  return {
+    provider: settings.provider || "",
+    endpoint: settings.endpoint || "",
+    port: settings.port || 9000,
+    useSsl: settings.useSsl,
+    bucketName: settings.bucketName || "",
+    accessKey: settings.accessKey || "",
+    secretKey: "",
+    clearSecretKey: false,
+    externalEndpoint: settings.externalEndpoint ?? undefined,
+    externalPort: settings.externalPort ?? undefined,
+    externalUseSsl: settings.externalUseSsl ?? undefined,
+    region: settings.region || "us-east-1",
+    forcePathStyle: settings.forcePathStyle,
+  };
+}
+
+export async function getStorageProviders(): Promise<StorageProvidersResponse> {
+  const { data } = await axiosInstance.get<StorageProvidersResponse>(
+    "/api/system-settings/storage/providers"
+  );
+  return data;
 }
 
 export async function getStorageSettings(): Promise<StorageSettings> {

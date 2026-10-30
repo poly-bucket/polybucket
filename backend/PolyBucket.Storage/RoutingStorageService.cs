@@ -60,6 +60,14 @@ public sealed class RoutingStorageService(
                 return _inner;
             }
 
+            if (!StorageProviderIds.IsSupported(settings.Provider))
+            {
+                _logger.LogWarning("Storage provider {Provider} is not supported at runtime.", settings.Provider);
+                _inner = UnavailableStorageService.Instance;
+                _cacheFingerprint = settings.ConfigFingerprint;
+                return _inner;
+            }
+
             _inner = new MinioStorageService(settings.ToStorageSettings());
             _cacheFingerprint = settings.ConfigFingerprint;
             return _inner;
