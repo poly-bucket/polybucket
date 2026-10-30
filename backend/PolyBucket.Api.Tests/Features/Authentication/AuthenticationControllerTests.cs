@@ -5,7 +5,8 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.Authentication.ForgotPassword.Http;
 using PolyBucket.Api.Features.Authentication.Login.Http;
-using PolyBucket.Api.Features.Authentication.OAuth.Http;
+using PolyBucket.Api.Features.Authentication.OAuthAuthorize.Http;
+using PolyBucket.Api.Features.Authentication.OAuthCallback.Http;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Http;
 using PolyBucket.Api.Features.Authentication.Register.Http;
 using PolyBucket.Api.Features.Authentication.ResetPassword.Http;
@@ -27,7 +28,8 @@ public class AuthenticationControllerTests
             new object[] { typeof(ForgotPasswordController) },
             new object[] { typeof(ResetPasswordController) },
             new object[] { typeof(VerifyEmailController) },
-            new object[] { typeof(OAuthController) }
+            new object[] { typeof(OAuthAuthorizeController) },
+            new object[] { typeof(OAuthCallbackController) }
         };
     }
 

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.ResendVerificationEmail.Repository;
 using PolyBucket.Api.Features.Authentication.ResendVerificationEmail.Domain;
 using PolyBucket.Api.Features.Authentication.Services;
 using Shouldly;
@@ -15,7 +15,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Commands;
 
 public class ResendVerificationEmailCommandHandlerTests
 {
-    private readonly Mock<IAuthenticationRepository> _repository = new();
+    private readonly Mock<IResendVerificationEmailRepository> _repository = new();
     private readonly Mock<ITokenService> _tokenService = new();
     private readonly Mock<IEmailSettingsResolver> _resolver = new();
     private readonly Mock<IAccountEmailService> _accountEmail = new();

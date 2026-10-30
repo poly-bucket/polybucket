@@ -1,23 +1,24 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Comments.Http;
-using PolyBucket.Api.Features.Comments.ModerateComment.Http;
+using PolyBucket.Api.Features.Comments.ModerateAllUserComments.Domain;
 
 namespace PolyBucket.Api.Features.Comments.ModerateAllUserComments.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize(Roles = "Admin,Moderator")]
-public class ModerateAllUserCommentsController(IEnhancedCommentsPlugin commentsPlugin) : ControllerBase
+public class ModerateAllUserCommentsController(IModerateAllUserCommentsService moderateAllUserCommentsService) : ControllerBase
 {
     /// <summary>
     /// Hides every comment written by a user.
     /// </summary>
     /// <param name="targetUserId">The user whose comments are hidden.</param>
     /// <param name="request">The moderation reason.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">The comments were moderated.</response>
     /// <response code="400">The comments could not be moderated.</response>
     /// <response code="401">The caller is not signed in.</response>
@@ -27,7 +28,7 @@ public class ModerateAllUserCommentsController(IEnhancedCommentsPlugin commentsP
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> ModerateAllUserComments(Guid targetUserId, [FromBody] ModerateCommentRequest request)
+    public async Task<IActionResult> ModerateAllUserComments(Guid targetUserId, [FromBody] ModerateAllUserCommentsRequest request, CancellationToken cancellationToken)
     {
         var moderatorId = User.GetCommentUserId();
         if (moderatorId == null)
@@ -35,7 +36,7 @@ public class ModerateAllUserCommentsController(IEnhancedCommentsPlugin commentsP
             return Unauthorized();
         }
 
-        var moderated = await commentsPlugin.ModerateAllCommentsForUserAsync(targetUserId, moderatorId.Value, request.Reason.Trim());
+        var moderated = await moderateAllUserCommentsService.ModerateAllAsync(targetUserId, moderatorId.Value, request.Reason.Trim(), cancellationToken);
         return moderated
             ? Ok(new { message = "All user comments moderated successfully" })
             : BadRequest(new { message = "Unable to moderate user comments" });

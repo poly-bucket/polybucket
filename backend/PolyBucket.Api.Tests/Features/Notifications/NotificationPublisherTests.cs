@@ -15,7 +15,7 @@ public class NotificationPublisherTests
     private static readonly Guid RecipientId = Guid.NewGuid();
     private static readonly Guid ActorId = Guid.NewGuid();
 
-    private readonly Mock<INotificationRepository> _repository = new();
+    private readonly Mock<INotificationPublisherRepository> _repository = new();
     private readonly Mock<IEmailQueue> _emailQueue = new();
     private readonly Mock<IEmailSettingsResolver> _settingsResolver = new();
     private Notification? _added;

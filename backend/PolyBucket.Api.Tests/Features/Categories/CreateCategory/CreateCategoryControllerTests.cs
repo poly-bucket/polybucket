@@ -30,37 +30,8 @@ public class CreateCategoryControllerTests
         var result = await CreateController().CreateCategory(command);
 
         // Assert
-        var created = result.Result.ShouldBeOfType<CreatedAtActionResult>();
+        var created = result.Result.ShouldBeOfType<CreatedAtRouteResult>();
         created.Value.ShouldBe(response);
-        created.ActionName.ShouldBe(nameof(CreateCategoryController.GetCategory));
-    }
-
-    [Fact(DisplayName = "When GetCategory finds a category, it returns Ok.")]
-    public async Task GetCategory_Found_ReturnsOk()
-    {
-        // Arrange
-        var id = Guid.NewGuid();
-        var response = new CreateCategoryResponse { Id = id, Name = "Tools" };
-        _mediator.SetupSend<GetCategoryByIdQuery, CreateCategoryResponse?>(response);
-
-        // Act
-        var result = await CreateController().GetCategory(id);
-
-        // Assert
-        result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);
-    }
-
-    [Fact(DisplayName = "When GetCategory does not find a category, it returns NotFound.")]
-    public async Task GetCategory_Missing_ReturnsNotFound()
-    {
-        // Arrange
-        _mediator.Setup(m => m.Send(It.IsAny<GetCategoryByIdQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((CreateCategoryResponse?)null);
-
-        // Act
-        var result = await CreateController().GetCategory(Guid.NewGuid());
-
-        // Assert
-        result.Result.ShouldBeOfType<NotFoundResult>();
+        created.RouteName.ShouldBe("GetCategoryById");
     }
 }

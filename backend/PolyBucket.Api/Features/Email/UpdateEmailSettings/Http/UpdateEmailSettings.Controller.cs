@@ -6,15 +6,19 @@ using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 
+using PolyBucket.Email.UpdateEmailSettings;
+using ApiUpdateEmailSettings = PolyBucket.Api.Features.Email.UpdateEmailSettings.Domain;
+using PolyBucket.Api.Features.Email.UpdateEmailSettings.Domain;
+
 namespace PolyBucket.Api.Features.Email.UpdateEmailSettings.Http;
 
 [Authorize]
 [ApiController]
 [Route("api/system-settings/email")]
 [RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
-public class UpdateEmailSettingsController(IUpdateEmailSettingsService service) : ControllerBase
+public class UpdateEmailSettingsController(ApiUpdateEmailSettings.IUpdateEmailSettingsService service) : ControllerBase
 {
-    private readonly IUpdateEmailSettingsService _service = service;
+    private readonly ApiUpdateEmailSettings.IUpdateEmailSettingsService _service = service;
 
     /// <summary>
     /// Updates the email configuration stored in the database.

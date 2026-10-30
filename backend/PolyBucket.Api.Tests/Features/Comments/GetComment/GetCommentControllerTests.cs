@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.GetComment.Domain;
 using PolyBucket.Api.Features.Comments.GetComment.Http;
+using PolyBucket.Api.Features.Comments.Plugins;
 using Shouldly;
 using Xunit;
 
@@ -13,47 +13,32 @@ namespace PolyBucket.Api.Tests.Features.Comments.GetComment;
 
 public class GetCommentControllerTests
 {
-    private readonly Mock<IEnhancedCommentsPlugin> _plugin = new();
-    private readonly Mock<ICommentResponseMapper> _mapper = new();
+    private readonly Mock<IGetCommentService> _service = new();
     private readonly Guid _userId = Guid.NewGuid();
 
     [Fact(DisplayName = "When the comment exists, it is returned.")]
-    public async Task Get_Existing_ReturnsOk()
+    public async Task GetComment_Found_ReturnsOk()
     {
         // Arrange
-        var comment = new EnhancedComment { Id = Guid.NewGuid(), Content = "hi" };
-        _plugin.Setup(p => p.GetCommentByIdAsync(comment.Id)).ReturnsAsync(comment);
-        _mapper.Setup(m => m.MapAsync(It.IsAny<IReadOnlyList<EnhancedComment>>(), _userId, false, true, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<CommentResponse> { new() { Id = comment.Id } });
-        var controller = new GetCommentController(_plugin.Object, _mapper.Object).WithUser(_userId);
+        var response = new CommentResponse { Id = Guid.NewGuid(), Content = "hi" };
+        _service.Setup(s => s.GetAsync(response.Id, _userId, false, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetCommentResult(response, false));
+        var controller = new GetCommentController(_service.Object).WithUser(_userId);
 
         // Act
-        var result = await controller.GetComment(comment.Id, CancellationToken.None);
+        var result = await controller.GetComment(response.Id, CancellationToken.None);
 
         // Assert
-        result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<CommentResponse>().Id.ShouldBe(comment.Id);
+        result.ShouldBeOfType<OkObjectResult>();
     }
 
-    [Fact(DisplayName = "When the comment is hidden and the caller is not a moderator, the controller returns NotFound.")]
-    public async Task Get_HiddenForUser_ReturnsNotFound()
+    [Fact(DisplayName = "When the comment is missing, the controller returns NotFound.")]
+    public async Task GetComment_Missing_ReturnsNotFound()
     {
         // Arrange
-        var comment = new EnhancedComment { Id = Guid.NewGuid(), IsHidden = true };
-        _plugin.Setup(p => p.GetCommentByIdAsync(comment.Id)).ReturnsAsync(comment);
-        var controller = new GetCommentController(_plugin.Object, _mapper.Object).WithUser(_userId);
-
-        // Act
-        var result = await controller.GetComment(comment.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeOfType<NotFoundResult>();
-    }
-
-    [Fact(DisplayName = "When the comment does not exist, the controller returns NotFound.")]
-    public async Task Get_Missing_ReturnsNotFound()
-    {
-        // Arrange
-        var controller = new GetCommentController(_plugin.Object, _mapper.Object).WithUser(_userId);
+        _service.Setup(s => s.GetAsync(It.IsAny<Guid>(), _userId, false, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetCommentResult(null, true));
+        var controller = new GetCommentController(_service.Object).WithUser(_userId);
 
         // Act
         var result = await controller.GetComment(Guid.NewGuid(), CancellationToken.None);

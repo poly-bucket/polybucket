@@ -1,38 +1,27 @@
-using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.Federation.Http;
+using Moq;
+using PolyBucket.Api.Features.Federation.GetFederatedModels.Domain;
+using PolyBucket.Api.Features.Federation.GetFederatedModels.Http;
 using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
 
 namespace PolyBucket.Api.Tests.Features.Federation.GetFederatedModels;
 
-public class GetFederatedModelsControllerTests : IDisposable
+public class GetFederatedModelsControllerTests
 {
-    private readonly PolyBucketDbContext _context;
+    private readonly Mock<IGetFederatedModelsService> _service = new();
 
-    public GetFederatedModelsControllerTests()
+    [Fact]
+    public async Task GetModels_ReturnsOk()
     {
-        _context = new PolyBucketDbContext(new DbContextOptionsBuilder<PolyBucketDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options);
-    }
-
-    [Fact(DisplayName = "When no federated models exist, GetFederatedModels returns Ok with an empty list.")]
-    public async Task GetFederatedModels_Empty_ReturnsOk()
-    {
-        // Arrange
-        var controller = new GetFederatedModelsController(_context).WithUser(Guid.NewGuid());
-
-        // Act
+        _service.Setup(s => s.GetFederatedModelsAsync(It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((new OkObjectResult(new List<FederatedModelDto>()), 0));
+        var controller = new GetFederatedModelsController(_service.Object).WithUser(Guid.NewGuid());
         var result = await controller.GetFederatedModels();
-
-        // Assert
         result.Result.ShouldBeOfType<OkObjectResult>();
     }
-
-    public void Dispose() => _context.Dispose();
 }

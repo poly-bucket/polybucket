@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.VerifyEmail.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Authentication.VerifyEmail.Domain;
 using Shouldly;
@@ -17,7 +17,7 @@ public class VerifyEmailCommandHandlerTests
 {
     private const string RawToken = "raw-verification-token";
 
-    private readonly Mock<IAuthenticationRepository> _repository = new();
+    private readonly Mock<IVerifyEmailRepository> _repository = new();
     private readonly Mock<IAccountEmailService> _accountEmail = new();
 
     private VerifyEmailCommandHandler CreateHandler() =>

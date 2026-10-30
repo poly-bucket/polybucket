@@ -12,7 +12,7 @@ using PolyBucket.Api.Common.Http;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.ResetPassword.Repository;
 using PolyBucket.Api.Features.Authentication.ResetPassword.Domain;
 using PolyBucket.Api.Features.Authentication.ResetPassword.Http;
 using PolyBucket.Api.Features.Authentication.Services;
@@ -23,7 +23,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 {
     public class ResetPasswordCommandControllerTests
     {
-        private readonly Mock<IAuthenticationRepository> _repository = new();
+        private readonly Mock<IResetPasswordRepository> _repository = new();
         private readonly Mock<IPasswordHasher> _hasher = new();
         private readonly ResetPasswordController _controller;
 

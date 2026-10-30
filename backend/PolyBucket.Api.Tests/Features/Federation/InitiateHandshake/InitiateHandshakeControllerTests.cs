@@ -1,40 +1,25 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Moq;
-using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.Federation.Http;
+using PolyBucket.Api.Features.Federation.InitiateHandshake.Domain;
+using PolyBucket.Api.Features.Federation.InitiateHandshake.Http;
 using Shouldly;
 using Xunit;
 
 namespace PolyBucket.Api.Tests.Features.Federation.InitiateHandshake;
 
-public class InitiateHandshakeControllerTests : IDisposable
+public class InitiateHandshakeControllerTests
 {
-    private readonly PolyBucketDbContext _context;
+    private readonly Mock<IInitiateHandshakeService> _service = new();
 
-    public InitiateHandshakeControllerTests()
+    [Fact]
+    public async Task Initiate_WhenInvalid_ReturnsBadRequest()
     {
-        _context = new PolyBucketDbContext(new DbContextOptionsBuilder<PolyBucketDbContext>()
-            .UseInMemoryDatabase(global::System.Guid.NewGuid().ToString())
-            .Options);
-    }
-
-    [Fact(DisplayName = "When initiator URL is missing, InitiateHandshake returns BadRequest.")]
-    public async Task InitiateHandshake_MissingUrl_ReturnsBadRequest()
-    {
-        // Arrange
-        var factory = new Mock<IHttpClientFactory>();
-        var config = new Mock<IConfiguration>();
-        var controller = new InitiateHandshakeController(_context, factory.Object, config.Object);
-
-        // Act
+        _service.Setup(s => s.InitiateHandshakeAsync(It.IsAny<InitiateHandshakeRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BadRequestObjectResult("bad"));
+        var controller = new InitiateHandshakeController(_service.Object);
         var result = await controller.InitiateHandshake(new InitiateHandshakeRequest());
-
-        // Assert
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
     }
-
-    public void Dispose() => _context.Dispose();
 }

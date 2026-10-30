@@ -3,15 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.GetComment.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.Plugins;
 
 namespace PolyBucket.Api.Features.Comments.GetComment.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize]
-public class GetCommentController(IEnhancedCommentsPlugin commentsPlugin, ICommentResponseMapper mapper) : ControllerBase
+public class GetCommentController(IGetCommentService getCommentService) : ControllerBase
 {
     /// <summary>
     /// Gets a single comment with its replies.
@@ -27,13 +28,7 @@ public class GetCommentController(IEnhancedCommentsPlugin commentsPlugin, IComme
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetComment(Guid commentId, CancellationToken cancellationToken)
     {
-        var comment = await commentsPlugin.GetCommentByIdAsync(commentId);
-        if (comment == null || (comment.IsHidden && !User.IsCommentModerator()))
-        {
-            return NotFound();
-        }
-
-        var mapped = await mapper.MapAsync(new[] { comment }, User.GetCommentUserId(), User.IsCommentAdmin(), includeReplies: true, cancellationToken);
-        return Ok(mapped[0]);
+        var result = await getCommentService.GetAsync(commentId, User.GetCommentUserId(), User.IsCommentAdmin(), User.IsCommentModerator(), cancellationToken);
+        return result.NotFound ? NotFound() : Ok(result.Comment);
     }
 }

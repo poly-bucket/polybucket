@@ -1,42 +1,25 @@
-using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Moq;
-using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.Federation.Http;
-using PolyBucket.Api.Features.Federation.Services;
+using PolyBucket.Api.Features.Federation.ExchangeToken.Domain;
+using PolyBucket.Api.Features.Federation.ExchangeToken.Http;
 using Shouldly;
 using Xunit;
 
 namespace PolyBucket.Api.Tests.Features.Federation.ExchangeToken;
 
-public class ExchangeTokenControllerTests : IDisposable
+public class ExchangeTokenControllerTests
 {
-    private readonly PolyBucketDbContext _context;
+    private readonly Mock<IExchangeTokenService> _service = new();
 
-    public ExchangeTokenControllerTests()
+    [Fact]
+    public async Task Exchange_WhenInvalid_ReturnsBadRequest()
     {
-        _context = new PolyBucketDbContext(new DbContextOptionsBuilder<PolyBucketDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options);
-    }
-
-    [Fact(DisplayName = "When handshake id is empty, ExchangeToken returns BadRequest.")]
-    public async Task ExchangeToken_EmptyHandshake_ReturnsBadRequest()
-    {
-        // Arrange
-        var tokenService = new Mock<IFederationTokenService>();
-        var config = new Mock<IConfiguration>();
-        var controller = new ExchangeTokenController(_context, tokenService.Object, config.Object);
-
-        // Act
-        var result = await controller.ExchangeToken(new ExchangeTokenRequest { HandshakeId = Guid.Empty });
-
-        // Assert
+        _service.Setup(s => s.ExchangeTokenAsync(It.IsAny<ExchangeTokenRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BadRequestObjectResult("bad"));
+        var controller = new ExchangeTokenController(_service.Object);
+        var result = await controller.ExchangeToken(new ExchangeTokenRequest());
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
     }
-
-    public void Dispose() => _context.Dispose();
 }

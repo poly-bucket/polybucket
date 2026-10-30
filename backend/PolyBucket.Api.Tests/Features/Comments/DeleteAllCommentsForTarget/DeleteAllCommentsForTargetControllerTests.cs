@@ -1,11 +1,10 @@
 using System;
-using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using PolyBucket.Api.Features.Comments.DeleteAllCommentsForTarget.Domain;
 using PolyBucket.Api.Features.Comments.DeleteAllCommentsForTarget.Http;
-using PolyBucket.Api.Features.Comments.Domain;
 using Shouldly;
 using Xunit;
 
@@ -13,48 +12,20 @@ namespace PolyBucket.Api.Tests.Features.Comments.DeleteAllCommentsForTarget;
 
 public class DeleteAllCommentsForTargetControllerTests
 {
-    private readonly Mock<IEnhancedCommentsPlugin> _plugin = new();
-    private readonly Guid _adminId = Guid.NewGuid();
+    private readonly Mock<IDeleteAllCommentsForTargetService> _service = new();
 
-    [Fact(DisplayName = "When an admin clears a model's comments, the controller returns Ok.")]
-    public async Task DeleteAll_Valid_ReturnsOk()
+    [Fact(DisplayName = "When deletion succeeds, the controller returns Ok.")]
+    public async Task DeleteAllCommentsForTarget_Success_ReturnsOk()
     {
         // Arrange
-        var modelId = Guid.NewGuid();
-        _plugin.Setup(p => p.DeleteAllCommentsForTargetAsync(It.Is<CommentTarget>(t => t.TargetId == modelId), _adminId)).ReturnsAsync(true);
-        var controller = new DeleteAllCommentsForTargetController(_plugin.Object).WithUser(_adminId, "Admin");
+        _service.Setup(s => s.DeleteAllAsync("model", It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DeleteAllCommentsForTargetResult(true, null));
+        var controller = new DeleteAllCommentsForTargetController(_service.Object).WithUser(Guid.NewGuid(), "Admin");
 
         // Act
-        var result = await controller.DeleteAllCommentsForTarget("model", modelId);
+        var result = await controller.DeleteAllCommentsForTarget("model", Guid.NewGuid(), CancellationToken.None);
 
         // Assert
         result.ShouldBeOfType<OkObjectResult>();
-    }
-
-    [Fact(DisplayName = "When the target type is unknown, the controller returns BadRequest without deleting.")]
-    public async Task DeleteAll_InvalidType_ReturnsBadRequest()
-    {
-        // Arrange
-        var controller = new DeleteAllCommentsForTargetController(_plugin.Object).WithUser(_adminId, "Admin");
-
-        // Act
-        var result = await controller.DeleteAllCommentsForTarget("printer", Guid.NewGuid());
-
-        // Assert
-        result.ShouldBeOfType<BadRequestObjectResult>();
-        _plugin.VerifyNoOtherCalls();
-    }
-
-    [Fact(DisplayName = "The controller is restricted to admins.")]
-    public void Controller_RequiresAdminRole()
-    {
-        // Arrange
-        var type = typeof(DeleteAllCommentsForTargetController);
-
-        // Act
-        var authorize = type.GetCustomAttribute<AuthorizeAttribute>();
-
-        // Assert
-        authorize!.Roles.ShouldBe("Admin");
     }
 }

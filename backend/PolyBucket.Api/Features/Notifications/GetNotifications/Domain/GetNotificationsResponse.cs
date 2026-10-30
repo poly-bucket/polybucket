@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using PolyBucket.Api.Features.Notifications.Domain;
+using PolyBucket.Api.Features.Notifications.GetNotifications.Http;
 
 namespace PolyBucket.Api.Features.Notifications.GetNotifications.Domain;
 

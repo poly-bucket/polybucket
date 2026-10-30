@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Users.GetUserFollowers.Domain;
 using PolyBucket.Api.Features.Users.GetUserFollowing.Domain;
 
 namespace PolyBucket.Api.Features.Users.GetUserFollowing.Http;
@@ -19,17 +18,17 @@ public class GetUserFollowingController(
     /// Get users that the specified user follows.
     /// </summary>
     [HttpGet("{userId}/following")]
-    [ProducesResponseType(200, Type = typeof(GetUserFollowListResult))]
+    [ProducesResponseType(200, Type = typeof(GetUserFollowingResult))]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<GetUserFollowListResult>> GetFollowingByUserId(
+    public async Task<ActionResult<GetUserFollowingResult>> GetFollowingByUserId(
         [FromRoute] Guid userId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         return await GetFollowingInternal(
-            new GetUserFollowListQuery { UserId = userId, Page = page, PageSize = pageSize },
+            new GetUserFollowingQuery { UserId = userId, Page = page, PageSize = pageSize },
             userId,
             null,
             cancellationToken);
@@ -39,24 +38,24 @@ public class GetUserFollowingController(
     /// Get users that the specified profile username follows.
     /// </summary>
     [HttpGet("profile/{username}/following")]
-    [ProducesResponseType(200, Type = typeof(GetUserFollowListResult))]
+    [ProducesResponseType(200, Type = typeof(GetUserFollowingResult))]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<GetUserFollowListResult>> GetFollowingByUsername(
+    public async Task<ActionResult<GetUserFollowingResult>> GetFollowingByUsername(
         [FromRoute] string username,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         return await GetFollowingInternal(
-            new GetUserFollowListQuery { Username = username, Page = page, PageSize = pageSize },
+            new GetUserFollowingQuery { Username = username, Page = page, PageSize = pageSize },
             null,
             username,
             cancellationToken);
     }
 
-    private async Task<ActionResult<GetUserFollowListResult>> GetFollowingInternal(
-        GetUserFollowListQuery query,
+    private async Task<ActionResult<GetUserFollowingResult>> GetFollowingInternal(
+        GetUserFollowingQuery query,
         Guid? userIdForLog,
         string? usernameForLog,
         CancellationToken cancellationToken)
@@ -78,9 +77,9 @@ public class GetUserFollowingController(
             var (outcome, result) = await getUserFollowingService.GetFollowingAsync(query, cancellationToken);
             return outcome switch
             {
-                GetUserFollowListOutcome.Success => Ok(result),
-                GetUserFollowListOutcome.UserNotFound => NotFound(new { message = "User not found" }),
-                GetUserFollowListOutcome.ProfilePrivate => NotFound(new { message = "User not found" }),
+                GetUserFollowingOutcome.Success => Ok(result),
+                GetUserFollowingOutcome.UserNotFound => NotFound(new { message = "User not found" }),
+                GetUserFollowingOutcome.ProfilePrivate => NotFound(new { message = "User not found" }),
                 _ => StatusCode(500, new { message = "An error occurred" })
             };
         }
@@ -99,7 +98,7 @@ public class GetUserFollowingController(
         }
     }
 
-    private void PopulateRequesterContext(GetUserFollowListQuery query)
+    private void PopulateRequesterContext(GetUserFollowingQuery query)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (Guid.TryParse(userIdClaim, out var userId))

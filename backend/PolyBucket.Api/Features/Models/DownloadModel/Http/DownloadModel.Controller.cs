@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.DownloadModel.Domain;
-using PolyBucket.Api.Features.Models.Http;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

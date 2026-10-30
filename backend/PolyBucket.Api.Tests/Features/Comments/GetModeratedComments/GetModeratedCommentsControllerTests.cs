@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.GetModeratedComments.Domain;
 using PolyBucket.Api.Features.Comments.GetModeratedComments.Http;
 using Shouldly;
 using Xunit;
@@ -13,36 +11,20 @@ namespace PolyBucket.Api.Tests.Features.Comments.GetModeratedComments;
 
 public class GetModeratedCommentsControllerTests
 {
-    private readonly Mock<IEnhancedCommentsPlugin> _plugin = new();
-    private readonly Mock<ICommentResponseMapper> _mapper = new();
+    private readonly Mock<IGetModeratedCommentsService> _service = new();
 
-    [Fact(DisplayName = "When a moderator lists moderated comments, the mapped comments are returned.")]
-    public async Task Get_ReturnsMappedComments()
+    [Fact(DisplayName = "When paging is valid, moderated comments are returned.")]
+    public async Task GetModeratedComments_Valid_ReturnsOk()
     {
         // Arrange
-        var comment = new EnhancedComment { Id = Guid.NewGuid(), IsModerated = true };
-        _plugin.Setup(p => p.GetModeratedCommentsAsync(1, 20)).ReturnsAsync(new[] { comment });
-        _mapper.Setup(m => m.MapAsync(It.IsAny<IReadOnlyList<EnhancedComment>>(), It.IsAny<Guid?>(), It.IsAny<bool>(), false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<CommentResponse> { new() { Id = comment.Id, IsModerated = true } });
-        var controller = new GetModeratedCommentsController(_plugin.Object, _mapper.Object).WithUser(Guid.NewGuid(), "Moderator");
+        _service.Setup(s => s.GetAsync(1, 20, It.IsAny<System.Guid?>(), false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetModeratedCommentsResult(new System.Collections.Generic.List<PolyBucket.Api.Features.Comments.Plugins.CommentResponse>(), null));
+        var controller = new GetModeratedCommentsController(_service.Object).WithUser(System.Guid.NewGuid(), "Moderator");
 
         // Act
-        var result = await controller.GetModeratedComments();
+        var result = await controller.GetModeratedComments(cancellationToken: CancellationToken.None);
 
         // Assert
-        result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<List<CommentResponse>>().ShouldHaveSingleItem();
-    }
-
-    [Fact(DisplayName = "When the page size is too large, the controller returns BadRequest.")]
-    public async Task Get_InvalidPaging_ReturnsBadRequest()
-    {
-        // Arrange
-        var controller = new GetModeratedCommentsController(_plugin.Object, _mapper.Object).WithUser(Guid.NewGuid(), "Moderator");
-
-        // Act
-        var result = await controller.GetModeratedComments(1, 1000);
-
-        // Assert
-        result.ShouldBeOfType<BadRequestObjectResult>();
+        result.ShouldBeOfType<OkObjectResult>();
     }
 }

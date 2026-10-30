@@ -2,23 +2,18 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Features.Users.Follow.Domain;
-using PolyBucket.Api.Features.Users.Follow.Repository;
-using PolyBucket.Api.Features.Users.GetUserFollowers.Domain;
-using PolyBucket.Database.Persistence;
+using PolyBucket.Api.Features.Users.GetUserFollowers.Repository;
 
 namespace PolyBucket.Api.Features.Users.GetUserFollowers.Domain;
 
-public class GetUserFollowersService(
-    PolyBucketDbContext dbContext,
-    IUserFollowRepository followRepository) : IGetUserFollowersService
+public class GetUserFollowersService(IGetUserFollowersRepository repository) : IGetUserFollowersService
 {
     public async Task<(GetUserFollowListOutcome Outcome, GetUserFollowListResult? Result)> GetFollowersAsync(
         GetUserFollowListQuery query,
         CancellationToken cancellationToken = default)
     {
-        var user = await ResolveUserAsync(query, cancellationToken);
+        var user = await repository.ResolveUserAsync(query, cancellationToken);
         if (user == null)
         {
             return (GetUserFollowListOutcome.UserNotFound, null);
@@ -29,7 +24,7 @@ public class GetUserFollowersService(
             return (GetUserFollowListOutcome.ProfilePrivate, null);
         }
 
-        var (items, totalCount) = await followRepository.GetFollowersPageAsync(
+        var (items, totalCount) = await repository.GetFollowersPageAsync(
             user.Id,
             query.Page,
             query.PageSize,
@@ -55,26 +50,5 @@ public class GetUserFollowersService(
         };
 
         return (GetUserFollowListOutcome.Success, result);
-    }
-
-    private async Task<PolyBucket.Database.Entities.Models.User?> ResolveUserAsync(
-        GetUserFollowListQuery query,
-        CancellationToken cancellationToken)
-    {
-        if (query.UserId != Guid.Empty)
-        {
-            return await dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == query.UserId && u.DeletedAt == null, cancellationToken);
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.Username))
-        {
-            return await dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Username == query.Username && u.DeletedAt == null, cancellationToken);
-        }
-
-        return null;
     }
 }

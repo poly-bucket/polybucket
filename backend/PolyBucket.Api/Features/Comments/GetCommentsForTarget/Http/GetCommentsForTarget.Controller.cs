@@ -1,18 +1,18 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.GetCommentsForTarget.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.Plugins;
 
 namespace PolyBucket.Api.Features.Comments.GetCommentsForTarget.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize]
-public class GetCommentsForTargetController(IEnhancedCommentsPlugin commentsPlugin, ICommentResponseMapper mapper) : ControllerBase
+public class GetCommentsForTargetController(IGetCommentsForTargetService getCommentsForTargetService) : ControllerBase
 {
     /// <summary>
     /// Gets a page of top-level comments for a model, user profile, or collection, each with its replies.
@@ -38,30 +38,19 @@ public class GetCommentsForTargetController(IEnhancedCommentsPlugin commentsPlug
         [FromQuery] bool includeHidden = false,
         CancellationToken cancellationToken = default)
     {
-        if (!CommentTargetParser.TryParse(targetType, targetId, out var target))
-        {
-            return BadRequest(new { message = $"Invalid target type: {targetType}" });
-        }
+        var result = await getCommentsForTargetService.GetAsync(
+            targetType,
+            targetId,
+            page,
+            pageSize,
+            includeHidden,
+            User.IsCommentModerator(),
+            User.GetCommentUserId(),
+            User.IsCommentAdmin(),
+            cancellationToken);
 
-        if (page < 1 || pageSize < 1 || pageSize > CommentLimits.MaxPageSize)
-        {
-            return BadRequest(new { message = $"Page must be at least 1 and page size between 1 and {CommentLimits.MaxPageSize}" });
-        }
-
-        var showHidden = includeHidden && User.IsCommentModerator();
-        var comments = (await commentsPlugin.GetCommentsForTargetAsync(target, showHidden, page, pageSize)).ToList();
-        var totalCount = await commentsPlugin.GetCommentCountForTargetAsync(target, showHidden);
-        var statistics = await commentsPlugin.GetCommentStatisticsAsync(target);
-        var mapped = await mapper.MapAsync(comments, User.GetCommentUserId(), User.IsCommentAdmin(), includeReplies: true, cancellationToken);
-
-        return Ok(new CommentsPagedResponse
-        {
-            Comments = mapped,
-            TotalCount = totalCount,
-            Page = page,
-            PageSize = pageSize,
-            TotalPages = (int)Math.Ceiling((double)totalCount / pageSize),
-            Statistics = statistics
-        });
+        return result.ErrorMessage == null
+            ? Ok(result.Page)
+            : BadRequest(new { message = result.ErrorMessage });
     }
 }

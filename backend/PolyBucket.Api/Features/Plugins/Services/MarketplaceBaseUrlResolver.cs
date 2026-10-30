@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Features.SystemSettings.Domain;
+using PolyBucket.Api.Features.Plugins.GetMarketplaceBaseUrl.Domain;
 using PolyBucket.Database.Persistence;
 
 namespace PolyBucket.Api.Features.Plugins.Services;
@@ -12,7 +12,7 @@ public class MarketplaceBaseUrlResolver(
     {
         var stored = await dbContext.SystemSettings
             .AsNoTracking()
-            .Where(s => s.Key == SystemSettingKeys.MarketplaceBaseUrl)
+            .Where(s => s.Key == MarketplaceSettingsKeys.MarketplaceBaseUrl)
             .Select(s => s.Value)
             .FirstOrDefaultAsync(cancellationToken);
 

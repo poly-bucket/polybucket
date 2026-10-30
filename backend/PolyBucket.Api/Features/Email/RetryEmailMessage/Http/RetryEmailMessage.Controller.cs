@@ -7,6 +7,8 @@ using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 
+using PolyBucket.Api.Features.Email.RetryEmailMessage.Domain;
+
 namespace PolyBucket.Api.Features.Email.RetryEmailMessage.Http;
 
 [Authorize]

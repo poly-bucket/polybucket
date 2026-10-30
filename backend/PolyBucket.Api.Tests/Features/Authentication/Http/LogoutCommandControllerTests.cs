@@ -6,7 +6,7 @@ using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Logout.Domain;
 using PolyBucket.Api.Features.Authentication.Logout.Http;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.Logout.Repository;
 using Shouldly;
 using System;
 using System.Threading;
@@ -17,12 +17,12 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http;
 
 public class LogoutCommandControllerTests
 {
-    private readonly Mock<IAuthenticationRepository> _authRepositoryMock;
+    private readonly Mock<ILogoutRepository> _authRepositoryMock;
     private readonly LogoutController _controller;
 
     public LogoutCommandControllerTests()
     {
-        _authRepositoryMock = new Mock<IAuthenticationRepository>();
+        _authRepositoryMock = new Mock<ILogoutRepository>();
         var handler = new LogoutCommandHandler(
             _authRepositoryMock.Object,
             Mock.Of<ILogger<LogoutCommandHandler>>());

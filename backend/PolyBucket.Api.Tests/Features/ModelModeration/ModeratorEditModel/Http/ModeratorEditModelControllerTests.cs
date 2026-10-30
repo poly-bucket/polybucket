@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PolyBucket.Api.Common;
-using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.ModelModeration.EditModeratorModel.Http;
+using PolyBucket.Api.Features.ModelModeration.GetModelForModeration.Http;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Domain;
 using PolyBucket.Api.Features.ModelModeration.ModeratorEditModel.Http;
 using PolyBucket.Api.Tests.Testing;
+using PolyBucket.Database.Entities.ModelModeration;
 using Shouldly;
 using Xunit;
 
@@ -18,10 +20,13 @@ public class ModeratorEditModelControllerTests
     private readonly Mock<IModeratorEditModelService> _service = new();
     private readonly Guid _moderatorId = Guid.NewGuid();
 
-    private ModeratorEditModelController CreateController(Guid? userId) =>
-        new ModeratorEditModelController(_service.Object).WithUser(userId);
+    private EditModeratorModelController CreateEditController(Guid? userId) =>
+        new EditModeratorModelController(_service.Object).WithUser(userId);
 
-    private static ModeratorEditRequest EditRequest() => new()
+    private GetModelForModerationController CreateGetController(Guid? userId) =>
+        new GetModelForModerationController(_service.Object).WithUser(userId);
+
+    private static ModeratorEditModelRequestDto EditRequest() => new()
     {
         Name = "Updated name",
         Description = "Updated description with enough length",
@@ -35,11 +40,11 @@ public class ModeratorEditModelControllerTests
         var modelId = Guid.NewGuid();
         var model = new ModeratorEditModelResponseDto { Id = modelId, Name = "Updated name" };
         _service
-            .Setup(s => s.EditModelAsync(modelId, _moderatorId, It.IsAny<ModeratorEditRequest>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.EditModelAsync(modelId, _moderatorId, It.IsAny<ModeratorEditModelRequestDto>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(model);
 
         // Act
-        var result = await CreateController(_moderatorId).EditModel(modelId, EditRequest(), CancellationToken.None);
+        var result = await CreateEditController(_moderatorId).EditModel(modelId, EditRequest(), CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(model);
@@ -51,11 +56,11 @@ public class ModeratorEditModelControllerTests
         // Arrange
         var modelId = Guid.NewGuid();
         _service
-            .Setup(s => s.EditModelAsync(modelId, _moderatorId, It.IsAny<ModeratorEditRequest>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.EditModelAsync(modelId, _moderatorId, It.IsAny<ModeratorEditModelRequestDto>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new NotFoundException("Model"));
 
         // Act
-        var result = await CreateController(_moderatorId).EditModel(modelId, EditRequest(), CancellationToken.None);
+        var result = await CreateEditController(_moderatorId).EditModel(modelId, EditRequest(), CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<NotFoundObjectResult>();
@@ -64,11 +69,8 @@ public class ModeratorEditModelControllerTests
     [Fact(DisplayName = "When the caller has no user id claim on edit, the controller returns Unauthorized.")]
     public async Task EditModel_NoUser_ReturnsUnauthorized()
     {
-        // Arrange
-        var controller = CreateController(null);
-
         // Act
-        var result = await controller.EditModel(Guid.NewGuid(), EditRequest(), CancellationToken.None);
+        var result = await CreateEditController(null).EditModel(Guid.NewGuid(), EditRequest(), CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<UnauthorizedObjectResult>();
@@ -84,7 +86,7 @@ public class ModeratorEditModelControllerTests
         _service.Setup(s => s.GetModelForModerationAsync(modelId, It.IsAny<CancellationToken>())).ReturnsAsync(model);
 
         // Act
-        var result = await CreateController(_moderatorId).GetModelForModeration(modelId, CancellationToken.None);
+        var result = await CreateGetController(_moderatorId).GetModelForModeration(modelId, CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(model);
@@ -98,7 +100,7 @@ public class ModeratorEditModelControllerTests
         _service.Setup(s => s.GetModelForModerationAsync(modelId, It.IsAny<CancellationToken>())).ReturnsAsync((ModeratorEditModelResponseDto?)null);
 
         // Act
-        var result = await CreateController(_moderatorId).GetModelForModeration(modelId, CancellationToken.None);
+        var result = await CreateGetController(_moderatorId).GetModelForModeration(modelId, CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<NotFoundObjectResult>();

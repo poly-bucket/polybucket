@@ -81,7 +81,7 @@ namespace PolyBucket.Api.Tests.Features.Users.CreateUser.Http
             var createdResult = Assert.IsType<CreatedAtActionResult>(result);
             Assert.Equal(201, createdResult.StatusCode);
             
-            var responseData = Assert.IsType<CreateUserCommandResponse>(createdResult.Value);
+            var responseData = Assert.IsType<CreateUserResponseDto>(createdResult.Value);
             Assert.Equal(expectedResponse.Email, responseData.Email);
             Assert.Equal(expectedResponse.Username, responseData.Username);
             Assert.Equal(expectedResponse.GeneratedPassword, responseData.GeneratedPassword);
@@ -191,6 +191,7 @@ namespace PolyBucket.Api.Tests.Features.Users.CreateUser.Http
                 UserId = Guid.NewGuid(),
                 Email = command.Email,
                 Username = command.Username,
+                RoleId = roleId,
                 GeneratedPassword = "TempPassword123!",
                 CreatedAt = DateTime.UtcNow,
                 EmailVerificationRequired = false
@@ -204,7 +205,7 @@ namespace PolyBucket.Api.Tests.Features.Users.CreateUser.Http
 
             // Assert
             var createdResult = Assert.IsType<CreatedAtActionResult>(result);
-            var responseData = Assert.IsType<CreateUserCommandResponse>(createdResult.Value);
+            var responseData = Assert.IsType<CreateUserResponseDto>(createdResult.Value);
             Assert.Equal(command.RoleId, roleId);
         }
 
@@ -224,6 +225,7 @@ namespace PolyBucket.Api.Tests.Features.Users.CreateUser.Http
                 UserId = Guid.NewGuid(),
                 Email = command.Email,
                 Username = command.Username,
+                RoleId = command.RoleId,
                 GeneratedPassword = "TempPassword123!",
                 CreatedAt = DateTime.UtcNow,
                 EmailVerificationRequired = false

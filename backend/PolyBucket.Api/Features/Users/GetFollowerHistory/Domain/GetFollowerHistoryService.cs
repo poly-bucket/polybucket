@@ -2,16 +2,12 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Features.Users.Follow.Repository;
-using PolyBucket.Api.Features.Users.GetFollowerHistory.Domain;
-using PolyBucket.Database.Persistence;
+using PolyBucket.Api.Features.Users.GetFollowerHistory.Repository;
 
 namespace PolyBucket.Api.Features.Users.GetFollowerHistory.Domain;
 
 public class GetFollowerHistoryService(
-    PolyBucketDbContext dbContext,
-    IUserFollowRepository followRepository,
+    IGetFollowerHistoryRepository repository,
     TimeProvider timeProvider) : IGetFollowerHistoryService
 {
     private static readonly int[] AllowedDayWindows = [7, 30, 90];
@@ -25,9 +21,7 @@ public class GetFollowerHistoryService(
             return (GetFollowerHistoryOutcome.InvalidDays, null);
         }
 
-        var userExists = await dbContext.Users
-            .AsNoTracking()
-            .AnyAsync(u => u.Id == query.UserId && u.DeletedAt == null, cancellationToken);
+        var userExists = await repository.UserExistsAsync(query.UserId, cancellationToken);
 
         if (!userExists)
         {
@@ -43,7 +37,7 @@ public class GetFollowerHistoryService(
         var windowStart = today.AddDays(-(query.Days - 1));
         var windowEndExclusive = today.AddDays(1);
 
-        var rows = await followRepository.GetFollowerHistoryAsync(
+        var rows = await repository.GetFollowerHistoryAsync(
             query.UserId,
             windowStart,
             windowEndExclusive,

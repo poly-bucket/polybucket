@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Database.Entities.Comments;
 
 namespace PolyBucket.Api.Features.Comments.CreateComment.Http;
 

@@ -6,7 +6,7 @@ using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Register.Domain;
 using PolyBucket.Api.Features.Authentication.Register.Http;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.Register.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Database.Entities.SystemSettings;
 using PolyBucket.Database.Entities.Users;
@@ -23,7 +23,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 {
     public class RegisterCommandControllerTests : IDisposable
     {
-        private readonly Mock<IAuthenticationRepository> _authRepositoryMock;
+        private readonly Mock<IRegisterRepository> _authRepositoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<IEmailSettingsResolver> _emailSettingsResolverMock;
         private readonly Mock<IAccountEmailService> _accountEmailServiceMock;
@@ -34,7 +34,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 
         public RegisterCommandControllerTests()
         {
-            _authRepositoryMock = new Mock<IAuthenticationRepository>();
+            _authRepositoryMock = new Mock<IRegisterRepository>();
             _tokenServiceMock = new Mock<ITokenService>();
             _emailSettingsResolverMock = new Mock<IEmailSettingsResolver>();
             _accountEmailServiceMock = new Mock<IAccountEmailService>();
@@ -61,6 +61,9 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
                 .Setup(x => x.GetEffectiveSettingsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new EffectiveEmailSettings());
 
+            _authRepositoryMock
+                .Setup(r => r.GetDefaultUserRoleIdAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(_dbContext.Roles.First().Id);
             var registrationGate = new UserRegistrationGate(_dbContext);
             _handler = new RegisterCommandHandler(
                 _authRepositoryMock.Object,
@@ -68,8 +71,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
                 _emailSettingsResolverMock.Object,
                 _accountEmailServiceMock.Object,
                 registrationGate,
-                _loggerMock.Object,
-                _dbContext);
+                _loggerMock.Object);
 
             _controller = new RegisterController(_handler, Mock.Of<ILogger<RegisterController>>())
             {

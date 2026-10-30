@@ -8,7 +8,7 @@ using PolyBucket.Api.Features.Notifications.Repository;
 namespace PolyBucket.Api.Features.Notifications.Domain;
 
 public class NotificationPublisher(
-    INotificationRepository repository,
+    INotificationPublisherRepository repository,
     IEmailQueue emailQueue,
     IEmailSettingsResolver emailSettingsResolver,
     TimeProvider timeProvider,

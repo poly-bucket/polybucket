@@ -1,69 +1,38 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PolyBucket.Database.Entities.Models;
-using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.ACL.Domain;
+using Moq;
+using PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Domain;
 using PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Http;
-using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
 
 namespace PolyBucket.Api.Tests.Features.Admin.GetModerationAuditLogs;
 
-public class GetModerationAuditLogsControllerTests : IDisposable
+public class GetModerationAuditLogsControllerTests
 {
-    private readonly PolyBucketDbContext _context;
-    private readonly Guid _adminUserId;
-    private readonly Guid _adminRoleId;
-
-    public GetModerationAuditLogsControllerTests()
-    {
-        _context = new PolyBucketDbContext(new DbContextOptionsBuilder<PolyBucketDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options);
-        _adminRoleId = Guid.NewGuid();
-        _adminUserId = Guid.NewGuid();
-        _context.Roles.Add(new Role { Id = _adminRoleId, Name = "Admin", Description = "Admin", IsActive = true });
-        _context.Users.Add(new User
-        {
-            Id = _adminUserId,
-            Email = "admin@test.com",
-            Username = "admin",
-            Salt = "s",
-            PasswordHash = "h",
-            RoleId = _adminRoleId,
-            Role = _context.Roles.Find(_adminRoleId)
-        });
-        _context.SaveChanges();
-    }
+    private readonly Mock<IGetModerationAuditLogsService> _service = new();
+    private readonly Guid _adminUserId = Guid.NewGuid();
 
     private GetModerationAuditLogsController CreateController(Guid? userId) =>
-        new GetModerationAuditLogsController(_context).WithUser(userId);
+        new GetModerationAuditLogsController(_service.Object).WithUser(userId);
 
     [Fact(DisplayName = "When the caller is an admin, GetAuditLogs returns Ok with paginated logs.")]
     public async Task GetAuditLogs_Admin_ReturnsOk()
     {
         // Arrange
-        _context.ModerationAuditLogs.Add(new ModerationAuditLog
-        {
-            Id = Guid.NewGuid(),
-            ModelId = Guid.NewGuid(),
-            Action = ModerationAction.Approve,
-            PerformedAt = DateTime.UtcNow
-        });
-        await _context.SaveChangesAsync();
+        var body = new ModerationAuditResponseDto { TotalCount = 1, Logs = { new ModerationAuditLogItemDto { Id = Guid.NewGuid().ToString() } } };
+        _service.Setup(s => s.GetAuditLogsAsync(_adminUserId, It.IsAny<GetModerationAuditLogsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(body);
 
         // Act
         var result = await CreateController(_adminUserId).GetAuditLogs();
 
         // Assert
         var ok = result.Result.ShouldBeOfType<OkObjectResult>();
-        var body = ok.Value.ShouldBeOfType<ModerationAuditResponse>();
-        body.TotalCount.ShouldBe(1);
-        body.Logs.Count.ShouldBe(1);
+        ok.Value.ShouldBeOfType<ModerationAuditResponseDto>().TotalCount.ShouldBe(1);
     }
 
     [Fact(DisplayName = "When the caller has no user id, GetAuditLogs returns Unauthorized.")]
@@ -80,27 +49,13 @@ public class GetModerationAuditLogsControllerTests : IDisposable
     public async Task GetAuditLogs_NonAdmin_ReturnsForbid()
     {
         // Arrange
-        var userRoleId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        _context.Roles.Add(new Role { Id = userRoleId, Name = "User", Description = "User", IsActive = true });
-        _context.Users.Add(new User
-        {
-            Id = userId,
-            Email = "user@test.com",
-            Username = "user",
-            Salt = "s",
-            PasswordHash = "h",
-            RoleId = userRoleId,
-            Role = _context.Roles.Find(userRoleId)
-        });
-        await _context.SaveChangesAsync();
+        _service.Setup(s => s.GetAuditLogsAsync(It.IsAny<Guid>(), It.IsAny<GetModerationAuditLogsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ModerationAuditResponseDto?)null);
 
         // Act
-        var result = await CreateController(userId).GetAuditLogs();
+        var result = await CreateController(Guid.NewGuid()).GetAuditLogs();
 
         // Assert
         result.Result.ShouldBeOfType<ForbidResult>();
     }
-
-    public void Dispose() => _context.Dispose();
 }

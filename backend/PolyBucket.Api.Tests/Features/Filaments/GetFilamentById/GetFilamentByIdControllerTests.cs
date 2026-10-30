@@ -1,14 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Filaments.Domain;
-using PolyBucket.Api.Features.Filaments.Http;
-using PolyBucket.Api.Features.Filaments.Queries;
+using PolyBucket.Api.Features.Filaments.GetFilamentById.Domain;
+using PolyBucket.Api.Features.Filaments.GetFilamentById.Http;
 using PolyBucket.Database.Entities.Printers.Enums;
-using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
 
@@ -16,16 +13,15 @@ namespace PolyBucket.Api.Tests.Features.Filaments.GetFilamentById;
 
 public class GetFilamentByIdControllerTests
 {
-    private readonly Mock<IMediator> _mediator = new();
-
     [Fact(DisplayName = "When the filament exists, GetById returns Ok.")]
     public async Task GetById_Found_ReturnsOk()
     {
         // Arrange
         var id = Guid.NewGuid();
         var filament = new Filament { Id = id, Manufacturer = "A", Type = MaterialType.Pla, Color = "B", Diameter = "1.75" };
-        _mediator.Setup(m => m.Send(It.IsAny<GetFilamentByIdQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(filament);
-        var controller = new GetFilamentByIdController(_mediator.Object);
+        var service = new Mock<IGetFilamentByIdService>();
+        service.Setup(s => s.GetByIdAsync(It.IsAny<GetFilamentByIdQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(filament);
+        var controller = new GetFilamentByIdController(service.Object);
 
         // Act
         var result = await controller.GetById(id);
@@ -38,9 +34,10 @@ public class GetFilamentByIdControllerTests
     public async Task GetById_Missing_ReturnsNotFound()
     {
         // Arrange
-        _mediator.Setup(m => m.Send(It.IsAny<GetFilamentByIdQuery>(), It.IsAny<CancellationToken>()))
+        var service = new Mock<IGetFilamentByIdService>();
+        service.Setup(s => s.GetByIdAsync(It.IsAny<GetFilamentByIdQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Filament?)null);
-        var controller = new GetFilamentByIdController(_mediator.Object);
+        var controller = new GetFilamentByIdController(service.Object);
 
         // Act
         var result = await controller.GetById(Guid.NewGuid());

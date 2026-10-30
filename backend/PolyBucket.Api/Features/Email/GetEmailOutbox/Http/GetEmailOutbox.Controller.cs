@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Email.GetEmailOutbox;
+using ApiGetEmailOutbox = PolyBucket.Api.Features.Email.GetEmailOutbox.Domain;
 
 namespace PolyBucket.Api.Features.Email.GetEmailOutbox.Http;
 
@@ -11,9 +13,9 @@ namespace PolyBucket.Api.Features.Email.GetEmailOutbox.Http;
 [ApiController]
 [Route("api/admin/email/outbox")]
 [RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
-public class GetEmailOutboxController(IGetEmailOutboxService service) : ControllerBase
+public class GetEmailOutboxController(ApiGetEmailOutbox.IGetEmailOutboxService service) : ControllerBase
 {
-    private readonly IGetEmailOutboxService _service = service;
+    private readonly ApiGetEmailOutbox.IGetEmailOutboxService _service = service;
 
     /// <summary>
     /// Lists queued, sent, failed, and dead-lettered emails, newest first, with a count per status.

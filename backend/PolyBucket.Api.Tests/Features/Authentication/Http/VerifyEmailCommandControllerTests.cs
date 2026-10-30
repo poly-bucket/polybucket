@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.VerifyEmail.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Authentication.VerifyEmail.Domain;
 using PolyBucket.Api.Features.Authentication.VerifyEmail.Http;
@@ -20,7 +20,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 {
     public class VerifyEmailCommandControllerTests
     {
-        private readonly Mock<IAuthenticationRepository> _repository = new();
+        private readonly Mock<IVerifyEmailRepository> _repository = new();
         private readonly VerifyEmailController _controller;
 
         public VerifyEmailCommandControllerTests()

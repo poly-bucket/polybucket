@@ -2,9 +2,13 @@ using System;
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Account.Domain;
-using PolyBucket.Api.Features.Authentication.Account.Http;
+using PolyBucket.Api.Features.Authentication.DeleteAccount.Domain;
+using PolyBucket.Api.Features.Authentication.DeleteAccount.Http;
+using PolyBucket.Api.Features.Authentication.ExportAccount.Domain;
+using PolyBucket.Api.Features.Authentication.GetActiveSessions.Domain;
+using PolyBucket.Api.Features.Authentication.RevokeAllSessions.Http;
+using PolyBucket.Api.Features.Authentication.RevokeSession.Http;
+using RefreshToken = PolyBucket.Database.Entities.Authentication.RefreshToken;
 using Shouldly;
 using Xunit;
 

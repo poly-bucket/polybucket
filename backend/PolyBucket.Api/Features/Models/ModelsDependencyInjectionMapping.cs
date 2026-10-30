@@ -154,12 +154,17 @@ public static class ModelsDependencyInjectionMapping
             RecordModelDownload.Domain.IModelDownloadCounter,
             RecordModelDownload.Domain.ModelDownloadCounter>();
 
-        services.AddScoped<
-            ModelReactions.Domain.IModelReactionService,
-            ModelReactions.Domain.ModelReactionService>();
-        services.AddTransient<
-            ModelReactions.Repository.IModelReactionRepository,
-            ModelReactions.Repository.ModelReactionRepository>();
+        
+        services.AddScoped<LikeModel.Domain.ILikeModelService, LikeModel.Domain.LikeModelService>();
+        services.AddTransient<LikeModel.Repository.ILikeModelRepository, LikeModel.Repository.LikeModelRepository>();
+        services.AddScoped<UnlikeModel.Domain.IUnlikeModelService, UnlikeModel.Domain.UnlikeModelService>();
+        services.AddTransient<UnlikeModel.Repository.IUnlikeModelRepository, UnlikeModel.Repository.UnlikeModelRepository>();
+        services.AddScoped<DislikeModel.Domain.IDislikeModelService, DislikeModel.Domain.DislikeModelService>();
+        services.AddTransient<DislikeModel.Repository.IDislikeModelRepository, DislikeModel.Repository.DislikeModelRepository>();
+        services.AddScoped<RemoveModelDislike.Domain.IRemoveModelDislikeService, RemoveModelDislike.Domain.RemoveModelDislikeService>();
+        services.AddTransient<RemoveModelDislike.Repository.IRemoveModelDislikeRepository, RemoveModelDislike.Repository.RemoveModelDislikeRepository>();
+        services.AddScoped<GenerateCustomThumbnail.Domain.IGenerateCustomThumbnailService, GenerateCustomThumbnail.Domain.GenerateCustomThumbnailService>();
+        services.AddTransient<GenerateCustomThumbnail.Repository.IGenerateCustomThumbnailRepository, GenerateCustomThumbnail.Repository.GenerateCustomThumbnailRepository>();
 
         return services;
     }

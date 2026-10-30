@@ -3,15 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.LikeComment.Domain;
+using PolyBucket.Api.Features.Comments.RemoveCommentLike.Domain;
 
 namespace PolyBucket.Api.Features.Comments.RemoveCommentLike.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize]
-public class RemoveCommentLikeController(ICommentReactionService reactionService) : ControllerBase
+public class RemoveCommentLikeController(IRemoveCommentLikeService removeCommentLikeService) : ControllerBase
 {
     /// <summary>
     /// Removes the caller's like from a comment. Does nothing if the caller has not liked it.
@@ -33,7 +34,7 @@ public class RemoveCommentLikeController(ICommentReactionService reactionService
             return Unauthorized();
         }
 
-        var outcome = await reactionService.RemoveReactionAsync(commentId, userId.Value, CommentReactionType.Like, cancellationToken);
+        var outcome = await removeCommentLikeService.RemoveReactionAsync(commentId, userId.Value, cancellationToken);
         return MapOutcome(outcome);
     }
 

@@ -23,7 +23,7 @@ public class ModeratorEditModelService(
     public async Task<ModeratorEditModelResponseDto> EditModelAsync(
         Guid modelId,
         Guid moderatorId,
-        ModeratorEditRequest request,
+        ModeratorEditModelRequestDto request,
         string? ipAddress,
         string? userAgent,
         CancellationToken cancellationToken = default)

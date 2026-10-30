@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 using PolyBucket.Api.Features.Models.Common;
-using PolyBucket.Api.Features.Models.ModelReactions.Domain;
+using PolyBucket.Database.Entities.Models.Enums;
 
 namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 {

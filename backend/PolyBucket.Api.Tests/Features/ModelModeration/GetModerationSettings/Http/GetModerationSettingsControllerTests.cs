@@ -18,7 +18,7 @@ public class GetModerationSettingsControllerTests
     public async Task GetModerationSettings_ReturnsOk()
     {
         // Arrange
-        var settings = new ModerationSettingsDto { RequireModeration = true, AutoApproveModels = false };
+        var settings = new GetModerationSettingsResponseDto { RequireModeration = true, AutoApproveModels = false };
         _service.Setup(s => s.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
         var controller = new GetModerationSettingsController(_service.Object);
 

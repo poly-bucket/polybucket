@@ -1,9 +1,9 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.SystemSettings.GetStorageSettings.Http;
+using ApiTestStorageConfiguration = PolyBucket.Api.Features.SystemSettings.TestStorageConfiguration.Domain;
 using PolyBucket.Storage.TestStorageConfiguration;
 using PolyBucket.Storage.UpdateStorageSettings;
 
@@ -13,7 +13,7 @@ namespace PolyBucket.Api.Features.SystemSettings.TestStorageConfiguration.Http;
 [ApiController]
 [Route("api/system-settings/storage")]
 [RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
-public class TestStorageConfigurationController(ITestStorageConfigurationService service) : ControllerBase
+public class TestStorageConfigurationController(ApiTestStorageConfiguration.ITestStorageConfigurationService testStorageConfigurationService) : ControllerBase
 {
     /// <summary>
     /// Tests connectivity to object storage using saved settings or an optional proposed configuration.
@@ -24,7 +24,7 @@ public class TestStorageConfigurationController(ITestStorageConfigurationService
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
     public async Task<ActionResult<TestStorageConfigurationResult>> TestStorageConfiguration(
-        [FromBody] GetStorageSettings.Http.UpdateStorageSettingsRequest? request,
+        [FromBody] UpdateStorageSettingsRequest? request,
         CancellationToken cancellationToken = default)
     {
         StorageSettingsUpdate? proposed = null;
@@ -48,6 +48,6 @@ public class TestStorageConfigurationController(ITestStorageConfigurationService
             };
         }
 
-        return Ok(await service.TestAsync(proposed, cancellationToken));
+        return Ok(await testStorageConfigurationService.TestStorageConfigurationAsync(proposed, cancellationToken));
     }
 }

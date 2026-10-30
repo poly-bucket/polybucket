@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PolyBucket.Api.Features.Authentication.GetRegistrationStatus.Domain;
 using PolyBucket.Api.Features.Authentication.GetRegistrationStatus.Http;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Database.Entities.SystemSettings;
@@ -21,7 +22,7 @@ public class GetRegistrationStatusControllerTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _dbContext = new PolyBucketDbContext(dbOptions);
-        _controller = new GetRegistrationStatusController(new UserRegistrationGate(_dbContext));
+        _controller = new GetRegistrationStatusController(new GetRegistrationStatusService(new UserRegistrationGate(_dbContext)));
     }
 
     [Fact(DisplayName = "When no site setup exists, registration status reports registration is closed.")]

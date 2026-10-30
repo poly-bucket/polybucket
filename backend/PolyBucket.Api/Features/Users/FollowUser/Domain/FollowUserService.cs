@@ -1,17 +1,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Features.Notifications.Domain;
-using PolyBucket.Api.Features.Users.Follow.Repository;
-using PolyBucket.Api.Features.Users.FollowUser.Domain;
-using PolyBucket.Database.Persistence;
+using PolyBucket.Api.Features.Users.FollowUser.Repository;
 
 namespace PolyBucket.Api.Features.Users.FollowUser.Domain;
 
 public class FollowUserService(
-    PolyBucketDbContext dbContext,
-    IUserFollowRepository followRepository,
+    IFollowUserRepository repository,
     INotificationPublisher notificationPublisher,
     TimeProvider timeProvider) : IFollowUserService
 {
@@ -25,9 +21,7 @@ public class FollowUserService(
             return FollowUserOutcome.SelfFollow;
         }
 
-        var target = await dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == followedUserId && u.DeletedAt == null, cancellationToken);
+        var target = await repository.GetActiveTargetUserAsync(followedUserId, cancellationToken);
 
         if (target == null)
         {
@@ -44,14 +38,14 @@ public class FollowUserService(
             return FollowUserOutcome.TargetPrivate;
         }
 
-        var existing = await followRepository.GetActiveFollowAsync(followerUserId, followedUserId, cancellationToken);
+        var existing = await repository.GetActiveFollowAsync(followerUserId, followedUserId, cancellationToken);
         if (existing != null)
         {
             return FollowUserOutcome.AlreadyFollowing;
         }
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var follow = await followRepository.AddFollowAsync(followerUserId, followedUserId, followerUserId, now, cancellationToken);
+        var follow = await repository.AddFollowAsync(followerUserId, followedUserId, followerUserId, now, cancellationToken);
 
         await notificationPublisher.PublishAsync(new NotificationRequest
         {
@@ -68,7 +62,7 @@ public class FollowUserService(
             SendEmail = false
         }, cancellationToken);
 
-        await followRepository.SaveChangesAsync(cancellationToken);
+        await repository.SaveChangesAsync(cancellationToken);
 
         return FollowUserOutcome.Success;
     }

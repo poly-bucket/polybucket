@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.Comments.Domain;
-using PolyBucket.Api.Features.Comments.Repository;
+using PolyBucket.Api.Features.Comments.LikeComment.Domain;
+using PolyBucket.Api.Features.Comments.LikeComment.Repository;
 using PolyBucket.Api.Common.Plugins;
 using PolyBucket.Api.Features.Reports.Domain;
 using PolyBucket.Api.Features.Notifications.Domain;
@@ -15,15 +15,15 @@ namespace PolyBucket.Api.Features.Comments.Plugins
     public class EnhancedCommentsPlugin(
         PolyBucketDbContext context,
         IReportingPlugin reportingPlugin,
-        ICommentReactionService reactionService,
-        ICommentReactionRepository reactionRepository,
+        ICommentReactionOperations reactionService,
+        ICommentReactionPersistence reactionRepository,
         INotificationPublisher notificationPublisher) : IEnhancedCommentsPlugin
     {
         private readonly PolyBucketDbContext _context = context;
         private readonly INotificationPublisher _notificationPublisher = notificationPublisher;
         private readonly IReportingPlugin _reportingPlugin = reportingPlugin;
-        private readonly ICommentReactionService _reactionService = reactionService;
-        private readonly ICommentReactionRepository _reactionRepository = reactionRepository;
+        private readonly ICommentReactionOperations _reactionService = reactionService;
+        private readonly ICommentReactionPersistence _reactionRepository = reactionRepository;
 
         public string Id => "enhanced-comments-plugin";
         public string Name => "Enhanced Comments Plugin";

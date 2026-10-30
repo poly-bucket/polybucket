@@ -1,14 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using PolyBucket.Api.Features.Notifications.Repository;
+using PolyBucket.Api.Features.Notifications.GetUnreadNotificationCount.Repository;
 
 namespace PolyBucket.Api.Features.Notifications.GetUnreadNotificationCount.Domain;
 
-public class GetUnreadNotificationCountService(INotificationRepository repository, TimeProvider timeProvider) : IGetUnreadNotificationCountService
+public class GetUnreadNotificationCountService(IGetUnreadNotificationCountRepository repository, TimeProvider timeProvider) : IGetUnreadNotificationCountService
 {
-    public Task<int> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        return repository.CountUnreadAsync(userId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
-    }
+    public Task<int> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken) =>
+        repository.CountUnreadAsync(userId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
 }

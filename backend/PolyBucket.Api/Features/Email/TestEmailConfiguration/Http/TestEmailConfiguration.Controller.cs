@@ -7,15 +7,18 @@ using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 
+using PolyBucket.Email.TestEmailConfiguration;
+using ApiTestEmailConfiguration = PolyBucket.Api.Features.Email.TestEmailConfiguration.Domain;
+
 namespace PolyBucket.Api.Features.Email.TestEmailConfiguration.Http;
 
 [Authorize]
 [ApiController]
 [Route("api/system-settings/email")]
 [RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
-public class TestEmailConfigurationController(ITestEmailConfigurationService service) : ControllerBase
+public class TestEmailConfigurationController(ApiTestEmailConfiguration.ITestEmailConfigurationService service) : ControllerBase
 {
-    private readonly ITestEmailConfigurationService _service = service;
+    private readonly ApiTestEmailConfiguration.ITestEmailConfigurationService _service = service;
 
     /// <summary>
     /// Sends a test email with the saved settings and reports each delivery stage (configuration, DNS, connect, TLS, authentication, send).

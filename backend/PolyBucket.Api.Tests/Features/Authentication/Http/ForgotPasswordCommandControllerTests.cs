@@ -9,7 +9,7 @@ using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.ForgotPassword.Domain;
 using PolyBucket.Api.Features.Authentication.ForgotPassword.Http;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.ForgotPassword.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using Shouldly;
 using Xunit;
@@ -18,7 +18,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 {
     public class ForgotPasswordCommandControllerTests
     {
-        private readonly Mock<IAuthenticationRepository> _repository = new();
+        private readonly Mock<IForgotPasswordRepository> _repository = new();
         private readonly Mock<ITokenService> _tokenService = new();
         private readonly Mock<IAccountEmailService> _accountEmail = new();
         private readonly ForgotPasswordController _controller;

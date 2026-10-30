@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.Plugins;
+using PolyBucket.Api.Features.Comments.UpdateComment.Domain;
 using PolyBucket.Api.Features.Comments.UpdateComment.Http;
 using Shouldly;
 using Xunit;
@@ -13,51 +13,36 @@ namespace PolyBucket.Api.Tests.Features.Comments.UpdateComment;
 
 public class UpdateCommentControllerTests
 {
-    private readonly Mock<IEnhancedCommentsPlugin> _plugin = new();
-    private readonly Mock<ICommentResponseMapper> _mapper = new();
+    private readonly Mock<IUpdateCommentService> _service = new();
     private readonly Guid _userId = Guid.NewGuid();
 
-    private UpdateCommentController CreateController() => new UpdateCommentController(_plugin.Object, _mapper.Object).WithUser(_userId);
-
-    [Fact(DisplayName = "When the author edits their comment, the updated comment is returned.")]
-    public async Task Update_Owner_ReturnsOk()
+    [Fact(DisplayName = "When the caller updates their comment, the updated comment is returned.")]
+    public async Task UpdateComment_Valid_ReturnsOk()
     {
         // Arrange
         var commentId = Guid.NewGuid();
-        _plugin.Setup(p => p.UpdateCommentAsync(commentId, _userId, "edited")).ReturnsAsync(new EnhancedComment { Id = commentId, Content = "edited" });
-        _mapper.Setup(m => m.MapAsync(It.IsAny<IReadOnlyList<EnhancedComment>>(), _userId, false, true, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<CommentResponse> { new() { Id = commentId, Content = "edited", IsEdited = true } });
+        var response = new CommentResponse { Id = commentId, Content = "updated" };
+        _service.Setup(s => s.UpdateAsync(commentId, _userId, "updated", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateCommentResult(response, null, false));
+        var controller = new UpdateCommentController(_service.Object).WithUser(_userId);
 
         // Act
-        var result = await CreateController().UpdateComment(commentId, new UpdateCommentContentRequest { Content = "edited" }, CancellationToken.None);
+        var result = await controller.UpdateComment(commentId, new UpdateCommentContentRequest { Content = "updated" }, CancellationToken.None);
 
         // Assert
-        result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<CommentResponse>().IsEdited.ShouldBeTrue();
+        result.ShouldBeOfType<OkObjectResult>();
     }
 
-    [Fact(DisplayName = "When someone else's comment is edited, the controller returns Forbid.")]
-    public async Task Update_NotOwner_ReturnsForbid()
+    [Fact(DisplayName = "When the caller has no user id claim, the controller returns Unauthorized.")]
+    public async Task UpdateComment_NoUser_ReturnsUnauthorized()
     {
         // Arrange
-        _plugin.Setup(p => p.UpdateCommentAsync(It.IsAny<Guid>(), _userId, It.IsAny<string>())).ThrowsAsync(new UnauthorizedAccessException());
+        var controller = new UpdateCommentController(_service.Object).WithUser(null);
 
         // Act
-        var result = await CreateController().UpdateComment(Guid.NewGuid(), new UpdateCommentContentRequest { Content = "x" }, CancellationToken.None);
+        var result = await controller.UpdateComment(Guid.NewGuid(), new UpdateCommentContentRequest { Content = "x" }, CancellationToken.None);
 
         // Assert
-        result.ShouldBeOfType<ForbidResult>();
-    }
-
-    [Fact(DisplayName = "When the comment does not exist, the controller returns BadRequest.")]
-    public async Task Update_Missing_ReturnsBadRequest()
-    {
-        // Arrange
-        _plugin.Setup(p => p.UpdateCommentAsync(It.IsAny<Guid>(), _userId, It.IsAny<string>())).ThrowsAsync(new InvalidOperationException("Comment not found"));
-
-        // Act
-        var result = await CreateController().UpdateComment(Guid.NewGuid(), new UpdateCommentContentRequest { Content = "x" }, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeOfType<BadRequestObjectResult>();
+        result.ShouldBeOfType<UnauthorizedResult>();
     }
 }

@@ -1,14 +1,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Filaments.Domain;
-using PolyBucket.Api.Features.Filaments.Http;
-using PolyBucket.Api.Features.Filaments.Queries;
+using PolyBucket.Api.Features.Filaments.GetAllFilaments.Domain;
+using PolyBucket.Api.Features.Filaments.GetAllFilaments.Http;
 using PolyBucket.Database.Entities.Printers.Enums;
-using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
 
@@ -16,8 +13,6 @@ namespace PolyBucket.Api.Tests.Features.Filaments.GetAllFilaments;
 
 public class GetAllFilamentsControllerTests
 {
-    private readonly Mock<IMediator> _mediator = new();
-
     [Fact(DisplayName = "When filaments exist, GetAll returns Ok with the list.")]
     public async Task GetAll_ReturnsOk()
     {
@@ -26,8 +21,9 @@ public class GetAllFilamentsControllerTests
         {
             new() { Manufacturer = "A", Type = MaterialType.Pla, Color = "B", Diameter = "1.75" }
         };
-        _mediator.SetupSend<GetAllFilamentsQuery, List<Filament>>(filaments);
-        var controller = new GetAllFilamentsController(_mediator.Object);
+        var service = new Mock<IGetAllFilamentsService>();
+        service.Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(filaments);
+        var controller = new GetAllFilamentsController(service.Object);
 
         // Act
         var result = await controller.GetAll();

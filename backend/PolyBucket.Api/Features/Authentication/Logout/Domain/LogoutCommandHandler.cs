@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.Logout.Repository;
 
 namespace PolyBucket.Api.Features.Authentication.Logout.Domain;
 
 public class LogoutCommandHandler(
-    IAuthenticationRepository authRepository,
+    ILogoutRepository logoutRepository,
     ILogger<LogoutCommandHandler> logger)
 {
-    private readonly IAuthenticationRepository _authRepository = authRepository;
+    private readonly ILogoutRepository _logoutRepository = logoutRepository;
     private readonly ILogger<LogoutCommandHandler> _logger = logger;
 
     public async Task Handle(LogoutCommand command, CancellationToken cancellationToken)
@@ -17,13 +17,13 @@ public class LogoutCommandHandler(
             return;
         }
 
-        var refreshToken = await _authRepository.GetRefreshTokenAsync(command.RefreshToken);
+        var refreshToken = await _logoutRepository.GetRefreshTokenAsync(command.RefreshToken);
         if (refreshToken == null || !refreshToken.IsActive)
         {
             return;
         }
 
-        await _authRepository.RevokeRefreshTokenAsync(
+        await _logoutRepository.RevokeRefreshTokenAsync(
             command.RefreshToken,
             "User logged out",
             command.Client.IpAddress);

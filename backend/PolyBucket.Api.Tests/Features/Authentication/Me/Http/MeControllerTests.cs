@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.Authentication.Me.Domain;
 using PolyBucket.Api.Features.Authentication.Me.Http;
+using PolyBucket.Api.Features.Authentication.Me.Repository;
 using DomainUserSettings = PolyBucket.Database.Entities.Users.UserSettings;
 using PolyBucket.Api.Tests.Testing;
 using Moq;
@@ -60,13 +62,13 @@ public class MeControllerTests : IDisposable
     }
 
     private MeController CreateController(Guid? userId) =>
-        new MeController(_context, _emailSettings.Object).WithUser(userId);
+        new MeController(new MeService(new MeRepository(_context), _emailSettings.Object)).WithUser(userId);
 
     [Fact(DisplayName = "When the signed-in user exists, GetCurrentUser returns Ok with profile data.")]
     public async Task GetCurrentUser_Valid_ReturnsOk()
     {
         // Act
-        var result = await CreateController(_userId).GetCurrentUser();
+        var result = await CreateController(_userId).GetCurrentUser(CancellationToken.None);
 
         // Assert
         var ok = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -81,7 +83,7 @@ public class MeControllerTests : IDisposable
     public async Task GetCurrentUser_NoClaim_ReturnsUnauthorized()
     {
         // Act
-        var result = await CreateController(null).GetCurrentUser();
+        var result = await CreateController(null).GetCurrentUser(CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<UnauthorizedObjectResult>();
@@ -91,7 +93,7 @@ public class MeControllerTests : IDisposable
     public async Task GetCurrentUser_MissingUser_ReturnsNotFound()
     {
         // Act
-        var result = await CreateController(Guid.NewGuid()).GetCurrentUser();
+        var result = await CreateController(Guid.NewGuid()).GetCurrentUser(CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<NotFoundObjectResult>();

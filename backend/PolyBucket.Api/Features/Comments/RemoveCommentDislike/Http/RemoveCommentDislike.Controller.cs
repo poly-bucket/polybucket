@@ -3,15 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.LikeComment.Domain;
+using PolyBucket.Api.Features.Comments.RemoveCommentDislike.Domain;
 
 namespace PolyBucket.Api.Features.Comments.RemoveCommentDislike.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize]
-public class RemoveCommentDislikeController(ICommentReactionService reactionService) : ControllerBase
+public class RemoveCommentDislikeController(IRemoveCommentDislikeService removeCommentDislikeService) : ControllerBase
 {
     /// <summary>
     /// Removes the caller's dislike from a comment. Does nothing if the caller has not disliked it.
@@ -33,7 +34,7 @@ public class RemoveCommentDislikeController(ICommentReactionService reactionServ
             return Unauthorized();
         }
 
-        var outcome = await reactionService.RemoveReactionAsync(commentId, userId.Value, CommentReactionType.Dislike, cancellationToken);
+        var outcome = await removeCommentDislikeService.RemoveReactionAsync(commentId, userId.Value, cancellationToken);
         return MapOutcome(outcome);
     }
 

@@ -61,10 +61,15 @@ public static class UsersDependencyInjectionMapping
         services.AddTransient<GeneratePasswordResetLink.Repository.IGeneratePasswordResetLinkRepository, GeneratePasswordResetLink.Repository.GeneratePasswordResetLinkRepository>();
 
         services.AddTransient<Follow.Repository.IUserFollowRepository, Follow.Repository.UserFollowRepository>();
+        services.AddTransient<FollowUser.Repository.IFollowUserRepository, FollowUser.Repository.FollowUserRepository>();
         services.AddScoped<FollowUser.Domain.IFollowUserService, FollowUser.Domain.FollowUserService>();
+        services.AddTransient<UnfollowUser.Repository.IUnfollowUserRepository, UnfollowUser.Repository.UnfollowUserRepository>();
         services.AddScoped<UnfollowUser.Domain.IUnfollowUserService, UnfollowUser.Domain.UnfollowUserService>();
+        services.AddTransient<GetUserFollowers.Repository.IGetUserFollowersRepository, GetUserFollowers.Repository.GetUserFollowersRepository>();
         services.AddScoped<GetUserFollowers.Domain.IGetUserFollowersService, GetUserFollowers.Domain.GetUserFollowersService>();
+        services.AddTransient<GetUserFollowing.Repository.IGetUserFollowingRepository, GetUserFollowing.Repository.GetUserFollowingRepository>();
         services.AddScoped<GetUserFollowing.Domain.IGetUserFollowingService, GetUserFollowing.Domain.GetUserFollowingService>();
+        services.AddTransient<GetFollowerHistory.Repository.IGetFollowerHistoryRepository, GetFollowerHistory.Repository.GetFollowerHistoryRepository>();
         services.AddScoped<GetFollowerHistory.Domain.IGetFollowerHistoryService, GetFollowerHistory.Domain.GetFollowerHistoryService>();
 
         return services;

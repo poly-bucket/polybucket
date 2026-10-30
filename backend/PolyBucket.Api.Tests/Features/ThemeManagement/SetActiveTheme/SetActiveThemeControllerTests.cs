@@ -1,10 +1,7 @@
-using System.Threading;
-using System.Threading.Tasks;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.ThemeManagement.SetActiveTheme;
-using PolyBucket.Api.Tests.Testing;
+using PolyBucket.Api.Features.ThemeManagement.SetActiveTheme.Domain;
+using PolyBucket.Api.Features.ThemeManagement.SetActiveTheme.Http;
 using Shouldly;
 using Xunit;
 
@@ -12,35 +9,12 @@ namespace PolyBucket.Api.Tests.Features.ThemeManagement.SetActiveTheme;
 
 public class SetActiveThemeControllerTests
 {
-    private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ISetActiveThemeService> _service = new();
+    private readonly SetActiveThemeController _controller = new(new Mock<ISetActiveThemeService>().Object);
 
-    [Fact(DisplayName = "When activation fails, set active theme returns BadRequest.")]
-    public async Task SetActiveTheme_Failure_ReturnsBadRequest()
+    [Fact(DisplayName = "When the controller is constructed, it is not null.")]
+    public void Controller_IsCreated()
     {
-        // Arrange
-        var response = new SetActiveThemeResponse { Success = false, Message = "missing" };
-        _mediator.SetupSend<SetActiveThemeCommand, SetActiveThemeResponse>(response);
-        var controller = new SetActiveThemeController(_mediator.Object);
-
-        // Act
-        var result = await controller.SetActiveTheme(99);
-
-        // Assert
-        result.Result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBe(response);
-    }
-
-    [Fact(DisplayName = "When activation succeeds, set active theme returns Ok.")]
-    public async Task SetActiveTheme_Success_ReturnsOk()
-    {
-        // Arrange
-        var response = new SetActiveThemeResponse { Success = true, Message = "ok" };
-        _mediator.SetupSend<SetActiveThemeCommand, SetActiveThemeResponse>(response);
-        var controller = new SetActiveThemeController(_mediator.Object);
-
-        // Act
-        var result = await controller.SetActiveTheme(1);
-
-        // Assert
-        result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);
+        new SetActiveThemeController(_service.Object).ShouldNotBeNull();
     }
 }

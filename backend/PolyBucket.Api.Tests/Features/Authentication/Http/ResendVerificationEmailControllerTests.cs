@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PolyBucket.Api.Extensions;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.ResendVerificationEmail.Repository;
 using PolyBucket.Api.Features.Authentication.ResendVerificationEmail.Domain;
 using PolyBucket.Api.Features.Authentication.ResendVerificationEmail.Http;
 using PolyBucket.Api.Features.Authentication.Services;
@@ -20,7 +20,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http;
 
 public class ResendVerificationEmailControllerTests
 {
-    private readonly Mock<IAuthenticationRepository> _repository = new();
+    private readonly Mock<IResendVerificationEmailRepository> _repository = new();
     private readonly Mock<IEmailSettingsResolver> _resolver = new();
     private readonly ResendVerificationEmailController _controller;
 

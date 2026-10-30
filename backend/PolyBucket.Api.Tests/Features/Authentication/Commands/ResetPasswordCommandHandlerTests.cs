@@ -6,7 +6,7 @@ using Moq;
 using PolyBucket.Api.Common.Http;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.ResetPassword.Repository;
 using PolyBucket.Api.Features.Authentication.ResetPassword.Domain;
 using PolyBucket.Api.Features.Authentication.Services;
 using Shouldly;
@@ -18,7 +18,7 @@ public class ResetPasswordCommandHandlerTests
 {
     private const string RawToken = "raw-reset-token";
 
-    private readonly Mock<IAuthenticationRepository> _repository = new();
+    private readonly Mock<IResetPasswordRepository> _repository = new();
     private readonly Mock<IPasswordHasher> _hasher = new();
     private readonly Mock<IAccountEmailService> _accountEmail = new();
 

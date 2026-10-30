@@ -2,30 +2,25 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
-using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.ModelModeration.GetModerationSettings.Domain;
-using System.Threading;
-using System.Threading.Tasks;
+using PolyBucket.Api.Features.ModelModeration.GetModerationSettings.Http;
 
 namespace PolyBucket.Api.Features.ModelModeration.GetModerationSettings.Http;
 
 [Authorize]
 [ApiController]
-[Route("api/moderation/models")]
+[Route("api/moderation/settings")]
 [RequirePermission(PermissionConstants.MODERATION_VIEW_QUEUE)]
 public class GetModerationSettingsController(IGetModerationSettingsService service) : ControllerBase
 {
-    private readonly IGetModerationSettingsService _service = service;
-
     /// <summary>
-    /// Returns site model moderation settings.
+    /// Get moderation workflow settings.
     /// </summary>
-    [HttpGet("settings")]
-    [ProducesResponseType(typeof(ModerationSettingsDto), 200)]
-    [ProducesResponseType(403)]
-    public async Task<ActionResult<ModerationSettingsDto>> GetModerationSettings(CancellationToken cancellationToken = default)
+    [HttpGet]
+    [ProducesResponseType(typeof(GetModerationSettingsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<GetModerationSettingsResponseDto>> GetModerationSettings(CancellationToken cancellationToken = default)
     {
-        var settings = await _service.GetAsync(cancellationToken);
-        return Ok(settings);
+        return Ok(await service.GetAsync(cancellationToken));
     }
 }

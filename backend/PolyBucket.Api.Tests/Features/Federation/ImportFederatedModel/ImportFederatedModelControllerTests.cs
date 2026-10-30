@@ -1,10 +1,9 @@
-using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Database.Entities.Models;
-using PolyBucket.Api.Features.Federation.Http;
-using PolyBucket.Api.Features.Federation.Services;
+using PolyBucket.Api.Features.Federation.ImportFederatedModel.Domain;
+using PolyBucket.Api.Features.Federation.ImportFederatedModel.Http;
 using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
@@ -13,37 +12,15 @@ namespace PolyBucket.Api.Tests.Features.Federation.ImportFederatedModel;
 
 public class ImportFederatedModelControllerTests
 {
-    private readonly Mock<IFederationImportService> _importService = new();
+    private readonly Mock<IImportFederatedModelService> _service = new();
 
-    [Fact(DisplayName = "When instance id is missing, ImportFederatedModel returns BadRequest.")]
-    public async Task ImportFederatedModel_MissingInstance_ReturnsBadRequest()
+    [Fact]
+    public async Task Import_WhenInvalid_ReturnsBadRequest()
     {
-        // Arrange
-        var controller = new ImportFederatedModelController(_importService.Object).WithUser(Guid.NewGuid());
-
-        // Act
-        var result = await controller.ImportFederatedModel(new ImportFederatedModelRequest { RemoteModelId = "rm-1" });
-
-        // Assert
+        _service.Setup(s => s.ImportFederatedModelAsync(It.IsAny<ImportFederatedModelRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BadRequestObjectResult("bad"));
+        var controller = new ImportFederatedModelController(_service.Object).WithUser(Guid.NewGuid());
+        var result = await controller.ImportFederatedModel(new ImportFederatedModelRequest());
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
-    }
-
-    [Fact(DisplayName = "When import succeeds, ImportFederatedModel returns 201.")]
-    public async Task ImportFederatedModel_Success_ReturnsCreated()
-    {
-        // Arrange
-        var model = new Model { Id = Guid.NewGuid(), Name = "Imported", Description = "D", IsFederated = true };
-        _importService.Setup(s => s.ImportModelAsync("inst", "rm-1")).ReturnsAsync(model);
-        var controller = new ImportFederatedModelController(_importService.Object).WithUser(Guid.NewGuid());
-
-        // Act
-        var result = await controller.ImportFederatedModel(new ImportFederatedModelRequest
-        {
-            InstanceId = "inst",
-            RemoteModelId = "rm-1"
-        });
-
-        // Assert
-        result.Result.ShouldBeOfType<CreatedAtActionResult>();
     }
 }

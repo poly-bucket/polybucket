@@ -3,15 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.DislikeComment.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.LikeComment.Domain;
 
 namespace PolyBucket.Api.Features.Comments.DislikeComment.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize]
-public class DislikeCommentController(ICommentReactionService reactionService) : ControllerBase
+public class DislikeCommentController(IDislikeCommentService dislikeCommentService) : ControllerBase
 {
     /// <summary>
     /// Dislikes a comment. Disliking twice has no further effect, and disliking a liked comment switches the reaction.
@@ -33,7 +34,7 @@ public class DislikeCommentController(ICommentReactionService reactionService) :
             return Unauthorized();
         }
 
-        var outcome = await reactionService.ReactAsync(commentId, userId.Value, CommentReactionType.Dislike, cancellationToken);
+        var outcome = await dislikeCommentService.ReactAsync(commentId, userId.Value, cancellationToken);
         return MapOutcome(outcome);
     }
 

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Models.Http;
 using PolyBucket.Api.Features.Models.RecordModelView.Domain;
 using PolyBucket.Api.Features.Models.RecordModelView.Http;
 using Shouldly;
@@ -38,7 +37,7 @@ public class RecordModelViewControllerTests
 
         var result = await controller.RecordModelView(modelId, CancellationToken.None);
 
-        var body = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<ModelViewResponse>();
+        var body = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<RecordModelViewResponseDto>();
         body.Views.ShouldBe(7);
         body.Counted.ShouldBeTrue();
     }

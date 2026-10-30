@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.RequestEmailChange.Repository;
 using PolyBucket.Api.Features.Authentication.RequestEmailChange.Domain;
 using PolyBucket.Api.Features.Authentication.Services;
 using Shouldly;
@@ -15,7 +15,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Commands;
 
 public class RequestEmailChangeCommandHandlerTests
 {
-    private readonly Mock<IAuthenticationRepository> _repository = new();
+    private readonly Mock<IRequestEmailChangeRepository> _repository = new();
     private readonly Mock<ITokenService> _tokenService = new();
     private readonly Mock<IPasswordHasher> _hasher = new();
     private readonly Mock<IEmailSettingsResolver> _resolver = new();

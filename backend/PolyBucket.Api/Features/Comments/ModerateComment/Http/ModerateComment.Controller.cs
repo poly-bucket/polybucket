@@ -1,22 +1,24 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.ModerateComment.Domain;
 
 namespace PolyBucket.Api.Features.Comments.ModerateComment.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize(Roles = "Admin,Moderator")]
-public class ModerateCommentController(IEnhancedCommentsPlugin commentsPlugin) : ControllerBase
+public class ModerateCommentController(IModerateCommentService moderateCommentService) : ControllerBase
 {
     /// <summary>
     /// Hides a comment for moderation, recording who hid it and why.
     /// </summary>
     /// <param name="commentId">The comment id.</param>
     /// <param name="request">The moderation reason.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">The comment was moderated.</response>
     /// <response code="401">The caller is not signed in.</response>
     /// <response code="403">The caller is not an admin or moderator.</response>
@@ -26,7 +28,7 @@ public class ModerateCommentController(IEnhancedCommentsPlugin commentsPlugin) :
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ModerateComment(Guid commentId, [FromBody] ModerateCommentRequest request)
+    public async Task<IActionResult> ModerateComment(Guid commentId, [FromBody] ModerateCommentRequest request, CancellationToken cancellationToken)
     {
         var moderatorId = User.GetCommentUserId();
         if (moderatorId == null)
@@ -34,7 +36,7 @@ public class ModerateCommentController(IEnhancedCommentsPlugin commentsPlugin) :
             return Unauthorized();
         }
 
-        var moderated = await commentsPlugin.ModerateCommentAsync(commentId, moderatorId.Value, request.Reason.Trim());
+        var moderated = await moderateCommentService.ModerateAsync(commentId, moderatorId.Value, request.Reason.Trim(), cancellationToken);
         return moderated
             ? Ok(new { message = "Comment moderated successfully" })
             : NotFound();

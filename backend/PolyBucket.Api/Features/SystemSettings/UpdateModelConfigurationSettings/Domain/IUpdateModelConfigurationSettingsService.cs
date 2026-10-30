@@ -1,0 +1,6 @@
+namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain;
+
+public interface IUpdateModelConfigurationSettingsService
+{
+    Task<UpdateModelConfigurationSettingsResponse> UpdateModelConfigurationSettingsAsync(UpdateModelConfigurationSettingsCommand request, CancellationToken cancellationToken = default);
+}

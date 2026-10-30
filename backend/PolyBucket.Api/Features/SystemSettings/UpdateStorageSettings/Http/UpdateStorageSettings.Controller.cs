@@ -1,11 +1,12 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.SystemSettings.GetStorageSettings.Http;
+using PolyBucket.Api.Features.SystemSettings.UpdateStorageSettings.Domain;
 using PolyBucket.Storage;
 using PolyBucket.Storage.UpdateStorageSettings;
+using ApiUpdateStorageSettings = PolyBucket.Api.Features.SystemSettings.UpdateStorageSettings.Domain;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateStorageSettings.Http;
 
@@ -13,7 +14,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateStorageSettings.Http;
 [ApiController]
 [Route("api/system-settings/storage")]
 [RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
-public class UpdateStorageSettingsController(IUpdateStorageSettingsService service) : ControllerBase
+public class UpdateStorageSettingsController(ApiUpdateStorageSettings.IUpdateStorageSettingsService updateStorageSettingsService) : ControllerBase
 {
     /// <summary>
     /// Updates the object storage configuration stored in the database.
@@ -29,7 +30,7 @@ public class UpdateStorageSettingsController(IUpdateStorageSettingsService servi
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
     public async Task<ActionResult<StorageSettingsDto>> UpdateStorageSettings(
-        [FromBody] GetStorageSettings.Http.UpdateStorageSettingsRequest request,
+        [FromBody] UpdateStorageSettingsRequest request,
         CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -39,7 +40,7 @@ public class UpdateStorageSettingsController(IUpdateStorageSettingsService servi
 
         try
         {
-            var result = await service.UpdateAsync(
+            var result = await updateStorageSettingsService.UpdateStorageSettingsAsync(
                 new StorageSettingsUpdate
                 {
                     Provider = request.Provider,

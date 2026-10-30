@@ -1,18 +1,18 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.Authentication.Authorization;
-using PolyBucket.Api.Features.Comments.Domain;
+using PolyBucket.Api.Features.Comments.CreateComment.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.Plugins;
 
 namespace PolyBucket.Api.Features.Comments.CreateComment.Http;
 
 [ApiController]
 [Route("api/comments")]
 [Authorize]
-public class CreateCommentController(IEnhancedCommentsPlugin commentsPlugin, ICommentResponseMapper mapper) : ControllerBase
+public class CreateCommentController(ICreateCommentService createCommentService) : ControllerBase
 {
     /// <summary>
     /// Adds a comment, or a reply when a parent comment is given.
@@ -38,15 +38,9 @@ public class CreateCommentController(IEnhancedCommentsPlugin commentsPlugin, ICo
             return Unauthorized();
         }
 
-        try
-        {
-            var comment = await commentsPlugin.AddCommentAsync(request.Target, userId.Value, request.Content, request.ParentCommentId);
-            var mapped = await mapper.MapAsync(new[] { comment }, userId, User.IsCommentAdmin(), includeReplies: false, cancellationToken);
-            return Ok(mapped[0]);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await createCommentService.CreateAsync(userId.Value, request.Target, request.Content, request.ParentCommentId, User.IsCommentAdmin(), cancellationToken);
+        return result.ErrorMessage == null
+            ? Ok(result.Comment)
+            : BadRequest(new { message = result.ErrorMessage });
     }
 }

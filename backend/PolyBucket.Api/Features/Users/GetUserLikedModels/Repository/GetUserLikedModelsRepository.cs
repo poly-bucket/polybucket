@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.Models.ModelReactions.Domain;
+using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.Users.GetUserLikedModels.Domain;
 
 namespace PolyBucket.Api.Features.Users.GetUserLikedModels.Repository;

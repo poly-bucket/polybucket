@@ -7,13 +7,21 @@ using PolyBucket.Api.Features.Reports.Plugins;
 using PolyBucket.Api.Common.Plugins;
 using PolyBucket.Api.Common.Services;
 using PolyBucket.Api.Features.SystemSettings.Plugins;
-using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Api.Features.SystemSettings;
+using PolyBucket.Api.Features.ACL;
+using PolyBucket.Api.Features.ThemeManagement;
 using PolyBucket.Api.Features.ModelModeration;
 using PolyBucket.Email.DependencyInjection;
 using PolyBucket.Storage.DependencyInjection;
 using PolyBucket.Api.Features.Comments;
 using PolyBucket.Api.Features.Notifications;
-using PolyBucket.Api.Features.Plugins.Services;
+using PolyBucket.Api.Features.Plugins;
+using PolyBucket.Api.Features.Filaments;
+using PolyBucket.Api.Features.Email;
+using PolyBucket.Api.Features.Federation;
+using PolyBucket.Api.Features.Files;
+using PolyBucket.Api.Features.Printers;
+using PolyBucket.Api.Features.Search;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -26,6 +34,11 @@ public static class FeatureServiceCollectionExtensions
         services.AddModelsFeature();
         services.AddModelModerationFeature();
         services.AddEmailFeatureServices();
+        services.AddEmailApiFeature();
+        services.AddFilamentsFeature();
+        services.AddFilesFeature();
+        services.AddPrintersFeature();
+        services.AddSearchFeature();
         services.AddStorageFeatureServices();
         services.AddNotificationsFeature();
 
@@ -79,9 +92,35 @@ public static class FeatureServiceCollectionExtensions
         // Login-specific 2FA services
         services.AddTransient<Features.Authentication.Login.Domain.ILoginTwoFactorAuthService, Features.Authentication.Login.Domain.LoginTwoFactorAuthService>();
         services.AddTransient<Features.Authentication.Login.Repository.ILoginTwoFactorAuthRepository, Features.Authentication.Login.Repository.LoginTwoFactorAuthRepository>();
+        services.AddScoped<Features.Authentication.DeleteAccount.Domain.IDeleteAccountService, Features.Authentication.DeleteAccount.Domain.DeleteAccountService>();
+        services.AddTransient<Features.Authentication.DeleteAccount.Repository.IDeleteAccountRepository, Features.Authentication.DeleteAccount.Repository.DeleteAccountRepository>();
+        services.AddScoped<Features.Authentication.ExportAccount.Domain.IExportAccountService, Features.Authentication.ExportAccount.Domain.ExportAccountService>();
+        services.AddTransient<Features.Authentication.ExportAccount.Repository.IExportAccountRepository, Features.Authentication.ExportAccount.Repository.ExportAccountRepository>();
+        services.AddScoped<Features.Authentication.GetActiveSessions.Domain.IGetActiveSessionsService, Features.Authentication.GetActiveSessions.Domain.GetActiveSessionsService>();
+        services.AddTransient<Features.Authentication.GetActiveSessions.Repository.IGetActiveSessionsRepository, Features.Authentication.GetActiveSessions.Repository.GetActiveSessionsRepository>();
+        services.AddScoped<Features.Authentication.RevokeSession.Domain.IRevokeSessionService, Features.Authentication.RevokeSession.Domain.RevokeSessionService>();
+        services.AddTransient<Features.Authentication.RevokeSession.Repository.IRevokeSessionRepository, Features.Authentication.RevokeSession.Repository.RevokeSessionRepository>();
+        services.AddScoped<Features.Authentication.RevokeAllSessions.Domain.IRevokeAllSessionsService, Features.Authentication.RevokeAllSessions.Domain.RevokeAllSessionsService>();
+        services.AddTransient<Features.Authentication.RevokeAllSessions.Repository.IRevokeAllSessionsRepository, Features.Authentication.RevokeAllSessions.Repository.RevokeAllSessionsRepository>();
+        services.AddScoped<Features.Authentication.Me.Domain.IMeService, Features.Authentication.Me.Domain.MeService>();
+        services.AddTransient<Features.Authentication.Me.Repository.IMeRepository, Features.Authentication.Me.Repository.MeRepository>();
+        services.AddScoped<Features.Authentication.GetRegistrationStatus.Domain.IGetRegistrationStatusService, Features.Authentication.GetRegistrationStatus.Domain.GetRegistrationStatusService>();
+        services.AddTransient<Features.Authentication.GetRegistrationStatus.Repository.IGetRegistrationStatusRepository, Features.Authentication.GetRegistrationStatus.Repository.GetRegistrationStatusRepository>();
+        services.AddTransient<Features.Authentication.ForgotPassword.Repository.IForgotPasswordRepository, Features.Authentication.ForgotPassword.Repository.ForgotPasswordRepository>();
+        services.AddTransient<Features.Authentication.Logout.Repository.ILogoutRepository, Features.Authentication.Logout.Repository.LogoutRepository>();
+        services.AddTransient<Features.Authentication.RefreshToken.Repository.IRefreshTokenRepository, Features.Authentication.RefreshToken.Repository.RefreshTokenRepository>();
+        services.AddTransient<Features.Authentication.Register.Repository.IRegisterRepository, Features.Authentication.Register.Repository.RegisterRepository>();
+        services.AddTransient<Features.Authentication.ResetPassword.Repository.IResetPasswordRepository, Features.Authentication.ResetPassword.Repository.ResetPasswordRepository>();
+        services.AddTransient<Features.Authentication.VerifyEmail.Repository.IVerifyEmailRepository, Features.Authentication.VerifyEmail.Repository.VerifyEmailRepository>();
+        services.AddTransient<Features.Authentication.ResendVerificationEmail.Repository.IResendVerificationEmailRepository, Features.Authentication.ResendVerificationEmail.Repository.ResendVerificationEmailRepository>();
+        services.AddTransient<Features.Authentication.RequestEmailChange.Repository.IRequestEmailChangeRepository, Features.Authentication.RequestEmailChange.Repository.RequestEmailChangeRepository>();
+        services.AddTransient<Features.Authentication.ChangePassword.Repository.IChangePasswordRepository, Features.Authentication.ChangePassword.Repository.ChangePasswordRepository>();
+        services.AddScoped<Features.Authentication.SkipPasswordChange.Domain.ISkipPasswordChangeService, Features.Authentication.SkipPasswordChange.Domain.SkipPasswordChangeService>();
+        services.AddTransient<Features.Authentication.SkipPasswordChange.Repository.ISkipPasswordChangeRepository, Features.Authentication.SkipPasswordChange.Repository.SkipPasswordChangeRepository>();
+        services.AddTransient<Features.Authentication.OAuthAuthorize.Repository.IOAuthAuthorizeRepository, Features.Authentication.OAuthAuthorize.Repository.OAuthAuthorizeRepository>();
+        services.AddTransient<Features.Authentication.OAuthCallback.Repository.IOAuthCallbackRepository, Features.Authentication.OAuthCallback.Repository.OAuthCallbackRepository>();
         services.AddTransient<Features.Authentication.Register.Domain.RegisterCommandHandler>();
         services.AddTransient<Features.Authentication.Login.Domain.LoginCommandHandler>();
-        services.AddScoped<Features.Authentication.Account.Domain.DeleteOwnAccountService>();
         services.AddTransient<Features.Authentication.ChangePassword.Domain.ChangePasswordCommandHandler>();
         services.AddTransient<Features.Authentication.TwoFactorAuth.InitializeTwoFactorAuth.Domain.InitializeTwoFactorAuthCommandHandler>();
         services.AddTransient<Features.Authentication.TwoFactorAuth.EnableTwoFactorAuth.Domain.EnableTwoFactorAuthCommandHandler>();
@@ -98,23 +137,16 @@ public static class FeatureServiceCollectionExtensions
         services.AddScoped<Features.Authentication.Services.IUserRegistrationGate, Features.Authentication.Services.UserRegistrationGate>();
         
         // System Settings
-        services.AddTransient<Features.SystemSettings.Services.IAuthenticationSettingsService, Features.SystemSettings.Services.AuthenticationSettingsService>();
-        services.AddTransient<Features.SystemSettings.Services.ITokenSettingsService, Features.SystemSettings.Services.TokenSettingsService>();
-        services.AddMemoryCache();
-        services.AddScoped<Features.SystemSettings.Services.ISitePrivacyState, Features.SystemSettings.Services.SitePrivacyState>();
+        services.AddSystemSettingsFeature();
         
-        // FontAwesome Settings
-        services.AddTransient<Features.SystemSettings.Domain.IFontAwesomeSettingsService, Features.SystemSettings.Services.FontAwesomeSettingsService>();
-        services.AddTransient<Features.SystemSettings.Repository.IFontAwesomeSettingsRepository, Features.SystemSettings.Repository.FontAwesomeSettingsRepository>();
-        
-        // ACL Services
-        services.AddTransient<IPermissionService, Features.ACL.Services.PermissionService>();
-        services.AddTransient<Features.ACL.Services.IRoleManagementService, Features.ACL.Services.RoleManagementService>();
-        services.AddTransient<Features.ACL.Repository.IRoleRepository, Features.ACL.Repository.RoleRepository>();
+        services.AddAclFeature();
+        services.AddThemeManagementFeature();
         
         // Admin Model Statistics
         services.AddTransient<Features.Admin.GetAdminModelStatistics.Domain.IGetAdminModelStatisticsService, Features.Admin.GetAdminModelStatistics.Domain.GetAdminModelStatisticsService>();
         services.AddTransient<Features.Admin.GetAdminModelStatistics.Repository.IGetAdminModelStatisticsRepository, Features.Admin.GetAdminModelStatistics.Repository.GetAdminModelStatisticsRepository>();
+        services.AddScoped<Features.Admin.GetModerationAuditLogs.Domain.IGetModerationAuditLogsService, Features.Admin.GetModerationAuditLogs.Domain.GetModerationAuditLogsService>();
+        services.AddTransient<Features.Admin.GetModerationAuditLogs.Repository.IGetModerationAuditLogsRepository, Features.Admin.GetModerationAuditLogs.Repository.GetModerationAuditLogsRepository>();
         
         // Avatar Service
         services.AddTransient<Common.Services.IAvatarService, Common.Services.AvatarService>();
@@ -122,22 +154,7 @@ public static class FeatureServiceCollectionExtensions
         
         // Regenerate Avatar Service is registered in AddUsersFeature
 
-        // Authorization Filters
-        services.AddScoped<Features.Files.Http.PublicModelAuthorizationFilter>();
-
-        // Plugin System
-        services.AddSingleton<PluginManager>(provider =>
-        {
-            var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
-            return new PluginManager(pluginsPath);
-        });
-
-        // Marketplace Integration
-        services.AddScoped<IMarketplaceBaseUrlResolver, MarketplaceBaseUrlResolver>();
-        services.AddHttpClient<IPluginArchiveDownloader, GitHubPluginArchiveDownloader>();
-        services.AddHttpClient<MarketplaceClient>();
-        services.AddScoped<PluginManifestValidator>();
-        services.AddScoped<PluginInstallationService>();
+        // Authorization Filters registered in AddFilesFeature
 
         // Register default plugins
         services.AddCommentsFeature();
@@ -145,6 +162,18 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Reports.GetAllReports.Repository.IGetAllReportsRepository, Features.Reports.GetAllReports.Repository.GetAllReportsRepository>();
         services.AddScoped<Features.Reports.GetReport.Domain.IGetReportService, Features.Reports.GetReport.Domain.GetReportService>();
         services.AddTransient<Features.Reports.GetReport.Repository.IGetReportRepository, Features.Reports.GetReport.Repository.GetReportRepository>();
+        services.AddScoped<Features.Reports.GetReportsAnalytics.Domain.IGetReportsAnalyticsService, Features.Reports.GetReportsAnalytics.Domain.GetReportsAnalyticsService>();
+        services.AddTransient<Features.Reports.GetReportsAnalytics.Repository.IGetReportsAnalyticsRepository, Features.Reports.GetReportsAnalytics.Repository.GetReportsAnalyticsRepository>();
+        services.AddScoped<Features.Reports.GetTopReportedModels.Domain.IGetTopReportedModelsService, Features.Reports.GetTopReportedModels.Domain.GetTopReportedModelsService>();
+        services.AddTransient<Features.Reports.GetTopReportedModels.Repository.IGetTopReportedModelsRepository, Features.Reports.GetTopReportedModels.Repository.GetTopReportedModelsRepository>();
+        services.AddScoped<Features.Reports.GetTopReportedUsers.Domain.IGetTopReportedUsersService, Features.Reports.GetTopReportedUsers.Domain.GetTopReportedUsersService>();
+        services.AddTransient<Features.Reports.GetTopReportedUsers.Repository.IGetTopReportedUsersRepository, Features.Reports.GetTopReportedUsers.Repository.GetTopReportedUsersRepository>();
+        services.AddScoped<Features.Reports.GetTopReportedComments.Domain.IGetTopReportedCommentsService, Features.Reports.GetTopReportedComments.Domain.GetTopReportedCommentsService>();
+        services.AddTransient<Features.Reports.GetTopReportedComments.Repository.IGetTopReportedCommentsRepository, Features.Reports.GetTopReportedComments.Repository.GetTopReportedCommentsRepository>();
+        services.AddScoped<Features.Reports.GetReportTrends.Domain.IGetReportTrendsService, Features.Reports.GetReportTrends.Domain.GetReportTrendsService>();
+        services.AddTransient<Features.Reports.GetReportTrends.Repository.IGetReportTrendsRepository, Features.Reports.GetReportTrends.Repository.GetReportTrendsRepository>();
+        services.AddScoped<Features.Reports.GetModeratorReportActivity.Domain.IGetModeratorReportActivityService, Features.Reports.GetModeratorReportActivity.Domain.GetModeratorReportActivityService>();
+        services.AddTransient<Features.Reports.GetModeratorReportActivity.Repository.IGetModeratorReportActivityRepository, Features.Reports.GetModeratorReportActivity.Repository.GetModeratorReportActivityRepository>();
         services.AddScoped<Features.Reports.GetReportAnalytics.Domain.IGetReportAnalyticsService, Features.Reports.GetReportAnalytics.Domain.GetReportAnalyticsService>();
         services.AddTransient<Features.Reports.GetReportAnalytics.Repository.IGetReportAnalyticsRepository, Features.Reports.GetReportAnalytics.Repository.GetReportAnalyticsRepository>();
         services.AddScoped<Features.Reports.GetReportsForTarget.Domain.IGetReportsForTargetService, Features.Reports.GetReportsForTarget.Domain.GetReportsForTargetService>();
@@ -165,22 +194,15 @@ public static class FeatureServiceCollectionExtensions
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IPasswordGenerator, PasswordGenerator>();
 
-        // Email Settings
-        // System Setup
-        services.AddTransient<Features.SystemSettings.CheckFirstTimeSetup.Domain.CheckFirstTimeSetupQueryHandler>();
-        services.AddTransient<Features.SystemSettings.UpdateSiteSettings.Domain.UpdateSiteSettingsCommandHandler>();
-        services.AddTransient<Features.SystemSettings.CompleteFirstTimeSetup.Domain.CompleteFirstTimeSetupCommandHandler>();
-        services.AddTransient<Features.SystemSettings.GetSiteSettings.Domain.GetSiteSettingsQueryHandler>();
 
+        // Email Settings
         // Seeders
         services.AddTransient<PolyBucket.Api.Seeders.AdminSeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.CategorySeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.FileTypeSettingsSeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.ModelSettingsSeeder>();
         
-        // Theme Management
-        services.AddTransient<Features.ThemeManagement.Repository.IThemeRepository, Features.ThemeManagement.Repository.ThemeRepository>();
-        
+
         // Categories
         services.AddScoped<Features.Categories.CreateCategory.Domain.ICreateCategoryService, Features.Categories.CreateCategory.Domain.CreateCategoryService>();
         services.AddTransient<Features.Categories.CreateCategory.Repository.ICreateCategoryRepository, Features.Categories.CreateCategory.Repository.CreateCategoryRepository>();
@@ -188,18 +210,13 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Categories.DeleteCategory.Repository.IDeleteCategoryRepository, Features.Categories.DeleteCategory.Repository.DeleteCategoryRepository>();
         services.AddScoped<Features.Categories.UpdateCategory.Domain.IUpdateCategoryService, Features.Categories.UpdateCategory.Domain.UpdateCategoryService>();
         services.AddTransient<Features.Categories.UpdateCategory.Repository.IUpdateCategoryRepository, Features.Categories.UpdateCategory.Repository.UpdateCategoryRepository>();
+        services.AddScoped<Features.Categories.GetCategoryById.Domain.IGetCategoryByIdService, Features.Categories.GetCategoryById.Domain.GetCategoryByIdService>();
+        services.AddTransient<Features.Categories.GetCategoryById.Repository.IGetCategoryByIdRepository, Features.Categories.GetCategoryById.Repository.GetCategoryByIdRepository>();
         services.AddScoped<Features.Categories.GetCategories.Domain.IGetCategoriesService, Features.Categories.GetCategories.Domain.GetCategoriesService>();
         services.AddTransient<Features.Categories.GetCategories.Repository.IGetCategoriesRepository, Features.Categories.GetCategories.Repository.GetCategoriesRepository>();
 
-        // Search
-        services.AddTransient<Features.Search.Repository.ISearchRepository, Features.Search.Repository.SearchRepository>();
-        services.AddSingleton<Features.Search.Repository.ISearchCapabilities, Features.Search.Repository.SearchCapabilities>();
-        services.AddHostedService<Features.Search.Repository.SearchCapabilityStartupCheck>();
-
         // Federation
-        services.AddTransient<Features.Federation.Repository.IFederationRepository, Features.Federation.Repository.FederationRepository>();
-        services.AddTransient<Features.Federation.Services.IFederationImportService, Features.Federation.Services.FederationImportService>();
-        services.AddSingleton<Features.Federation.Services.IFederationTokenService, Features.Federation.Services.FederationTokenService>();
+        services.AddFederationFeature();
 
         return services;
     }

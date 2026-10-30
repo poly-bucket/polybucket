@@ -3,6 +3,7 @@ using Moq;
 using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Search.Domain;
 using PolyBucket.Api.Features.Search.Repository;
+using PolyBucket.Api.Features.Search.SearchModels.Repository;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.Collections.Domain;
@@ -30,7 +31,7 @@ namespace PolyBucket.Api.Tests.Features.Search
             var capabilities = new Mock<ISearchCapabilities>();
             capabilities.Setup(c => c.GetModeAsync(It.IsAny<PolyBucketDbContext>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(SearchTextMode.Basic);
-            _searchRepository = new SearchRepository(_context, capabilities.Object);
+            _searchRepository = new SearchRepository(_context, capabilities.Object, new SearchModelsRepository(_context, capabilities.Object));
 
             SeedTestData();
         }

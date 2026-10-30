@@ -2,35 +2,29 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using PolyBucket.Api.Features.Users.Follow.Domain;
-using PolyBucket.Api.Features.Users.Follow.Repository;
-using PolyBucket.Api.Features.Users.GetUserFollowers.Domain;
-using PolyBucket.Api.Features.Users.GetUserFollowing.Domain;
-using PolyBucket.Database.Persistence;
+using PolyBucket.Api.Features.Users.GetUserFollowing.Repository;
 
 namespace PolyBucket.Api.Features.Users.GetUserFollowing.Domain;
 
-public class GetUserFollowingService(
-    PolyBucketDbContext dbContext,
-    IUserFollowRepository followRepository) : IGetUserFollowingService
+public class GetUserFollowingService(IGetUserFollowingRepository repository) : IGetUserFollowingService
 {
-    public async Task<(GetUserFollowListOutcome Outcome, GetUserFollowListResult? Result)> GetFollowingAsync(
-        GetUserFollowListQuery query,
+    public async Task<(GetUserFollowingOutcome Outcome, GetUserFollowingResult? Result)> GetFollowingAsync(
+        GetUserFollowingQuery query,
         CancellationToken cancellationToken = default)
     {
-        var user = await ResolveUserAsync(query, cancellationToken);
+        var user = await repository.ResolveUserAsync(query, cancellationToken);
         if (user == null)
         {
-            return (GetUserFollowListOutcome.UserNotFound, null);
+            return (GetUserFollowingOutcome.UserNotFound, null);
         }
 
         if (!UserFollowAccess.CanViewFollowLists(user, query.RequestingUserId, query.IsRequestingUserAdmin))
         {
-            return (GetUserFollowListOutcome.ProfilePrivate, null);
+            return (GetUserFollowingOutcome.ProfilePrivate, null);
         }
 
-        var (items, totalCount) = await followRepository.GetFollowingPageAsync(
+        var (items, totalCount) = await repository.GetFollowingPageAsync(
             user.Id,
             query.Page,
             query.PageSize,
@@ -40,9 +34,9 @@ public class GetUserFollowingService(
             ? (int)Math.Ceiling((double)totalCount / query.PageSize)
             : 0;
 
-        var result = new GetUserFollowListResult
+        var result = new GetUserFollowingResult
         {
-            Users = items.Select(i => new UserFollowListItemDto
+            Users = items.Select(i => new UserFollowingListItemDto
             {
                 Id = i.Id,
                 Username = i.Username,
@@ -55,27 +49,6 @@ public class GetUserFollowingService(
             TotalPages = totalPages
         };
 
-        return (GetUserFollowListOutcome.Success, result);
-    }
-
-    private async Task<PolyBucket.Database.Entities.Models.User?> ResolveUserAsync(
-        GetUserFollowListQuery query,
-        CancellationToken cancellationToken)
-    {
-        if (query.UserId != Guid.Empty)
-        {
-            return await dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == query.UserId && u.DeletedAt == null, cancellationToken);
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.Username))
-        {
-            return await dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Username == query.Username && u.DeletedAt == null, cancellationToken);
-        }
-
-        return null;
+        return (GetUserFollowingOutcome.Success, result);
     }
 }

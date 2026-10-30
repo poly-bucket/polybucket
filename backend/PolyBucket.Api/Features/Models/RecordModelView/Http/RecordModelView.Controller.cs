@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Models.Http;
+using PolyBucket.Api.Features.Models.RecordModelView.Http;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Features.Models.RecordModelView.Domain;
 using System;
@@ -19,7 +19,7 @@ public class RecordModelViewController(
     /// Records a view of a model. Counts at most once per viewer per 24 hours; the model author is not counted.
     /// </summary>
     [HttpPost("{id:guid}/view")]
-    [ProducesResponseType(typeof(ModelViewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RecordModelViewResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RecordModelView(Guid id, CancellationToken cancellationToken)
@@ -33,7 +33,7 @@ public class RecordModelViewController(
         {
             RecordModelViewOutcomeKind.NotFound => NotFound(),
             RecordModelViewOutcomeKind.Forbid => Forbid(),
-            _ => Ok(ModelViewResponse.From(outcome))
+            _ => Ok(RecordModelViewResponseDto.From(outcome))
         };
     }
 }

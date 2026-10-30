@@ -1,14 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using PolyBucket.Api.Features.Notifications.Repository;
+using PolyBucket.Api.Features.Notifications.MarkNotificationRead.Repository;
 
 namespace PolyBucket.Api.Features.Notifications.MarkNotificationRead.Domain;
 
-public class MarkNotificationReadService(INotificationRepository repository, TimeProvider timeProvider) : IMarkNotificationReadService
+public class MarkNotificationReadService(IMarkNotificationReadRepository repository, TimeProvider timeProvider) : IMarkNotificationReadService
 {
-    public Task<bool> MarkReadAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken)
-    {
-        return repository.MarkReadAsync(userId, notificationId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
-    }
+    public Task<bool> MarkReadAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken) =>
+        repository.MarkReadAsync(userId, notificationId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
 }

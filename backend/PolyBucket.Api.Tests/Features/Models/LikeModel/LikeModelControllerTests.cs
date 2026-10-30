@@ -3,9 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Models.Http;
 using PolyBucket.Api.Features.Models.LikeModel.Http;
-using PolyBucket.Api.Features.Models.ModelReactions.Domain;
+using PolyBucket.Api.Features.Models.LikeModel.Domain;
+using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Tests.Features.Comments;
 using Shouldly;
 using Xunit;
@@ -14,14 +14,14 @@ namespace PolyBucket.Api.Tests.Features.Models.LikeModel;
 
 public class LikeModelControllerTests
 {
-    private readonly Mock<IModelReactionService> _service = new();
+    private readonly Mock<ILikeModelService> _service = new();
     private readonly Guid _userId = Guid.NewGuid();
 
     [Fact(DisplayName = "When liking a model, the controller returns Ok with reaction counts.")]
     public async Task LikeModel_ReturnsOkWithBody()
     {
         var modelId = Guid.NewGuid();
-        _service.Setup(s => s.ReactAsync(modelId, It.IsAny<System.Security.Claims.ClaimsPrincipal>(), ModelReactionType.Like, It.IsAny<CancellationToken>()))
+        _service.Setup(s => s.LikeAsync(modelId, It.IsAny<System.Security.Claims.ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ModelReactionOutcome(ModelReactionChange.Applied, 1, 0, ModelReactionType.Like));
         var controller = new LikeModelController(_service.Object).WithUser(_userId);
 
@@ -36,7 +36,7 @@ public class LikeModelControllerTests
     public async Task LikeModel_SelfReaction_ReturnsForbid()
     {
         var modelId = Guid.NewGuid();
-        _service.Setup(s => s.ReactAsync(modelId, It.IsAny<System.Security.Claims.ClaimsPrincipal>(), ModelReactionType.Like, It.IsAny<CancellationToken>()))
+        _service.Setup(s => s.LikeAsync(modelId, It.IsAny<System.Security.Claims.ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(ModelReactionOutcome.Forbidden);
         var controller = new LikeModelController(_service.Object).WithUser(_userId);
 

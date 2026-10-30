@@ -31,7 +31,7 @@ public class CreateUserController : ControllerBase
     /// Create a new user account with auto-generated password (Admin only)
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(201, Type = typeof(CreateUserCommandResponse))]
+    [ProducesResponseType(201, Type = typeof(CreateUserResponseDto))]
     [ProducesResponseType(400)]
     [ProducesResponseType(403)]
     [ProducesResponseType(409)]
@@ -57,7 +57,7 @@ public class CreateUserController : ControllerBase
                 nameof(GetUserByIdController.GetUserById),
                 "GetUserById",
                 new { id = response.UserId },
-                response);
+                CreateUserResponseMapper.ToDto(response));
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("already"))
         {

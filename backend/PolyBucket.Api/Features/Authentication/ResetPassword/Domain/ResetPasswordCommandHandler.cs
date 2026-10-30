@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.ResetPassword.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using System;
 using System.Threading;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace PolyBucket.Api.Features.Authentication.ResetPassword.Domain
 {
     public class ResetPasswordCommandHandler(
-        IAuthenticationRepository authRepository,
+        IResetPasswordRepository resetPasswordRepository,
         IPasswordHasher passwordHasher,
         IAccountEmailService accountEmailService,
         TimeProvider timeProvider,
@@ -16,7 +16,7 @@ namespace PolyBucket.Api.Features.Authentication.ResetPassword.Domain
     {
         public const string InvalidTokenMessage = "This password reset link is invalid or has expired. Request a new one.";
 
-        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly IResetPasswordRepository _resetPasswordRepository = resetPasswordRepository;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
         private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly TimeProvider _timeProvider = timeProvider;
@@ -30,7 +30,7 @@ namespace PolyBucket.Api.Features.Authentication.ResetPassword.Domain
             }
 
             var now = _timeProvider.GetUtcNow().UtcDateTime;
-            var resetToken = await _authRepository.GetPasswordResetTokenByHashAsync(TokenHasher.Hash(command.Token.Trim()), cancellationToken);
+            var resetToken = await _resetPasswordRepository.GetPasswordResetTokenByHashAsync(TokenHasher.Hash(command.Token.Trim()), cancellationToken);
             if (resetToken == null
                 || resetToken.IsUsed
                 || resetToken.ExpiresAt <= now
@@ -39,13 +39,13 @@ namespace PolyBucket.Api.Features.Authentication.ResetPassword.Domain
                 throw new InvalidOperationException(InvalidTokenMessage);
             }
 
-            var user = await _authRepository.GetUserForUpdateByEmailAsync(resetToken.Email, cancellationToken);
+            var user = await _resetPasswordRepository.GetUserForUpdateByEmailAsync(resetToken.Email, cancellationToken);
             if (user == null)
             {
                 throw new InvalidOperationException(InvalidTokenMessage);
             }
 
-            if (!await _authRepository.TryConsumePasswordResetTokenAsync(resetToken.Id, now, cancellationToken))
+            if (!await _resetPasswordRepository.TryConsumePasswordResetTokenAsync(resetToken.Id, now, cancellationToken))
             {
                 throw new InvalidOperationException(InvalidTokenMessage);
             }
@@ -56,10 +56,10 @@ namespace PolyBucket.Api.Features.Authentication.ResetPassword.Domain
             user.RequiresPasswordChange = false;
             user.EmailVerifiedAt ??= now;
             user.UpdatedAt = now;
-            await _authRepository.SaveChangesAsync(cancellationToken);
+            await _resetPasswordRepository.SaveChangesAsync(cancellationToken);
 
-            await _authRepository.InvalidateOutstandingPasswordResetTokensAsync(user.Email, now, cancellationToken);
-            await _authRepository.RevokeAllRefreshTokensForUserAsync(user.Id, "Password reset", command.Client.IpAddress);
+            await _resetPasswordRepository.InvalidateOutstandingPasswordResetTokensAsync(user.Email, now, cancellationToken);
+            await _resetPasswordRepository.RevokeAllRefreshTokensForUserAsync(user.Id, "Password reset", command.Client.IpAddress);
             await _accountEmailService.SendPasswordChangedAsync(user, command.Client, cancellationToken: cancellationToken);
 
             _logger.LogInformation("Password reset for user {UserId}; all sessions revoked", user.Id);

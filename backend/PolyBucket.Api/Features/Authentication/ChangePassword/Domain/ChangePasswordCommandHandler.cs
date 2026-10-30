@@ -1,199 +1,103 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
-using PolyBucket.Database.Persistence;
-using PolyBucket.Database.Entities.Models;
+using Microsoft.Extensions.Logging;
+using PolyBucket.Api.Features.Authentication.ChangePassword.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using System.Security.Claims;
 
-namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
+namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain;
+
+public class ChangePasswordCommandHandler(
+    IChangePasswordRepository changePasswordRepository,
+    IPasswordHasher passwordHasher,
+    IAccountEmailService accountEmailService,
+    ILogger<ChangePasswordCommandHandler> logger,
+    IHttpContextAccessor httpContextAccessor) : IRequestHandler<ChangePasswordCommand, ChangePasswordResponse>
 {
-    public class ChangePasswordCommandHandler(
-        PolyBucketDbContext context,
-        IPasswordHasher passwordHasher,
-        IAccountEmailService accountEmailService,
-        ILogger<ChangePasswordCommandHandler> logger,
-        IHttpContextAccessor httpContextAccessor) : IRequestHandler<ChangePasswordCommand, ChangePasswordResponse>
+    private readonly IChangePasswordRepository _changePasswordRepository = changePasswordRepository;
+    private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly IAccountEmailService _accountEmailService = accountEmailService;
+    private readonly ILogger<ChangePasswordCommandHandler> _logger = logger;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+
+    public async Task<ChangePasswordResponse> Handle(ChangePasswordCommand command, CancellationToken cancellationToken)
     {
-        private readonly PolyBucketDbContext _context = context;
-        private readonly IPasswordHasher _passwordHasher = passwordHasher;
-        private readonly IAccountEmailService _accountEmailService = accountEmailService;
-        private readonly ILogger<ChangePasswordCommandHandler> _logger = logger;
-        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-
-        public async Task<ChangePasswordResponse> Handle(ChangePasswordCommand command, CancellationToken cancellationToken)
+        try
         {
-            try
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
             {
-                // Get current user ID from claims
-                var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-                {
-                    return new ChangePasswordResponse
-                    {
-                        Success = false,
-                        Message = "User not authenticated",
-                        RequiresFirstTimeSetup = false
-                    };
-                }
-
-                // Get user
-                var user = await _context.Users
-                    .Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-
-                if (user == null)
-                {
-                    return new ChangePasswordResponse
-                    {
-                        Success = false,
-                        Message = "User not found",
-                        RequiresFirstTimeSetup = false
-                    };
-                }
-
-                // Verify current password
-                if (!_passwordHasher.VerifyPassword(command.CurrentPassword, user.PasswordHash))
-                {
-                    return new ChangePasswordResponse
-                    {
-                        Success = false,
-                        Message = "Current password is incorrect",
-                        RequiresFirstTimeSetup = false
-                    };
-                }
-
-                // Hash new password
-                var salt = _passwordHasher.GenerateSalt();
-                var passwordHash = _passwordHasher.HashPassword(command.NewPassword, salt);
-
-                // Update user password
-                user.PasswordHash = passwordHash;
-                user.Salt = salt;
-                user.UpdatedAt = DateTime.UtcNow;
-                user.RequiresPasswordChange = false;
-
-                // Revoke all refresh tokens for security after password change
-                var refreshTokens = await _context.RefreshTokens
-                    .Where(rt => rt.UserId == userId && rt.RevokedAt == null)
-                    .ToListAsync(cancellationToken);
-                
-                foreach (var token in refreshTokens)
-                {
-                    token.RevokedAt = DateTime.UtcNow;
-                    token.ReasonRevoked = "Password changed";
-                    token.RevokedByIp = command.Client.IpAddress;
-                }
-
-                // If this is the admin user and they haven't completed first-time setup, mark admin as configured
-                if (user.Role?.Name == "Admin" && !user.HasCompletedFirstTimeSetup)
-                {
-                    var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync(cancellationToken);
-                    if (systemSetup != null)
-                    {
-                        systemSetup.IsAdminConfigured = true;
-                        systemSetup.UpdatedAt = DateTime.UtcNow;
-                        systemSetup.UpdatedById = userId;
-                    }
-                }
-
-                await _context.SaveChangesAsync(cancellationToken);
-                await _accountEmailService.SendPasswordChangedAsync(user, command.Client, cancellationToken: cancellationToken);
-
-                _logger.LogInformation("Password changed successfully for user {UserId}", userId);
-
-                return new ChangePasswordResponse
-                {
-                    Success = true,
-                    Message = "Password changed successfully",
-                    RequiresFirstTimeSetup = user.Role?.Name == "Admin" && !user.HasCompletedFirstTimeSetup
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to change password for user");
                 return new ChangePasswordResponse
                 {
                     Success = false,
-                    Message = "Failed to change password. Please try again.",
+                    Message = "User not authenticated",
                     RequiresFirstTimeSetup = false
                 };
             }
+
+            var user = await _changePasswordRepository.GetUserForPasswordChangeAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return new ChangePasswordResponse
+                {
+                    Success = false,
+                    Message = "User not found",
+                    RequiresFirstTimeSetup = false
+                };
+            }
+
+            if (!_passwordHasher.VerifyPassword(command.CurrentPassword, user.PasswordHash))
+            {
+                return new ChangePasswordResponse
+                {
+                    Success = false,
+                    Message = "Current password is incorrect",
+                    RequiresFirstTimeSetup = false
+                };
+            }
+
+            var salt = _passwordHasher.GenerateSalt();
+            var passwordHash = _passwordHasher.HashPassword(command.NewPassword, salt);
+
+            user.PasswordHash = passwordHash;
+            user.Salt = salt;
+            user.UpdatedAt = DateTime.UtcNow;
+            user.RequiresPasswordChange = false;
+
+            var refreshTokens = await _changePasswordRepository.GetActiveRefreshTokensAsync(userId, cancellationToken);
+            foreach (var token in refreshTokens)
+            {
+                token.RevokedAt = DateTime.UtcNow;
+                token.ReasonRevoked = "Password changed";
+                token.RevokedByIp = command.Client.IpAddress;
+            }
+
+            if (user.Role?.Name == "Admin" && !user.HasCompletedFirstTimeSetup)
+            {
+                await _changePasswordRepository.MarkAdminConfiguredAsync(userId, cancellationToken);
+            }
+
+            await _changePasswordRepository.SaveChangesAsync(cancellationToken);
+            await _accountEmailService.SendPasswordChangedAsync(user, command.Client, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Password changed successfully for user {UserId}", userId);
+
+            return new ChangePasswordResponse
+            {
+                Success = true,
+                Message = "Password changed successfully",
+                RequiresFirstTimeSetup = user.Role?.Name == "Admin" && !user.HasCompletedFirstTimeSetup
+            };
         }
-
-        public async Task<ChangePasswordResponse> SkipPasswordChange(CancellationToken cancellationToken)
+        catch (Exception ex)
         {
-            try
+            _logger.LogError(ex, "Failed to change password for user");
+            return new ChangePasswordResponse
             {
-                // Get current user ID from claims
-                var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-                {
-                    return new ChangePasswordResponse
-                    {
-                        Success = false,
-                        Message = "User not authenticated",
-                        RequiresFirstTimeSetup = false
-                    };
-                }
-
-                // Get user
-                var user = await _context.Users
-                    .Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-
-                if (user == null)
-                {
-                    return new ChangePasswordResponse
-                    {
-                        Success = false,
-                        Message = "User not found",
-                        RequiresFirstTimeSetup = false
-                    };
-                }
-
-                // Only allow skipping for admin users during first-time setup
-                if (user.Role?.Name != "Admin" || user.HasCompletedFirstTimeSetup)
-                {
-                    return new ChangePasswordResponse
-                    {
-                        Success = false,
-                        Message = "Password change can only be skipped by admin users during first-time setup",
-                        RequiresFirstTimeSetup = false
-                    };
-                }
-
-                // Mark admin as configured without changing password
-                var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync(cancellationToken);
-                if (systemSetup != null)
-                {
-                    systemSetup.IsAdminConfigured = true;
-                    systemSetup.UpdatedAt = DateTime.UtcNow;
-                    systemSetup.UpdatedById = userId;
-                }
-
-                await _context.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation("Password change skipped for admin user {UserId}", userId);
-
-                return new ChangePasswordResponse
-                {
-                    Success = true,
-                    Message = "Password change skipped successfully",
-                    RequiresFirstTimeSetup = true
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to skip password change for user");
-                return new ChangePasswordResponse
-                {
-                    Success = false,
-                    Message = "Failed to skip password change. Please try again.",
-                    RequiresFirstTimeSetup = false
-                };
-            }
+                Success = false,
+                Message = "Failed to change password. Please try again.",
+                RequiresFirstTimeSetup = false
+            };
         }
     }
-} 
+}

@@ -1,13 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Filaments.Domain;
-using PolyBucket.Api.Features.Filaments.Http;
+using PolyBucket.Api.Features.Filaments.UpdateFilament.Domain;
+using PolyBucket.Api.Features.Filaments.UpdateFilament.Http;
 using PolyBucket.Database.Entities.Printers.Enums;
-using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
 
@@ -15,8 +13,6 @@ namespace PolyBucket.Api.Tests.Features.Filaments.UpdateFilament;
 
 public class UpdateFilamentControllerTests
 {
-    private readonly Mock<IMediator> _mediator = new();
-
     [Fact(DisplayName = "When the filament is updated, Update returns Ok.")]
     public async Task Update_Found_ReturnsOk()
     {
@@ -30,8 +26,9 @@ public class UpdateFilamentControllerTests
             Diameter = "1.75"
         };
         var filament = new Filament { Id = id, Manufacturer = "New", Type = MaterialType.Pla, Color = "B", Diameter = "1.75" };
-        _mediator.SetupSend<UpdateFilamentCommand, Filament>(filament);
-        var controller = new UpdateFilamentController(_mediator.Object);
+        var service = new Mock<IUpdateFilamentService>();
+        service.Setup(s => s.UpdateAsync(It.IsAny<UpdateFilamentCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(filament);
+        var controller = new UpdateFilamentController(service.Object);
 
         // Act
         var result = await controller.Update(id, command);
@@ -45,9 +42,10 @@ public class UpdateFilamentControllerTests
     public async Task Update_Missing_ReturnsNotFound()
     {
         // Arrange
-        _mediator.Setup(m => m.Send(It.IsAny<UpdateFilamentCommand>(), It.IsAny<CancellationToken>()))
+        var service = new Mock<IUpdateFilamentService>();
+        service.Setup(s => s.UpdateAsync(It.IsAny<UpdateFilamentCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Filament?)null);
-        var controller = new UpdateFilamentController(_mediator.Object);
+        var controller = new UpdateFilamentController(service.Object);
 
         // Act
         var result = await controller.Update(Guid.NewGuid(), new UpdateFilamentCommand

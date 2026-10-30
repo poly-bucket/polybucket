@@ -6,7 +6,7 @@ using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Domain;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Http;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.RefreshToken.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using Shouldly;
 using System;
@@ -20,7 +20,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 {
     public class RefreshTokenCommandControllerTests
     {
-        private readonly Mock<IAuthenticationRepository> _authRepositoryMock;
+        private readonly Mock<IRefreshTokenRepository> _authRepositoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<ILogger<RefreshTokenCommandHandler>> _loggerMock;
         private readonly RefreshTokenController _controller;
@@ -28,7 +28,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 
         public RefreshTokenCommandControllerTests()
         {
-            _authRepositoryMock = new Mock<IAuthenticationRepository>();
+            _authRepositoryMock = new Mock<IRefreshTokenRepository>();
             _tokenServiceMock = new Mock<ITokenService>();
             _loggerMock = new Mock<ILogger<RefreshTokenCommandHandler>>();
 

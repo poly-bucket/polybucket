@@ -16,11 +16,16 @@ namespace PolyBucket.Api.Features.Search.Repository
     {
         private readonly PolyBucketDbContext _context;
         private readonly ISearchCapabilities _capabilities;
+        private readonly SearchModels.Repository.ISearchModelsRepository _searchModelsRepository;
 
-        public SearchRepository(PolyBucketDbContext context, ISearchCapabilities capabilities)
+        public SearchRepository(
+            PolyBucketDbContext context,
+            ISearchCapabilities capabilities,
+            SearchModels.Repository.ISearchModelsRepository searchModelsRepository)
         {
             _context = context;
             _capabilities = capabilities;
+            _searchModelsRepository = searchModelsRepository;
         }
 
         public async Task<SearchResponse> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
@@ -44,9 +49,9 @@ namespace PolyBucket.Api.Features.Search.Repository
 
             if (query.Type is SearchType.All or SearchType.Models)
             {
-                var (items, count) = await SearchModelsAsync(query, term, mode, cancellationToken);
-                results.AddRange(items);
-                response.Counts.Models = count;
+                var modelsResponse = await _searchModelsRepository.SearchModelsAsync(query, cancellationToken);
+                results.AddRange(modelsResponse.Results);
+                response.Counts.Models = modelsResponse.Counts.Models;
             }
 
             if (query.Type is SearchType.All or SearchType.Users)
@@ -71,50 +76,6 @@ namespace PolyBucket.Api.Features.Search.Repository
         }
 
         private int Skip(SearchQuery query) => (query.Page - 1) * query.PageSize;
-
-        private async Task<(List<SearchResultItem>, int)> SearchModelsAsync(SearchQuery query, string term, SearchTextMode mode, CancellationToken cancellationToken)
-        {
-            var visible = _context.Models
-                .AsNoTracking()
-                .Where(m => m.DeletedAt == null && m.Privacy == PrivacySettings.Public)
-                .WherePubliclyVisible(_context.ModelModerationRecords);
-
-            if (!string.IsNullOrWhiteSpace(query.Category))
-            {
-                var category = query.Category.Trim().ToLower();
-                visible = visible.Where(m => m.Categories.Any(c => c.Name.ToLower() == category));
-            }
-
-            var scored = SearchQueryBuilder.ScoreModels(visible, term, mode);
-            var count = await scored.CountAsync(cancellationToken);
-            if (count == 0)
-            {
-                return (new List<SearchResultItem>(), 0);
-            }
-
-            var items = await SearchQueryBuilder.OrderModels(scored, query.SortBy, query.SortDescending)
-                .Skip(Skip(query))
-                .Take(query.PageSize)
-                .Select(s => new SearchResultItem
-                {
-                    Id = s.Entity.Id,
-                    Title = s.Entity.Name,
-                    Description = s.Entity.Description,
-                    ThumbnailUrl = s.Entity.ThumbnailUrl,
-                    Type = SearchResultType.Model,
-                    Author = s.Entity.Author.Username,
-                    AuthorId = s.Entity.AuthorId,
-                    CreatedAt = s.Entity.CreatedAt,
-                    UpdatedAt = s.Entity.UpdatedAt ?? s.Entity.CreatedAt,
-                    Downloads = s.Entity.Downloads,
-                    Likes = s.Entity.Likes,
-                    Dislikes = s.Entity.Dislikes,
-                    RelevanceScore = s.Score
-                })
-                .ToListAsync(cancellationToken);
-
-            return (items, count);
-        }
 
         private async Task<(List<SearchResultItem>, int)> SearchUsersAsync(SearchQuery query, string term, SearchTextMode mode, CancellationToken cancellationToken)
         {

@@ -4,8 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.OAuth.Domain;
-using PolyBucket.Api.Features.Authentication.OAuth.Http;
+using PolyBucket.Api.Features.Authentication.OAuthCallback.Domain;
+using PolyBucket.Api.Features.Authentication.OAuthAuthorize.Http;
+using PolyBucket.Api.Features.Authentication.OAuthCallback.Http;
 using PolyBucket.Api.Features.Authentication.Services;
 using Shouldly;
 using System;
@@ -15,23 +16,20 @@ using Xunit;
 
 namespace PolyBucket.Api.Tests.Features.Authentication.Http
 {
-    public class OAuthControllerTests
+    public class OAuthAuthorizeControllerTests
     {
         private readonly Mock<IOAuthService> _oauthServiceMock;
-        private readonly Mock<IConfiguration> _configurationMock;
-        private readonly Mock<ILogger<OAuthController>> _loggerMock;
-        private readonly OAuthController _controller;
+        private readonly Mock<ILogger<OAuthAuthorizeController>> _authorizeLoggerMock;
+        private readonly OAuthAuthorizeController _controller;
 
-        public OAuthControllerTests()
+        public OAuthAuthorizeControllerTests()
         {
             _oauthServiceMock = new Mock<IOAuthService>();
-            _configurationMock = new Mock<IConfiguration>();
-            _loggerMock = new Mock<ILogger<OAuthController>>();
+            _authorizeLoggerMock = new Mock<ILogger<OAuthAuthorizeController>>();
 
-            _controller = new OAuthController(
+            _controller = new OAuthAuthorizeController(
                 _oauthServiceMock.Object,
-                _configurationMock.Object,
-                _loggerMock.Object)
+                _authorizeLoggerMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -128,6 +126,56 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
 
             // Verify service was called
             _oauthServiceMock.Verify(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state), Times.Once);
+        }
+
+        [Theory(DisplayName = "When requesting an authorization URL for a supported OAuth provider, the OAuth controller returns Ok")]
+        [InlineData("google")]
+        [InlineData("github")]
+        [InlineData("microsoft")]
+        public async Task GetAuthorizationUrl_SupportedProviders_ShouldReturnOk(string provider)
+        {
+            // Arrange
+            var redirectUri = "http://localhost:3000/auth/callback";
+            var state = "test-state";
+            var expectedAuthUrl = $"https://{provider}.com/oauth/authorize";
+
+            _oauthServiceMock.Setup(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state))
+                .ReturnsAsync(expectedAuthUrl);
+
+            // Act
+            var result = await _controller.GetAuthorizationUrl(provider, redirectUri, state);
+
+            // Assert
+            result.ShouldBeOfType<OkObjectResult>();
+
+            // Verify service was called
+            _oauthServiceMock.Verify(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state), Times.Once);
+        }
+    }
+
+    public class OAuthCallbackControllerTests
+    {
+        private readonly Mock<IOAuthService> _oauthServiceMock;
+        private readonly Mock<IConfiguration> _configurationMock;
+        private readonly Mock<ILogger<OAuthCallbackController>> _loggerMock;
+        private readonly OAuthCallbackController _controller;
+
+        public OAuthCallbackControllerTests()
+        {
+            _oauthServiceMock = new Mock<IOAuthService>();
+            _configurationMock = new Mock<IConfiguration>();
+            _loggerMock = new Mock<ILogger<OAuthCallbackController>>();
+
+            _controller = new OAuthCallbackController(
+                _oauthServiceMock.Object,
+                _configurationMock.Object,
+                _loggerMock.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
         }
 
         [Fact(DisplayName = "When handling an OAuth callback with a valid authorization code, the OAuth controller returns Ok with authentication data.")]
@@ -356,30 +404,6 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
                 It.IsAny<string>()), Times.Once);
         }
 
-        [Theory(DisplayName = "When requesting an authorization URL for a supported OAuth provider, the OAuth controller returns Ok")]
-        [InlineData("google")]
-        [InlineData("github")]
-        [InlineData("microsoft")]
-        public async Task GetAuthorizationUrl_SupportedProviders_ShouldReturnOk(string provider)
-        {
-            // Arrange
-            var redirectUri = "http://localhost:3000/auth/callback";
-            var state = "test-state";
-            var expectedAuthUrl = $"https://{provider}.com/oauth/authorize";
-
-            _oauthServiceMock.Setup(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state))
-                .ReturnsAsync(expectedAuthUrl);
-
-            // Act
-            var result = await _controller.GetAuthorizationUrl(provider, redirectUri, state);
-
-            // Assert
-            result.ShouldBeOfType<OkObjectResult>();
-
-            // Verify service was called
-            _oauthServiceMock.Verify(x => x.GetAuthorizationUrlAsync(provider, redirectUri, state), Times.Once);
-        }
-
         [Fact(DisplayName = "When handling an OAuth callback that has an error without a description, the OAuth controller returns BadRequest with a generic message.")]
         public async Task OAuthCallback_EmptyErrorDescription_ShouldUseGenericMessage()
         {
@@ -390,7 +414,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
                 Provider = provider,
                 Code = "",
                 Error = "server_error",
-                ErrorDescription = null, // No description provided
+                ErrorDescription = null,
                 UserAgent = "Test User Agent"
             };
 
@@ -404,4 +428,4 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
             errorResponse!.GetValue(badRequestResult.Value).ShouldBe("OAuth authentication failed");
         }
     }
-} 
+}

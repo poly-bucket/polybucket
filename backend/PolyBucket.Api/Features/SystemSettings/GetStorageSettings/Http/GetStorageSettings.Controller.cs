@@ -1,9 +1,8 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
+using ApiGetStorageSettings = PolyBucket.Api.Features.SystemSettings.GetStorageSettings.Domain;
 using PolyBucket.Storage;
 using PolyBucket.Storage.GetStorageSettings;
 
@@ -13,7 +12,7 @@ namespace PolyBucket.Api.Features.SystemSettings.GetStorageSettings.Http;
 [ApiController]
 [Route("api/system-settings/storage")]
 [RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
-public class GetStorageSettingsController(IGetStorageSettingsService service) : ControllerBase
+public class GetStorageSettingsController(ApiGetStorageSettings.IGetStorageSettingsService getStorageSettingsService) : ControllerBase
 {
     /// <summary>
     /// Gets the effective object storage configuration stored in the database.
@@ -26,6 +25,6 @@ public class GetStorageSettingsController(IGetStorageSettingsService service) : 
     [ProducesResponseType(403)]
     public async Task<ActionResult<StorageSettingsDto>> GetStorageSettings(CancellationToken cancellationToken = default)
     {
-        return Ok(await service.GetAsync(cancellationToken));
+        return Ok(await getStorageSettingsService.GetStorageSettingsAsync(cancellationToken));
     }
 }

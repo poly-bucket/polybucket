@@ -1,9 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using PolyBucket.Database.Entities.Models;
-using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.Register.Repository;
+using PolyBucket.Database.Entities.Authentication;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Database.Entities.Users;
 using System;
@@ -13,34 +11,32 @@ using System.Threading.Tasks;
 namespace PolyBucket.Api.Features.Authentication.Register.Domain
 {
     public class RegisterCommandHandler(
-        IAuthenticationRepository authRepository,
+        IRegisterRepository registerRepository,
         ITokenService tokenService,
         IEmailSettingsResolver emailSettingsResolver,
         IAccountEmailService accountEmailService,
         IUserRegistrationGate registrationGate,
-        ILogger<RegisterCommandHandler> logger,
-        PolyBucketDbContext context)
+        ILogger<RegisterCommandHandler> logger)
     {
         public static readonly TimeSpan EmailVerificationLifetime = TimeSpan.FromHours(24);
 
-        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly IRegisterRepository _registerRepository = registerRepository;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
         private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly IUserRegistrationGate _registrationGate = registrationGate;
         private readonly ILogger<RegisterCommandHandler> _logger = logger;
-        private readonly PolyBucketDbContext _context = context;
 
         public async Task<RegisterCommandResponse> Handle(RegisterCommand command, CancellationToken cancellationToken)
         {
             await _registrationGate.EnsureRegistrationAllowedAsync(cancellationToken);
 
-            if (await _authRepository.IsEmailTakenAsync(command.Email))
+            if (await _registerRepository.IsEmailTakenAsync(command.Email))
             {
                 throw new InvalidOperationException("Email is already registered");
             }
 
-            if (await _authRepository.IsUsernameTakenAsync(command.Username))
+            if (await _registerRepository.IsUsernameTakenAsync(command.Username))
             {
                 throw new InvalidOperationException("Username is already taken");
             }
@@ -48,8 +44,8 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
             var salt = BCrypt.Net.BCrypt.GenerateSalt();
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(command.Password, salt);
 
-            var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User", cancellationToken);
-            if (userRole == null)
+            var userRoleId = await _registerRepository.GetDefaultUserRoleIdAsync(cancellationToken);
+            if (userRoleId == null)
             {
                 throw new InvalidOperationException("Default User role not found. Please ensure roles are properly configured.");
             }
@@ -64,7 +60,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                 Country = command.Country,
                 PasswordHash = passwordHash,
                 Salt = salt,
-                RoleId = userRole.Id,
+                RoleId = userRoleId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 Settings = new UserSettings
@@ -81,7 +77,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
 
             user.Settings.UserId = user.Id;
 
-            await _authRepository.CreateUserAsync(user);
+            await _registerRepository.CreateUserAsync(user);
 
             _logger.LogInformation("User registered successfully: {Email}", user.Email);
 
@@ -106,7 +102,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                         CreatedByIp = command.Client.IpAddress
                     };
 
-                    await _authRepository.CreateEmailVerificationTokenAsync(verificationToken);
+                    await _registerRepository.CreateEmailVerificationTokenAsync(verificationToken);
                     await _accountEmailService.SendVerificationAsync(user, emailVerificationToken, EmailVerificationLifetime, cancellationToken: cancellationToken);
 
                     _logger.LogInformation("Email verification queued for user: {Email}", user.Email);
@@ -128,7 +124,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
 
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
 
-            await _authRepository.CreateRefreshTokenAsync(new PolyBucket.Database.Entities.Authentication.RefreshToken
+            await _registerRepository.CreateRefreshTokenAsync(new PolyBucket.Database.Entities.Authentication.RefreshToken
             {
                 Id = Guid.NewGuid(),
                 Token = authResponse.RefreshToken,
@@ -148,11 +144,11 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                 UserAgent = command.Client.UserAgent,
                 CreatedAt = DateTime.UtcNow
             };
-            await _authRepository.CreateLoginRecordAsync(loginRecord);
+            await _registerRepository.CreateLoginRecordAsync(loginRecord);
 
             return new RegisterCommandResponse
             {
-                Authentication = authResponse,
+                Authentication = RegisterAuthenticationMapper.From(authResponse),
                 RequiresEmailVerification = false
             };
         }

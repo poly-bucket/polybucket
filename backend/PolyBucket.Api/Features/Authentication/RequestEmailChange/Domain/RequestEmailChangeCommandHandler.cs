@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.RequestEmailChange.Repository;
+using PolyBucket.Database.Entities.Authentication;
 using PolyBucket.Api.Features.Authentication.Services;
 using System;
 using System.Threading;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PolyBucket.Api.Features.Authentication.RequestEmailChange.Domain
 {
     public class RequestEmailChangeCommandHandler(
-        IAuthenticationRepository authRepository,
+        IRequestEmailChangeRepository requestEmailChangeRepository,
         ITokenService tokenService,
         IPasswordHasher passwordHasher,
         IEmailSettingsResolver emailSettingsResolver,
@@ -23,7 +23,7 @@ namespace PolyBucket.Api.Features.Authentication.RequestEmailChange.Domain
         public const string SameEmailMessage = "The new email address matches your current one.";
         public const string EmailInUseMessage = "This email address is already in use by another account.";
 
-        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly IRequestEmailChangeRepository _requestEmailChangeRepository = requestEmailChangeRepository;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
         private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
@@ -39,7 +39,7 @@ namespace PolyBucket.Api.Features.Authentication.RequestEmailChange.Domain
                 throw new InvalidOperationException(EmailUnavailableMessage);
             }
 
-            var user = await _authRepository.GetUserForUpdateByIdAsync(command.UserId, cancellationToken)
+            var user = await _requestEmailChangeRepository.GetUserForUpdateByIdAsync(command.UserId, cancellationToken)
                 ?? throw new UnauthorizedAccessException("User not found");
 
             if (!_passwordHasher.VerifyPassword(command.CurrentPassword, user.PasswordHash))
@@ -53,7 +53,7 @@ namespace PolyBucket.Api.Features.Authentication.RequestEmailChange.Domain
                 throw new InvalidOperationException(SameEmailMessage);
             }
 
-            if (await _authRepository.IsEmailTakenAsync(newEmail))
+            if (await _requestEmailChangeRepository.IsEmailTakenAsync(newEmail))
             {
                 throw new InvalidOperationException(EmailInUseMessage);
             }
@@ -61,12 +61,12 @@ namespace PolyBucket.Api.Features.Authentication.RequestEmailChange.Domain
             var now = _timeProvider.GetUtcNow().UtcDateTime;
             user.PendingEmail = newEmail;
             user.UpdatedAt = now;
-            await _authRepository.SaveChangesAsync(cancellationToken);
+            await _requestEmailChangeRepository.SaveChangesAsync(cancellationToken);
 
-            await _authRepository.InvalidateOutstandingEmailVerificationTokensAsync(newEmail, EmailVerificationPurpose.ChangeAddress, now, cancellationToken);
+            await _requestEmailChangeRepository.InvalidateOutstandingEmailVerificationTokensAsync(newEmail, EmailVerificationPurpose.ChangeAddress, now, cancellationToken);
 
             var rawToken = _tokenService.GenerateEmailVerificationToken();
-            await _authRepository.CreateEmailVerificationTokenAsync(new EmailVerificationToken
+            await _requestEmailChangeRepository.CreateEmailVerificationTokenAsync(new EmailVerificationToken
             {
                 Id = Guid.NewGuid(),
                 Token = TokenHasher.Hash(rawToken),

@@ -1,6 +1,6 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Reports.GetReportAnalytics.Http;
+using PolyBucket.Api.Features.Reports.GetReportsAnalytics.Http;
 using Shouldly;
 using Xunit;
 
@@ -12,7 +12,7 @@ public class GetReportAnalyticsControllerTests
     public void Controller_ShouldHaveApiControllerAndRoute()
     {
         // Arrange
-        var controllerType = typeof(GetReportAnalyticsController);
+        var controllerType = typeof(GetReportsAnalyticsController);
         // Act
         var apiAttr = controllerType.GetCustomAttribute<ApiControllerAttribute>();
         var routeAttr = controllerType.GetCustomAttribute<RouteAttribute>();

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using PolyBucket.Database.Entities.Models;
-using PolyBucket.Api.Features.Authentication.Domain;
-using PolyBucket.Api.Features.Authentication.Repository;
+using PolyBucket.Api.Features.Authentication.VerifyEmail.Repository;
+using PolyBucket.Database.Entities.Authentication;
 using PolyBucket.Api.Features.Authentication.Services;
 using System;
 using System.Threading;
@@ -12,7 +12,7 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
     public sealed record VerifyEmailResult(EmailVerificationPurpose Purpose, string Email);
 
     public class VerifyEmailCommandHandler(
-        IAuthenticationRepository authRepository,
+        IVerifyEmailRepository verifyEmailRepository,
         IAccountEmailService accountEmailService,
         TimeProvider timeProvider,
         ILogger<VerifyEmailCommandHandler> logger)
@@ -20,7 +20,7 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
         public const string InvalidTokenMessage = "This verification link is invalid or has expired. Request a new one.";
         public const string EmailInUseMessage = "This email address is already in use by another account.";
 
-        private readonly IAuthenticationRepository _authRepository = authRepository;
+        private readonly IVerifyEmailRepository _verifyEmailRepository = verifyEmailRepository;
         private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly TimeProvider _timeProvider = timeProvider;
         private readonly ILogger<VerifyEmailCommandHandler> _logger = logger;
@@ -33,7 +33,7 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
             }
 
             var now = _timeProvider.GetUtcNow().UtcDateTime;
-            var token = await _authRepository.GetEmailVerificationTokenByHashAsync(TokenHasher.Hash(command.Token.Trim()), cancellationToken);
+            var token = await _verifyEmailRepository.GetEmailVerificationTokenByHashAsync(TokenHasher.Hash(command.Token.Trim()), cancellationToken);
             if (token == null
                 || token.IsUsed
                 || token.ExpiresAt <= now
@@ -43,8 +43,8 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
             }
 
             var user = token.Purpose == EmailVerificationPurpose.ChangeAddress
-                ? token.UserId.HasValue ? await _authRepository.GetUserForUpdateByIdAsync(token.UserId.Value, cancellationToken) : null
-                : await _authRepository.GetUserForUpdateByEmailAsync(token.Email, cancellationToken);
+                ? token.UserId.HasValue ? await _verifyEmailRepository.GetUserForUpdateByIdAsync(token.UserId.Value, cancellationToken) : null
+                : await _verifyEmailRepository.GetUserForUpdateByEmailAsync(token.Email, cancellationToken);
             if (user == null)
             {
                 throw new InvalidOperationException(InvalidTokenMessage);
@@ -57,13 +57,13 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
                     throw new InvalidOperationException(InvalidTokenMessage);
                 }
 
-                if (await _authRepository.IsEmailTakenAsync(token.Email))
+                if (await _verifyEmailRepository.IsEmailTakenAsync(token.Email))
                 {
                     throw new InvalidOperationException(EmailInUseMessage);
                 }
             }
 
-            if (!await _authRepository.TryConsumeEmailVerificationTokenAsync(token.Id, now, cancellationToken))
+            if (!await _verifyEmailRepository.TryConsumeEmailVerificationTokenAsync(token.Id, now, cancellationToken))
             {
                 throw new InvalidOperationException(InvalidTokenMessage);
             }
@@ -77,7 +77,7 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
         {
             user.EmailVerifiedAt ??= now;
             user.UpdatedAt = now;
-            await _authRepository.SaveChangesAsync(cancellationToken);
+            await _verifyEmailRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Email verified for user {UserId}", user.Id);
             return new VerifyEmailResult(EmailVerificationPurpose.VerifyAddress, user.Email);
@@ -90,7 +90,7 @@ namespace PolyBucket.Api.Features.Authentication.VerifyEmail.Domain
             user.PendingEmail = null;
             user.EmailVerifiedAt = now;
             user.UpdatedAt = now;
-            await _authRepository.SaveChangesAsync(cancellationToken);
+            await _verifyEmailRepository.SaveChangesAsync(cancellationToken);
 
             await _accountEmailService.SendEmailChangedNoticeAsync(user, previousEmail, newEmail, cancellationToken: cancellationToken);
 

@@ -1,10 +1,11 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Federation.Domain;
-using PolyBucket.Api.Features.Federation.Http;
-using PolyBucket.Api.Features.Federation.Repository;
+using PolyBucket.Api.Features.Federation.UpdateFederatedInstance.Domain;
+using PolyBucket.Api.Features.Federation.UpdateFederatedInstance.Http;
+using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
 
@@ -12,43 +13,15 @@ namespace PolyBucket.Api.Tests.Features.Federation.UpdateFederatedInstance;
 
 public class UpdateFederatedInstanceControllerTests
 {
-    private readonly Mock<IFederationRepository> _repository = new();
+    private readonly Mock<IUpdateFederatedInstanceService> _service = new();
 
-    [Fact(DisplayName = "When the instance is missing, UpdateFederatedInstance returns NotFound.")]
-    public async Task UpdateFederatedInstance_Missing_ReturnsNotFound()
+    [Fact]
+    public async Task Update_WhenMissing_ReturnsNotFound()
     {
-        // Arrange
-        _repository.Setup(r => r.GetFederatedInstanceAsync(It.IsAny<Guid>())).ReturnsAsync((FederatedInstance?)null);
-        var accessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var controller = new UpdateFederatedInstanceController(_repository.Object, accessor.Object);
-
-        // Act
-        var result = await controller.UpdateFederatedInstance(Guid.NewGuid(), new UpdateFederatedInstanceRequest { Name = "X" });
-
-        // Assert
+        _service.Setup(s => s.UpdateFederatedInstanceAsync(It.IsAny<Guid>(), It.IsAny<UpdateFederatedInstanceRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new NotFoundObjectResult("missing"));
+        var controller = new UpdateFederatedInstanceController(_service.Object).WithUser(Guid.NewGuid());
+        var result = await controller.UpdateFederatedInstance(Guid.NewGuid(), new UpdateFederatedInstanceRequest());
         result.Result.ShouldBeOfType<NotFoundObjectResult>();
-    }
-
-    [Fact(DisplayName = "When the base URL is invalid, UpdateFederatedInstance returns BadRequest.")]
-    public async Task UpdateFederatedInstance_InvalidUrl_ReturnsBadRequest()
-    {
-        // Arrange
-        var id = Guid.NewGuid();
-        _repository.Setup(r => r.GetFederatedInstanceAsync(id)).ReturnsAsync(new FederatedInstance
-        {
-            Id = id,
-            Name = "Peer",
-            BaseUrl = "https://peer.example",
-            Status = FederationStatus.Active,
-            CreatedAt = DateTime.UtcNow
-        });
-        var accessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var controller = new UpdateFederatedInstanceController(_repository.Object, accessor.Object);
-
-        // Act
-        var result = await controller.UpdateFederatedInstance(id, new UpdateFederatedInstanceRequest { BaseUrl = "not-a-url" });
-
-        // Assert
-        result.Result.ShouldBeOfType<BadRequestObjectResult>();
     }
 }

@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PolyBucket.Api.Features.Search.Domain;
-using PolyBucket.Api.Features.Search.Http;
-using PolyBucket.Api.Features.Search.Repository;
+using PolyBucket.Api.Features.Search.Search.Domain;
+using PolyBucket.Api.Features.Search.Search.Http;
 using Shouldly;
 using Xunit;
 
@@ -13,9 +13,9 @@ namespace PolyBucket.Api.Tests.Features.Search;
 
 public class SearchControllerUnitTests
 {
-    private readonly Mock<ISearchRepository> _repository = new();
+    private readonly Mock<ISearchService> _service = new();
 
-    private SearchController CreateController() => new(_repository.Object);
+    private SearchController CreateController() => new(_service.Object);
 
     [Fact(DisplayName = "When the query is empty, search returns BadRequest.")]
     public async Task Search_EmptyQuery_ReturnsBadRequest()
@@ -28,7 +28,7 @@ public class SearchControllerUnitTests
 
         // Assert
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
-        _repository.VerifyNoOtherCalls();
+        _service.VerifyNoOtherCalls();
     }
 
     [Fact(DisplayName = "When the query exceeds 200 characters, search returns BadRequest.")]
@@ -43,7 +43,7 @@ public class SearchControllerUnitTests
 
         // Assert
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
-        _repository.VerifyNoOtherCalls();
+        _service.VerifyNoOtherCalls();
     }
 
     [Theory(DisplayName = "Invalid page or page size returns BadRequest.")]
@@ -60,14 +60,14 @@ public class SearchControllerUnitTests
 
         // Assert
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
-        _repository.VerifyNoOtherCalls();
+        _service.VerifyNoOtherCalls();
     }
 
     [Fact(DisplayName = "When the repository throws, search returns 500.")]
     public async Task Search_RepositoryError_Returns500()
     {
         // Arrange
-        _repository
+        _service
             .Setup(r => r.SearchAsync(It.IsAny<SearchQuery>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("db"));
         var controller = CreateController();
@@ -85,7 +85,7 @@ public class SearchControllerUnitTests
     {
         // Arrange
         var response = new SearchResponse { Query = "cats", TotalCount = 1, Page = 1, PageSize = 20 };
-        _repository
+        _service
             .Setup(r => r.SearchAsync(It.Is<SearchQuery>(q => q.Query == "cats"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
         var controller = CreateController();

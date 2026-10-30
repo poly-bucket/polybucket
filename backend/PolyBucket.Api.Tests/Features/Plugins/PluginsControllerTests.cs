@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.Plugins.Commands;
-using PolyBucket.Api.Features.Plugins.Queries;
+using PolyBucket.Api.Features.Plugins.GetPlugins.Http;
+using PolyBucket.Api.Features.Plugins.ReloadPlugins.Http;
 using Shouldly;
 using Xunit;
 
@@ -24,12 +24,14 @@ public class PluginsControllerTests
     [MemberData(nameof(ControllerTypes))]
     public void Controller_ShouldHaveApiControllerAndRoute(Type controllerType)
     {
-        // Ensure ApiController attribute exists
-        var apiAttr = controllerType.GetCustomAttribute<ApiControllerAttribute>();
-        apiAttr.ShouldNotBeNull();
+        // Arrange
 
-        // Ensure RouteAttribute exists
+        // Act
+        var apiAttr = controllerType.GetCustomAttribute<ApiControllerAttribute>();
         var routeAttr = controllerType.GetCustomAttribute<RouteAttribute>();
+
+        // Assert
+        apiAttr.ShouldNotBeNull();
         routeAttr.ShouldNotBeNull();
     }
-} 
+}

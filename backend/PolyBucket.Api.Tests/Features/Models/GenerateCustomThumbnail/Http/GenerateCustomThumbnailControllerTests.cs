@@ -1,13 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PolyBucket.Api.Features.Models.GenerateCustomThumbnail.Domain;
 using PolyBucket.Api.Features.Models.GenerateCustomThumbnail.Http;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Services;
-using PolyBucket.Api.Tests.Testing;
 using Shouldly;
 using Xunit;
 
@@ -15,31 +13,31 @@ namespace PolyBucket.Api.Tests.Features.Models.GenerateCustomThumbnail.Http;
 
 public class GenerateCustomThumbnailControllerTests
 {
-    private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IGenerateCustomThumbnailService> _service = new();
 
     [Fact(DisplayName = "When settings are missing, the controller returns BadRequest.")]
     public async Task GenerateCustomThumbnail_NoSettings_ReturnsBadRequest()
     {
         // Arrange
-        var controller = new GenerateCustomThumbnailController(_mediator.Object);
+        var controller = new GenerateCustomThumbnailController(_service.Object);
         var request = new GenerateCustomThumbnailRequest { Settings = null };
 
         // Act
-        var result = await controller.GenerateCustomThumbnail(Guid.NewGuid(), request);
+        var result = await controller.GenerateCustomThumbnail(Guid.NewGuid(), request, CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<BadRequestObjectResult>();
-        _mediator.VerifyNoOtherCalls();
     }
 
-    [Fact(DisplayName = "When settings are provided, the controller returns Ok with the handler response.")]
+    [Fact(DisplayName = "When settings are provided, the controller returns Ok with the service response.")]
     public async Task GenerateCustomThumbnail_Valid_ReturnsOk()
     {
         // Arrange
         var modelId = Guid.NewGuid();
         var response = new GenerateCustomThumbnailResponse { ModelId = modelId, Size = "thumbnail", IsQueued = true };
-        _mediator.SetupSend<GenerateCustomThumbnailCommand, GenerateCustomThumbnailResponse>(response);
-        var controller = new GenerateCustomThumbnailController(_mediator.Object);
+        _service.Setup(s => s.GenerateAsync(It.IsAny<GenerateCustomThumbnailCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+        var controller = new GenerateCustomThumbnailController(_service.Object);
         var request = new GenerateCustomThumbnailRequest
         {
             ModelFileUrl = "https://example.com/model.stl",
@@ -48,7 +46,7 @@ public class GenerateCustomThumbnailControllerTests
         };
 
         // Act
-        var result = await controller.GenerateCustomThumbnail(modelId, request);
+        var result = await controller.GenerateCustomThumbnail(modelId, request, CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);

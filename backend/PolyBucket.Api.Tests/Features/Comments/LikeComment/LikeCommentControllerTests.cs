@@ -3,9 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Comments.Http;
+using PolyBucket.Api.Features.Comments.LikeComment.Domain;
 using PolyBucket.Api.Features.Comments.LikeComment.Http;
+using PolyBucket.Database.Entities.Comments;
 using Shouldly;
 using Xunit;
 
@@ -13,7 +14,7 @@ namespace PolyBucket.Api.Tests.Features.Comments.LikeComment;
 
 public class LikeCommentControllerTests
 {
-    private readonly Mock<ICommentReactionService> _service = new();
+    private readonly Mock<ILikeCommentService> _service = new();
     private readonly Guid _userId = Guid.NewGuid();
 
     [Fact(DisplayName = "When a comment is liked, the new counts and the caller's like are returned.")]
@@ -21,7 +22,7 @@ public class LikeCommentControllerTests
     {
         // Arrange
         var commentId = Guid.NewGuid();
-        _service.Setup(s => s.ReactAsync(commentId, _userId, CommentReactionType.Like, It.IsAny<CancellationToken>()))
+        _service.Setup(s => s.ReactAsync(commentId, _userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CommentReactionOutcome(CommentReactionChange.Applied, 4, 0, CommentReactionType.Like));
         var controller = new LikeCommentController(_service.Object).WithUser(_userId);
 
@@ -39,7 +40,7 @@ public class LikeCommentControllerTests
     public async Task Like_Missing_ReturnsNotFound()
     {
         // Arrange
-        _service.Setup(s => s.ReactAsync(It.IsAny<Guid>(), _userId, CommentReactionType.Like, It.IsAny<CancellationToken>()))
+        _service.Setup(s => s.ReactAsync(It.IsAny<Guid>(), _userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(CommentReactionOutcome.NotFound);
         var controller = new LikeCommentController(_service.Object).WithUser(_userId);
 
