@@ -13,6 +13,9 @@ namespace PolyBucket.Marketplace.Api.Models
         public string Category { get; set; } = string.Empty;
         public string Version { get; set; } = string.Empty;
         public string RepositoryUrl { get; set; } = string.Empty;
+        public string RepositoryBranch { get; set; } = "main";
+        public string RepositorySubpath { get; set; } = string.Empty;
+        public string Targets { get; set; } = string.Empty;
         public string License { get; set; } = string.Empty;
         public string Status { get; set; } = "draft"; // draft, pending, published, rejected
         public bool IsVerified { get; set; }
@@ -110,6 +113,9 @@ namespace PolyBucket.Marketplace.Api.Models
         public string Description { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string RepositoryUrl { get; set; } = string.Empty;
+        public string RepositoryBranch { get; set; } = "main";
+        public string RepositorySubpath { get; set; } = string.Empty;
+        public string Targets { get; set; } = string.Empty;
         public string License { get; set; } = string.Empty;
         public string Status { get; set; } = "pending"; // pending, approved, rejected, published
         public string? ReviewNotes { get; set; }

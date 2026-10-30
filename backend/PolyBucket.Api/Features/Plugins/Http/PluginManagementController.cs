@@ -15,13 +15,16 @@ namespace PolyBucket.Api.Features.Plugins.Http
     public class PluginManagementController : ControllerBase
     {
         private readonly PluginInstallationService _installationService;
+        private readonly MarketplaceClient _marketplaceClient;
         private readonly ILogger<PluginManagementController> _logger;
 
         public PluginManagementController(
             PluginInstallationService installationService,
+            MarketplaceClient marketplaceClient,
             ILogger<PluginManagementController> logger)
         {
             _installationService = installationService;
+            _marketplaceClient = marketplaceClient;
             _logger = logger;
         }
 
@@ -91,7 +94,12 @@ namespace PolyBucket.Api.Features.Plugins.Http
                         {
                             return BadRequest(new { message = "Plugin ID is required for marketplace installation" });
                         }
-                        result = await _installationService.InstallFromMarketplaceAsync(request.PluginId, request.Version ?? "latest");
+                        var listing = await _marketplaceClient.GetPluginDetailsAsync(request.PluginId);
+                        if (listing == null)
+                        {
+                            return NotFound(new { message = $"Plugin {request.PluginId} not found in marketplace" });
+                        }
+                        result = await _installationService.InstallFromMarketplaceAsync(listing);
                         break;
 
                     default:

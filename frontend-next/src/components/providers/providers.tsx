@@ -3,11 +3,9 @@
 import { useEffect } from "react";
 import "@/lib/plugins/config";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import {
-  getLayoutProviders,
-  getPlugins,
-} from "@/lib/plugins/registry";
+import { getLayoutProviders, getPlugins } from "@/lib/plugins/registry";
 import { PluginBoundary } from "@/lib/plugins/plugin-boundary";
+import { InstalledPluginAssets } from "@/components/layout/installed-plugin-assets";
 
 function ComposeLayoutProviders({
   children,
@@ -52,6 +50,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <PluginLifecycleRunner>
+        <InstalledPluginAssets />
         <ComposeLayoutProviders>{children}</ComposeLayoutProviders>
       </PluginLifecycleRunner>
     </AuthProvider>

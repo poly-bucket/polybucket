@@ -21,7 +21,7 @@ namespace PolyBucket.Marketplace.Api.Services
             {
                 var query = _context.Plugins
                     .Include(p => p.Versions)
-                    .Where(p => p.IsActive);
+                    .Where(p => p.IsActive && p.Status == "published");
 
                 if (!string.IsNullOrEmpty(category))
                 {
@@ -54,7 +54,7 @@ namespace PolyBucket.Marketplace.Api.Services
                 var plugin = await _context.Plugins
                     .Include(p => p.Versions)
                     .Include(p => p.Reviews)
-                    .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+                    .FirstOrDefaultAsync(p => p.Id == id && p.IsActive && p.Status == "published");
 
                 if (plugin != null)
                 {
@@ -139,7 +139,7 @@ namespace PolyBucket.Marketplace.Api.Services
             try
             {
                 var categories = await _context.Plugins
-                    .Where(p => p.IsActive)
+                    .Where(p => p.IsActive && p.Status == "published")
                     .Select(p => p.Category)
                     .Distinct()
                     .OrderBy(c => c)
@@ -161,7 +161,7 @@ namespace PolyBucket.Marketplace.Api.Services
             {
                 var query = _context.Plugins
                     .Include(p => p.Reviews)
-                    .Where(p => p.IsActive);
+                    .Where(p => p.IsActive && p.Status == "published");
 
                 // Apply search filter
                 if (!string.IsNullOrEmpty(request.Search))
@@ -284,7 +284,7 @@ namespace PolyBucket.Marketplace.Api.Services
             try
             {
                 var plugins = await _context.Plugins
-                    .Where(p => p.IsActive && p.IsFeatured)
+                    .Where(p => p.IsActive && p.Status == "published" && p.IsFeatured)
                     .Include(p => p.Reviews)
                     .OrderByDescending(p => p.Downloads)
                     .Take(limit)
@@ -326,7 +326,7 @@ namespace PolyBucket.Marketplace.Api.Services
                 var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
                 
                 var plugins = await _context.Plugins
-                    .Where(p => p.IsActive && p.CreatedAt >= thirtyDaysAgo)
+                    .Where(p => p.IsActive && p.Status == "published" && p.CreatedAt >= thirtyDaysAgo)
                     .Include(p => p.Reviews)
                     .OrderByDescending(p => p.Downloads)
                     .ThenByDescending(p => p.AverageRating)
@@ -369,7 +369,7 @@ namespace PolyBucket.Marketplace.Api.Services
                 
                 var plugin = await _context.Plugins
                     .Include(p => p.Versions)
-                    .FirstOrDefaultAsync(p => p.Id == pluginId && p.IsActive);
+                    .FirstOrDefaultAsync(p => p.Id == pluginId && p.IsActive && p.Status == "published");
 
                 _logger.LogInformation("Plugin found: {PluginFound}, PluginId: {PluginId}, IsActive: {IsActive}", 
                     plugin != null, plugin?.Id, plugin?.IsActive);
@@ -431,7 +431,7 @@ namespace PolyBucket.Marketplace.Api.Services
                     .Include(p => p.Versions)
                     .Include(p => p.Reviews)
                     .Include(p => p.Author)
-                    .FirstOrDefaultAsync(p => p.Id == pluginId && p.IsActive);
+                    .FirstOrDefaultAsync(p => p.Id == pluginId && p.IsActive && p.Status == "published");
 
                 if (plugin == null)
                 {
@@ -447,6 +447,11 @@ namespace PolyBucket.Marketplace.Api.Services
                     Category = plugin.Category,
                     Version = plugin.Version,
                     RepositoryUrl = plugin.RepositoryUrl,
+                    RepositoryBranch = plugin.RepositoryBranch,
+                    RepositorySubpath = plugin.RepositorySubpath,
+                    Targets = string.IsNullOrWhiteSpace(plugin.Targets)
+                        ? new List<string>()
+                        : plugin.Targets.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
                     License = plugin.License,
                     IsVerified = plugin.IsVerified,
                     IsFeatured = plugin.IsFeatured,
@@ -533,7 +538,7 @@ namespace PolyBucket.Marketplace.Api.Services
             }
         }
 
-        public async Task<MarketplacePluginsResponse> GetPluginsForMainApiAsync(int page = 1, int pageSize = 20, string? category = null, string? search = null)
+        public async Task<MarketplacePluginsResponse> GetPluginsForMainApiAsync(int page = 1, int pageSize = 20, string? category = null, string? search = null, string? target = null)
         {
             try
             {
@@ -542,7 +547,7 @@ namespace PolyBucket.Marketplace.Api.Services
                     page = 1;
                 }
 
-                if (pageSize < 1 || pageSize > 20)
+                if (pageSize < 1 || pageSize > 100)
                 {
                     pageSize = 20;
                 }
@@ -550,7 +555,7 @@ namespace PolyBucket.Marketplace.Api.Services
                 var query = _context.Plugins
                     .Include(p => p.Reviews)
                     .Include(p => p.Author)
-                    .Where(p => p.IsActive);
+                    .Where(p => p.IsActive && p.Status == "published");
 
                 // Apply filters
                 if (!string.IsNullOrEmpty(category))
@@ -566,36 +571,47 @@ namespace PolyBucket.Marketplace.Api.Services
                         p.Description.ToLower().Contains(searchTerm));
                 }
 
+                if (!string.IsNullOrWhiteSpace(target))
+                {
+                    var normalizedTarget = target.Trim().ToLowerInvariant();
+                    query = query.Where(p => p.Targets.ToLower().Contains(normalizedTarget));
+                }
+
                 // Get total count
                 var totalCount = await query.CountAsync();
 
-                // Apply pagination
-                var plugins = await query
+                var pageItems = await query
                     .OrderByDescending(p => p.Downloads)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
-                    .Select(p => new MarketplacePluginDetails
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Description = p.Description,
-                        LongDescription = p.LongDescription,
-                        Category = p.Category,
-                        Version = p.Version,
-                        RepositoryUrl = p.RepositoryUrl,
-                        License = p.License,
-                        IsVerified = p.IsVerified,
-                        IsFeatured = p.IsFeatured,
-                        Downloads = p.Downloads,
-                        AverageRating = p.AverageRating,
-                        ReviewCount = p.Reviews.Count,
-                        Author = p.Author != null ? p.Author.UserName : "Unknown",
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        Versions = new List<PluginVersion>(),
-                        Tags = new List<string>()
-                    })
                     .ToListAsync();
+
+                var plugins = pageItems.Select(p => new MarketplacePluginDetails
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    LongDescription = p.LongDescription,
+                    Category = p.Category,
+                    Version = p.Version,
+                    RepositoryUrl = p.RepositoryUrl,
+                    RepositoryBranch = p.RepositoryBranch,
+                    RepositorySubpath = p.RepositorySubpath,
+                    Targets = string.IsNullOrWhiteSpace(p.Targets)
+                        ? new List<string>()
+                        : p.Targets.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
+                    License = p.License,
+                    IsVerified = p.IsVerified,
+                    IsFeatured = p.IsFeatured,
+                    Downloads = p.Downloads,
+                    AverageRating = p.AverageRating,
+                    ReviewCount = p.Reviews.Count,
+                    Author = p.Author != null ? p.Author.UserName ?? "Unknown" : "Unknown",
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt = p.UpdatedAt,
+                    Versions = new List<PluginVersion>(),
+                    Tags = new List<string>()
+                }).ToList();
 
                 var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
@@ -622,7 +638,7 @@ namespace PolyBucket.Marketplace.Api.Services
             try
             {
                 var categories = await _context.Plugins
-                    .Where(p => p.IsActive)
+                    .Where(p => p.IsActive && p.Status == "published")
                     .GroupBy(p => p.Category)
                     .Select(g => new MarketplaceCategory
                     {

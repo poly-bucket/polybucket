@@ -83,6 +83,48 @@ class ApiClient {
     });
   }
 
+  async createSubmission(payload: {
+    name: string;
+    description: string;
+    category: string;
+    license: string;
+    repositoryUrl: string;
+    repositoryBranch?: string;
+    repositorySubpath?: string;
+  }): Promise<SubmissionSummary> {
+    return this.request<SubmissionSummary>('/api/submissions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getSubmissions(status: string = 'pending'): Promise<SubmissionSummary[]> {
+    return this.request<SubmissionSummary[]>(`/api/submissions?status=${encodeURIComponent(status)}`);
+  }
+
+  async approveSubmission(id: string): Promise<{ success: boolean; message: string; pluginId?: string }> {
+    return this.request(`/api/submissions/${encodeURIComponent(id)}/approve`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  async rejectSubmission(id: string, reviewNotes: string): Promise<SubmissionSummary> {
+    return this.request<SubmissionSummary>(`/api/submissions/${encodeURIComponent(id)}/reject`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ reviewNotes }),
+    });
+  }
+
+  private getAuthHeaders(): Record<string, string> {
+    if (typeof window === 'undefined') {
+      return {};
+    }
+    const token = localStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
   // Direct repository access (for offline resilience)
   async getRepositoryInfo(repositoryUrl: string): Promise<{
     name: string;
@@ -100,3 +142,18 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+
+export interface SubmissionSummary {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  repositoryUrl: string;
+  repositoryBranch: string;
+  repositorySubpath: string;
+  license: string;
+  status: string;
+  reviewNotes?: string;
+  submittedAt: string;
+  reviewedAt?: string;
+}

@@ -1,11 +1,16 @@
+"use client"
+
 import { ModerationQueue } from "@/components/moderation-queue"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/theme-toggle"
 import Link from "next/link"
+import { useState } from "react"
 
 export default function ModerationPage() {
+  const [pendingCount, setPendingCount] = useState(0)
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -38,24 +43,12 @@ export default function ModerationPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Pending Review</CardDescription>
-              <CardTitle className="text-3xl">8</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Approved Today</CardDescription>
-              <CardTitle className="text-3xl">12</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Rejected Today</CardDescription>
-              <CardTitle className="text-3xl">3</CardTitle>
+              <CardTitle className="text-3xl">{pendingCount}</CardTitle>
             </CardHeader>
           </Card>
         </div>
 
-        <ModerationQueue />
+        <ModerationQueue onCountsChange={(counts) => setPendingCount(counts.pending)} />
       </main>
     </div>
   )

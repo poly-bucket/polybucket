@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-using PolyBucket.Api.Features.Plugins.Domain;
 using PolyBucket.Api.Features.Plugins.Http;
 using PolyBucket.Api.Features.Plugins.Services;
 using Shouldly;
@@ -66,18 +60,44 @@ public class MarketplacePluginControllerTests
     {
         var handler = new DelegatingHandlerStub(responder);
         var httpClient = new HttpClient(handler);
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["Marketplace:BaseUrl"] = "https://marketplace.test" })
-            .Build();
-        var marketplaceClient = new MarketplaceClient(httpClient, configuration, NullLogger<MarketplaceClient>.Instance);
+        var marketplaceClient = new MarketplaceClient(
+            httpClient,
+            new FixedMarketplaceBaseUrlResolver("https://marketplace.test"),
+            NullLogger<MarketplaceClient>.Instance);
         var installationService = new PluginInstallationService(
-            new HttpClient(new DelegatingHandlerStub(_ => new HttpResponseMessage(HttpStatusCode.OK))),
+            new EmptyArchiveDownloader(),
             new PluginManifestValidator(NullLogger<PluginManifestValidator>.Instance),
+            new TestHostApplicationLifetime(),
             NullLogger<PluginInstallationService>.Instance);
         return new MarketplacePluginController(
             marketplaceClient,
             installationService,
             NullLogger<MarketplacePluginController>.Instance);
+    }
+
+    private sealed class FixedMarketplaceBaseUrlResolver(string baseUrl) : IMarketplaceBaseUrlResolver
+    {
+        public Task<string> ResolveAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(baseUrl);
+    }
+
+    private sealed class EmptyArchiveDownloader : IPluginArchiveDownloader
+    {
+        public Task<PluginArchiveDownloadResult> DownloadRepositoryArchiveAsync(
+            string repositoryUrl,
+            string branch,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new PluginArchiveDownloadResult { Success = false, Message = "not used" });
+    }
+
+    private sealed class TestHostApplicationLifetime : IHostApplicationLifetime
+    {
+        public CancellationToken ApplicationStarted { get; } = CancellationToken.None;
+        public CancellationToken ApplicationStopping { get; } = CancellationToken.None;
+        public CancellationToken ApplicationStopped { get; } = CancellationToken.None;
+        public void StopApplication()
+        {
+        }
     }
 
     private sealed class DelegatingHandlerStub : HttpMessageHandler

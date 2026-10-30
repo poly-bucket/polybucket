@@ -19,7 +19,7 @@ namespace PolyBucket.Marketplace.Api.Services
         Task<PluginDownloadInfo?> GetPluginDownloadAsync(string pluginId, string? version = null);
         Task<MarketplacePluginDetails?> GetPluginDetailsAsync(string pluginId);
         Task<PluginInstallationResponse> RecordInstallationAsync(PluginInstallationRequest request);
-        Task<MarketplacePluginsResponse> GetPluginsForMainApiAsync(int page = 1, int pageSize = 20, string? category = null, string? search = null);
+        Task<MarketplacePluginsResponse> GetPluginsForMainApiAsync(int page = 1, int pageSize = 20, string? category = null, string? search = null, string? target = null);
         Task<List<MarketplaceCategory>> GetCategoriesForMainApiAsync();
     }
 }

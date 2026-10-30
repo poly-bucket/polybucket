@@ -13,6 +13,7 @@ using PolyBucket.Email.DependencyInjection;
 using PolyBucket.Storage.DependencyInjection;
 using PolyBucket.Api.Features.Comments;
 using PolyBucket.Api.Features.Notifications;
+using PolyBucket.Api.Features.Plugins.Services;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -132,8 +133,11 @@ public static class FeatureServiceCollectionExtensions
         });
 
         // Marketplace Integration
-        // services.AddHttpClient<Features.Plugins.Services.MarketplaceClient>();
-        // services.AddTransient<Features.Plugins.Services.MarketplaceClient>();
+        services.AddScoped<IMarketplaceBaseUrlResolver, MarketplaceBaseUrlResolver>();
+        services.AddHttpClient<IPluginArchiveDownloader, GitHubPluginArchiveDownloader>();
+        services.AddHttpClient<MarketplaceClient>();
+        services.AddScoped<PluginManifestValidator>();
+        services.AddScoped<PluginInstallationService>();
 
         // Register default plugins
         services.AddCommentsFeature();

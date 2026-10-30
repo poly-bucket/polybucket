@@ -1,358 +1,343 @@
-using System;
-using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using PolyBucket.Api.Features.Plugins.Domain;
 
-namespace PolyBucket.Api.Features.Plugins.Services
+namespace PolyBucket.Api.Features.Plugins.Services;
+
+public class PluginInstallationService
 {
-    public class PluginInstallationService
+    private readonly IPluginArchiveDownloader _archiveDownloader;
+    private readonly PluginManifestValidator _manifestValidator;
+    private readonly IHostApplicationLifetime _lifetime;
+    private readonly ILogger<PluginInstallationService> _logger;
+    private readonly string _pluginsPath;
+
+    public PluginInstallationService(
+        IPluginArchiveDownloader archiveDownloader,
+        PluginManifestValidator manifestValidator,
+        IHostApplicationLifetime lifetime,
+        ILogger<PluginInstallationService> logger)
     {
-        private readonly HttpClient _httpClient;
-        private readonly PluginManifestValidator _manifestValidator;
-        private readonly ILogger<PluginInstallationService> _logger;
-        private readonly string _pluginsPath;
+        _archiveDownloader = archiveDownloader;
+        _manifestValidator = manifestValidator;
+        _lifetime = lifetime;
+        _logger = logger;
+        _pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
+        Directory.CreateDirectory(_pluginsPath);
+    }
 
-        public PluginInstallationService(
-            HttpClient httpClient,
-            PluginManifestValidator manifestValidator,
-            ILogger<PluginInstallationService> logger)
+    public Task<PluginInstallationResult> InstallFromUrlAsync(string url) =>
+        InstallFromGitHubAsync(url, null);
+
+    public async Task<PluginInstallationResult> InstallFromGitHubAsync(string repoUrl, string? branch = null)
+    {
+        return await InstallFromRepositoryAsync(repoUrl, branch ?? "main", null);
+    }
+
+    public Task<PluginInstallationResult> InstallFromMarketplaceAsync(MarketplacePluginDetails listing)
+    {
+        if (string.IsNullOrWhiteSpace(listing.RepositoryUrl))
         {
-            _httpClient = httpClient;
-            _manifestValidator = manifestValidator;
-            _logger = logger;
-            _pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
-            
-            // Ensure plugins directory exists
-            Directory.CreateDirectory(_pluginsPath);
+            return Task.FromResult(new PluginInstallationResult
+            {
+                Success = false,
+                Message = "Marketplace listing is missing a repository URL",
+                Errors = { "Marketplace listing is missing a repository URL" }
+            });
         }
 
-        public async Task<PluginInstallationResult> InstallFromUrlAsync(string url)
+        return InstallFromRepositoryAsync(
+            listing.RepositoryUrl,
+            string.IsNullOrWhiteSpace(listing.RepositoryBranch) ? "main" : listing.RepositoryBranch,
+            listing.RepositorySubpath);
+    }
+
+    public async Task<PluginInstallationResult> InstallFromRepositoryAsync(
+        string repositoryUrl,
+        string branch,
+        string? repositorySubpath)
+    {
+        try
         {
-            try
+            var download = await _archiveDownloader.DownloadRepositoryArchiveAsync(repositoryUrl, branch);
+            if (!download.Success || download.ArchiveBytes == null)
             {
-                _logger.LogInformation("Installing plugin from URL: {Url}", url);
-
-                // Download plugin package
-                var pluginData = await _httpClient.GetByteArrayAsync(url);
-                
-                // Extract to temporary directory
-                var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                Directory.CreateDirectory(tempPath);
-                
-                using (var stream = new MemoryStream(pluginData))
-                using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
-                {
-                    archive.ExtractToDirectory(tempPath);
-                }
-
-                // Validate manifest
-                var manifestPath = Path.Combine(tempPath, "polybucket-plugin.json");
-                var validationResult = await _manifestValidator.ValidateManifestAsync(manifestPath);
-                
-                if (!validationResult.IsValid)
-                {
-                    Directory.Delete(tempPath, true);
-                    return new PluginInstallationResult
-                    {
-                        Success = false,
-                        Message = validationResult.Message,
-                        Errors = new() { validationResult.Message }
-                    };
-                }
-
-                // Read manifest
-                var manifestContent = await File.ReadAllTextAsync(manifestPath);
-                var manifest = JsonSerializer.Deserialize<PluginManifest>(manifestContent, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (manifest == null)
-                {
-                    Directory.Delete(tempPath, true);
-                    return new PluginInstallationResult
-                    {
-                        Success = false,
-                        Message = "Failed to parse plugin manifest",
-                        Errors = new() { "Failed to parse plugin manifest" }
-                    };
-                }
-
-                // Install plugin
-                var installationPath = Path.Combine(_pluginsPath, manifest.Id);
-                if (Directory.Exists(installationPath))
-                {
-                    Directory.Delete(installationPath, true);
-                }
-
-                Directory.Move(tempPath, installationPath);
-
-                _logger.LogInformation("Successfully installed plugin {PluginId} version {Version}", 
-                    manifest.Id, manifest.Version);
-
-                return new PluginInstallationResult
-                {
-                    Success = true,
-                    Message = $"Plugin {manifest.Name} installed successfully",
-                    PluginId = manifest.Id,
-                    Version = manifest.Version,
-                    InstallationPath = installationPath
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error installing plugin from URL: {Url}", url);
                 return new PluginInstallationResult
                 {
                     Success = false,
-                    Message = $"Installation failed: {ex.Message}",
-                    Errors = new() { ex.Message }
+                    Message = download.Message,
+                    Errors = { download.Message }
                 };
             }
+
+            return await InstallFromArchiveBytesAsync(download.ArchiveBytes, repositorySubpath);
         }
-
-        public async Task<PluginInstallationResult> InstallFromGitHubAsync(string repoUrl, string? branch = null)
+        catch (Exception ex)
         {
-            try
-            {
-                _logger.LogInformation("Installing plugin from GitHub: {RepoUrl}, branch: {Branch}", repoUrl, branch ?? "main");
-
-                // Parse GitHub URL to get owner and repo
-                var urlParts = repoUrl.Replace("https://github.com/", "").Split('/');
-                if (urlParts.Length < 2)
-                {
-                    return new PluginInstallationResult
-                    {
-                        Success = false,
-                        Message = "Invalid GitHub repository URL",
-                        Errors = new() { "Invalid GitHub repository URL" }
-                    };
-                }
-
-                var owner = urlParts[0];
-                var repo = urlParts[1];
-                var targetBranch = branch ?? "main";
-
-                // Download repository as ZIP
-                var downloadUrl = $"https://github.com/{owner}/{repo}/archive/refs/heads/{targetBranch}.zip";
-                var pluginData = await _httpClient.GetByteArrayAsync(downloadUrl);
-
-                // Extract to temporary directory
-                var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                Directory.CreateDirectory(tempPath);
-                
-                using (var stream = new MemoryStream(pluginData))
-                using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
-                {
-                    archive.ExtractToDirectory(tempPath);
-                }
-
-                // Find the manifest file (it might be in a subdirectory)
-                var manifestPath = FindManifestFile(tempPath);
-                if (manifestPath == null)
-                {
-                    Directory.Delete(tempPath, true);
-                    return new PluginInstallationResult
-                    {
-                        Success = false,
-                        Message = "Plugin manifest not found in repository",
-                        Errors = new() { "Plugin manifest not found in repository" }
-                    };
-                }
-
-                // Validate manifest
-                var validationResult = await _manifestValidator.ValidateManifestAsync(manifestPath);
-                
-                if (!validationResult.IsValid)
-                {
-                    Directory.Delete(tempPath, true);
-                    return new PluginInstallationResult
-                    {
-                        Success = false,
-                        Message = validationResult.Message,
-                        Errors = new() { validationResult.Message }
-                    };
-                }
-
-                // Read manifest
-                var manifestContent = await File.ReadAllTextAsync(manifestPath);
-                var manifest = JsonSerializer.Deserialize<PluginManifest>(manifestContent, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (manifest == null)
-                {
-                    Directory.Delete(tempPath, true);
-                    return new PluginInstallationResult
-                    {
-                        Success = false,
-                        Message = "Failed to parse plugin manifest",
-                        Errors = new() { "Failed to parse plugin manifest" }
-                    };
-                }
-
-                // Install plugin
-                var installationPath = Path.Combine(_pluginsPath, manifest.Id);
-                if (Directory.Exists(installationPath))
-                {
-                    Directory.Delete(installationPath, true);
-                }
-
-                // Move the plugin files to the installation directory
-                var sourceDir = Path.GetDirectoryName(manifestPath);
-                if (sourceDir != null)
-                {
-                    Directory.Move(sourceDir, installationPath);
-                }
-
-                _logger.LogInformation("Successfully installed plugin {PluginId} version {Version} from GitHub", 
-                    manifest.Id, manifest.Version);
-
-                return new PluginInstallationResult
-                {
-                    Success = true,
-                    Message = $"Plugin {manifest.Name} installed successfully from GitHub",
-                    PluginId = manifest.Id,
-                    Version = manifest.Version,
-                    InstallationPath = installationPath
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error installing plugin from GitHub: {RepoUrl}", repoUrl);
-                return new PluginInstallationResult
-                {
-                    Success = false,
-                    Message = $"Installation failed: {ex.Message}",
-                    Errors = new() { ex.Message }
-                };
-            }
-        }
-
-        public async Task<PluginInstallationResult> InstallFromMarketplaceAsync(string pluginId, string version)
-        {
-            // TODO: Implement marketplace installation
-            // This would involve fetching plugin metadata from marketplace API
-            // and downloading the plugin package
-            await Task.CompletedTask;
-            
+            _logger.LogError(ex, "Error installing plugin from repository {RepositoryUrl}", repositoryUrl);
             return new PluginInstallationResult
             {
                 Success = false,
-                Message = "Marketplace installation not yet implemented",
-                Errors = new() { "Marketplace installation not yet implemented" }
+                Message = $"Installation failed: {ex.Message}",
+                Errors = { ex.Message }
             };
         }
+    }
 
-        public Task<bool> UninstallPluginAsync(string pluginId)
+    internal async Task<PluginInstallationResult> InstallFromArchiveBytesAsync(byte[] archiveBytes, string? repositorySubpath)
+    {
+        var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempPath);
+
+        try
         {
-            try
+            using (var stream = new MemoryStream(archiveBytes))
+            using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
             {
-                var pluginPath = Path.Combine(_pluginsPath, pluginId);
-                if (Directory.Exists(pluginPath))
-                {
-                    Directory.Delete(pluginPath, true);
-                    _logger.LogInformation("Successfully uninstalled plugin {PluginId}", pluginId);
-                    return Task.FromResult(true);
-                }
-                
-                _logger.LogWarning("Plugin {PluginId} not found for uninstallation", pluginId);
-                return Task.FromResult(false);
+                archive.ExtractToDirectory(tempPath);
             }
-            catch (Exception ex)
+
+            var manifestPath = PluginRepositoryArchiveHelper.FindManifestPath(tempPath, repositorySubpath);
+            if (manifestPath == null)
             {
-                _logger.LogError(ex, "Error uninstalling plugin {PluginId}", pluginId);
-                return Task.FromResult(false);
+                return new PluginInstallationResult
+                {
+                    Success = false,
+                    Message = "Plugin manifest not found in repository",
+                    Errors = { "Plugin manifest not found in repository" }
+                };
+            }
+
+            var validationResult = await _manifestValidator.ValidateManifestAsync(manifestPath);
+            if (!validationResult.IsValid)
+            {
+                return new PluginInstallationResult
+                {
+                    Success = false,
+                    Message = validationResult.Message,
+                    Errors = { validationResult.Message }
+                };
+            }
+
+            var manifestContent = await File.ReadAllTextAsync(manifestPath);
+            var manifest = JsonSerializer.Deserialize<PluginManifest>(manifestContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (manifest == null)
+            {
+                return new PluginInstallationResult
+                {
+                    Success = false,
+                    Message = "Failed to parse plugin manifest",
+                    Errors = { "Failed to parse plugin manifest" }
+                };
+            }
+
+            var sourceDir = Path.GetDirectoryName(manifestPath);
+            if (sourceDir == null)
+            {
+                return new PluginInstallationResult
+                {
+                    Success = false,
+                    Message = "Invalid plugin source directory",
+                    Errors = { "Invalid plugin source directory" }
+                };
+            }
+
+            var installationPath = Path.Combine(_pluginsPath, manifest.Id);
+            if (Directory.Exists(installationPath))
+            {
+                Directory.Delete(installationPath, true);
+            }
+
+            Directory.CreateDirectory(installationPath);
+            CopyDirectory(sourceDir, installationPath);
+
+            var restartRequired = PluginManifestTargets.TargetsApi(manifest.Targets);
+            if (restartRequired)
+            {
+                ScheduleApiRestart();
+            }
+
+            _logger.LogInformation(
+                "Installed plugin {PluginId} version {Version}. RestartRequired={RestartRequired}",
+                manifest.Id,
+                manifest.Version,
+                restartRequired);
+
+            return new PluginInstallationResult
+            {
+                Success = true,
+                Message = restartRequired
+                    ? $"Plugin {manifest.Name} installed. The API will restart to load backend plugin code."
+                    : $"Plugin {manifest.Name} installed successfully",
+                PluginId = manifest.Id,
+                Version = manifest.Version,
+                InstallationPath = installationPath,
+                RestartRequired = restartRequired
+            };
+        }
+        finally
+        {
+            if (Directory.Exists(tempPath))
+            {
+                Directory.Delete(tempPath, true);
             }
         }
+    }
 
-        public async Task<List<InstalledPlugin>> GetInstalledPluginsAsync()
+    public Task<bool> UninstallPluginAsync(string pluginId)
+    {
+        try
         {
-            var installedPlugins = new List<InstalledPlugin>();
-
-            try
+            var pluginPath = Path.Combine(_pluginsPath, pluginId);
+            if (Directory.Exists(pluginPath))
             {
-                if (!Directory.Exists(_pluginsPath))
+                Directory.Delete(pluginPath, true);
+                _logger.LogInformation("Successfully uninstalled plugin {PluginId}", pluginId);
+                return Task.FromResult(true);
+            }
+
+            _logger.LogWarning("Plugin {PluginId} not found for uninstallation", pluginId);
+            return Task.FromResult(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uninstalling plugin {PluginId}", pluginId);
+            return Task.FromResult(false);
+        }
+    }
+
+    public async Task<List<InstalledPlugin>> GetInstalledPluginsAsync()
+    {
+        var installedPlugins = new List<InstalledPlugin>();
+
+        try
+        {
+            if (!Directory.Exists(_pluginsPath))
+            {
+                return installedPlugins;
+            }
+
+            foreach (var pluginDir in Directory.GetDirectories(_pluginsPath))
+            {
+                var manifestPath = Path.Combine(pluginDir, "polybucket-plugin.json");
+                if (!File.Exists(manifestPath))
                 {
-                    return installedPlugins;
+                    continue;
                 }
 
-                var pluginDirectories = Directory.GetDirectories(_pluginsPath);
-                
-                foreach (var pluginDir in pluginDirectories)
+                try
                 {
-                    var manifestPath = Path.Combine(pluginDir, "polybucket-plugin.json");
-                    if (File.Exists(manifestPath))
+                    var manifestContent = await File.ReadAllTextAsync(manifestPath);
+                    var manifest = JsonSerializer.Deserialize<PluginManifest>(manifestContent, new JsonSerializerOptions
                     {
-                        try
-                        {
-                            var manifestContent = await File.ReadAllTextAsync(manifestPath);
-                            var manifest = JsonSerializer.Deserialize<PluginManifest>(manifestContent, new JsonSerializerOptions
-                            {
-                                PropertyNameCaseInsensitive = true
-                            });
+                        PropertyNameCaseInsensitive = true
+                    });
 
-                            if (manifest != null)
-                            {
-                                var installedPlugin = new InstalledPlugin
-                                {
-                                    Id = manifest.Id,
-                                    Name = manifest.Name,
-                                    Version = manifest.Version,
-                                    Author = manifest.Author,
-                                    Description = manifest.Description,
-                                    Type = manifest.Type,
-                                    Status = "active", // TODO: Determine actual status
-                                    InstalledAt = Directory.GetCreationTime(pluginDir),
-                                    UpdatedAt = Directory.GetLastWriteTime(pluginDir),
-                                    InstallationPath = pluginDir,
-                                    Permissions = manifest.Permissions,
-                                    IsEnabled = true // TODO: Check actual enabled status
-                                };
-
-                                installedPlugins.Add(installedPlugin);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error reading plugin manifest from {ManifestPath}", manifestPath);
-                        }
+                    if (manifest == null)
+                    {
+                        continue;
                     }
+
+                    installedPlugins.Add(new InstalledPlugin
+                    {
+                        Id = manifest.Id,
+                        Name = manifest.Name,
+                        Version = manifest.Version,
+                        Author = manifest.Author,
+                        Description = manifest.Description,
+                        Type = manifest.Type,
+                        Status = "active",
+                        InstalledAt = Directory.GetCreationTimeUtc(pluginDir),
+                        UpdatedAt = Directory.GetLastWriteTimeUtc(pluginDir),
+                        InstallationPath = pluginDir,
+                        Permissions = manifest.Permissions,
+                        Targets = PluginManifestTargets.NormalizeTargets(manifest.Targets).ToList(),
+                        CssAssets = manifest.Assets?.Css ?? new List<string>(),
+                        IsEnabled = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error reading plugin manifest from {ManifestPath}", manifestPath);
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting installed plugins");
-            }
-
-            return installedPlugins;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting installed plugins");
         }
 
-        private string? FindManifestFile(string directory)
+        return installedPlugins;
+    }
+
+    public string GetPluginsRootPath() => _pluginsPath;
+
+    public bool TryResolveAssetPath(string pluginId, string relativePath, out string fullPath)
+    {
+        fullPath = string.Empty;
+        if (string.IsNullOrWhiteSpace(pluginId) || string.IsNullOrWhiteSpace(relativePath))
         {
-            var manifestPath = Path.Combine(directory, "polybucket-plugin.json");
-            if (File.Exists(manifestPath))
-            {
-                return manifestPath;
-            }
+            return false;
+        }
 
-            // Search in subdirectories
-            var subdirectories = Directory.GetDirectories(directory);
-            foreach (var subdir in subdirectories)
-            {
-                var result = FindManifestFile(subdir);
-                if (result != null)
-                {
-                    return result;
-                }
-            }
+        var pluginRoot = Path.GetFullPath(Path.Combine(_pluginsPath, pluginId));
+        if (!pluginRoot.StartsWith(Path.GetFullPath(_pluginsPath), StringComparison.Ordinal))
+        {
+            return false;
+        }
 
-            return null;
+        var normalizedRelative = relativePath.Replace('\\', '/').TrimStart('/');
+        if (normalizedRelative.Contains("..", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var candidate = Path.GetFullPath(Path.Combine(pluginRoot, normalizedRelative));
+        if (!candidate.StartsWith(pluginRoot, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (!File.Exists(candidate))
+        {
+            return false;
+        }
+
+        fullPath = candidate;
+        return true;
+    }
+
+    private void ScheduleApiRestart()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), _lifetime.ApplicationStopping).ConfigureAwait(false);
+                _lifetime.StopApplication();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }, CancellationToken.None);
+    }
+
+    private static void CopyDirectory(string sourceDir, string destinationDir)
+    {
+        Directory.CreateDirectory(destinationDir);
+        foreach (var file in Directory.GetFiles(sourceDir))
+        {
+            File.Copy(file, Path.Combine(destinationDir, Path.GetFileName(file)), true);
+        }
+
+        foreach (var directory in Directory.GetDirectories(sourceDir))
+        {
+            CopyDirectory(directory, Path.Combine(destinationDir, Path.GetFileName(directory)));
         }
     }
 }

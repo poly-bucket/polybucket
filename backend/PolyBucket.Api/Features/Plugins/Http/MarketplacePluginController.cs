@@ -44,14 +44,15 @@ namespace PolyBucket.Api.Features.Plugins.Http
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20,
             [FromQuery] string? category = null,
-            [FromQuery] string? search = null)
+            [FromQuery] string? search = null,
+            [FromQuery] string? target = null)
         {
             try
             {
                 if (page < 1) page = 1;
                 if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-                var response = await _marketplaceClient.GetPluginsAsync(page, pageSize, category, search);
+                var response = await _marketplaceClient.GetPluginsAsync(page, pageSize, category, search, target);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -145,19 +146,15 @@ namespace PolyBucket.Api.Features.Plugins.Http
                     return NotFound(new { message = $"Plugin {pluginId} not found in marketplace" });
                 }
 
-                // Get download info
-                var downloadInfo = await _marketplaceClient.GetPluginDownloadAsync(pluginId, version);
-                if (downloadInfo == null)
+                var result = await _installationService.InstallFromMarketplaceAsync(pluginDetails);
+
+                if (!result.Success)
                 {
-                    return NotFound(new { message = $"Download information not available for plugin {pluginId}" });
+                    return BadRequest(result);
                 }
 
-                // Install the plugin
-                var result = await _installationService.InstallFromUrlAsync(downloadInfo.DownloadUrl);
-
-                // Record installation for analytics
                 var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
-                await _marketplaceClient.RecordInstallationAsync(pluginId, downloadInfo.Version, userId);
+                await _marketplaceClient.RecordInstallationAsync(pluginId, result.Version, userId);
 
                 return Ok(result);
             }

@@ -10,6 +10,7 @@ This document defines the contract between `polybucket-plugin.json` (JSON manife
 |------------------------|----------------------------------|-------|
 | `id`, `name`, `version`, `author` | `PluginDefinition.id`, `.name`, `.version` | Direct map. `author` metadata only. |
 | `type` | `PluginDefinition.type` | Optional. Values: `"theme"`, `"extension"`, `"tool"`. |
+| `targets` | Install/runtime | Required for marketplace install. `"frontend"` (manifest + static assets), `"api"` (MEF assembly implementing `IPlugin`), or both. |
 | `hooks` | `layoutProviders` | `hooks` with `name: "theme-override"` or `"layout-provider"` maps to `layoutProviders: [{ component, order: priority }]`. Component names resolve to React components at build time. |
 | `contributions.navItems` | `navItems` | Same shape; order field. |
 | `contributions.userMenuItems` | `userMenuItems` | Same shape. |
@@ -21,7 +22,7 @@ This document defines the contract between `polybucket-plugin.json` (JSON manife
 | `contributions.routes` | `routes` | `path` is relative to `/ext/`. |
 | `contributions.layoutProviders` | `layoutProviders` | Canonical frontend field. Maps from `hooks` in JSON. |
 | `settings` | Deferred v2 | Not in v1. |
-| `assets` | Deferred v2 | Not in v1. |
+| `assets` | Runtime (frontend target) | CSS/JS paths relative to plugin root; served by PolyBucket API after install. |
 | `compatibility` | Deferred v2 | Not in v1. |
 | `permissions` | Deferred v2 | Not in v1. |
 

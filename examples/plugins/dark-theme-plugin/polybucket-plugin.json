@@ -5,6 +5,7 @@
   "author": "PolyBucket Community",
   "description": "Dark theme with customizable accent colors and modern styling for PolyBucket",
   "type": "theme",
+  "targets": ["frontend"],
   "compatibility": {
     "minVersion": "1.0.0",
     "maxVersion": "2.0.0"

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace PolyBucket.Api.Features.Plugins.Services
@@ -10,20 +9,21 @@ namespace PolyBucket.Api.Features.Plugins.Services
     public class MarketplaceClient
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
+        private readonly IMarketplaceBaseUrlResolver _baseUrlResolver;
         private readonly ILogger<MarketplaceClient> _logger;
-        private readonly string _marketplaceBaseUrl;
 
         public MarketplaceClient(
             HttpClient httpClient,
-            IConfiguration configuration,
+            IMarketplaceBaseUrlResolver baseUrlResolver,
             ILogger<MarketplaceClient> logger)
         {
             _httpClient = httpClient;
-            _configuration = configuration;
+            _baseUrlResolver = baseUrlResolver;
             _logger = logger;
-            _marketplaceBaseUrl = _configuration["Marketplace:BaseUrl"] ?? "http://localhost:5001";
         }
+
+        private async Task<string> GetBaseUrlAsync(CancellationToken cancellationToken = default) =>
+            await _baseUrlResolver.ResolveAsync(cancellationToken);
 
         /// <summary>
         /// Get available plugins from the marketplace
@@ -37,10 +37,13 @@ namespace PolyBucket.Api.Features.Plugins.Services
             int page = 1,
             int pageSize = 20,
             string? category = null,
-            string? search = null)
+            string? search = null,
+            string? target = null,
+            CancellationToken cancellationToken = default)
         {
             try
             {
+                var baseUrl = await GetBaseUrlAsync(cancellationToken);
                 var queryParams = new List<string>
                 {
                     $"page={page}",
@@ -57,11 +60,16 @@ namespace PolyBucket.Api.Features.Plugins.Services
                     queryParams.Add($"search={Uri.EscapeDataString(search)}");
                 }
 
-                var url = $"{_marketplaceBaseUrl}/api/plugins?{string.Join("&", queryParams)}";
+                if (!string.IsNullOrWhiteSpace(target))
+                {
+                    queryParams.Add($"target={Uri.EscapeDataString(target)}");
+                }
+
+                var url = $"{baseUrl}/api/plugins/main-api?{string.Join("&", queryParams)}";
                 
                 _logger.LogInformation("Fetching plugins from marketplace: {Url}", url);
                 
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, cancellationToken);
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
@@ -84,15 +92,16 @@ namespace PolyBucket.Api.Features.Plugins.Services
         /// </summary>
         /// <param name="pluginId">Plugin ID</param>
         /// <returns>Plugin details</returns>
-        public async Task<MarketplacePluginDetails?> GetPluginDetailsAsync(string pluginId)
+        public async Task<MarketplacePluginDetails?> GetPluginDetailsAsync(string pluginId, CancellationToken cancellationToken = default)
         {
             try
             {
-                var url = $"{_marketplaceBaseUrl}/api/plugins/{pluginId}";
+                var baseUrl = await GetBaseUrlAsync(cancellationToken);
+                var url = $"{baseUrl}/api/plugins/{Uri.EscapeDataString(pluginId)}/details";
                 
                 _logger.LogInformation("Fetching plugin details from marketplace: {Url}", url);
                 
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, cancellationToken);
                 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
@@ -122,11 +131,12 @@ namespace PolyBucket.Api.Features.Plugins.Services
         /// <param name="pluginId">Plugin ID</param>
         /// <param name="version">Plugin version</param>
         /// <returns>Download URL and metadata</returns>
-        public async Task<PluginDownloadInfo?> GetPluginDownloadAsync(string pluginId, string? version = null)
+        public async Task<PluginDownloadInfo?> GetPluginDownloadAsync(string pluginId, string? version = null, CancellationToken cancellationToken = default)
         {
             try
             {
-                var url = $"{_marketplaceBaseUrl}/api/plugins/{pluginId}/download";
+                var baseUrl = await GetBaseUrlAsync(cancellationToken);
+                var url = $"{baseUrl}/api/plugins/{Uri.EscapeDataString(pluginId)}/download";
                 
                 if (!string.IsNullOrWhiteSpace(version))
                 {
@@ -135,7 +145,7 @@ namespace PolyBucket.Api.Features.Plugins.Services
                 
                 _logger.LogInformation("Getting plugin download info from marketplace: {Url}", url);
                 
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, cancellationToken);
                 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
@@ -163,15 +173,16 @@ namespace PolyBucket.Api.Features.Plugins.Services
         /// Get plugin categories from the marketplace
         /// </summary>
         /// <returns>List of categories</returns>
-        public async Task<List<MarketplaceCategory>> GetCategoriesAsync()
+        public async Task<List<MarketplaceCategory>> GetCategoriesAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var url = $"{_marketplaceBaseUrl}/api/categories";
+                var baseUrl = await GetBaseUrlAsync(cancellationToken);
+                var url = $"{baseUrl}/api/plugins/categories/main-api";
                 
                 _logger.LogInformation("Fetching categories from marketplace: {Url}", url);
                 
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, cancellationToken);
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
@@ -195,18 +206,17 @@ namespace PolyBucket.Api.Features.Plugins.Services
         /// <param name="pluginId">Plugin ID</param>
         /// <param name="version">Plugin version</param>
         /// <param name="userId">User ID who installed the plugin</param>
-        public async Task RecordInstallationAsync(string pluginId, string version, Guid userId)
+        public async Task RecordInstallationAsync(string pluginId, string version, Guid userId, CancellationToken cancellationToken = default)
         {
             try
             {
-                var url = $"{_marketplaceBaseUrl}/api/analytics/installations";
+                var baseUrl = await GetBaseUrlAsync(cancellationToken);
+                var url = $"{baseUrl}/api/plugins/{Uri.EscapeDataString(pluginId)}/install";
                 
-                var installation = new
+                var installation = new PluginInstallationRequestDto
                 {
                     PluginId = pluginId,
-                    Version = version,
-                    UserId = userId,
-                    InstalledAt = DateTime.UtcNow
+                    Version = version
                 };
 
                 var json = JsonSerializer.Serialize(installation);
@@ -215,7 +225,7 @@ namespace PolyBucket.Api.Features.Plugins.Services
                 _logger.LogInformation("Recording plugin installation: {PluginId} v{Version} for user {UserId}", 
                     pluginId, version, userId);
                 
-                var response = await _httpClient.PostAsync(url, content);
+                var response = await _httpClient.PostAsync(url, content, cancellationToken);
                 response.EnsureSuccessStatusCode();
             }
             catch (Exception ex)
@@ -229,11 +239,13 @@ namespace PolyBucket.Api.Features.Plugins.Services
     // Data Transfer Objects
     public class MarketplacePluginsResponse
     {
-        public List<MarketplacePlugin> Plugins { get; set; } = new();
+        public List<MarketplacePluginDetails> Plugins { get; set; } = new();
         public int TotalCount { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }
         public int TotalPages { get; set; }
+        public bool HasNextPage { get; set; }
+        public bool HasPreviousPage { get; set; }
     }
 
     public class MarketplacePlugin
@@ -247,11 +259,16 @@ namespace PolyBucket.Api.Features.Plugins.Services
         public List<string> Tags { get; set; } = new();
         public int Downloads { get; set; }
         public double Rating { get; set; }
+        public double AverageRating { get; set; }
         public int ReviewCount { get; set; }
         public string RepositoryUrl { get; set; } = string.Empty;
+        public string RepositoryBranch { get; set; } = "main";
+        public string RepositorySubpath { get; set; } = string.Empty;
+        public List<string> Targets { get; set; } = new();
         public bool IsVerified { get; set; }
         public bool IsFeatured { get; set; }
         public DateTime LastUpdated { get; set; }
+        public DateTime UpdatedAt { get; set; }
         public string License { get; set; } = string.Empty;
         public List<string> Screenshots { get; set; } = new();
         public string DocumentationUrl { get; set; } = string.Empty;
@@ -317,5 +334,11 @@ namespace PolyBucket.Api.Features.Plugins.Services
         public string ChecksumAlgorithm { get; set; } = string.Empty;
         public DateTime ReleasedAt { get; set; }
         public string ReleaseNotes { get; set; } = string.Empty;
+    }
+
+    internal class PluginInstallationRequestDto
+    {
+        public string PluginId { get; set; } = string.Empty;
+        public string? Version { get; set; }
     }
 }

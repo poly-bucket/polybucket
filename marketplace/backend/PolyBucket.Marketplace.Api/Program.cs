@@ -212,6 +212,8 @@ builder.Services.AddScoped<IPluginService, PluginService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<ISubmissionService, SubmissionService>();
+builder.Services.AddHttpClient<IPluginRepositoryManifestService, PluginRepositoryManifestService>();
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 
 var app = builder.Build();
@@ -259,6 +261,10 @@ try
         var context = scope.ServiceProvider.GetRequiredService<MarketplaceDbContext>();
         context.Database.EnsureCreated();
         Log.Logger.Information("Database schema ensured");
+        await MarketplaceSeedData.SeedAsync(
+            context,
+            scope.ServiceProvider.GetRequiredService<IConfiguration>(),
+            scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("MarketplaceSeed"));
     }
 }
 catch (Exception ex)

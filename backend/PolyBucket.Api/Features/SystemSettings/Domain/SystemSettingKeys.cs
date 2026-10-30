@@ -8,4 +8,5 @@ public static class SystemSettingKeys
     public const string TokenAccessTokenExpiryHours = "Token:AccessTokenExpiryHours";
     public const string TokenRefreshTokenExpiryDays = "Token:RefreshTokenExpiryDays";
     public const string TokenEnableRefreshTokens = "Token:EnableRefreshTokens";
+    public const string MarketplaceBaseUrl = "Marketplace:BaseUrl";
 }

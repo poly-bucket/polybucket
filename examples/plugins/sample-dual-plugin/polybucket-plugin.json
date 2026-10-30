@@ -1,0 +1,31 @@
+{
+  "id": "sample-dual-plugin",
+  "name": "Sample Dual Plugin",
+  "version": "1.0.0",
+  "author": "PolyBucket Community",
+  "description": "API and frontend assets for marketplace install tests",
+  "type": "integration",
+  "targets": ["api", "frontend"],
+  "compatibility": {
+    "minVersion": "1.0.0",
+    "maxVersion": "2.0.0"
+  },
+  "dependencies": {
+    "backend": [],
+    "frontend": []
+  },
+  "permissions": [],
+  "hooks": [],
+  "settings": [],
+  "assets": {
+    "css": ["styles/dual-plugin.css"],
+    "js": [],
+    "images": []
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/poly-bucket/polybucket"
+  },
+  "keywords": ["sample", "dual", "test"],
+  "license": "MIT"
+}

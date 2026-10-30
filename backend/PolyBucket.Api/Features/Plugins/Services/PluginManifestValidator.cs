@@ -86,9 +86,26 @@ namespace PolyBucket.Api.Features.Plugins.Services
             }
 
             // Validate plugin type
-            var validTypes = new[] { "theme", "oauth", "metadata", "localization", "layout", "integration" };
+            var validTypes = new[] { "theme", "oauth", "metadata", "localization", "layout", "integration", "extension", "tool" };
             if (!string.IsNullOrWhiteSpace(manifest.Type) && !validTypes.Contains(manifest.Type.ToLower()))
                 errors.Add($"Invalid plugin type. Must be one of: {string.Join(", ", validTypes)}");
+
+            var normalizedTargets = PluginManifestTargets.NormalizeTargets(manifest.Targets);
+            if (normalizedTargets.Count == 0)
+            {
+                errors.Add("At least one target is required (frontend and/or api)");
+            }
+            else
+            {
+                var validTargets = new[] { PluginManifestTargets.Frontend, PluginManifestTargets.Api };
+                foreach (var target in normalizedTargets)
+                {
+                    if (!validTargets.Contains(target))
+                    {
+                        errors.Add($"Invalid target '{target}'. Must be one of: {string.Join(", ", validTargets)}");
+                    }
+                }
+            }
 
             // Validate settings
             if (manifest.Settings != null)

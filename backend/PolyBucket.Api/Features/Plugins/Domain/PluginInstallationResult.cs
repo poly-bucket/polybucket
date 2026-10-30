@@ -13,6 +13,7 @@ namespace PolyBucket.Api.Features.Plugins.Domain
         public List<string> Errors { get; set; } = new();
         public DateTime InstalledAt { get; set; } = DateTime.UtcNow;
         public string InstallationPath { get; set; } = string.Empty;
+        public bool RestartRequired { get; set; }
     }
 
     public class PluginInstallationRequest
@@ -38,6 +39,8 @@ namespace PolyBucket.Api.Features.Plugins.Domain
         public string InstallationPath { get; set; } = string.Empty;
         public List<string> Permissions { get; set; } = new();
         public bool IsEnabled { get; set; }
+        public List<string> Targets { get; set; } = new();
+        public List<string> CssAssets { get; set; } = new();
     }
 
     public class MarketplacePlugin

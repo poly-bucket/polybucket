@@ -5,6 +5,7 @@ import { SettingsSection } from "@/components/settings/settings-section";
 import { Button } from "@/components/primitives/button";
 import { getPlugins } from "@/lib/plugins/registry";
 import { reloadPlugins } from "@/lib/services/adminService";
+import { MarketplacePluginsSection } from "@/components/admin/marketplace-plugins-section";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/primitives/tabs";
@@ -126,21 +127,7 @@ export function PluginsTab() {
           </SettingsSection>
         </TabsContent>
         <TabsContent variant="glass" value="marketplace">
-          <SettingsSection
-            title="Plugin Marketplace"
-            description="Browse and install plugins"
-          >
-            <div className="rounded-lg border border-white/10 glass-bg p-12 text-center">
-              <Puzzle className="h-16 w-16 mx-auto mb-4 text-white/40" />
-              <p className="text-white/80 mb-2 font-medium">
-                Plugin marketplace coming soon
-              </p>
-              <p className="text-sm text-white/50 max-w-md mx-auto">
-                Search, install from URL or GitHub, and browse featured plugins
-                will be available when the marketplace API is ready.
-              </p>
-            </div>
-          </SettingsSection>
+          <MarketplacePluginsSection />
         </TabsContent>
       </Tabs>
     </div>

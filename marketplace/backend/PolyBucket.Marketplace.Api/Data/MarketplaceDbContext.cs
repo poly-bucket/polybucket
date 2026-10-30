@@ -35,6 +35,9 @@ namespace PolyBucket.Marketplace.Api.Data
                 entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Version).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.RepositoryUrl).HasMaxLength(500);
+                entity.Property(e => e.RepositoryBranch).HasMaxLength(100).HasDefaultValue("main");
+                entity.Property(e => e.RepositorySubpath).HasMaxLength(500);
+                entity.Property(e => e.Targets).HasMaxLength(200);
                 entity.Property(e => e.License).HasMaxLength(100);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Downloads).HasDefaultValue(0);
@@ -161,6 +164,9 @@ namespace PolyBucket.Marketplace.Api.Data
                 entity.Property(e => e.Description).HasMaxLength(2000);
                 entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.RepositoryUrl).HasMaxLength(500);
+                entity.Property(e => e.RepositoryBranch).HasMaxLength(100).HasDefaultValue("main");
+                entity.Property(e => e.RepositorySubpath).HasMaxLength(500);
+                entity.Property(e => e.Targets).HasMaxLength(200);
                 entity.Property(e => e.License).HasMaxLength(100);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.SubmittedAt).HasDefaultValueSql("NOW()");

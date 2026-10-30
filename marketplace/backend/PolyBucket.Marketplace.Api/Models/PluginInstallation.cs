@@ -55,6 +55,9 @@ namespace PolyBucket.Marketplace.Api.Models
         public string Category { get; set; } = string.Empty;
         public string Version { get; set; } = string.Empty;
         public string RepositoryUrl { get; set; } = string.Empty;
+        public string RepositoryBranch { get; set; } = "main";
+        public string RepositorySubpath { get; set; } = string.Empty;
+        public List<string> Targets { get; set; } = new();
         public string License { get; set; } = string.Empty;
         public bool IsVerified { get; set; }
         public bool IsFeatured { get; set; }

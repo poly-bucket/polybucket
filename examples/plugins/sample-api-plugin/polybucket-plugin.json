@@ -1,0 +1,31 @@
+{
+  "id": "sample-api-plugin",
+  "name": "Sample API Plugin",
+  "version": "1.0.0",
+  "author": "PolyBucket Community",
+  "description": "Minimal API plugin for marketplace install tests",
+  "type": "integration",
+  "targets": ["api"],
+  "compatibility": {
+    "minVersion": "1.0.0",
+    "maxVersion": "2.0.0"
+  },
+  "dependencies": {
+    "backend": [],
+    "frontend": []
+  },
+  "permissions": [],
+  "hooks": [],
+  "settings": [],
+  "assets": {
+    "css": [],
+    "js": [],
+    "images": []
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/poly-bucket/polybucket"
+  },
+  "keywords": ["sample", "api", "test"],
+  "license": "MIT"
+}

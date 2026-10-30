@@ -455,11 +455,12 @@ namespace PolyBucket.Marketplace.Api.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20,
             [FromQuery] string? category = null,
-            [FromQuery] string? search = null)
+            [FromQuery] string? search = null,
+            [FromQuery] string? target = null)
         {
             try
             {
-                var response = await _pluginService.GetPluginsForMainApiAsync(page, pageSize, category, search);
+                var response = await _pluginService.GetPluginsForMainApiAsync(page, pageSize, category, search, target);
                 return Ok(response);
             }
             catch (Exception ex)

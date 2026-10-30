@@ -50,6 +50,39 @@ namespace PolyBucket.Api.Features.Plugins.Domain
 
         [JsonPropertyName("license")]
         public string License { get; set; } = string.Empty;
+
+        [JsonPropertyName("targets")]
+        public List<string> Targets { get; set; } = new();
+    }
+
+    public static class PluginManifestTargets
+    {
+        public const string Frontend = "frontend";
+        public const string Api = "api";
+
+        public static bool TargetsApi(IEnumerable<string>? targets)
+        {
+            return targets?.Any(t => string.Equals(t, Api, StringComparison.OrdinalIgnoreCase)) == true;
+        }
+
+        public static bool TargetsFrontend(IEnumerable<string>? targets)
+        {
+            return targets?.Any(t => string.Equals(t, Frontend, StringComparison.OrdinalIgnoreCase)) == true;
+        }
+
+        public static IReadOnlyList<string> NormalizeTargets(IEnumerable<string>? targets)
+        {
+            if (targets == null)
+            {
+                return Array.Empty<string>();
+            }
+
+            return targets
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Select(t => t.Trim().ToLowerInvariant())
+                .Distinct()
+                .ToList();
+        }
     }
 
     public class PluginCompatibility
