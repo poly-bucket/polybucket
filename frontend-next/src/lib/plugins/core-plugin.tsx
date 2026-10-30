@@ -27,7 +27,6 @@ import {
   Palette,
   Puzzle,
   Heart,
-  Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { useAuth } from "@/contexts/AuthContext";
