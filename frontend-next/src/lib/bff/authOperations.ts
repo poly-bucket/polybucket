@@ -5,6 +5,7 @@ import {
   apiPostJson,
   type ApiLoginResponse,
   type ApiRefreshResponse,
+  type ApiRegisterResponse,
 } from "./apiClient";
 import { appendSessionCookie, readSessionCookieValue, refreshMaxAgeFromIso } from "./cookies";
 import {
@@ -149,6 +150,71 @@ export async function handleLoginBody(
     accessToken,
     refreshToken,
     login.refreshTokenExpiresAt,
+    effectiveProfile.roles ?? []
+  );
+  return { kind: "success", response: json };
+}
+
+export async function handleRegisterBody(
+  body: Record<string, unknown>
+): Promise<
+  | { kind: "verification"; response: NextResponse }
+  | { kind: "success"; response: NextResponse }
+  | { kind: "error"; response: NextResponse }
+> {
+  const result = await apiPostJson<ApiRegisterResponse>("/api/auth/register", {
+    email: body.email,
+    username: body.username,
+    password: body.password,
+    confirmPassword: body.confirmPassword,
+    userAgent: body.userAgent ?? "",
+  });
+  if (!result.ok || result.data === null) {
+    let message = result.text || "Registration failed";
+    if (result.data && typeof result.data === "object" && "message" in result.data) {
+      const m = (result.data as { message?: string }).message;
+      if (m) {
+        message = m;
+      }
+    }
+    return {
+      kind: "error",
+      response: NextResponse.json({ message }, { status: result.status || 400 }),
+    };
+  }
+  const register = result.data;
+  if (register.requiresEmailVerification) {
+    return {
+      kind: "verification",
+      response: NextResponse.json({ requiresEmailVerification: true }),
+    };
+  }
+  const auth = register.authentication;
+  const accessToken = auth?.accessToken ?? "";
+  const refreshToken = auth?.refreshToken ?? "";
+  if (!accessToken.trim() || !refreshToken.trim()) {
+    return {
+      kind: "error",
+      response: NextResponse.json({ message: "Invalid registration response" }, { status: 502 }),
+    };
+  }
+  const profile = profileFromAuthentication(auth!);
+  if (!profile) {
+    return {
+      kind: "error",
+      response: NextResponse.json({ message: "Invalid token" }, { status: 502 }),
+    };
+  }
+  const hydrated = await hydrateProfileFromMe(accessToken);
+  const effectiveProfile = hydrated ?? profile;
+  const json = NextResponse.json({
+    user: toClientJson(effectiveProfile).user,
+  });
+  await sealTokensInResponse(
+    json,
+    accessToken,
+    refreshToken,
+    auth?.refreshTokenExpiresAt,
     effectiveProfile.roles ?? []
   );
   return { kind: "success", response: json };

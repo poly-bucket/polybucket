@@ -19,7 +19,7 @@ namespace PolyBucket.Database.Entities.SystemSettings
         public string ContactEmail { get; set; } = string.Empty;
         public bool AllowPublicBrowsing { get; set; } = true;
         public bool RequireLoginForUpload { get; set; } = true;
-        public bool AllowUserRegistration { get; set; } = true;
+        public bool AllowUserRegistration { get; set; } = false;
         public bool RequireEmailVerification { get; set; } = false;
         public bool DisableEmailSettings { get; set; } = false;
         

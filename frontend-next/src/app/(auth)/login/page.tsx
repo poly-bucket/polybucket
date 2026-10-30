@@ -18,6 +18,7 @@ import { Input } from "@/components/primitives/input";
 import { cn } from "@/lib/utils";
 import type { LoginResult } from "@/contexts/AuthContext";
 import { isSafeInternalRedirect } from "@/lib/bff/safeRedirect";
+import { fetchRegistrationStatus } from "@/lib/services/registrationService";
 
 type Phase = "credentials" | "twoFactor";
 
@@ -40,10 +41,24 @@ export default function LoginPage() {
   const totpInputRef = useRef<HTMLInputElement>(null);
   const backupInputRef = useRef<HTMLInputElement>(null);
 
+  const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
+
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect");
+
+  useEffect(() => {
+    let active = true;
+    void fetchRegistrationStatus().then((allowed) => {
+      if (active) {
+        setRegistrationOpen(allowed);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (phase !== "twoFactor") {
@@ -256,6 +271,15 @@ export default function LoginPage() {
               <Button type="submit" disabled={isSubmitting} className="w-full">
                 {isSubmitting ? "Signing in…" : "Sign in"}
               </Button>
+
+              {registrationOpen === true && (
+                <p className="text-center text-sm text-white/60">
+                  No account?{" "}
+                  <Link href="/register" className="text-primary underline-offset-4 hover:underline">
+                    Create an account
+                  </Link>
+                </p>
+              )}
             </form>
           ) : (
             <form onSubmit={handleTwoFactorSubmit} className="space-y-4">

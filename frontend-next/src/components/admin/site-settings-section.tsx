@@ -131,7 +131,7 @@ export function SiteSettingsSection() {
       <SettingsToggle
         label="Allow user registration"
         description="Let new users create accounts"
-        checked={form.allowUserRegistration ?? true}
+        checked={form.allowUserRegistration ?? false}
         onCheckedChange={(v) => patch({ allowUserRegistration: v })}
       />
       <SettingsToggle

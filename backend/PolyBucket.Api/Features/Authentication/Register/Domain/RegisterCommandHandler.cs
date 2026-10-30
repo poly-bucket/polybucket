@@ -17,7 +17,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         ITokenService tokenService,
         IEmailSettingsResolver emailSettingsResolver,
         IAccountEmailService accountEmailService,
-        IPasswordHasher passwordHasher,
+        IUserRegistrationGate registrationGate,
         ILogger<RegisterCommandHandler> logger,
         PolyBucketDbContext context)
     {
@@ -27,36 +27,33 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         private readonly ITokenService _tokenService = tokenService;
         private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
         private readonly IAccountEmailService _accountEmailService = accountEmailService;
-        private readonly IPasswordHasher _passwordHasher = passwordHasher;
+        private readonly IUserRegistrationGate _registrationGate = registrationGate;
         private readonly ILogger<RegisterCommandHandler> _logger = logger;
         private readonly PolyBucketDbContext _context = context;
 
         public async Task<RegisterCommandResponse> Handle(RegisterCommand command, CancellationToken cancellationToken)
         {
-            // Check if email is already taken
+            await _registrationGate.EnsureRegistrationAllowedAsync(cancellationToken);
+
             if (await _authRepository.IsEmailTakenAsync(command.Email))
             {
                 throw new InvalidOperationException("Email is already registered");
             }
 
-            // Check if username is already taken
             if (await _authRepository.IsUsernameTakenAsync(command.Username))
             {
                 throw new InvalidOperationException("Username is already taken");
             }
 
-            // Hash password
             var salt = BCrypt.Net.BCrypt.GenerateSalt();
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(command.Password, salt);
 
-            // Find the default User role
-            var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
+            var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User", cancellationToken);
             if (userRole == null)
             {
                 throw new InvalidOperationException("Default User role not found. Please ensure roles are properly configured.");
             }
 
-            // Create user
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -73,7 +70,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                 Settings = new UserSettings
                 {
                     Id = Guid.NewGuid(),
-                    UserId = Guid.NewGuid(), // Will be set after user creation
+                    UserId = Guid.NewGuid(),
                     Language = "en",
                     Theme = "dark",
                     EmailNotifications = true,
@@ -82,40 +79,11 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                 }
             };
 
-            // Set the UserId for settings
             user.Settings.UserId = user.Id;
 
-            // Save user
             await _authRepository.CreateUserAsync(user);
 
-            // Log successful registration
             _logger.LogInformation("User registered successfully: {Email}", user.Email);
-
-            // Generate authentication response
-            var authResponse = _tokenService.GenerateAuthenticationResponse(user);
-
-            await _authRepository.CreateRefreshTokenAsync(new PolyBucket.Database.Entities.Authentication.RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                Token = authResponse.RefreshToken,
-                UserId = user.Id,
-                ExpiresAt = authResponse.RefreshTokenExpiresAt,
-                CreatedAt = DateTime.UtcNow,
-                CreatedByIp = command.Client.IpAddress
-            });
-
-            // Create login record
-            var loginRecord = new UserLogin
-            {
-                Id = Guid.NewGuid(),
-                Email = user.Email,
-                UserId = user.Id,
-                Successful = true,
-                IpAddress = command.Client.IpAddress,
-                UserAgent = command.Client.UserAgent,
-                CreatedAt = DateTime.UtcNow
-            };
-            await _authRepository.CreateLoginRecordAsync(loginRecord);
 
             var emailSettings = await _emailSettingsResolver.GetEffectiveSettingsAsync(cancellationToken);
             var isEmailServiceConfigured = emailSettings.CanDeliver;
@@ -142,23 +110,51 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                     await _accountEmailService.SendVerificationAsync(user, emailVerificationToken, EmailVerificationLifetime, cancellationToken: cancellationToken);
 
                     _logger.LogInformation("Email verification queued for user: {Email}", user.Email);
+
+                    return new RegisterCommandResponse
+                    {
+                        Authentication = null,
+                        RequiresEmailVerification = true
+                    };
                 }
-                else
-                {
-                    await _accountEmailService.SendWelcomeAsync(user, cancellationToken: cancellationToken);
-                    _logger.LogInformation("Welcome email queued for user: {Email}", user.Email);
-                }
+
+                await _accountEmailService.SendWelcomeAsync(user, cancellationToken: cancellationToken);
+                _logger.LogInformation("Welcome email queued for user: {Email}", user.Email);
             }
             else
             {
                 _logger.LogWarning("Email service is not configured. Skipping email sending for user: {Email}", user.Email);
             }
 
+            var authResponse = _tokenService.GenerateAuthenticationResponse(user);
+
+            await _authRepository.CreateRefreshTokenAsync(new PolyBucket.Database.Entities.Authentication.RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                Token = authResponse.RefreshToken,
+                UserId = user.Id,
+                ExpiresAt = authResponse.RefreshTokenExpiresAt,
+                CreatedAt = DateTime.UtcNow,
+                CreatedByIp = command.Client.IpAddress
+            });
+
+            var loginRecord = new UserLogin
+            {
+                Id = Guid.NewGuid(),
+                Email = user.Email,
+                UserId = user.Id,
+                Successful = true,
+                IpAddress = command.Client.IpAddress,
+                UserAgent = command.Client.UserAgent,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _authRepository.CreateLoginRecordAsync(loginRecord);
+
             return new RegisterCommandResponse
             {
                 Authentication = authResponse,
-                RequiresEmailVerification = requiresEmailVerification
+                RequiresEmailVerification = false
             };
         }
     }
-} 
+}

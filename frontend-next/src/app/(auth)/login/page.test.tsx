@@ -9,6 +9,16 @@ const mockSearchParamsGet = vi.fn((key: string) =>
   key === "redirect" ? null : null
 );
 
+const mockFetchRegistrationStatus = vi.fn();
+
+vi.mock("@/lib/services/registrationService", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/services/registrationService")>();
+  return {
+    ...actual,
+    fetchRegistrationStatus: () => mockFetchRegistrationStatus(),
+  };
+});
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
   useSearchParams: () => ({ get: mockSearchParamsGet }),
@@ -20,6 +30,37 @@ describe("LoginPage", () => {
     mockSearchParamsGet.mockImplementation((key: string) =>
       key === "redirect" ? null : null
     );
+    mockFetchRegistrationStatus.mockResolvedValue(null);
+  });
+
+  it("shows create account link when public registration is open", async () => {
+    // Arrange
+    mockFetchRegistrationStatus.mockResolvedValue(true);
+
+    // Act
+    render(<LoginPage />, {
+      mockAuth: { user: null, login: vi.fn().mockResolvedValue({ success: true }) },
+    });
+
+    // Assert
+    expect(await screen.findByRole("link", { name: /create an account/i })).toHaveAttribute(
+      "href",
+      "/register"
+    );
+  });
+
+  it("hides create account link when public registration is closed", async () => {
+    // Arrange
+    mockFetchRegistrationStatus.mockResolvedValue(false);
+
+    // Act
+    render(<LoginPage />, {
+      mockAuth: { user: null, login: vi.fn().mockResolvedValue({ success: true }) },
+    });
+
+    // Assert
+    await screen.findByRole("button", { name: /sign in/i });
+    expect(screen.queryByRole("link", { name: /create an account/i })).not.toBeInTheDocument();
   });
 
   it("renders form with heading and inputs", () => {

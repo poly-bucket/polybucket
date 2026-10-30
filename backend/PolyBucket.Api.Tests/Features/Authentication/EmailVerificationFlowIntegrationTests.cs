@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api.Features.Authentication.Authorization;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.SystemSettings.Domain;
+using PolyBucket.Database.Entities.SystemSettings;
 using Shouldly;
 using Xunit;
 
@@ -66,8 +67,53 @@ public class EmailVerificationFlowIntegrationTests : BaseIntegrationTest
         return current.GetString() ?? string.Empty;
     }
 
+    private async Task EnablePublicRegistrationAsync(bool allowed = true)
+    {
+        if (!await DbContext.SystemSetups.AnyAsync())
+        {
+            DbContext.SystemSetups.Add(new SystemSetup
+            {
+                Id = Guid.NewGuid(),
+                AllowUserRegistration = allowed,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            var setup = await DbContext.SystemSetups.FirstAsync();
+            setup.AllowUserRegistration = allowed;
+        }
+
+        await DbContext.SaveChangesAsync();
+    }
+
+    private async Task RegisterUserAsync(string email)
+    {
+        await EnablePublicRegistrationAsync(true);
+        var response = await Client.PostAsJsonAsync("/api/auth/register", new
+        {
+            email,
+            username = email.Split('@')[0],
+            password = "Password123!",
+            confirmPassword = "Password123!"
+        });
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    private async Task<(string AccessToken, string RefreshToken)> LoginUserAsync(
+        string email,
+        string password = "Password123!")
+    {
+        var login = await Client.PostAsJsonAsync("/api/auth/login", new { emailOrUsername = email, password });
+        login.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var doc = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        return (ReadString(doc.RootElement, "token"), ReadString(doc.RootElement, "refreshToken"));
+    }
+
     private async Task<(string AccessToken, string RefreshToken)> RegisterAsync(string email)
     {
+        await EnablePublicRegistrationAsync(true);
         var response = await Client.PostAsJsonAsync("/api/auth/register", new
         {
             email,
@@ -77,7 +123,18 @@ public class EmailVerificationFlowIntegrationTests : BaseIntegrationTest
         });
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return (ReadString(doc.RootElement, "authentication", "accessToken"), ReadString(doc.RootElement, "authentication", "refreshToken"));
+        if (doc.RootElement.TryGetProperty("authentication", out var auth)
+            && auth.ValueKind == JsonValueKind.Object
+            && auth.TryGetProperty("accessToken", out var accessProp))
+        {
+            var access = accessProp.GetString();
+            if (!string.IsNullOrWhiteSpace(access))
+            {
+                return (access, ReadString(auth, "refreshToken"));
+            }
+        }
+
+        return await LoginUserAsync(email);
     }
 
     private async Task<HttpResponseMessage> SendAuthorizedAsync(HttpMethod method, string url, string accessToken, object? body = null)
@@ -97,13 +154,15 @@ public class EmailVerificationFlowIntegrationTests : BaseIntegrationTest
     {
         // Arrange
         await ResetStateAsync();
+        await EnablePublicRegistrationAsync(true);
         await EnableEmailAsync(requireVerification: true);
-        var (accessToken, _) = await RegisterAsync("new-maker@polybucket.test");
+        await RegisterUserAsync("new-maker@polybucket.test");
         await DispatchAsync();
         var rawToken = ExtractTokenFromEmailTo("new-maker@polybucket.test", "/verify-email");
 
         // Act
         var verify = await Client.PostAsJsonAsync("/api/auth/verify-email", new { token = rawToken });
+        var (accessToken, _) = await LoginUserAsync("new-maker@polybucket.test");
         var me = await SendAuthorizedAsync(HttpMethod.Get, "/api/auth/me", accessToken);
 
         // Assert
@@ -122,8 +181,9 @@ public class EmailVerificationFlowIntegrationTests : BaseIntegrationTest
     {
         // Arrange
         await ResetStateAsync();
+        await EnablePublicRegistrationAsync(true);
         await EnableEmailAsync(requireVerification: true);
-        await RegisterAsync("twice@polybucket.test");
+        await RegisterUserAsync("twice@polybucket.test");
         await DispatchAsync();
         var rawToken = ExtractTokenFromEmailTo("twice@polybucket.test", "/verify-email");
         await Client.PostAsJsonAsync("/api/auth/verify-email", new { token = rawToken });
@@ -140,8 +200,10 @@ public class EmailVerificationFlowIntegrationTests : BaseIntegrationTest
     {
         // Arrange
         await ResetStateAsync();
+        await EnablePublicRegistrationAsync(true);
         await EnableEmailAsync(requireVerification: true);
-        var (accessToken, _) = await RegisterAsync("blocked@polybucket.test");
+        await RegisterUserAsync("blocked@polybucket.test");
+        var (accessToken, _) = await LoginUserAsync("blocked@polybucket.test");
         await DispatchAsync();
         var rawToken = ExtractTokenFromEmailTo("blocked@polybucket.test", "/verify-email");
 
@@ -220,8 +282,9 @@ public class EmailVerificationFlowIntegrationTests : BaseIntegrationTest
     {
         // Arrange
         await ResetStateAsync();
+        await EnablePublicRegistrationAsync(true);
         await EnableEmailAsync(requireVerification: true);
-        await RegisterAsync("resend@polybucket.test");
+        await RegisterUserAsync("resend@polybucket.test");
         await DispatchAsync();
         var firstToken = ExtractTokenFromEmailTo("resend@polybucket.test", "/verify-email");
         await DbContext.EmailVerificationTokens.ExecuteUpdateAsync(s => s.SetProperty(t => t.CreatedAt, DateTime.UtcNow.AddMinutes(-5)));

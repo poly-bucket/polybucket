@@ -94,6 +94,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Authentication.ResendVerificationEmail.Domain.ResendVerificationEmailCommandHandler>();
         services.AddTransient<Features.Authentication.RequestEmailChange.Domain.RequestEmailChangeCommandHandler>();
         services.AddScoped<Features.Authentication.Services.IEmailVerificationGate, Features.Authentication.Services.EmailVerificationGate>();
+        services.AddScoped<Features.Authentication.Services.IUserRegistrationGate, Features.Authentication.Services.UserRegistrationGate>();
         
         // System Settings
         services.AddTransient<Features.SystemSettings.Services.IAuthenticationSettingsService, Features.SystemSettings.Services.AuthenticationSettingsService>();

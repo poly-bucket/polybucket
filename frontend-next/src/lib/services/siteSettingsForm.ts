@@ -10,7 +10,7 @@ export function siteSettingsToCommand(
     contactEmail: settings.contactEmail ?? "",
     allowPublicBrowsing: settings.allowPublicBrowsing ?? true,
     requireLoginForUpload: settings.requireLoginForUpload ?? true,
-    allowUserRegistration: settings.allowUserRegistration ?? true,
+    allowUserRegistration: settings.allowUserRegistration ?? false,
     requireEmailVerification: settings.requireEmailVerification ?? false,
     disableEmailSettings: settings.disableEmailSettings ?? false,
     maxFileSizeBytes: settings.maxFileSizeBytes,

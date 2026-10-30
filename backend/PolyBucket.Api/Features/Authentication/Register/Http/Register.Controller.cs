@@ -5,9 +5,6 @@ using PolyBucket.Api.Common.Http;
 using PolyBucket.Email;
 using PolyBucket.Api.Extensions;
 using PolyBucket.Api.Features.Authentication.Register.Domain;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Authentication.Register.Http
 {
@@ -29,6 +26,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Http
         [ProducesResponseType(200, Type = typeof(RegisterCommandResponse))]
         [ProducesResponseType(400)]
         [ProducesResponseType(409)]
+        [ProducesResponseType(403)]
         [ProducesResponseType(429)]
         public async Task<IActionResult> Register([FromBody] RegisterCommand command, CancellationToken cancellationToken)
         {
@@ -42,6 +40,11 @@ namespace PolyBucket.Api.Features.Authentication.Register.Http
                 command.Client = ClientRequestInfoMapper.From(HttpContext);
                 var response = await _handler.Handle(command, cancellationToken);
                 return Ok(response);
+            }
+            catch (UserRegistrationClosedException ex)
+            {
+                _logger.LogWarning(ex, "Registration rejected for {Email} — registration is disabled", command.Email);
+                return StatusCode(403, new { message = ex.Message });
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("already"))
             {

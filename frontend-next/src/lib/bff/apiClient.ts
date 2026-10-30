@@ -31,6 +31,11 @@ export type ApiRefreshResponse = {
   authentication?: ApiAuthenticationResponse;
 };
 
+export type ApiRegisterResponse = {
+  authentication?: ApiAuthenticationResponse | null;
+  requiresEmailVerification?: boolean;
+};
+
 export async function apiPostJson<T>(
   path: string,
   body: unknown,
@@ -73,6 +78,26 @@ export async function apiGetJson<T>(
       Accept: "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
+    cache: "no-store",
+  });
+  let data: T | null = null;
+  if (res.ok) {
+    try {
+      data = (await res.json()) as T;
+    } catch {
+      data = null;
+    }
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
+export async function apiGetJsonAnonymous<T>(
+  path: string
+): Promise<{ ok: boolean; status: number; data: T | null }> {
+  const base = getPolybucketApiUrl();
+  const res = await fetch(`${base}${path}`, {
+    method: "GET",
+    headers: { Accept: "application/json" },
     cache: "no-store",
   });
   let data: T | null = null;

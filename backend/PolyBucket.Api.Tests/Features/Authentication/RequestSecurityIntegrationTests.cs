@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api.Features.Authentication.Login.Domain;
+using PolyBucket.Database.Entities.SystemSettings;
 using Shouldly;
 using Xunit;
 
@@ -22,11 +23,33 @@ public class RequestSecurityIntegrationTests : BaseIntegrationTest
     {
     }
 
+    private async Task EnablePublicRegistrationAsync(bool allowed = true)
+    {
+        if (!await DbContext.SystemSetups.AnyAsync())
+        {
+            DbContext.SystemSetups.Add(new SystemSetup
+            {
+                Id = Guid.NewGuid(),
+                AllowUserRegistration = allowed,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            var setup = await DbContext.SystemSetups.FirstAsync();
+            setup.AllowUserRegistration = allowed;
+        }
+
+        await DbContext.SaveChangesAsync();
+    }
+
     [Fact(DisplayName = "When a user registers, the response body never contains an email verification token.")]
     public async Task Register_ResponseBody_DoesNotContainVerificationToken()
     {
         // Arrange
         await ResetStateAsync();
+        await EnablePublicRegistrationAsync(true);
         var payload = new
         {
             email = "no-token-leak@test.com",

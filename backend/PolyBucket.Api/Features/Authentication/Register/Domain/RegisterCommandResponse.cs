@@ -4,7 +4,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
 {
     public class RegisterCommandResponse
     {
-        public AuthenticationResponse Authentication { get; set; } = new();
+        public AuthenticationResponse? Authentication { get; set; }
         public bool RequiresEmailVerification { get; set; }
     }
 }

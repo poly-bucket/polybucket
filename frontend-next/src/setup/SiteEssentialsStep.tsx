@@ -25,7 +25,7 @@ export default function SiteEssentialsStep({
     siteName: (data.siteName as string) ?? "PolyBucket",
     contactEmail: (data.contactEmail as string) ?? "",
     allowPublicBrowsing: (data.allowPublicBrowsing as boolean) ?? true,
-    allowUserRegistration: (data.allowUserRegistration as boolean) ?? true,
+    allowUserRegistration: (data.allowUserRegistration as boolean) ?? false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
