@@ -35,6 +35,7 @@ import { ProfileModelsTab } from "@/components/profile/profile-models-tab";
 import { ProfileCollectionsTab } from "@/components/profile/profile-collections-tab";
 import { ProfileLikesTab } from "@/components/profile/profile-likes-tab";
 import { ProfileFollowListTab } from "@/components/profile/profile-follow-list-tab";
+import { FollowerHistoryChart } from "@/components/profile/follower-history-chart";
 import { AddToCollectionCard } from "@/components/collections/add-to-collection-card";
 import { CollectionModelsTab } from "@/components/collections/collection-models-tab";
 import type { UserProfileData } from "@/lib/services/userProfileService";
@@ -151,12 +152,15 @@ function ProfileLikesTabWrapper({
 }
 
 function ProfileFollowersTabWrapper({
+  userId,
   username,
+  profile,
 }: {
   userId: string;
   username: string;
   profile: UserProfileData;
 }): React.ReactElement {
+  const { user: currentUser } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
@@ -168,13 +172,19 @@ function ProfileFollowersTabWrapper({
     },
     [searchParams, router]
   );
+  const isOwnProfile =
+    !!currentUser?.id && !!profile.id && currentUser.id === profile.id;
+
   return (
-    <ProfileFollowListTab
-      username={username}
-      mode="followers"
-      page={page}
-      onPageChange={setPage}
-    />
+    <div className="space-y-4">
+      {isOwnProfile && userId ? <FollowerHistoryChart userId={userId} /> : null}
+      <ProfileFollowListTab
+        username={username}
+        mode="followers"
+        page={page}
+        onPageChange={setPage}
+      />
+    </div>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import type { LucideIcon } from "lucide-react"
+import type { PanelNavItemContribution } from "@/lib/plugins/types"
 import {
   Sidebar,
   SidebarContent,
@@ -16,20 +16,14 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/glass/sidebar"
-export interface PanelNavItem {
-  id: string
-  label: string
-  group: string
-  icon: LucideIcon
-  path: string
-  badge?: string
-}
+export type PanelNavItem = PanelNavItemContribution
 
 export interface PanelLayoutProps {
   title: string
   description?: string
-  navItems: PanelNavItem[]
+  navItems: PanelNavItemContribution[]
   children: React.ReactNode
 }
 
@@ -47,6 +41,29 @@ function getGroupedNavItems<T extends { group: string }>(
     groupMap.set(item.group, existing)
   }
   return groupOrder.map((group) => ({ group, items: groupMap.get(group) ?? [] }))
+}
+
+function PanelLayoutInset({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  const { state, isMobile } = useSidebar()
+  const showInsetHeader = isMobile || state === "collapsed"
+
+  return (
+    <SidebarInset className="min-w-0 overflow-x-hidden">
+      {showInsetHeader && (
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-4">
+          <SidebarTrigger className="text-white/70 hover:text-white" />
+          <span className="text-sm font-medium text-white">{title}</span>
+        </header>
+      )}
+      <main className="min-w-0 flex-1 overflow-auto p-4 md:p-6">{children}</main>
+    </SidebarInset>
+  )
 }
 
 export function PanelLayout({
@@ -108,13 +125,7 @@ export function PanelLayout({
           ))}
         </SidebarContent>
       </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-4 md:hidden">
-          <SidebarTrigger className="text-white/70 hover:text-white" />
-          <span className="text-sm font-medium text-white">{title}</span>
-        </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
-      </SidebarInset>
+      <PanelLayoutInset title={title}>{children}</PanelLayoutInset>
     </SidebarProvider>
   )
 }

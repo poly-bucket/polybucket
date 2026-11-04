@@ -17,6 +17,7 @@ public class EmailDispatcherHostedService(
 {
     private static readonly TimeSpan PurgeInterval = TimeSpan.FromHours(1);
     private static readonly TimeSpan ErrorBackoff = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan DisabledRecheckInterval = TimeSpan.FromSeconds(30);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -35,6 +36,15 @@ public class EmailDispatcherHostedService(
             try
             {
                 using var scope = scopeFactory.CreateScope();
+                var settings = await scope.ServiceProvider
+                    .GetRequiredService<IEmailSettingsResolver>()
+                    .GetEffectiveSettingsAsync(stoppingToken);
+                if (!settings.CanDeliver)
+                {
+                    await signal.WaitAsync(DisabledRecheckInterval, stoppingToken).ContinueWith(_ => { }, TaskScheduler.Default);
+                    continue;
+                }
+
                 var dispatcher = scope.ServiceProvider.GetRequiredService<IEmailDispatcher>();
                 processed = await dispatcher.DispatchPendingAsync(stoppingToken);
 

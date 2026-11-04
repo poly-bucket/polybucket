@@ -16,6 +16,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         IEmailSettingsResolver emailSettingsResolver,
         IAccountEmailService accountEmailService,
         IUserRegistrationGate registrationGate,
+        IRecoveryCodeProvisioningService recoveryCodeProvisioningService,
         ILogger<RegisterCommandHandler> logger)
     {
         public static readonly TimeSpan EmailVerificationLifetime = TimeSpan.FromHours(24);
@@ -25,6 +26,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
         private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly IUserRegistrationGate _registrationGate = registrationGate;
+        private readonly IRecoveryCodeProvisioningService _recoveryCodeProvisioningService = recoveryCodeProvisioningService;
         private readonly ILogger<RegisterCommandHandler> _logger = logger;
 
         public async Task<RegisterCommandResponse> Handle(RegisterCommand command, CancellationToken cancellationToken)
@@ -79,6 +81,13 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
 
             await _registerRepository.CreateUserAsync(user);
 
+            var recoveryCodes = await _recoveryCodeProvisioningService.ProvisionForNewUserAsync(
+                user,
+                user.Id,
+                storePendingDisplayPayload: false,
+                UserAuditAction.RecoveryCodesGenerated,
+                cancellationToken);
+
             _logger.LogInformation("User registered successfully: {Email}", user.Email);
 
             var emailSettings = await _emailSettingsResolver.GetEffectiveSettingsAsync(cancellationToken);
@@ -110,7 +119,8 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
                     return new RegisterCommandResponse
                     {
                         Authentication = null,
-                        RequiresEmailVerification = true
+                        RequiresEmailVerification = true,
+                        RecoveryCodes = recoveryCodes
                     };
                 }
 
@@ -149,7 +159,8 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
             return new RegisterCommandResponse
             {
                 Authentication = RegisterAuthenticationMapper.From(authResponse),
-                RequiresEmailVerification = false
+                RequiresEmailVerification = false,
+                RecoveryCodes = recoveryCodes
             };
         }
     }

@@ -9,14 +9,14 @@ namespace PolyBucket.Api.Features.ModelModeration.GetModerationSettings.Http;
 
 [Authorize]
 [ApiController]
-[Route("api/moderation/settings")]
+[Route("api/moderation/models")]
 [RequirePermission(PermissionConstants.MODERATION_VIEW_QUEUE)]
 public class GetModerationSettingsController(IGetModerationSettingsService service) : ControllerBase
 {
     /// <summary>
     /// Get moderation workflow settings.
     /// </summary>
-    [HttpGet]
+    [HttpGet("settings")]
     [ProducesResponseType(typeof(GetModerationSettingsResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<GetModerationSettingsResponseDto>> GetModerationSettings(CancellationToken cancellationToken = default)

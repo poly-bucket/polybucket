@@ -28,7 +28,12 @@ namespace PolyBucket.Api.Features.Categories.UpdateCategory.Repository
                 .FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower() && c.DeletedAt == null);
         }
 
-        public async Task<Category> UpdateCategoryAsync(Guid id, string name, Guid updatedById)
+        public async Task<Category> UpdateCategoryAsync(
+            Guid id,
+            string name,
+            string description,
+            string color,
+            Guid updatedById)
         {
             var category = await _context.Categories.FindAsync(id);
             if (category == null)
@@ -37,6 +42,8 @@ namespace PolyBucket.Api.Features.Categories.UpdateCategory.Repository
             }
 
             category.Name = name.Trim();
+            category.Description = description.Trim();
+            category.Color = color.Trim();
             category.UpdatedAt = DateTime.UtcNow;
             category.UpdatedById = updatedById;
 

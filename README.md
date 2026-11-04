@@ -36,13 +36,13 @@ Yes. Expect bugs.
 
 PolyBucket supports **MinIO**, **Silo**, and **SeaweedFS** (S3-compatible APIs). Choose your provider in the setup wizard; connection settings are stored in PostgreSQL (not environment variables).
 
-For local development, optional bundled **Silo** (S3-compatible):
+For local development, **Silo** (S3-compatible) starts with the default stack:
 
 ```bash
-docker compose --profile object-storage up -d
+docker compose up -d
 ```
 
-The compose service is named `silo` (port 9000). In the wizard, select **Silo** and set the internal endpoint to `silo` when the API runs in Docker on the same network.
+The compose service is named `silo` (API port 9000, console 9001). In the wizard, select **Silo**, endpoint `silo`, access key `minioadmin`, secret `minioadmin`, and a bucket name (for example `polybucket`).
 
 **SeaweedFS** defaults to port **8333**; enable path-style URLs in the wizard if your S3 gateway requires it.
 
@@ -241,11 +241,7 @@ docker-compose logs -f
 docker-compose down
 ```
 
-**Minimal API environment (production-style):** The API can start with only database access, JWT signing, CORS/frontend URL, and a bootstrap admin password. Object storage and email are configured in the **setup wizard** (stored in PostgreSQL). Optional bundled Silo:
-
-```bash
-docker compose --profile object-storage up -d
-```
+**Minimal API environment (production-style):** The API can start with only database access, JWT signing, CORS/frontend URL, and a bootstrap admin password. Object storage and email are configured in the **setup wizard** (stored in PostgreSQL). Local `docker compose up` includes **Silo** on port 9000 for wizard configuration.
 
 | Variable | Purpose |
 |----------|---------|

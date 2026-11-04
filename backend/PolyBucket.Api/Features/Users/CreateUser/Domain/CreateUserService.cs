@@ -9,6 +9,7 @@ using PolyBucket.Api.Features.Authentication.Domain;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.Users.CreateUser.Repository;
+using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Database.Entities.Users;
 
 namespace PolyBucket.Api.Features.Users.CreateUser.Domain;
@@ -21,6 +22,7 @@ public class CreateUserService(
     ITokenService tokenService,
     IEmailSettingsResolver emailSettingsResolver,
     IAccountEmailService accountEmailService,
+    IRecoveryCodeProvisioningService recoveryCodeProvisioningService,
     ILogger<CreateUserService> logger) : ICreateUserService
 {
     public static readonly TimeSpan InviteLifetime = TimeSpan.FromHours(72);
@@ -78,6 +80,14 @@ public class CreateUserService(
 
         await authRepository.CreateUserAsync(user);
 
+        var actorUserId = command.CreatedByUserId ?? user.Id;
+        var recoveryCodes = await recoveryCodeProvisioningService.ProvisionForNewUserAsync(
+            user,
+            actorUserId,
+            storePendingDisplayPayload: false,
+            UserAuditAction.RecoveryCodesGenerated,
+            cancellationToken);
+
         logger.LogInformation("User created by admin: {Email} with role {Role}", user.Email, role.Name);
 
         var loginRecord = new UserLogin
@@ -124,7 +134,8 @@ public class CreateUserService(
             GeneratedPassword = inviteQueued ? null : generatedPassword,
             InviteEmailQueued = inviteQueued,
             CreatedAt = user.CreatedAt,
-            EmailVerificationRequired = emailSettings.CanDeliver && emailSettings.RequireEmailVerification
+            EmailVerificationRequired = emailSettings.CanDeliver && emailSettings.RequireEmailVerification,
+            RecoveryCodes = recoveryCodes
         };
     }
 }

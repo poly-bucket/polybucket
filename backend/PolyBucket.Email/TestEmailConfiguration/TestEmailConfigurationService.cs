@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Email;
 using PolyBucket.Email.Templates;
+using PolyBucket.Email.Domain;
 using PolyBucket.Email.TestEmailConfiguration;
 
 namespace PolyBucket.Email.TestEmailConfiguration;
 
 public class TestEmailConfigurationService(
     IEmailSettingsResolver settingsResolver,
+    IEmailDispatchSignal dispatchSignal,
     IEmailTransportFactory transportFactory,
     IEmailTemplateRenderer renderer,
     IEmailBrandingProvider brandingProvider,
@@ -54,6 +56,7 @@ public class TestEmailConfigurationService(
 
         await repository.RecordSuccessfulTestAsync(timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
         settingsResolver.Invalidate();
+        dispatchSignal.Notify();
         logger.LogInformation("Email configuration test succeeded using transport {Transport}", settings.Transport);
 
         return new EmailTestResult(true, $"Test email sent to {envelope.To}. Check the inbox (and spam folder).", diagnostic.Stages);

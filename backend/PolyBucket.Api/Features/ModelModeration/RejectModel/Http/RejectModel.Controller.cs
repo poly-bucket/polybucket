@@ -22,7 +22,7 @@ public class RejectModelController(IRejectModelService service) : ControllerBase
     /// <summary>
     /// Rejects a model pending moderation.
     /// </summary>
-    [HttpPost("{id}/reject")]
+    [HttpPost("{id:guid}/reject")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
     [ProducesResponseType(409)]

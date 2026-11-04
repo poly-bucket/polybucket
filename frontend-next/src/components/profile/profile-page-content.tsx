@@ -6,13 +6,13 @@ import { notFound } from "next/navigation";
 import { Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  enrichOwnProfileFromMe,
   fetchUserProfile,
   type UserProfileData,
 } from "@/lib/services/userProfileService";
 import { useProfileTabs, PluginBoundary } from "@/lib/plugins";
 import { ProfileHeader } from "./profile-header";
 import { ProfilePageSkeleton } from "@/components/ui/skeletons";
-import { FollowerHistoryChart } from "./follower-history-chart";
 
 export function ProfilePageContent() {
   const params = useParams();
@@ -47,10 +47,21 @@ export function ProfilePageContent() {
     [searchParams, router]
   );
 
+  const applyProfile = useCallback(
+    async (data: UserProfileData) => {
+      const isOwn =
+        !!currentUser?.id && !!data.id && currentUser.id === data.id;
+      setProfile(isOwn ? await enrichOwnProfileFromMe(data) : data);
+    },
+    [currentUser?.id]
+  );
+
   const refreshProfile = useCallback(() => {
     if (!idOrUsername) return;
-    fetchUserProfile(idOrUsername).then(setProfile).catch(() => {});
-  }, [idOrUsername]);
+    fetchUserProfile(idOrUsername)
+      .then((data) => void applyProfile(data))
+      .catch(() => {});
+  }, [idOrUsername, applyProfile]);
 
   const handleSelectTab = useCallback(
     (tab: string) => {
@@ -64,7 +75,7 @@ export function ProfilePageContent() {
     setLoading(true);
     setError(null);
     fetchUserProfile(idOrUsername)
-      .then(setProfile)
+      .then((data) => void applyProfile(data))
       .catch((err: unknown) => {
         const status = (err as { status?: number })?.status;
         if (status === 404) {
@@ -78,7 +89,7 @@ export function ProfilePageContent() {
         setError(msg);
       })
       .finally(() => setLoading(false));
-  }, [idOrUsername]);
+  }, [idOrUsername, applyProfile]);
 
   if (!idOrUsername) {
     notFound();
@@ -137,7 +148,6 @@ export function ProfilePageContent() {
         onSelectTab={handleSelectTab}
         onFollowChange={refreshProfile}
       />
-      {isOwnProfile && profileId && <FollowerHistoryChart userId={profileId} />}
       <nav
         className="mb-4 mt-4 flex space-x-4 overflow-x-auto"
         role="tablist"

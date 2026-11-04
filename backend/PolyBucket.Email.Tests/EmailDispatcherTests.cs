@@ -173,6 +173,7 @@ public class EmailDispatcherTests
         // Assert
         processed.ShouldBe(0);
         _repository.Verify(r => r.ClaimBatchAsync(It.IsAny<int>(), It.IsAny<TimeSpan>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(r => r.CountPendingAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Theory(DisplayName = "Retry delays grow exponentially, stay within 20% jitter, and cap at six hours.")]

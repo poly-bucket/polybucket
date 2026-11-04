@@ -9,6 +9,6 @@ namespace PolyBucket.Api.Features.Categories.UpdateCategory.Repository
     {
         Task<Category?> GetCategoryByIdAsync(Guid id);
         Task<Category?> GetCategoryByNameAsync(string name);
-        Task<Category> UpdateCategoryAsync(Guid id, string name, Guid updatedById);
+        Task<Category> UpdateCategoryAsync(Guid id, string name, string description, string color, Guid updatedById);
     }
 }

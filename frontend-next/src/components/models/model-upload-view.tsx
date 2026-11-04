@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { linkModelCategories, uploadModel } from "@/lib/services/modelsService";
 import {
-  getFileSettings,
+  getFileTypesForUpload,
   getExtensionsByCategory,
   isFileTypeAllowed,
 } from "@/lib/services/fileTypeSettingsService";
@@ -167,11 +167,11 @@ export default function ModelUploadView() {
     const load = async () => {
       try {
         setSettingsLoading(true);
-        const [fileResp, configResp] = await Promise.all([
-          getFileSettings(),
+        const [fileTypes, configResp] = await Promise.all([
+          getFileTypesForUpload(),
           getModelConfigurationSettings(),
         ]);
-        if (fileResp.fileTypes) setFileTypeSettings(fileResp.fileTypes);
+        if (fileTypes.length) setFileTypeSettings(fileTypes);
         if (configResp.settings?.defaultPrivacySetting) {
           const p = String(configResp.settings.defaultPrivacySetting).toLowerCase();
           if (p === "public")

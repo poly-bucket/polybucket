@@ -82,13 +82,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!cur) {
         return;
       }
+      const roleFromMe = me.role?.trim();
       const next: AuthUser = {
         ...cur,
         avatar: me.avatar ?? cur.avatar,
         profilePictureUrl: me.profilePictureUrl ?? cur.profilePictureUrl,
         isEmailVerified: me.isEmailVerified ?? cur.isEmailVerified,
+        roles: roleFromMe ? [roleFromMe] : cur.roles,
       };
       persistUser(next);
+      setUser(next);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 401) {
         setUser(getStoredUser());

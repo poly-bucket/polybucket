@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/primitives/input";
 import { Switch } from "@/components/primitives/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   formFromProviderDefaults,
   getStorageProviders,
   type StorageProviderCatalogEntry,
@@ -52,21 +59,29 @@ export function StorageSettingsForm({
     <div className="space-y-4">
       <div>
         <label className="text-sm text-white/80">Object storage provider</label>
-        <select
-          className={`mt-1 flex h-10 w-full rounded-md border bg-transparent px-3 py-2 text-sm text-white ${inputClass}`}
-          value={form.provider}
+        <Select
+          value={form.provider || undefined}
+          onValueChange={handleProviderChange}
           disabled={providersLoading}
-          onChange={(e) => handleProviderChange(e.target.value)}
         >
-          {showProviderPrompt && !form.provider ? (
-            <option value="">Select a provider…</option>
-          ) : null}
-          {providers.map((p) => (
-            <option key={p.id} value={p.id} className="text-black">
-              {p.displayName}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger
+            variant="glass"
+            className={`mt-1 h-10 w-full data-[placeholder]:text-white/50 ${inputClass}`}
+          >
+            <SelectValue
+              placeholder={
+                showProviderPrompt ? "Select a provider…" : undefined
+              }
+            />
+          </SelectTrigger>
+          <SelectContent variant="glass">
+            {providers.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.displayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {selectedProvider ? (
           <p className="text-white/60 text-sm mt-2">{selectedProvider.description}</p>
         ) : showProviderPrompt ? (

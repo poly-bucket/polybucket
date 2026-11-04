@@ -1,8 +1,7 @@
 import { ApiClient } from "./client";
-import { getApiConfig } from "./config";
 import axiosInstance from "./axiosConfig";
 
-const apiClient = new ApiClient(getApiConfig().baseUrl, axiosInstance);
+const apiClient = new ApiClient("", axiosInstance);
 
 export class ApiClientFactory {
   static getApiClient = (): ApiClient => apiClient;

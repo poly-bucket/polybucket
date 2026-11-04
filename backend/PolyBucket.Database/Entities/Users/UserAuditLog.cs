@@ -16,5 +16,9 @@ public class UserAuditLog
 public enum UserAuditAction
 {
     EmailMarkedVerified,
-    PasswordResetLinkGenerated
+    PasswordResetLinkGenerated,
+    RecoveryCodesGenerated,
+    RecoveryCodesRegenerated,
+    RecoveryCodesAcknowledged,
+    RecoveryCodePasswordReset
 }

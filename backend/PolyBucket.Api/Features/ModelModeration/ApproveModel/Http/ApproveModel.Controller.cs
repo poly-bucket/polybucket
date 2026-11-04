@@ -22,7 +22,7 @@ public class ApproveModelController(IApproveModelService service) : ControllerBa
     /// <summary>
     /// Approves a model pending moderation and publishes it when privacy allows.
     /// </summary>
-    [HttpPost("{id}/approve")]
+    [HttpPost("{id:guid}/approve")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
     [ProducesResponseType(409)]

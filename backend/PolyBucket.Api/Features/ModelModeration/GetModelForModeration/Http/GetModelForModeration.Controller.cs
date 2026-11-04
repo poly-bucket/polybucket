@@ -16,7 +16,7 @@ public class GetModelForModerationController(IModeratorEditModelService service)
     /// <summary>
     /// Get model details for moderation editing.
     /// </summary>
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ModeratorEditModelResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ModeratorEditModelResponseDto>> GetModelForModeration(Guid id, CancellationToken cancellationToken = default)

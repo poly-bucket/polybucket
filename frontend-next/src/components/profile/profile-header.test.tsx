@@ -91,4 +91,18 @@ describe("ProfileHeader", () => {
     render(<ProfileHeader profile={baseProfile()} isOwnProfile={false} />);
     expect(screen.queryByText("Followers over time")).not.toBeInTheDocument();
   });
+
+  it("shows member since and role labels when profile data is present", () => {
+    render(
+      <ProfileHeader
+        profile={baseProfile({
+          createdAt: "2026-11-04T15:41:31.923499Z",
+          roleName: "Admin",
+        })}
+        isOwnProfile={false}
+      />
+    );
+    expect(screen.getByText(/Member since/)).toHaveTextContent("Member since");
+    expect(screen.getByText(/Role\(s\): Admin/)).toBeInTheDocument();
+  });
 });

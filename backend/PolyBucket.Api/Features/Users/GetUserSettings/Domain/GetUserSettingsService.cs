@@ -12,7 +12,7 @@ public class GetUserSettingsService(IGetUserSettingsRepository repository) : IGe
         var settings = await repository.GetSettingsByUserIdAsync(request.UserId, cancellationToken);
         if (settings == null)
         {
-            throw new KeyNotFoundException($"Settings not found for user {request.UserId}");
+            settings = await repository.CreateDefaultSettingsForUserAsync(request.UserId, cancellationToken);
         }
 
         return new GetUserSettingsResult { Settings = settings };

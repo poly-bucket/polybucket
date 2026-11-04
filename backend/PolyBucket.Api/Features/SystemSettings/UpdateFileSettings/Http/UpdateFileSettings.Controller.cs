@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.ACL.Authorization;
+using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.SystemSettings.UpdateFileSettings.Domain;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateFileSettings.Http;
 
 [ApiController]
 [Route("api/system-settings/file-settings")]
-[Authorize(Roles = "Admin")]
+[Authorize]
+[RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
 public class UpdateFileSettingsController(IUpdateFileSettingsService updateFileSettingsService) : ControllerBase
 {
     private readonly IUpdateFileSettingsService _updateFileSettingsService = updateFileSettingsService;

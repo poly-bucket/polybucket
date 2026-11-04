@@ -39,6 +39,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddFilesFeature();
         services.AddPrintersFeature();
         services.AddSearchFeature();
+        services.AddPluginsFeature();
         services.AddStorageFeatureServices();
         services.AddNotificationsFeature();
 
@@ -59,6 +60,12 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Collections.CreateCollection.Domain.CreateCollectionCommandHandler>();
         services.AddTransient<Features.Collections.UpdateCollection.Domain.UpdateCollectionCommandHandler>();
         services.AddTransient<Features.Collections.DeleteCollection.Domain.DeleteCollectionCommandHandler>();
+        services.AddTransient<
+            Features.Collections.DeleteAllCollections.Domain.IDeleteAllCollectionsService,
+            Features.Collections.DeleteAllCollections.Domain.DeleteAllCollectionsService>();
+        services.AddTransient<
+            Features.Collections.DeleteAllCollections.Repository.IDeleteAllCollectionsRepository,
+            Features.Collections.DeleteAllCollections.Repository.DeleteAllCollectionsRepository>();
         services.AddTransient<Features.Collections.GetCollectionById.Domain.GetCollectionByIdQueryHandler>();
 
         services.AddTransient<Features.Collections.AddModelToCollection.Domain.AddModelToCollectionCommandHandler>();
@@ -105,6 +112,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddScoped<Features.Authentication.Me.Domain.IMeService, Features.Authentication.Me.Domain.MeService>();
         services.AddTransient<Features.Authentication.Me.Repository.IMeRepository, Features.Authentication.Me.Repository.MeRepository>();
         services.AddScoped<Features.Authentication.GetRegistrationStatus.Domain.IGetRegistrationStatusService, Features.Authentication.GetRegistrationStatus.Domain.GetRegistrationStatusService>();
+        services.AddScoped<Features.Authentication.GetSiteAccess.Domain.IGetSiteAccessService, Features.Authentication.GetSiteAccess.Domain.GetSiteAccessService>();
         services.AddTransient<Features.Authentication.GetRegistrationStatus.Repository.IGetRegistrationStatusRepository, Features.Authentication.GetRegistrationStatus.Repository.GetRegistrationStatusRepository>();
         services.AddTransient<Features.Authentication.ForgotPassword.Repository.IForgotPasswordRepository, Features.Authentication.ForgotPassword.Repository.ForgotPasswordRepository>();
         services.AddTransient<Features.Authentication.Logout.Repository.ILogoutRepository, Features.Authentication.Logout.Repository.LogoutRepository>();
@@ -135,6 +143,20 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Authentication.RequestEmailChange.Domain.RequestEmailChangeCommandHandler>();
         services.AddScoped<Features.Authentication.Services.IEmailVerificationGate, Features.Authentication.Services.EmailVerificationGate>();
         services.AddScoped<Features.Authentication.Services.IUserRegistrationGate, Features.Authentication.Services.UserRegistrationGate>();
+
+        services.AddSingleton<Features.Authentication.Services.IRecoveryCodeProtector, Features.Authentication.Services.RecoveryCodeProtector>();
+        services.AddScoped<Features.Authentication.Services.IRecoveryCodeService, Features.Authentication.Services.RecoveryCodeService>();
+        services.AddScoped<Features.Authentication.Services.IRecoveryCodeRepository, Features.Authentication.Services.RecoveryCodeRepository>();
+        services.AddScoped<Features.Authentication.Services.IRecoveryCodeProvisioningService, Features.Authentication.Services.RecoveryCodeProvisioningService>();
+        services.AddScoped<Features.Authentication.Services.IRecoveryCodePresentationService, Features.Authentication.Services.RecoveryCodePresentationService>();
+        services.AddTransient<Features.Authentication.RecoveryCodeResetPassword.Repository.IRecoveryCodeResetPasswordRepository, Features.Authentication.RecoveryCodeResetPassword.Repository.RecoveryCodeResetPasswordRepository>();
+        services.AddTransient<Features.Authentication.RecoveryCodeResetPassword.Domain.RecoveryCodeResetPasswordCommandHandler>();
+        services.AddTransient<Features.Authentication.RecoveryCodes.RegenerateRecoveryCodes.Repository.IRegenerateRecoveryCodesRepository, Features.Authentication.RecoveryCodes.RegenerateRecoveryCodes.Repository.RegenerateRecoveryCodesRepository>();
+        services.AddTransient<Features.Authentication.RecoveryCodes.RegenerateRecoveryCodes.Domain.RegenerateRecoveryCodesCommandHandler>();
+        services.AddTransient<Features.Authentication.RecoveryCodes.GetPendingRecoveryCodesDisplay.Repository.IGetPendingRecoveryCodesDisplayRepository, Features.Authentication.RecoveryCodes.GetPendingRecoveryCodesDisplay.Repository.GetPendingRecoveryCodesDisplayRepository>();
+        services.AddTransient<Features.Authentication.RecoveryCodes.GetPendingRecoveryCodesDisplay.Domain.GetPendingRecoveryCodesDisplayQueryHandler>();
+        services.AddTransient<Features.Authentication.RecoveryCodes.AcknowledgeRecoveryCodes.Repository.IAcknowledgeRecoveryCodesRepository, Features.Authentication.RecoveryCodes.AcknowledgeRecoveryCodes.Repository.AcknowledgeRecoveryCodesRepository>();
+        services.AddTransient<Features.Authentication.RecoveryCodes.AcknowledgeRecoveryCodes.Domain.AcknowledgeRecoveryCodesCommandHandler>();
         
         // System Settings
         services.AddSystemSettingsFeature();
@@ -214,6 +236,12 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Categories.GetCategoryById.Repository.IGetCategoryByIdRepository, Features.Categories.GetCategoryById.Repository.GetCategoryByIdRepository>();
         services.AddScoped<Features.Categories.GetCategories.Domain.IGetCategoriesService, Features.Categories.GetCategories.Domain.GetCategoriesService>();
         services.AddTransient<Features.Categories.GetCategories.Repository.IGetCategoriesRepository, Features.Categories.GetCategories.Repository.GetCategoriesRepository>();
+        services.AddTransient<
+            Features.Categories.DeleteAllCategories.Domain.IDeleteAllCategoriesService,
+            Features.Categories.DeleteAllCategories.Domain.DeleteAllCategoriesService>();
+        services.AddTransient<
+            Features.Categories.DeleteAllCategories.Repository.IDeleteAllCategoriesRepository,
+            Features.Categories.DeleteAllCategories.Repository.DeleteAllCategoriesRepository>();
 
         // Federation
         services.AddFederationFeature();

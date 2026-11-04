@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PolyBucket.Email;
 using PolyBucket.Database.Entities.SystemSettings;
+using PolyBucket.Email.Domain;
 using Shouldly;
 using Xunit;
 using Fields = PolyBucket.Email.EffectiveEmailSettings.Fields;
@@ -17,6 +18,7 @@ public class UpdateEmailSettingsServiceTests
 {
     private readonly Mock<IUpdateEmailSettingsRepository> _repository = new();
     private readonly Mock<IEmailSettingsResolver> _resolver = new();
+    private readonly Mock<IEmailDispatchSignal> _dispatchSignal = new();
     private readonly SmtpPasswordProtector _protector = new(new EphemeralDataProtectionProvider());
     private IReadOnlyDictionary<string, string>? _saved;
 
@@ -30,7 +32,7 @@ public class UpdateEmailSettingsServiceTests
     private UpdateEmailSettingsService CreateService(EffectiveEmailSettings current)
     {
         _resolver.Setup(r => r.GetEffectiveSettingsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(current);
-        return new UpdateEmailSettingsService(_repository.Object, _resolver.Object, _protector, TimeProvider.System, NullLogger<UpdateEmailSettingsService>.Instance);
+        return new UpdateEmailSettingsService(_repository.Object, _resolver.Object, _dispatchSignal.Object, _protector, TimeProvider.System, NullLogger<UpdateEmailSettingsService>.Instance);
     }
 
     private static EmailSettingsUpdate SmtpUpdate(string? password = null, bool clearPassword = false, bool requireVerification = false, string host = "smtp.example.com") =>

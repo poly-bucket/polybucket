@@ -1,5 +1,36 @@
 import { ApiClientFactory } from "@/lib/api/clientFactory";
-import { ApiException, type GetUserSettingsResult, UpdateUserSettingsRequest } from "@/lib/api/client";
+import {
+  ApiException,
+  ProblemDetails,
+  type GetUserSettingsResult,
+  UpdateUserSettingsRequest,
+} from "@/lib/api/client";
+import { isAxiosError } from "axios";
+
+function resolveSettingsFetchErrorStatus(error: unknown): number | undefined {
+  if (ApiException.isApiException(error)) {
+    return error.status;
+  }
+  if (isAxiosError(error) && typeof error.response?.status === "number") {
+    return error.response.status;
+  }
+  if (error instanceof ProblemDetails && typeof error.status === "number") {
+    return error.status;
+  }
+  if (typeof error === "object" && error !== null && "status" in error) {
+    const maybeStatus = (error as { status?: unknown }).status;
+    return typeof maybeStatus === "number" ? maybeStatus : undefined;
+  }
+  return undefined;
+}
+
+function isRecoverableSettingsFetchError(error: unknown): boolean {
+  const status = resolveSettingsFetchErrorStatus(error);
+  if (status !== undefined) {
+    return status >= 400 && status < 500;
+  }
+  return error instanceof ProblemDetails;
+}
 
 const api = () => ApiClientFactory.getApiClient();
 
@@ -63,16 +94,7 @@ export async function getUserSettings(): Promise<UserSettingsData | null> {
       gridColumns: settings.gridColumns ?? 4,
     };
   } catch (error) {
-    const status = (() => {
-      if (ApiException.isApiException(error)) return error.status;
-      if (typeof error === "object" && error !== null && "status" in error) {
-        const maybeStatus = (error as { status?: unknown }).status;
-        return typeof maybeStatus === "number" ? maybeStatus : undefined;
-      }
-      return undefined;
-    })();
-
-    if (status === 401 || status === 404) {
+    if (isRecoverableSettingsFetchError(error)) {
       return getDefaultSettings();
     }
 

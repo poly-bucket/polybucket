@@ -1,3 +1,4 @@
+import axiosInstance from "@/lib/api/axiosConfig";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import type {
   UserModelListItemDto,
@@ -17,6 +18,7 @@ export interface UserProfileData {
   profilePictureUrl?: string;
   country?: string;
   roleName?: string;
+  roles?: string[];
   createdAt?: Date | string;
   lastLoginAt?: Date | string;
   isBanned?: boolean;
@@ -44,14 +46,30 @@ export interface UserProfileData {
 export async function fetchUserProfile(
   idOrUsername: string
 ): Promise<UserProfileData> {
-  const client = ApiClientFactory.getApiClient();
   const isUuid = UUID_REGEX.test(idOrUsername);
+  const url = isUuid
+    ? `/api/users/profile/${encodeURIComponent(idOrUsername)}`
+    : `/api/users/profile/by-username/${encodeURIComponent(idOrUsername)}`;
 
-  const raw = isUuid
-    ? await client.getUserProfile_GetUserProfileById(idOrUsername)
-    : await client.getUserProfile_GetUserProfileByUsername(idOrUsername);
+  const { data } = await axiosInstance.get<UserProfileData>(url);
+  return data;
+}
 
-  return raw as unknown as UserProfileData;
+export async function enrichOwnProfileFromMe(
+  profile: UserProfileData
+): Promise<UserProfileData> {
+  try {
+    const me = await ApiClientFactory.getApiClient().me_GetCurrentUser();
+    const role = me.role?.trim();
+    return {
+      ...profile,
+      createdAt: me.createdAt ?? profile.createdAt,
+      roleName: role ?? profile.roleName,
+      roles: role ? [role] : profile.roles,
+    };
+  } catch {
+    return profile;
+  }
 }
 
 export async function fetchUserModels(

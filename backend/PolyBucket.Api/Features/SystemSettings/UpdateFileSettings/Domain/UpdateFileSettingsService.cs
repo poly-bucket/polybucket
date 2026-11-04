@@ -1,14 +1,17 @@
 using System.Security.Claims;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Api.Features.SystemSettings.UpdateFileSettings.Repository;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateFileSettings.Domain;
 
 public class UpdateFileSettingsService(
     IUpdateFileSettingsRepository repository,
+    IAllowedFileTypesSyncService allowedFileTypesSyncService,
     IHttpContextAccessor httpContextAccessor,
     ILogger<UpdateFileSettingsService> logger) : IUpdateFileSettingsService
 {
     private readonly IUpdateFileSettingsRepository _repository = repository;
+    private readonly IAllowedFileTypesSyncService _allowedFileTypesSyncService = allowedFileTypesSyncService;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<UpdateFileSettingsService> _logger = logger;
 
@@ -48,6 +51,15 @@ public class UpdateFileSettingsService(
             }
 
             await _repository.SaveChangesAsync(cancellationToken);
+
+            try
+            {
+                await _allowedFileTypesSyncService.SyncFromFileTypeSettingsAsync(cancellationToken);
+            }
+            catch (Exception syncEx)
+            {
+                _logger.LogWarning(syncEx, "File type updated but AllowedFileTypes sync failed");
+            }
 
             _logger.LogInformation("File type settings updated successfully by user {UserId} for file type {FileExtension}",
                 userIdClaim?.Value ?? "unknown", request.FileExtension);

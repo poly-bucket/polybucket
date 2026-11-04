@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PolyBucket.Email;
 using PolyBucket.Email.Templates;
+using PolyBucket.Email.Domain;
 using Shouldly;
 using Xunit;
 
@@ -13,6 +14,7 @@ namespace PolyBucket.Email.Tests;
 public class TestEmailConfigurationServiceTests
 {
     private readonly Mock<IEmailSettingsResolver> _resolver = new();
+    private readonly Mock<IEmailDispatchSignal> _dispatchSignal = new();
     private readonly Mock<IEmailTransportFactory> _factory = new();
     private readonly Mock<IEmailTransport> _transport = new();
     private readonly Mock<IEmailBrandingProvider> _branding = new();
@@ -26,6 +28,7 @@ public class TestEmailConfigurationServiceTests
             .ReturnsAsync(new EmailBranding("PolyBucket", string.Empty));
         return new TestEmailConfigurationService(
             _resolver.Object,
+            _dispatchSignal.Object,
             _factory.Object,
             new EmailTemplateRenderer(),
             _branding.Object,

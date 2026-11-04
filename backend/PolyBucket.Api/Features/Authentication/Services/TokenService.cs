@@ -60,7 +60,6 @@ namespace PolyBucket.Api.Features.Authentication.Services
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                 new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
-                new Claim(ClaimTypes.Role, roleName),
                 new Claim("role", roleName),
                 new Claim("sub", user.Id.ToString()),
                 new Claim("name", user.Username ?? string.Empty),

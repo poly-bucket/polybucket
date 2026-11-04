@@ -51,12 +51,19 @@ namespace PolyBucket.Api.Features.Categories.UpdateCategory.Domain
                 throw new InvalidOperationException($"Category with name '{command.Name}' already exists");
             }
 
-            var updatedCategory = await _repository.UpdateCategoryAsync(command.Id, command.Name, userId);
+            var updatedCategory = await _repository.UpdateCategoryAsync(
+                command.Id,
+                command.Name,
+                command.Description ?? string.Empty,
+                command.Color ?? string.Empty,
+                userId);
 
             return new UpdateCategoryResponse
             {
                 Id = updatedCategory.Id,
                 Name = updatedCategory.Name,
+                Description = updatedCategory.Description,
+                Color = updatedCategory.Color,
                 UpdatedAt = updatedCategory.UpdatedAt ?? DateTime.UtcNow,
                 UpdatedById = updatedCategory.UpdatedById
             };

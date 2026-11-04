@@ -39,7 +39,7 @@ public class EmailDispatcher(
 
         if (transport == null)
         {
-            EmailMetrics.SetQueueDepth(await repository.CountPendingAsync(cancellationToken));
+            EmailMetrics.SetQueueDepth(0);
             return 0;
         }
 

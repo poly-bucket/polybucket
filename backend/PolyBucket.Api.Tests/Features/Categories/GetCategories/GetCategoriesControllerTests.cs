@@ -34,4 +34,32 @@ public class GetCategoriesControllerTests
             It.Is<GetCategoriesQuery>(q => q.Page == 1 && q.PageSize == 20 && q.SearchTerm == "tool"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact(DisplayName = "When page is invalid, GetCategories returns BadRequest.")]
+    public async Task GetCategories_InvalidPage_ReturnsBadRequest()
+    {
+        // Act
+        var result = await _controller.GetCategories(0, 20, null);
+
+        // Assert
+        result.Result.ShouldBeOfType<BadRequestObjectResult>().Value
+            .ShouldBe("Page number must be greater than 0");
+        _mediator.Verify(
+            m => m.Send(It.IsAny<GetCategoriesQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact(DisplayName = "When page size is out of range, GetCategories returns BadRequest.")]
+    public async Task GetCategories_InvalidPageSize_ReturnsBadRequest()
+    {
+        // Act
+        var result = await _controller.GetCategories(1, 101, null);
+
+        // Assert
+        result.Result.ShouldBeOfType<BadRequestObjectResult>().Value
+            .ShouldBe("Page size must be between 1 and 100");
+        _mediator.Verify(
+            m => m.Send(It.IsAny<GetCategoriesQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

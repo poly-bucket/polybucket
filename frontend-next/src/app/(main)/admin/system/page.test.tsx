@@ -15,6 +15,7 @@ vi.mock("@/lib/services/adminService", () => ({
   getSiteSettings: () => mockGetSiteSettings(),
   updateSiteSettingsMerged: vi.fn(),
   mergeSiteSettingsPatch: (base: object, patch: object) => ({ ...base, ...patch }),
+  getAdminApiErrorMessage: (_: unknown, fallback: string) => fallback,
 }));
 
 vi.mock("@/lib/services/emailService", () => ({

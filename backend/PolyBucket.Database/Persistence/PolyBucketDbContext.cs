@@ -58,6 +58,7 @@ namespace PolyBucket.Database.Persistence;
         public DbSet<ExternalAuthProvider> ExternalAuthProviders { get; set; } = null!;
         public DbSet<TwoFactorAuthDomain.TwoFactorAuth> TwoFactorAuths { get; set; } = null!;
         public DbSet<TwoFactorAuthDomain.BackupCode> BackupCodes { get; set; } = null!;
+        public DbSet<AccountRecoveryCode> AccountRecoveryCodes { get; set; } = null!;
         public DbSet<ModelPreview> ModelPreviews { get; set; } = null!;
         public DbSet<ModerationAuditLog> ModerationAuditLogs { get; set; } = null!;
         public DbSet<ModelModerationRecord> ModelModerationRecords { get; set; } = null!;
@@ -296,6 +297,18 @@ namespace PolyBucket.Database.Persistence;
                 entity.HasIndex(t => t.Token).IsUnique();
                 entity.HasIndex(t => new { t.Email, t.IsUsed })
                     .HasDatabaseName("IX_PasswordResetTokens_Email_IsUsed");
+            });
+
+            modelBuilder.Entity<AccountRecoveryCode>(entity =>
+            {
+                entity.HasOne(c => c.User)
+                    .WithMany(u => u.AccountRecoveryCodes)
+                    .HasForeignKey(c => c.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(c => c.ProtectedCodeHash).IsRequired();
+                entity.HasIndex(c => new { c.UserId, c.IsUsed })
+                    .HasDatabaseName("IX_AccountRecoveryCodes_UserId_IsUsed");
             });
 
             modelBuilder.Entity<ReportsDomain.Report>(entity =>

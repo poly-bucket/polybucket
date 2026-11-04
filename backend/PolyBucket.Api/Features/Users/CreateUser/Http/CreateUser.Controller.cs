@@ -46,6 +46,10 @@ public class CreateUserController : ControllerBase
         {
             command.UserAgent = Request.Headers["User-Agent"].ToString();
             command.CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            if (Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var adminId))
+            {
+                command.CreatedByUserId = adminId;
+            }
 
             var response = await _createUserService.CreateUserAsync(command, cancellationToken);
 

@@ -28,6 +28,8 @@ namespace PolyBucket.Api.Features.Users.CreateUser.Domain
 
         public bool MarkEmailVerified { get; set; } = true;
 
+        public Guid? CreatedByUserId { get; set; }
+
         // These will be set internally by the system
         public string UserAgent { get; set; } = string.Empty;
         public string CreatedByIp { get; set; } = string.Empty;

@@ -10,9 +10,6 @@ public interface IGetCategoryByIdService
 
 public class GetCategoryByIdService(IGetCategoryByIdRepository repository) : IGetCategoryByIdService
 {
-    public async Task<GetCategoryByIdResponseDto?> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var category = await repository.GetCategoryByIdAsync(id);
-        return category == null ? null : GetCategoryByIdMapper.ToDto(category);
-    }
+    public Task<GetCategoryByIdResponseDto?> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        repository.GetCategoryByIdAsync(id, cancellationToken);
 }

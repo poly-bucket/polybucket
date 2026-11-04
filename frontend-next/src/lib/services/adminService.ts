@@ -1,5 +1,6 @@
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import axiosInstance from "@/lib/api/axiosConfig";
+import { isAxiosError } from "axios";
 import type {
   GetAdminModelStatisticsResponse,
   GetUsersResult,
@@ -22,6 +23,9 @@ import type {
   GetFileSettingsResponse,
   UpdateFileSettingsCommand,
   UpdateFileSettingsResponse,
+  BulkUpdateFileSettingsCommand,
+  BulkUpdateFileSettingsResponse,
+  SyncAllowedFileTypesResponse,
   GetCategoriesResponse,
   CreateCategoryResponse,
   UpdateCategoryCommand,
@@ -32,13 +36,13 @@ import type {
   UpdateSiteSettingsCommand,
   UpdateSiteSettingsResponse,
   DeleteAllModelsRequest,
-  DeleteAllModelsResponse,
   AuthenticationSettings,
-  TestLicenseResponse,
+  TestFontAwesomeLicenseResponseDto,
 } from "@/lib/api/client";
 import {
   CreateCategoryCommand,
-  TestLicenseRequest,
+  DeleteAllModelsResponse,
+  TestFontAwesomeLicenseRequestDto,
 } from "@/lib/api/client";
 
 const client = () => ApiClientFactory.getApiClient();
@@ -153,8 +157,18 @@ export async function updateSiteModelSettings(
   return client().updateSiteModelSettings_UpdateSiteModelSettings(command);
 }
 
-export async function getFileSettings(): Promise<GetFileSettingsResponse> {
-  return client().getFileSettings_GetFileSettings();
+export async function getFileSettings(
+  page = 1,
+  pageSize = 20,
+  searchTerm?: string | null,
+  category?: string | null
+): Promise<GetFileSettingsResponse> {
+  return client().getFileSettings_GetFileSettings(
+    page,
+    pageSize,
+    searchTerm ?? undefined,
+    category ?? undefined
+  );
 }
 
 export async function updateFileSettings(
@@ -163,22 +177,48 @@ export async function updateFileSettings(
   return client().updateFileSettings_UpdateFileSettings(command);
 }
 
+export async function bulkUpdateFileSettings(
+  command: BulkUpdateFileSettingsCommand
+): Promise<BulkUpdateFileSettingsResponse> {
+  return client().bulkUpdateFileSettings_BulkUpdateFileSettings(command);
+}
+
+export async function syncAllowedFileTypes(): Promise<SyncAllowedFileTypesResponse> {
+  return client().syncAllowedFileTypes_SyncAllowedFileTypes();
+}
+
 export async function getTokenSettings(): Promise<TokenSettings> {
-  return client().tokenSettings_GetTokenSettings();
+  return client().getTokenSettings_GetTokenSettings();
 }
 
 export async function updateTokenSettings(settings: TokenSettings): Promise<void> {
-  return client().tokenSettings_UpdateTokenSettings(settings);
+  return client().updateTokenSettings_UpdateTokenSettings(settings);
+}
+
+export function getAdminApiErrorMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) {
+    return fallback;
+  }
+
+  if (error.response?.status === 403) {
+    return "You do not have permission to manage system settings. Sign in with an administrator account or ask an admin to grant access.";
+  }
+
+  const body = error.response?.data as
+    | { detail?: string; title?: string; message?: string }
+    | undefined;
+
+  return body?.detail ?? body?.message ?? body?.title ?? fallback;
 }
 
 export async function getSetupStatus(): Promise<CheckFirstTimeSetupResponse> {
-  return client().systemSetup_GetSetupStatus();
+  return client().checkFirstTimeSetup_GetSetupStatus();
 }
 
 export async function updateSiteSettings(
   command: UpdateSiteSettingsCommand
 ): Promise<UpdateSiteSettingsResponse> {
-  return client().systemSetup_UpdateSiteSettings(command);
+  return client().updateSiteSettings_UpdateSiteSettings(command);
 }
 
 export {
@@ -198,6 +238,36 @@ export async function deleteAllModels(
   request: DeleteAllModelsRequest
 ): Promise<DeleteAllModelsResponse> {
   return client().deleteAllModels_DeleteAllModels(request);
+}
+
+export async function deleteAllCategories(
+  request: DeleteAllModelsRequest
+): Promise<DeleteAllModelsResponse> {
+  const { data } = await axiosInstance.delete<DeleteAllModelsResponse>(
+    "/api/admin/categories/delete-all",
+    { data: request }
+  );
+  return DeleteAllModelsResponse.fromJS(data);
+}
+
+export async function deleteAllFileSettings(
+  request: DeleteAllModelsRequest
+): Promise<DeleteAllModelsResponse> {
+  const { data } = await axiosInstance.delete<DeleteAllModelsResponse>(
+    "/api/system-settings/file-settings/delete-all",
+    { data: request }
+  );
+  return DeleteAllModelsResponse.fromJS(data);
+}
+
+export async function deleteAllCollections(
+  request: DeleteAllModelsRequest
+): Promise<DeleteAllModelsResponse> {
+  const { data } = await axiosInstance.delete<DeleteAllModelsResponse>(
+    "/api/admin/collections/delete-all",
+    { data: request }
+  );
+  return DeleteAllModelsResponse.fromJS(data);
 }
 
 export async function getCategories(
@@ -231,20 +301,52 @@ export async function deleteCategory(
   return client().deleteCategory_DeleteCategory(id);
 }
 
+export interface DeleteCategoriesResult {
+  deletedCount: number;
+  failedCount: number;
+  results: Array<{
+    id: string;
+    name?: string;
+    success: boolean;
+    message: string;
+  }>;
+}
+
+export async function deleteCategories(
+  ids: string[]
+): Promise<DeleteCategoriesResult> {
+  const { data } = await axiosInstance.post<{
+    deletedCount: number;
+    failedCount: number;
+    results: Array<{
+      id: string;
+      name?: string;
+      success: boolean;
+      message: string;
+    }>;
+  }>("/api/admin/categories/bulk-delete", { ids });
+
+  return {
+    deletedCount: data.deletedCount ?? 0,
+    failedCount: data.failedCount ?? 0,
+    results: data.results ?? [],
+  };
+}
+
 export async function getAuthenticationSettings(): Promise<AuthenticationSettings> {
-  return client().authenticationSettings_GetAuthenticationSettings();
+  return client().getAuthenticationSettings_GetAuthenticationSettings();
 }
 
 export async function updateAuthenticationSettings(
   settings: AuthenticationSettings
 ): Promise<void> {
-  return client().authenticationSettings_UpdateAuthenticationSettings(settings);
+  return client().updateAuthenticationSettings_UpdateAuthenticationSettings(settings);
 }
 
 export async function getOAuthProviders(): Promise<
   import("@/lib/api/client").OAuthProviderInfo[]
 > {
-  return client().oAuthPlugin_GetOAuthProviders();
+  return client().getOAuthProviders_GetOAuthProviders();
 }
 
 export async function getFederatedInstances(): Promise<
@@ -357,8 +459,8 @@ export async function updateFontAwesomeSettings(
 
 export async function testFontAwesomeLicense(request: {
   licenseKey?: string;
-}): Promise<TestLicenseResponse> {
-  return client().fontAwesomeSettings_TestLicense(
-    new TestLicenseRequest(request)
+}): Promise<TestFontAwesomeLicenseResponseDto> {
+  return client().testFontAwesomeLicense_TestFontAwesomeLicense(
+    new TestFontAwesomeLicenseRequestDto(request)
   );
 }

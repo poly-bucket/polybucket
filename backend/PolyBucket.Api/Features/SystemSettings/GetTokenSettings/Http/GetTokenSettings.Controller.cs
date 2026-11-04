@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.ACL.Authorization;
+using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.SystemSettings.GetTokenSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.Services;
 
 namespace PolyBucket.Api.Features.SystemSettings.GetTokenSettings.Http;
 
+[Authorize]
 [ApiController]
 [Route("api/system-settings/token")]
-[Authorize(Roles = "Admin")]
+[RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
 public class GetTokenSettingsController(IGetTokenSettingsService getTokenSettingsService) : ControllerBase
 {
     /// <summary>

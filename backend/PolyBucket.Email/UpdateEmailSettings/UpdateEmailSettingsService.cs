@@ -15,6 +15,7 @@ namespace PolyBucket.Email.UpdateEmailSettings;
 public class UpdateEmailSettingsService(
     IUpdateEmailSettingsRepository repository,
     IEmailSettingsResolver settingsResolver,
+    IEmailDispatchSignal dispatchSignal,
     ISmtpPasswordProtector passwordProtector,
     TimeProvider timeProvider,
     ILogger<UpdateEmailSettingsService> logger) : IUpdateEmailSettingsService
@@ -69,6 +70,7 @@ public class UpdateEmailSettingsService(
         var values = BuildValues(current, normalized, connectionChanged);
         await repository.UpsertAsync(values, cancellationToken);
         settingsResolver.Invalidate();
+        dispatchSignal.Notify();
 
         logger.LogInformation("Email settings updated (transport {Transport}, connection changed: {ConnectionChanged})", candidate.Transport, connectionChanged);
 

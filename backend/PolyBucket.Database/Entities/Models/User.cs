@@ -32,6 +32,10 @@ namespace PolyBucket.Database.Entities.Models
         public DateTime? LastLoginAt { get; set; }
         public DateTime? EmailVerifiedAt { get; set; }
         public string? PendingEmail { get; set; }
+        public DateTime? RecoveryCodesGeneratedAt { get; set; }
+        public DateTime? RecoveryCodesAcknowledgedAt { get; set; }
+        public string? ProtectedPendingRecoveryCodesPayload { get; set; }
+        public virtual ICollection<AccountRecoveryCode> AccountRecoveryCodes { get; set; } = new List<AccountRecoveryCode>();
         
         // Social media links
         public string? WebsiteUrl { get; set; }

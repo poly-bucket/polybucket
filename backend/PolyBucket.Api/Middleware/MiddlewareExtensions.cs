@@ -23,4 +23,9 @@ public static class MiddlewareExtensions
     {
         return app.UseMiddleware<PrivateSiteAccessMiddleware>();
     }
-} 
+
+    public static IApplicationBuilder UsePrivateSiteFilesAccess(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<PrivateSiteFilesAccessMiddleware>();
+    }
+}

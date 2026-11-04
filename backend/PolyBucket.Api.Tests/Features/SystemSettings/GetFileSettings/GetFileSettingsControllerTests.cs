@@ -15,13 +15,43 @@ public class GetFileSettingsControllerTests
         // Arrange
         var response = new GetFileSettingsResponse { Success = true };
         var service = new Mock<IGetFileSettingsService>();
-        service.Setup(s => s.GetFileSettingsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(response);
+        service
+            .Setup(s => s.GetFileSettingsAsync(It.IsAny<GetFileSettingsQueryParams>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
         var controller = new GetFileSettingsController(service.Object);
 
         // Act
-        var result = await controller.GetFileSettings(CancellationToken.None);
+        var result = await controller.GetFileSettings(cancellationToken: CancellationToken.None);
 
         // Assert
         result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);
+    }
+
+    [Fact(DisplayName = "When page is less than 1, get file settings returns BadRequest.")]
+    public async Task GetFileSettings_InvalidPage_ReturnsBadRequest()
+    {
+        // Arrange
+        var service = new Mock<IGetFileSettingsService>();
+        var controller = new GetFileSettingsController(service.Object);
+
+        // Act
+        var result = await controller.GetFileSettings(page: 0, cancellationToken: CancellationToken.None);
+
+        // Assert
+        result.Result.ShouldBeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact(DisplayName = "When page size is out of range, get file settings returns BadRequest.")]
+    public async Task GetFileSettings_InvalidPageSize_ReturnsBadRequest()
+    {
+        // Arrange
+        var service = new Mock<IGetFileSettingsService>();
+        var controller = new GetFileSettingsController(service.Object);
+
+        // Act
+        var result = await controller.GetFileSettings(pageSize: 101, cancellationToken: CancellationToken.None);
+
+        // Assert
+        result.Result.ShouldBeOfType<BadRequestObjectResult>();
     }
 }

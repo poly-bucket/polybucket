@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using PolyBucket.Api.Features.ACL.Authorization;
+using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.GetAuthenticationSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.GetAuthenticationSettings.Http;
@@ -13,15 +15,21 @@ namespace PolyBucket.Api.Tests.Features.SystemSettings.GetAuthenticationSettings
 
 public class GetAuthenticationSettingsControllerTests
 {
-    [Fact(DisplayName = "The get authentication settings controller requires the Admin role.")]
-    public void Controller_ShouldRequireAdminRole()
+    [Fact(DisplayName = "The get authentication settings controller requires the system settings permission.")]
+    public void Controller_ShouldRequireSystemSettingsPermission()
     {
         // Arrange
-        var authorizeAttr = typeof(GetAuthenticationSettingsController).GetCustomAttribute<AuthorizeAttribute>();
+        var permissionsField = typeof(RequirePermissionAttribute).GetField("_permissions", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        // Act & Assert
+        // Act
+        var authorizeAttr = typeof(GetAuthenticationSettingsController).GetCustomAttribute<AuthorizeAttribute>();
+        var permissionAttr = typeof(GetAuthenticationSettingsController).GetCustomAttribute<RequirePermissionAttribute>();
+
+        // Assert
         authorizeAttr.ShouldNotBeNull();
-        authorizeAttr!.Roles.ShouldBe("Admin");
+        permissionAttr.ShouldNotBeNull();
+        var permissions = (string[])permissionsField!.GetValue(permissionAttr!)!;
+        permissions.ShouldContain(PermissionConstants.ADMIN_SYSTEM_SETTINGS);
     }
 
     [Fact(DisplayName = "When authentication settings load, GetAuthenticationSettings returns Ok.")]

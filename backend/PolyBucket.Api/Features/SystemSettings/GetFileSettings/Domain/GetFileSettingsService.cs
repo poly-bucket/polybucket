@@ -1,6 +1,14 @@
+using PolyBucket.Api.Features.SystemSettings.GetFileSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.GetFileSettings.Repository;
 
 namespace PolyBucket.Api.Features.SystemSettings.GetFileSettings.Domain;
+
+public interface IGetFileSettingsService
+{
+    Task<GetFileSettingsResponse> GetFileSettingsAsync(
+        GetFileSettingsQueryParams query,
+        CancellationToken cancellationToken = default);
+}
 
 public class GetFileSettingsService(
     IGetFileSettingsRepository repository,
@@ -9,17 +17,13 @@ public class GetFileSettingsService(
     private readonly IGetFileSettingsRepository _repository = repository;
     private readonly ILogger<GetFileSettingsService> _logger = logger;
 
-    public async Task<GetFileSettingsResponse> GetFileSettingsAsync(CancellationToken cancellationToken = default)
+    public async Task<GetFileSettingsResponse> GetFileSettingsAsync(
+        GetFileSettingsQueryParams query,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var fileTypes = await _repository.GetFileTypesAsync(cancellationToken);
-            return new GetFileSettingsResponse
-            {
-                Success = true,
-                Message = "File type settings retrieved successfully",
-                FileTypes = fileTypes.ToList()
-            };
+            return await _repository.GetFileSettingsAsync(query, cancellationToken);
         }
         catch (Exception ex)
         {

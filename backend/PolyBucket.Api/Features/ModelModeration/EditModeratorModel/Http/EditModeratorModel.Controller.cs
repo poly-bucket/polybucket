@@ -18,7 +18,7 @@ public class EditModeratorModelController(IModeratorEditModelService service) : 
     /// <summary>
     /// Allows moderators to edit model details and metadata.
     /// </summary>
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ModeratorEditModelResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

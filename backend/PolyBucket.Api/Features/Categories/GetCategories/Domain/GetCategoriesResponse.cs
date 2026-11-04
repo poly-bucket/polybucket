@@ -17,8 +17,13 @@ namespace PolyBucket.Api.Features.Categories.GetCategories.Domain
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
         public string CreatedAt { get; set; } = string.Empty;
         public string CreatedBy { get; set; } = string.Empty;
+        public string CreatedByUsername { get; set; } = string.Empty;
+        public string CreatedByEmail { get; set; } = string.Empty;
         public string UpdatedAt { get; set; } = string.Empty;
         public string UpdatedBy { get; set; } = string.Empty;
     }

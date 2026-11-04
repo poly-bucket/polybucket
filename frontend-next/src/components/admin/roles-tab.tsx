@@ -24,6 +24,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -222,6 +230,17 @@ export function RolesTab() {
     }
   };
 
+  const closeCreateSheet = () => {
+    setCreateOpen(false);
+    setCreateForm({
+      name: "",
+      description: "",
+      priority: 100,
+      color: DEFAULT_COLOR,
+      initialPermissions: [],
+    });
+  };
+
   const handleCreate = async () => {
     if (!createForm.name.trim()) return;
     setSaving(true);
@@ -236,14 +255,7 @@ export function RolesTab() {
         initialPermissions: createForm.initialPermissions,
       });
       await createRole(request);
-      setCreateOpen(false);
-      setCreateForm({
-        name: "",
-        description: "",
-        priority: 100,
-        color: DEFAULT_COLOR,
-        initialPermissions: [],
-      });
+      closeCreateSheet();
       toast.success("Role created");
       await fetchRoles();
     } catch {
@@ -528,15 +540,21 @@ export function RolesTab() {
         </div>
       )}
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent variant="glass">
-          <DialogHeader>
-            <DialogTitle>Create Role</DialogTitle>
-            <DialogDescription>
+      <Sheet
+        open={createOpen}
+        onOpenChange={(open) => {
+          if (open) setCreateOpen(true);
+          else closeCreateSheet();
+        }}
+      >
+        <SheetContent side="right" variant="glass" className="sm:max-w-md">
+          <SheetHeader className="pr-10">
+            <SheetTitle>Create Role</SheetTitle>
+            <SheetDescription>
               Add a new role with name and optional initial permissions.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 space-y-4 overflow-y-auto px-4">
             <div>
               <label className="text-sm font-medium text-white/80">Name</label>
               <Input
@@ -546,7 +564,7 @@ export function RolesTab() {
                   setCreateForm((prev) => ({ ...prev, name: e.target.value }))
                 }
                 placeholder="Role name"
-                className="mt-1 text-white"
+                className="mt-1 text-white placeholder:text-white/50"
               />
             </div>
             <div>
@@ -563,7 +581,7 @@ export function RolesTab() {
                   }))
                 }
                 placeholder="Role description"
-                className="mt-1 text-white"
+                className="mt-1 text-white placeholder:text-white/50"
               />
             </div>
             <div>
@@ -598,28 +616,26 @@ export function RolesTab() {
                   onChange={(e) =>
                     setCreateForm((prev) => ({ ...prev, color: e.target.value }))
                   }
-                  className="flex-1 text-white font-mono text-sm"
+                  className="flex-1 font-mono text-sm text-white"
                 />
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setCreateOpen(false)}
-              className="border-white/20 text-white"
-            >
+          <SheetFooter className="sm:flex-row sm:justify-end">
+            <Button variant="glass" onClick={closeCreateSheet} className="text-white">
               Cancel
             </Button>
             <Button
+              variant="glass"
               onClick={handleCreate}
+              className="text-white"
               disabled={saving || !createForm.name.trim()}
             >
-              {saving ? "Creating..." : "Create"}
+              {saving ? "Creating..." : "Create Role"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent variant="glass">

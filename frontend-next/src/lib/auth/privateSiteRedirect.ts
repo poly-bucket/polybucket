@@ -1,7 +1,7 @@
+import { isAuthPath } from "@/lib/auth/authPaths";
+
 export const PRIVATE_SITE_MARKER_HEADER = "x-site-access";
 export const PRIVATE_SITE_MARKER_VALUE = "login-required";
-
-const AUTH_PATHS = ["/login", "/setup", "/verify-email", "/forgot-password", "/reset-password"];
 
 type HeaderLookup =
   | { get(name: string): string | null | undefined }
@@ -29,10 +29,6 @@ function readHeader(headers: HeaderLookup, name: string): string | null {
     }
   }
   return null;
-}
-
-function isAuthPath(pathname: string): boolean {
-  return AUTH_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 /**

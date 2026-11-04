@@ -11,6 +11,21 @@ interface SiteSecurityStepProps {
   data: Record<string, unknown>;
 }
 
+function clampBoundedInt(value: number, min: number, max: number): number {
+  if (Number.isNaN(value)) {
+    return min;
+  }
+  return Math.min(max, Math.max(min, value));
+}
+
+function parseNumericInput(raw: string): number {
+  if (raw === "") {
+    return Number.NaN;
+  }
+  const parsed = parseInt(raw, 10);
+  return Number.isNaN(parsed) ? Number.NaN : parsed;
+}
+
 export default function SiteSecurityStep({
   onComplete,
   onBack,
@@ -19,51 +34,64 @@ export default function SiteSecurityStep({
   const [formData, setFormData] = useState(() =>
     readSiteSecurityFromData(data)
   );
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (
     field: string,
     value: string | number | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    if (
-      formData.maxFailedLoginAttempts < 1 ||
-      formData.maxFailedLoginAttempts > 10
-    ) {
-      newErrors.maxFailedLoginAttempts = "Must be between 1 and 10";
+  const handleBoundedIntChange = (
+    field:
+      | "maxFailedLoginAttempts"
+      | "lockoutDurationMinutes"
+      | "passwordMinLength",
+    raw: string
+  ) => {
+    const parsed = parseNumericInput(raw);
+    if (Number.isNaN(parsed)) {
+      return;
     }
-    if (
-      formData.lockoutDurationMinutes < 5 ||
-      formData.lockoutDurationMinutes > 60
-    ) {
-      newErrors.lockoutDurationMinutes = "Must be between 5 and 60 minutes";
-    }
-    if (formData.passwordMinLength < 6 || formData.passwordMinLength > 20) {
-      newErrors.passwordMinLength = "Must be between 6 and 20";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    handleInputChange(field, parsed);
+  };
+
+  const handleBoundedIntBlur = (
+    field:
+      | "maxFailedLoginAttempts"
+      | "lockoutDurationMinutes"
+      | "passwordMinLength",
+    raw: string,
+    min: number,
+    max: number
+  ) => {
+    const parsed = parseNumericInput(raw);
+    const clamped = clampBoundedInt(parsed, min, max);
+    handleInputChange(field, clamped);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const normalized = {
+      ...formData,
+      maxFailedLoginAttempts: clampBoundedInt(
+        formData.maxFailedLoginAttempts,
+        1,
+        10
+      ),
+      lockoutDurationMinutes: clampBoundedInt(
+        formData.lockoutDurationMinutes,
+        5,
+        60
+      ),
+      passwordMinLength: clampBoundedInt(formData.passwordMinLength, 6, 20),
+    };
+    setFormData(normalized);
     onComplete({
-      maxFailedLoginAttempts: formData.maxFailedLoginAttempts,
-      lockoutDurationMinutes: formData.lockoutDurationMinutes,
-      requireStrongPasswords: formData.requireStrongPasswords,
-      passwordMinLength: formData.passwordMinLength,
+      maxFailedLoginAttempts: normalized.maxFailedLoginAttempts,
+      lockoutDurationMinutes: normalized.lockoutDurationMinutes,
+      requireStrongPasswords: normalized.requireStrongPasswords,
+      passwordMinLength: normalized.passwordMinLength,
       requireLoginForUpload: formData.requireLoginForUpload,
       requireEmailVerification: formData.requireEmailVerification,
       requireModeration: formData.requireModeration,
@@ -99,18 +127,18 @@ export default function SiteSecurityStep({
             max={10}
             value={formData.maxFailedLoginAttempts}
             onChange={(e) =>
-              handleInputChange(
+              handleBoundedIntChange("maxFailedLoginAttempts", e.target.value)
+            }
+            onBlur={(e) =>
+              handleBoundedIntBlur(
                 "maxFailedLoginAttempts",
-                parseInt(e.target.value, 10) || 1
+                e.target.value,
+                1,
+                10
               )
             }
-            className={`${inputClass} ${errors.maxFailedLoginAttempts ? "border-red-400" : ""}`}
+            className={inputClass}
           />
-          {errors.maxFailedLoginAttempts && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.maxFailedLoginAttempts}
-            </p>
-          )}
         </div>
 
         <div>
@@ -127,18 +155,18 @@ export default function SiteSecurityStep({
             max={60}
             value={formData.lockoutDurationMinutes}
             onChange={(e) =>
-              handleInputChange(
+              handleBoundedIntChange("lockoutDurationMinutes", e.target.value)
+            }
+            onBlur={(e) =>
+              handleBoundedIntBlur(
                 "lockoutDurationMinutes",
-                parseInt(e.target.value, 10) || 5
+                e.target.value,
+                5,
+                60
               )
             }
-            className={`${inputClass} ${errors.lockoutDurationMinutes ? "border-red-400" : ""}`}
+            className={inputClass}
           />
-          {errors.lockoutDurationMinutes && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.lockoutDurationMinutes}
-            </p>
-          )}
         </div>
 
         <div>
@@ -155,18 +183,13 @@ export default function SiteSecurityStep({
             max={20}
             value={formData.passwordMinLength}
             onChange={(e) =>
-              handleInputChange(
-                "passwordMinLength",
-                parseInt(e.target.value, 10) || 6
-              )
+              handleBoundedIntChange("passwordMinLength", e.target.value)
             }
-            className={`${inputClass} ${errors.passwordMinLength ? "border-red-400" : ""}`}
+            onBlur={(e) =>
+              handleBoundedIntBlur("passwordMinLength", e.target.value, 6, 20)
+            }
+            className={inputClass}
           />
-          {errors.passwordMinLength && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.passwordMinLength}
-            </p>
-          )}
         </div>
 
         <label className="flex items-center gap-2 cursor-pointer">

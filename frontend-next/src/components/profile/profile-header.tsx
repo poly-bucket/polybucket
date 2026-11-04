@@ -109,6 +109,15 @@ export function ProfileHeader({
       ? `${profile.firstName} ${profile.lastName}`
       : profile.username ?? "User";
 
+  const rolesLabel = (() => {
+    const fromList = profile.roles?.map((r) => r.trim()).filter(Boolean);
+    if (fromList?.length) {
+      return fromList.join(", ");
+    }
+    const single = profile.roleName?.trim();
+    return single || null;
+  })();
+
   const handleFollowClick = async () => {
     if (!profile.id) return;
     if (!isAuthenticated) {
@@ -238,10 +247,10 @@ export function ProfileHeader({
               <Calendar className="h-3 w-3" />
               Member since {formatDate(profile.createdAt)}
             </div>
-            {profile.roleName && (
+            {rolesLabel && (
               <div className="flex items-center gap-1">
                 <User className="h-3 w-3" />
-                {profile.roleName}
+                Role(s): {rolesLabel}
               </div>
             )}
             {(profile.websiteUrl ||

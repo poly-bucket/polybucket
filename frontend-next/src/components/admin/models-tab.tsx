@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Trash2 } from "lucide-react";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsToggle } from "@/components/settings/settings-toggle";
 import { SettingsField } from "@/components/settings/settings-field";
@@ -10,19 +9,11 @@ import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/primitives/tabs";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   getModelConfigurationSettings,
   updateModelConfigurationSettings,
   getSiteModelSettings,
   updateSiteModelSettings,
-  deleteAllModels,
+  getSiteSettings,
 } from "@/lib/services/adminService";
 import type {
   ModelConfigurationSettingsData,
@@ -31,14 +22,13 @@ import type {
 import {
   UpdateModelConfigurationSettingsCommand,
   UpdateSiteModelSettingsCommand,
-  DeleteAllModelsRequest,
 } from "@/lib/api/client";
 import { CategoriesSection } from "./categories-section";
 import { FileTypesSection } from "./file-types-section";
 import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
 import { ModerationActionsSection } from "./moderation-actions-section";
 import { ModelConfigurationAdvancedSection } from "./model-configuration-advanced-section";
-import { getSiteSettings } from "@/lib/services/adminService";
+import { BulkOperationsTab } from "./bulk-operations-tab";
 import {
   Select,
   SelectContent,
@@ -48,8 +38,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import Link from "next/link";
-
-const BULK_DELETE_CONFIRM_TEXT = "DELETE ALL";
+import { AllowedFileTypesTable } from "./allowed-file-types-table";
 
 function ConfigurationTab() {
   const [modelConfig, setModelConfig] =
@@ -119,6 +108,12 @@ function ConfigurationTab() {
       setSavingConfig(false);
     }
   };
+
+  const syncDerivedAllowedFileTypes = useCallback((derived: string) => {
+    setSiteSettings((prev) =>
+      prev ? ({ ...prev, allowedFileTypes: derived } as SiteModelSettingsData) : null
+    );
+  }, []);
 
   const saveSiteSettings = async () => {
     if (!siteSettings) return;
@@ -400,16 +395,9 @@ function ConfigurationTab() {
                 className="text-white"
               />
             </SettingsField>
-            <SettingsField label="Allowed file types" description="Comma-separated extensions (e.g. .stl,.obj)">
-              <Input
-                variant="glass"
-                value={siteSettings.allowedFileTypes ?? ""}
-                onChange={(e) =>
-                  handleSiteChange({ allowedFileTypes: e.target.value })
-                }
-                className="text-white"
-              />
-            </SettingsField>
+            <AllowedFileTypesTable
+              onDerivedAllowedFileTypesChange={syncDerivedAllowedFileTypes}
+            />
             <SettingsToggle
               label="Enable file compression"
               checked={siteSettings.enableFileCompression ?? false}
@@ -478,150 +466,31 @@ function ConfigurationTab() {
   );
 }
 
-function BulkOperationsTab() {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleting, setDeleting] = useState(false);
-
-  const confirmTextMatch = deleteConfirmText.trim() === BULK_DELETE_CONFIRM_TEXT;
-  const canProceedToStep2 = confirmTextMatch;
-
-  const resetDialog = () => {
-    setDeleteDialogOpen(false);
-    setDeleteStep(1);
-    setDeleteConfirmText("");
-    setDeletePassword("");
-  };
-
-  const handleBulkDelete = async () => {
-    if (!deletePassword.trim()) return;
-    setDeleting(true);
-    try {
-      await deleteAllModels(
-        new DeleteAllModelsRequest({ adminPassword: deletePassword })
-      );
-      resetDialog();
-      toast.success("All models deleted");
-    } catch {
-      toast.error("Failed to delete models");
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  return (
-    <SettingsSection
-      title="Bulk Operations"
-      description="Dangerous operations that affect all models"
-    >
-      <div className="flex items-center justify-between py-4">
-        <div>
-          <p className="font-medium text-white">Delete all models</p>
-          <p className="text-sm text-white/60">
-            Permanently delete every model on the site. This cannot be undone.
-          </p>
-        </div>
-        <Button
-          variant="destructive"
-          onClick={() => setDeleteDialogOpen(true)}
-          className="text-white"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete All Models
-        </Button>
-      </div>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={(open) => !open && resetDialog()}>
-        <DialogContent variant="glass">
-          <DialogHeader>
-            <DialogTitle>Delete All Models</DialogTitle>
-            <DialogDescription>
-              {deleteStep === 1
-                ? `This will permanently delete all models. Type ${BULK_DELETE_CONFIRM_TEXT} to continue.`
-                : "Enter your admin password to confirm this destructive action."}
-            </DialogDescription>
-          </DialogHeader>
-          {deleteStep === 1 ? (
-            <div>
-              <label className="text-sm font-medium text-white/80">
-                Confirmation text
-              </label>
-              <Input
-                variant="glass"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder={BULK_DELETE_CONFIRM_TEXT}
-                className="mt-1 text-white"
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="text-sm font-medium text-white/80">
-                Admin password
-              </label>
-              <Input
-                variant="glass"
-                type="password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="Enter admin password"
-                className="mt-1 text-white"
-              />
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={resetDialog}>
-              Cancel
-            </Button>
-            {deleteStep === 1 ? (
-              <Button
-                variant="destructive"
-                onClick={() => setDeleteStep(2)}
-                disabled={!canProceedToStep2}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                variant="destructive"
-                onClick={handleBulkDelete}
-                disabled={deleting || !deletePassword.trim()}
-              >
-                {deleting ? "Deleting..." : "Delete All"}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </SettingsSection>
-  );
-}
-
 export function ModelsTab() {
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <h2 className="text-2xl font-bold text-white">Model Settings</h2>
 
-      <Tabs defaultValue="configuration" className="w-full">
-        <TabsList variant="glass">
-          <TabsTrigger variant="glass" value="configuration">
-            Configuration
-          </TabsTrigger>
-          <TabsTrigger variant="glass" value="categories">
-            Categories
-          </TabsTrigger>
-          <TabsTrigger variant="glass" value="file-types">
-            File Types
-          </TabsTrigger>
-          <TabsTrigger variant="glass" value="moderation">
-            Moderation
-          </TabsTrigger>
-          <TabsTrigger variant="glass" value="bulk">
-            Bulk Operations
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="configuration" className="w-full min-w-0">
+        <div className="w-full min-w-0 overflow-x-auto pb-1">
+          <TabsList variant="glass" className="inline-flex w-max">
+            <TabsTrigger variant="glass" value="configuration">
+              Configuration
+            </TabsTrigger>
+            <TabsTrigger variant="glass" value="categories">
+              Categories
+            </TabsTrigger>
+            <TabsTrigger variant="glass" value="file-types">
+              File Types
+            </TabsTrigger>
+            <TabsTrigger variant="glass" value="moderation">
+              Moderation
+            </TabsTrigger>
+            <TabsTrigger variant="glass" value="bulk">
+              Bulk Operations
+            </TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent variant="glass" value="configuration">
           <ConfigurationTab />
         </TabsContent>

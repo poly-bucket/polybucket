@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@/test/test-utils";
+import userEvent from "@testing-library/user-event";
 import { PanelLayout } from "./panel-layout";
 import { LayoutDashboard, Users } from "lucide-react";
 
@@ -45,5 +46,20 @@ describe("PanelLayout", () => {
     );
 
     expect(screen.getByText("Manage the system")).toBeInTheDocument();
+  });
+
+  it("shows inset header with toggle after sidebar is collapsed on desktop", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PanelLayout title="Admin Panel" navItems={mockNavItems}>
+        <div>Content</div>
+      </PanelLayout>
+    );
+
+    const toggles = screen.getAllByRole("button", { name: "Toggle Sidebar" });
+    await user.click(toggles[0]);
+
+    expect(screen.getByText("Admin Panel", { selector: "span" })).toBeInTheDocument();
   });
 });

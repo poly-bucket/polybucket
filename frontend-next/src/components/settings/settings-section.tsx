@@ -18,14 +18,17 @@ export function SettingsSection({
   className,
 }: SettingsSectionProps) {
   return (
-    <Card variant="glass" className={cn("border-white/20", className)}>
+    <Card
+      variant="glass"
+      className={cn("min-w-0 border-white/20", className)}
+    >
       <CardHeader>
         <CardTitle className="text-white">{title}</CardTitle>
         {description && (
           <CardDescription className="text-white/70">{description}</CardDescription>
         )}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="min-w-0">{children}</CardContent>
     </Card>
   );
 }

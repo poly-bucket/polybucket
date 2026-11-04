@@ -10,6 +10,9 @@ using PolyBucket.Api.Features.Authentication.OAuthCallback.Http;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Http;
 using PolyBucket.Api.Features.Authentication.Register.Http;
 using PolyBucket.Api.Features.Authentication.ResetPassword.Http;
+using PolyBucket.Api.Features.Authentication.RecoveryCodes.AcknowledgeRecoveryCodes.Http;
+using PolyBucket.Api.Features.Authentication.RecoveryCodes.GetPendingRecoveryCodesDisplay.Http;
+using PolyBucket.Api.Features.Authentication.RecoveryCodes.RegenerateRecoveryCodes.Http;
 using PolyBucket.Api.Features.Authentication.VerifyEmail.Http;
 using Shouldly;
 using Xunit;
@@ -27,6 +30,10 @@ public class AuthenticationControllerTests
             new object[] { typeof(RefreshTokenController) },
             new object[] { typeof(ForgotPasswordController) },
             new object[] { typeof(ResetPasswordController) },
+            new object[] { typeof(RecoveryCodeResetPasswordController) },
+            new object[] { typeof(RegenerateRecoveryCodesController) },
+            new object[] { typeof(GetPendingRecoveryCodesDisplayController) },
+            new object[] { typeof(AcknowledgeRecoveryCodesController) },
             new object[] { typeof(VerifyEmailController) },
             new object[] { typeof(OAuthAuthorizeController) },
             new object[] { typeof(OAuthCallbackController) }

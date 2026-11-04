@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Authentication.SkipPasswordChange.Repository;
 using System.Security.Claims;
+
+using PolyBucket.Api.Features.Authentication.Services;
 
 namespace PolyBucket.Api.Features.Authentication.SkipPasswordChange.Domain;
 
@@ -15,11 +18,13 @@ public class SkipPasswordChangeResponse
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public bool RequiresFirstTimeSetup { get; set; }
+    public IReadOnlyList<string>? RecoveryCodes { get; set; }
 }
 
 public class SkipPasswordChangeService(
     ISkipPasswordChangeRepository repository,
     IHttpContextAccessor httpContextAccessor,
+    IRecoveryCodePresentationService recoveryCodePresentationService,
     ILogger<SkipPasswordChangeService> logger) : ISkipPasswordChangeService
 {
     private readonly ISkipPasswordChangeRepository _repository = repository;
@@ -71,7 +76,8 @@ public class SkipPasswordChangeService(
             {
                 Success = true,
                 Message = "Password change skipped successfully",
-                RequiresFirstTimeSetup = true
+                RequiresFirstTimeSetup = true,
+                RecoveryCodes = recoveryCodePresentationService.TryGetPendingRecoveryCodes(user)
             };
         }
         catch (Exception ex)

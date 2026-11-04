@@ -38,7 +38,13 @@ public class UpdateCategoryControllerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        var command = new UpdateCategoryCommand { Id = id, Name = "Updated" };
+        var command = new UpdateCategoryCommand
+        {
+            Id = id,
+            Name = "Updated",
+            Description = "Updated description",
+            Color = "#3B82F6"
+        };
         var response = new UpdateCategoryResponse { Id = id, Name = "Updated" };
         _mediator.SetupSend<UpdateCategoryCommand, UpdateCategoryResponse>(response);
 
@@ -47,5 +53,12 @@ public class UpdateCategoryControllerTests
 
         // Assert
         result.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(response);
+        _mediator.Verify(m => m.Send(
+            It.Is<UpdateCategoryCommand>(c =>
+                c.Id == id &&
+                c.Name == "Updated" &&
+                c.Description == "Updated description" &&
+                c.Color == "#3B82F6"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 }

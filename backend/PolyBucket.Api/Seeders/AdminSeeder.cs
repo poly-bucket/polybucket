@@ -19,12 +19,14 @@ namespace PolyBucket.Api.Seeders
         IPasswordGenerator passwordGenerator,
         IPasswordHasher passwordHasher,
         IOptions<AdminSeedSettings> adminSettings,
+        IRecoveryCodeProvisioningService recoveryCodeProvisioningService,
         ILogger<AdminSeeder> logger)
     {
         private readonly PolyBucketDbContext _context = context;
         private readonly IPasswordGenerator _passwordGenerator = passwordGenerator;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
         private readonly AdminSeedSettings _adminSettings = adminSettings.Value;
+        private readonly IRecoveryCodeProvisioningService _recoveryCodeProvisioningService = recoveryCodeProvisioningService;
         private readonly ILogger<AdminSeeder> _logger = logger;
 
         public async Task SeedAsync()
@@ -106,8 +108,10 @@ namespace PolyBucket.Api.Seeders
                 _logger.LogError("CRITICAL: Password hash verification failed immediately after creation! This indicates a problem with password hashing.");
             }
 
+            var adminId = Guid.NewGuid();
             var admin = new User
             {
+                Id = adminId,
                 Username = username,
                 Email = email,
                 PasswordHash = passwordHash,
@@ -120,6 +124,8 @@ namespace PolyBucket.Api.Seeders
                 EmailVerifiedAt = DateTime.UtcNow,
                 Settings = new UserSettings
                 {
+                    Id = Guid.NewGuid(),
+                    UserId = adminId,
                     Language = "en",
                     Theme = "dark",
                     EmailNotifications = true,
@@ -131,6 +137,13 @@ namespace PolyBucket.Api.Seeders
 
             _context.Users.Add(admin);
             await _context.SaveChangesAsync();
+
+            await _recoveryCodeProvisioningService.ProvisionForNewUserAsync(
+                admin,
+                admin.Id,
+                storePendingDisplayPayload: true,
+                UserAuditAction.RecoveryCodesGenerated,
+                CancellationToken.None);
             
             _logger.LogInformation($"{nameof(AdminSeeder)}: Admin user created successfully.");
         }

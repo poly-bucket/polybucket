@@ -10,7 +10,19 @@ vi.mock("@/lib/services/adminService", () => ({
   updateModelConfigurationSettings: vi.fn(),
   getSiteModelSettings: () => mockGetSiteModelSettings(),
   updateSiteModelSettings: vi.fn(),
+  getSiteSettings: vi.fn().mockResolvedValue(null),
+  getFileSettings: vi.fn().mockResolvedValue({
+    success: true,
+    fileTypes: [],
+    totalCount: 0,
+    totalPages: 1,
+    derivedAllowedFileTypes: ".stl,.obj",
+  }),
+  updateFileSettings: vi.fn(),
   deleteAllModels: vi.fn(),
+  deleteAllFileSettings: vi.fn(),
+  deleteAllCategories: vi.fn(),
+  deleteAllCollections: vi.fn(),
 }));
 
 describe("AdminModelsPage", () => {

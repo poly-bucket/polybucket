@@ -54,5 +54,5 @@ export async function updateSiteSettingsMerged(
   settings: SiteSettingsData
 ): Promise<UpdateSiteSettingsResponse> {
   const command = siteSettingsToCommand(settings);
-  return ApiClientFactory.getApiClient().systemSetup_UpdateSiteSettings(command);
+  return ApiClientFactory.getApiClient().updateSiteSettings_UpdateSiteSettings(command);
 }

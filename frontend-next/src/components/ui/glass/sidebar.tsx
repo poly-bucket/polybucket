@@ -41,12 +41,18 @@ export function Sidebar({
           "[&_[data-sidebar=sidebar]]:glass-bg [&_[data-sidebar=sidebar]]:border",
           glow &&
             "[&_[data-sidebar=sidebar]]:shadow-lg [&_[data-sidebar=sidebar]]:shadow-purple-500/20",
+          glow &&
+            "[&[data-mobile=true]]:shadow-purple-500/20",
           hoverEffects({ hover })
         )
       : ""
 
   return (
-    <BaseSidebar className={cn(glassClasses, className)} {...props} />
+    <BaseSidebar
+      mobileSheetVariant={variant === "glass" ? "glass" : "default"}
+      className={cn(glassClasses, className)}
+      {...props}
+    />
   )
 }
 

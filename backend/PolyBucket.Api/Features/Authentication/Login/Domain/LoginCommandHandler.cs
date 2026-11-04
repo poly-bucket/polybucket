@@ -11,6 +11,7 @@ using PolyBucket.Api.Features.Authentication.Login.Repository;
 using PolyBucket.Api.Features.Authentication.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.SystemSettings.Services;
+using PolyBucket.Database.Entities.SystemSettings;
 
 using RefreshTokenModel = PolyBucket.Database.Entities.Authentication.RefreshToken;
 
@@ -176,7 +177,25 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 try
                 {
                     var systemSetup = await _context.SystemSetups.FirstOrDefaultAsync(cancellationToken);
-                    if (systemSetup != null && systemSetup.IsFirstTimeSetup)
+                    if (systemSetup == null)
+                    {
+                        systemSetup = new SystemSetup
+                        {
+                            Id = Guid.NewGuid(),
+                            IsFirstTimeSetup = true,
+                            IsAdminConfigured = false,
+                            IsSiteConfigured = false,
+                            IsStorageConfigured = false,
+                            IsEmailConfigured = false,
+                            IsModerationConfigured = false,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+                        };
+                        _context.SystemSetups.Add(systemSetup);
+                        await _context.SaveChangesAsync(cancellationToken);
+                    }
+
+                    if (systemSetup.IsFirstTimeSetup)
                     {
                         requiresFirstTimeSetup = true;
 

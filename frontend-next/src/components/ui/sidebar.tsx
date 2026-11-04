@@ -155,6 +155,7 @@ function Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",
+  mobileSheetVariant = "default",
   className,
   children,
   ...props
@@ -162,6 +163,7 @@ function Sidebar({
   side?: "left" | "right"
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
+  mobileSheetVariant?: "default" | "glass"
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
@@ -187,7 +189,15 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          variant={mobileSheetVariant}
+          showCloseButton={false}
+          className={cn(
+            "w-(--sidebar-width) gap-0 p-0 [&>button]:hidden",
+            mobileSheetVariant === "glass"
+              ? "text-white"
+              : "bg-sidebar text-sidebar-foreground",
+            className
+          )}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,

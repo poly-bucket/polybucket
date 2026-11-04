@@ -25,7 +25,7 @@ namespace PolyBucket.Api.Features.Categories.GetCategories.Http
         /// Get categories with pagination and search
         /// </summary>
         /// <param name="page">Page number (default: 1)</param>
-        /// <param name="pageSize">Number of items per page (default: 20)</param>
+        /// <param name="pageSize">Number of items per page (default: 20, max: 100)</param>
         /// <param name="searchTerm">Search term to filter categories by name</param>
         /// <returns>Paginated list of categories</returns>
         /// <response code="200">Categories retrieved successfully</response>
@@ -33,6 +33,7 @@ namespace PolyBucket.Api.Features.Categories.GetCategories.Http
         /// <response code="403">User lacks permission to manage categories</response>
         [HttpGet]
         [ProducesResponseType(typeof(GetCategoriesResponse), 200)]
+        [ProducesResponseType(400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
         public async Task<ActionResult<GetCategoriesResponse>> GetCategories(
@@ -40,6 +41,16 @@ namespace PolyBucket.Api.Features.Categories.GetCategories.Http
             [FromQuery] int pageSize = 20,
             [FromQuery] string? searchTerm = null)
         {
+            if (page < 1)
+            {
+                return BadRequest("Page number must be greater than 0");
+            }
+
+            if (pageSize < 1 || pageSize > 100)
+            {
+                return BadRequest("Page size must be between 1 and 100");
+            }
+
             var query = new GetCategoriesQuery
             {
                 Page = page,

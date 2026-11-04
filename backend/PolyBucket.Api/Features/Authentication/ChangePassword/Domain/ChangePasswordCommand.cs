@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using MediatR;
@@ -28,5 +29,6 @@ namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public bool RequiresFirstTimeSetup { get; set; } = false;
+        public IReadOnlyList<string>? RecoveryCodes { get; set; }
     }
 } 

@@ -36,14 +36,21 @@ namespace PolyBucket.Api.Seeders
             }
 
             var categories = Enum.GetValues<ModelCategories>()
-                .Select(category => new Category
+                .Select(category =>
                 {
-                    Id = Guid.NewGuid(),
-                    Name = category.ToString(),
-                    CreatedById = adminUser.Id,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedById = adminUser.Id,
-                    UpdatedAt = DateTime.UtcNow
+                    var (description, color) = CategorySeedMetadata.Get(category);
+                    return new Category
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = category.ToString(),
+                        Description = description,
+                        Color = color,
+                        Icon = string.Empty,
+                        CreatedById = adminUser.Id,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedById = adminUser.Id,
+                        UpdatedAt = DateTime.UtcNow
+                    };
                 })
                 .ToList();
 

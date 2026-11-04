@@ -16,7 +16,6 @@ import {
   fetchFollowerHistory,
   type FollowerHistoryPoint,
 } from "@/lib/services/userFollowService";
-import { ChartBlockSkeleton } from "@/components/ui/skeletons";
 
 type DayWindow = 7 | 30 | 90;
 
@@ -71,16 +70,17 @@ export function FollowerHistoryChart({ userId }: FollowerHistoryChartProps) {
   );
 
   return (
-    <Card variant="glass" className="mb-6 border-white/20">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-2">
-        <CardTitle className="text-lg text-white">Followers over time</CardTitle>
-        <div className="flex gap-2">
+    <Card variant="glass" className="max-w-xl gap-3 border-white/20 py-4">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 px-4 pb-0">
+        <CardTitle className="text-sm font-medium text-white">Followers over time</CardTitle>
+        <div className="flex gap-1">
           {([7, 30, 90] as DayWindow[]).map((window) => (
             <Button
               key={window}
               type="button"
               size="sm"
               variant={days === window ? "glass" : "outline"}
+              className="h-7 px-2 text-xs"
               onClick={() => setDays(window)}
             >
               {window}d
@@ -88,13 +88,13 @@ export function FollowerHistoryChart({ userId }: FollowerHistoryChartProps) {
           ))}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pt-2">
         {loading ? (
-          <ChartBlockSkeleton />
+          <div className="h-28 w-full animate-pulse rounded-lg bg-white/10" />
         ) : error ? (
           <p className="text-center text-sm text-red-300">{error}</p>
         ) : (
-          <div className="h-64 w-full">
+          <div className="h-28 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />

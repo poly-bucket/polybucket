@@ -50,6 +50,17 @@ describe("shouldRedirectToLogin", () => {
     expect(result).toBeNull();
   });
 
+  it("returns null when on /register (auth path, no loop)", () => {
+    // Arrange
+    const headers = { [PRIVATE_SITE_MARKER_HEADER]: PRIVATE_SITE_MARKER_VALUE };
+
+    // Act
+    const result = shouldRedirectToLogin(401, headers, "/register");
+
+    // Assert
+    expect(result).toBeNull();
+  });
+
   it("returns null for a 401 without the marker (ordinary 401)", () => {
     // Arrange
     const headers = { "content-type": "application/json" };

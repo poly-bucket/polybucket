@@ -65,12 +65,22 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
                 .Setup(r => r.GetDefaultUserRoleIdAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(_dbContext.Roles.First().Id);
             var registrationGate = new UserRegistrationGate(_dbContext);
+            var recoveryCodeProvisioningMock = new Mock<IRecoveryCodeProvisioningService>();
+            recoveryCodeProvisioningMock
+                .Setup(p => p.ProvisionForNewUserAsync(
+                    It.IsAny<User>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<UserAuditAction>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[] { "RECOVERY-CODE-1", "RECOVERY-CODE-2" });
             _handler = new RegisterCommandHandler(
                 _authRepositoryMock.Object,
                 _tokenServiceMock.Object,
                 _emailSettingsResolverMock.Object,
                 _accountEmailServiceMock.Object,
                 registrationGate,
+                recoveryCodeProvisioningMock.Object,
                 _loggerMock.Object);
 
             _controller = new RegisterController(_handler, Mock.Of<ILogger<RegisterController>>())

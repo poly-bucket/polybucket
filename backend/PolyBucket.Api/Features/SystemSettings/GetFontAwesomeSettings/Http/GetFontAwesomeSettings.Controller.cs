@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.ACL.Authorization;
+using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.SystemSettings.GetFontAwesomeSettings.Domain;
 
 namespace PolyBucket.Api.Features.SystemSettings.GetFontAwesomeSettings.Http;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize(Roles = "Admin")]
+[Authorize]
+[RequirePermission(PermissionConstants.ADMIN_SYSTEM_SETTINGS)]
 public class GetFontAwesomeSettingsController(IGetFontAwesomeSettingsService getFontAwesomeSettingsService) : ControllerBase
 {
     /// <summary>

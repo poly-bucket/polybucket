@@ -37,18 +37,13 @@ vi.mock("./profile-header", () => ({
   ProfileHeader: () => <div data-testid="profile-header" />,
 }));
 
-vi.mock("./follower-history-chart", () => ({
-  FollowerHistoryChart: () => <div data-testid="follower-chart" />,
-}));
-
 describe("ProfilePageContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("does not show the follower chart when viewing another profile", async () => {
+  it("renders profile header when profile loads", async () => {
     render(<ProfilePageContent />);
     await screen.findByTestId("profile-header");
-    expect(screen.queryByTestId("follower-chart")).not.toBeInTheDocument();
   });
 });

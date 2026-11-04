@@ -1,5 +1,7 @@
 namespace PolyBucket.Api.Features.Users.CreateUser.Domain
 {
+    using System.Collections.Generic;
+
     public class CreateUserCommandResponse
     {
         public Guid UserId { get; set; }
@@ -11,6 +13,7 @@ namespace PolyBucket.Api.Features.Users.CreateUser.Domain
         public string? LastName { get; set; }
         public string? Country { get; set; }
         public string? GeneratedPassword { get; set; }
+        public IReadOnlyList<string>? RecoveryCodes { get; set; }
         public bool InviteEmailQueued { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool EmailVerificationRequired { get; set; }

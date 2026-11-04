@@ -2,14 +2,26 @@ import { test, expect } from "@playwright/test";
 
 const LOGIN_PATH = "/login";
 
+async function mockPublicSiteAccess(page: import("@playwright/test").Page) {
+  await page.route("**/api/polybucket/auth/site-access", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ allowPublicBrowsing: true }),
+    });
+  });
+}
+
 test.describe("Navigation", () => {
   test("home redirects to dashboard or auth", async ({ page }) => {
+    await mockPublicSiteAccess(page);
     await page.goto("/");
 
     await expect(page).toHaveURL(/\/(dashboard|login|auth)/);
   });
 
-  test("dashboard page loads", async ({ page }) => {
+  test("dashboard page loads when public browsing is enabled", async ({ page }) => {
+    await mockPublicSiteAccess(page);
     await page.goto("/dashboard");
 
     await expect(page.locator("main, [role='main'], body")).toBeVisible();

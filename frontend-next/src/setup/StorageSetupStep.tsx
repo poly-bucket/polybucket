@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2, CircleDashed, Loader2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/primitives/button";
 import {
@@ -37,6 +38,8 @@ const emptyForm: UpdateStorageSettingsRequest = {
   forcePathStyle: false,
 };
 
+type ConnectionTestStatus = "idle" | "success" | "failed";
+
 export default function StorageSetupStep({
   onComplete,
   onBack,
@@ -44,7 +47,12 @@ export default function StorageSetupStep({
   const [form, setForm] = useState(emptyForm);
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [testPassed, setTestPassed] = useState(false);
+  const [testStatus, setTestStatus] = useState<ConnectionTestStatus>("idle");
+
+  const handleFormChange = (next: UpdateStorageSettingsRequest) => {
+    setForm(next);
+    setTestStatus("idle");
+  };
 
   const handleTest = async () => {
     if (!form.provider) {
@@ -53,16 +61,18 @@ export default function StorageSetupStep({
     }
 
     setIsTesting(true);
-    setTestPassed(false);
+    setTestStatus("idle");
     try {
       const result = await testStorageConfiguration(buildStorageRequest(form));
       if (result.success) {
-        setTestPassed(true);
+        setTestStatus("success");
         toast.success(result.message);
       } else {
+        setTestStatus("failed");
         toast.error(result.message);
       }
     } catch (e) {
+      setTestStatus("failed");
       toast.error(getStorageApiErrorMessage(e, "Storage test failed"));
     } finally {
       setIsTesting(false);
@@ -75,7 +85,7 @@ export default function StorageSetupStep({
       return;
     }
 
-    if (!testPassed) {
+    if (testStatus !== "success") {
       toast.error("Run a successful connection test before continuing.");
       return;
     }
@@ -120,9 +130,13 @@ export default function StorageSetupStep({
         </p>
       </div>
 
-      <StorageSettingsForm form={form} onChange={setForm} showProviderPrompt />
+      <StorageSettingsForm
+        form={form}
+        onChange={handleFormChange}
+        showProviderPrompt
+      />
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button
           type="button"
           variant="outline"
@@ -131,18 +145,41 @@ export default function StorageSetupStep({
         >
           Back
         </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handleTest}
-          disabled={isTesting || isSaving}
-        >
-          {isTesting ? "Testing…" : "Test connection"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleTest}
+            disabled={isTesting || isSaving}
+          >
+            {isTesting ? "Testing…" : "Test connection"}
+          </Button>
+          {isTesting ? (
+            <Loader2
+              className="h-5 w-5 shrink-0 animate-spin text-white/60"
+              aria-label="Testing connection"
+            />
+          ) : testStatus === "success" ? (
+            <CheckCircle2
+              className="h-5 w-5 shrink-0 text-emerald-400"
+              aria-label="Connection test passed"
+            />
+          ) : testStatus === "failed" ? (
+            <XCircle
+              className="h-5 w-5 shrink-0 text-red-400"
+              aria-label="Connection test failed"
+            />
+          ) : (
+            <CircleDashed
+              className="h-5 w-5 shrink-0 text-white/40"
+              aria-label="Connection not tested yet"
+            />
+          )}
+        </div>
         <Button
           type="button"
           onClick={handleSaveAndApply}
-          disabled={isSaving || isTesting}
+          disabled={isSaving || isTesting || testStatus !== "success"}
         >
           {isSaving ? "Saving & restarting API…" : "Save and apply"}
         </Button>

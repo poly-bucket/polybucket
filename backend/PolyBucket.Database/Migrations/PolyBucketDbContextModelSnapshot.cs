@@ -219,6 +219,54 @@ namespace PolyBucket.Database.Migrations
                     b.ToTable("UserPermissions");
                 });
 
+            modelBuilder.Entity("PolyBucket.Database.Entities.Authentication.AccountRecoveryCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ProtectedCodeHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsUsed")
+                        .HasDatabaseName("IX_AccountRecoveryCodes_UserId_IsUsed");
+
+                    b.ToTable("AccountRecoveryCodes");
+                });
+
             modelBuilder.Entity("PolyBucket.Database.Entities.Authentication.BackupCode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2014,6 +2062,15 @@ namespace PolyBucket.Database.Migrations
                     b.Property<string>("ProfilePictureUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("ProtectedPendingRecoveryCodesPayload")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RecoveryCodesAcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RecoveryCodesGeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("RemoteInstanceId")
                         .HasColumnType("text");
 
@@ -3297,6 +3354,17 @@ namespace PolyBucket.Database.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PolyBucket.Database.Entities.Authentication.AccountRecoveryCode", b =>
+                {
+                    b.HasOne("PolyBucket.Database.Entities.Models.User", "User")
+                        .WithMany("AccountRecoveryCodes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PolyBucket.Database.Entities.Authentication.BackupCode", b =>
                 {
                     b.HasOne("PolyBucket.Database.Entities.Authentication.TwoFactorAuth", "TwoFactorAuth")
@@ -3738,6 +3806,8 @@ namespace PolyBucket.Database.Migrations
 
             modelBuilder.Entity("PolyBucket.Database.Entities.Models.User", b =>
                 {
+                    b.Navigation("AccountRecoveryCodes");
+
                     b.Navigation("Logins");
 
                     b.Navigation("Settings")

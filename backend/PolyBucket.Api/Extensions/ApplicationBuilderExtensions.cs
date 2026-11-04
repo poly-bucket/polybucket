@@ -110,20 +110,22 @@ public static class ApplicationBuilderExtensions
         }
         
         app.UseStaticFiles();
-        
+
+        app.UseRouting();
+
+        app.UseRateLimiter();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UsePrivateSiteFilesAccess();
+
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(filesPath),
             RequestPath = "/files"
         });
-        
-        app.UseRouting();
-        
-        app.UseRateLimiter();
 
-        app.UseAuthentication();
-        app.UseAuthorization();
-        
         app.UsePrivateSiteAccess();
         
         app.MapHealthChecks("/health");

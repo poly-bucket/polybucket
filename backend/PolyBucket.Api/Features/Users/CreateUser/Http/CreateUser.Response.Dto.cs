@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PolyBucket.Api.Features.Users.CreateUser.Http;
 
 public class CreateUserResponseDto
@@ -11,6 +13,7 @@ public class CreateUserResponseDto
     public string? LastName { get; set; }
     public string? Country { get; set; }
     public string? GeneratedPassword { get; set; }
+    public IReadOnlyList<string>? RecoveryCodes { get; set; }
     public bool InviteEmailQueued { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool EmailVerificationRequired { get; set; }

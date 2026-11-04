@@ -15,6 +15,7 @@ public static class CreateUserResponseMapper
         LastName = response.LastName,
         Country = response.Country,
         GeneratedPassword = response.GeneratedPassword,
+        RecoveryCodes = response.RecoveryCodes,
         InviteEmailQueued = response.InviteEmailQueued,
         CreatedAt = response.CreatedAt,
         EmailVerificationRequired = response.EmailVerificationRequired

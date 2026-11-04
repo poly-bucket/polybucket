@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Authentication.ChangePassword.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Email;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain;
@@ -11,12 +12,14 @@ public class ChangePasswordCommandHandler(
     IChangePasswordRepository changePasswordRepository,
     IPasswordHasher passwordHasher,
     IAccountEmailService accountEmailService,
+    IRecoveryCodePresentationService recoveryCodePresentationService,
     ILogger<ChangePasswordCommandHandler> logger,
     IHttpContextAccessor httpContextAccessor) : IRequestHandler<ChangePasswordCommand, ChangePasswordResponse>
 {
     private readonly IChangePasswordRepository _changePasswordRepository = changePasswordRepository;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly IAccountEmailService _accountEmailService = accountEmailService;
+    private readonly IRecoveryCodePresentationService _recoveryCodePresentationService = recoveryCodePresentationService;
     private readonly ILogger<ChangePasswordCommandHandler> _logger = logger;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
@@ -86,7 +89,8 @@ public class ChangePasswordCommandHandler(
             {
                 Success = true,
                 Message = "Password changed successfully",
-                RequiresFirstTimeSetup = user.Role?.Name == "Admin" && !user.HasCompletedFirstTimeSetup
+                RequiresFirstTimeSetup = user.Role?.Name == "Admin" && !user.HasCompletedFirstTimeSetup,
+                RecoveryCodes = _recoveryCodePresentationService.TryGetPendingRecoveryCodes(user)
             };
         }
         catch (Exception ex)

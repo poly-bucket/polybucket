@@ -17,8 +17,6 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Database.DependencyInjection;
 using PolyBucket.Email.DependencyInjection;
 using PolyBucket.Storage.DependencyInjection;
-using System.Security.Claims;
-using System.Linq;
 
 namespace PolyBucket.Api.Extensions;
 
@@ -54,6 +52,8 @@ public static class ServiceCollectionExtensions
         services.AddOptions<AdminSeedSettings>()
             .BindConfiguration(AdminSeedSettings.SectionName)
             .ValidateOnStart();
+        services.AddOptions<Features.Authentication.Domain.RecoveryCodeSettings>()
+            .BindConfiguration(Features.Authentication.Domain.RecoveryCodeSettings.SectionName);
 
         return services;
     }
@@ -115,6 +115,7 @@ public static class ServiceCollectionExtensions
         })
         .AddJwtBearer(options =>
         {
+            options.MapInboundClaims = false;
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,

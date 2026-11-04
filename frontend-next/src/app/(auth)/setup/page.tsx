@@ -62,7 +62,7 @@ export default function SetupPage() {
     const checkStatus = async () => {
       try {
         const client = ApiClientFactory.getApiClient();
-        const status = await client.systemSetup_GetSetupStatus();
+        const status = await client.checkFirstTimeSetup_GetSetupStatus();
         setCurrentStep(resumeStepFromStatus(status ?? {}));
       } catch {
         setCurrentStep(0);

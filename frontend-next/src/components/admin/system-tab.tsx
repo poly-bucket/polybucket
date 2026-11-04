@@ -17,11 +17,14 @@ import {
   getTokenSettings,
   updateTokenSettings,
   getSetupStatus,
+  getAdminApiErrorMessage,
 } from "@/lib/services/adminService";
 import type { TokenSettings } from "@/lib/api/client";
 import { SettingsSectionsSkeleton } from "@/components/ui/skeletons";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function SystemTab() {
+  const { refreshUserFromMe } = useAuth();
   const [tokenSettings, setTokenSettings] = useState<TokenSettings | null>(null);
   const [setupStatus, setSetupStatus] = useState<{
     isFirstTimeSetup?: boolean;
@@ -32,27 +35,51 @@ export function SystemTab() {
   const [savingToken, setSavingToken] = useState(false);
   const [tokenDirty, setTokenDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tokenError, setTokenError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const [tokenRes, statusRes] = await Promise.all([
+      setTokenError(null);
+
+      const [tokenResult, statusResult] = await Promise.allSettled([
         getTokenSettings(),
         getSetupStatus(),
       ]);
-      setTokenSettings(tokenRes ?? null);
-      setSetupStatus(statusRes ?? null);
-    } catch {
-      setError("Failed to load system settings");
+
+      if (statusResult.status === "fulfilled") {
+        setSetupStatus(statusResult.value ?? null);
+      } else {
+        setError(
+          getAdminApiErrorMessage(
+            statusResult.reason,
+            "Failed to load setup status"
+          )
+        );
+      }
+
+      if (tokenResult.status === "fulfilled") {
+        setTokenSettings(tokenResult.value ?? null);
+      } else {
+        setTokenSettings(null);
+        setTokenError(
+          getAdminApiErrorMessage(
+            tokenResult.reason,
+            "Failed to load token settings"
+          )
+        );
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    void refreshUserFromMe().finally(() => {
+      void fetchData();
+    });
+  }, [fetchData, refreshUserFromMe]);
 
   const handleTokenChange = (updates: Partial<TokenSettings>) => {
     setTokenSettings((prev) =>
@@ -64,11 +91,14 @@ export function SystemTab() {
   const saveToken = async () => {
     if (!tokenSettings) return;
     setSavingToken(true);
+    setTokenError(null);
     try {
       await updateTokenSettings(tokenSettings);
       setTokenDirty(false);
-    } catch {
-      setError("Failed to save token settings");
+    } catch (err) {
+      setTokenError(
+        getAdminApiErrorMessage(err, "Failed to save token settings")
+      );
     } finally {
       setSavingToken(false);
     }
@@ -138,7 +168,12 @@ export function SystemTab() {
       <EmailOutboxSection />
 
       <SettingsSection title="Token Settings" description="JWT and session token configuration">
-        {tokenSettings && (
+        {tokenError && (
+          <div className="mb-4 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-amber-200">
+            {tokenError}
+          </div>
+        )}
+        {tokenSettings ? (
           <>
             <SettingsField
               label="Access token expiry (hours)"
@@ -185,6 +220,10 @@ export function SystemTab() {
               isDirty={tokenDirty}
             />
           </>
+        ) : (
+          !tokenError && (
+            <p className="text-sm text-white/60">Token settings are unavailable.</p>
+          )
         )}
       </SettingsSection>
     </div>

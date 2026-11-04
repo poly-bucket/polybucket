@@ -20,6 +20,7 @@ public static class SystemSettingsDependencyInjectionMapping
         services.AddTransient<Services.IAuthenticationSettingsService, Services.AuthenticationSettingsService>();
         services.AddTransient<Services.ITokenSettingsService, Services.TokenSettingsService>();
         services.AddTransient<Repository.IFontAwesomeSettingsRepository, Repository.FontAwesomeSettingsRepository>();
+        services.AddScoped<Services.IAllowedFileTypesSyncService, Services.AllowedFileTypesSyncService>();
 
         Register<GetAuthenticationSettings.Domain.IGetAuthenticationSettingsService, GetAuthenticationSettings.Domain.GetAuthenticationSettingsService,
             GetAuthenticationSettings.Repository.IGetAuthenticationSettingsRepository, GetAuthenticationSettings.Repository.AuthenticationSettingsPersistence>(services);
@@ -43,6 +44,11 @@ public static class SystemSettingsDependencyInjectionMapping
             GetFileSettings.Repository.IGetFileSettingsRepository, GetFileSettings.Repository.GetFileSettingsRepository>(services);
         Register<UpdateFileSettings.Domain.IUpdateFileSettingsService, UpdateFileSettings.Domain.UpdateFileSettingsService,
             UpdateFileSettings.Repository.IUpdateFileSettingsRepository, UpdateFileSettings.Repository.UpdateFileSettingsRepository>(services);
+        Register<BulkUpdateFileSettings.Domain.IBulkUpdateFileSettingsService, BulkUpdateFileSettings.Domain.BulkUpdateFileSettingsService,
+            BulkUpdateFileSettings.Repository.IBulkUpdateFileSettingsRepository, BulkUpdateFileSettings.Repository.BulkUpdateFileSettingsRepository>(services);
+        Register<DeleteAllFileSettings.Domain.IDeleteAllFileSettingsService, DeleteAllFileSettings.Domain.DeleteAllFileSettingsService,
+            DeleteAllFileSettings.Repository.IDeleteAllFileSettingsRepository, DeleteAllFileSettings.Repository.DeleteAllFileSettingsRepository>(services);
+        services.AddScoped<SyncAllowedFileTypes.Domain.ISyncAllowedFileTypesService, SyncAllowedFileTypes.Domain.SyncAllowedFileTypesService>();
         Register<GetThemeSettings.Domain.IGetThemeSettingsService, GetThemeSettings.Domain.GetThemeSettingsService,
             GetThemeSettings.Repository.IGetThemeSettingsRepository, GetThemeSettings.Repository.GetThemeSettingsRepository>(services);
         Register<UpdateThemeSettings.Domain.IUpdateThemeSettingsService, UpdateThemeSettings.Domain.UpdateThemeSettingsService,

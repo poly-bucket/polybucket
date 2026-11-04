@@ -3,6 +3,7 @@ import type {
   FileTypeSettingsData,
   GetFileSettingsResponse,
 } from "@/lib/api/client";
+import { FileTypeSettingsData as FileTypeSettingsDataClass } from "@/lib/api/client";
 
 export type { FileTypeSettingsData };
 
@@ -15,7 +16,36 @@ export interface FileTypeSettingsServiceResult {
 const client = () => ApiClientFactory.getApiClient();
 
 export async function getFileSettings(): Promise<GetFileSettingsResponse> {
-  return client().getFileSettings_GetFileSettings();
+  return client().getFileSettings_GetFileSettings(1, 100, undefined, undefined);
+}
+
+export async function getFileTypesForUpload(): Promise<FileTypeSettingsData[]> {
+  const config = await client().getFileConfig_GetFileConfig();
+  const grouped = config.fileTypes ?? {};
+  const result: FileTypeSettingsData[] = [];
+
+  for (const list of Object.values(grouped)) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      result.push(
+        new FileTypeSettingsDataClass({
+          fileExtension: item.extension,
+          displayName: item.displayName,
+          description: item.description,
+          mimeType: item.mimeType,
+          maxFileSizeBytes: item.maxFileSizeBytes,
+          maxPerUpload: item.maxPerUpload,
+          requiresPreview: item.requiresPreview,
+          isCompressible: item.isCompressible,
+          category: item.category,
+          priority: item.priority,
+          enabled: true,
+        })
+      );
+    }
+  }
+
+  return result;
 }
 
 export function getEnabledFileTypesByCategory(
