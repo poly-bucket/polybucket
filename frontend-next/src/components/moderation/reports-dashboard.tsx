@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
 import { getReportsAnalytics } from "@/lib/services/moderationService";
-import type { ReportsAnalytics as ReportsAnalyticsType } from "@/lib/api/client";
+import type { ReportsAnalyticsResponseDto } from "@/lib/api/client";
 import { ReportsAnalytics } from "./reports/reports-analytics";
 import { ReportsTable } from "./reports/reports-table";
 import { TopReported } from "./reports/top-reported";
@@ -25,7 +25,7 @@ type SubTabId = (typeof SUB_TABS)[number]["id"];
 
 export function ReportsDashboard({ canHandleReports = true }: { canHandleReports?: boolean }) {
   const [activeTab, setActiveTab] = useState<SubTabId>("reports");
-  const [analytics, setAnalytics] = useState<ReportsAnalyticsType | null>(null);
+  const [analytics, setAnalytics] = useState<ReportsAnalyticsResponseDto | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],

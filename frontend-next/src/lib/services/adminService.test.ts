@@ -4,8 +4,8 @@ import * as adminService from "./adminService";
 const mockClient = {
   getAdminModelStatistics_GetAdminModelStatistics: vi.fn(),
   getUsers_GetUsers: vi.fn(),
-  roleManagement_GetAllRoles: vi.fn(),
-  roleManagement_GetAllPermissions: vi.fn(),
+  getAllRoles_GetAllRoles: vi.fn(),
+  getRolePermissionsCatalog_GetAllPermissions: vi.fn(),
 };
 
 vi.mock("@/lib/api/clientFactory", () => ({
@@ -52,11 +52,11 @@ describe("adminService", () => {
 
   it("getRoles calls roleManagement API", async () => {
     const mockResponse = { roles: [], pagination: { totalCount: 0 } };
-    mockClient.roleManagement_GetAllRoles.mockResolvedValue(mockResponse);
+    mockClient.getAllRoles_GetAllRoles.mockResolvedValue(mockResponse);
 
     await adminService.getRoles(1, 10, undefined, "priority", true);
 
-    expect(mockClient.roleManagement_GetAllRoles).toHaveBeenCalledWith(
+    expect(mockClient.getAllRoles_GetAllRoles).toHaveBeenCalledWith(
       1,
       10,
       undefined,

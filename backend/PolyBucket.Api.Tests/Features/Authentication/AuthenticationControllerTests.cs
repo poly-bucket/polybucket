@@ -9,6 +9,7 @@ using PolyBucket.Api.Features.Authentication.OAuthAuthorize.Http;
 using PolyBucket.Api.Features.Authentication.OAuthCallback.Http;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Http;
 using PolyBucket.Api.Features.Authentication.Register.Http;
+using PolyBucket.Api.Features.Authentication.RecoveryCodeResetPassword.Http;
 using PolyBucket.Api.Features.Authentication.ResetPassword.Http;
 using PolyBucket.Api.Features.Authentication.RecoveryCodes.AcknowledgeRecoveryCodes.Http;
 using PolyBucket.Api.Features.Authentication.RecoveryCodes.GetPendingRecoveryCodesDisplay.Http;

@@ -99,7 +99,7 @@ export default function SetupPage() {
     setIsCompletingSetup(true);
     try {
       const client = ApiClientFactory.getApiClient();
-      const response = await client.systemSetup_CompleteSetup();
+      const response = await client.completeFirstTimeSetup_CompleteSetup();
       if (response?.success) {
         setIsComplete(true);
       }

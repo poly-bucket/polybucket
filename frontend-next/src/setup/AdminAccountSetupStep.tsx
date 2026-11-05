@@ -188,7 +188,7 @@ export default function AdminAccountSetupStep({
     setErrors({});
     try {
       const client = ApiClientFactory.getApiClient();
-      const response = await client.changePassword_SkipPasswordChange();
+      const response = await client.skipPasswordChange_SkipPasswordChange();
       if (response?.success) {
         if (enable2FA) {
           setPhase("2fa");

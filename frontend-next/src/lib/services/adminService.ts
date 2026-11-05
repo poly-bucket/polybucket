@@ -8,12 +8,12 @@ import type {
   RoleDto,
   CreateRoleRequest,
   UpdateRoleRequest,
-  AssignPermissionsRequest,
-  RemovePermissionsRequest,
-  PermissionDto,
+  AssignPermissionsToRoleRequest,
+  RemovePermissionsFromRoleRequest,
+  PermissionCatalogItemDto,
   BanUserRequest,
   CreateUserCommand,
-  CreateUserCommandResponse,
+  CreateUserResponseDto,
   GetModelConfigurationSettingsResponse,
   UpdateModelConfigurationSettingsCommand,
   UpdateModelConfigurationSettingsResponse,
@@ -71,7 +71,7 @@ export async function getUsers(
   );
 }
 
-export async function createUser(command: CreateUserCommand): Promise<CreateUserCommandResponse> {
+export async function createUser(command: CreateUserCommand): Promise<CreateUserResponseDto> {
   return client().createUser_CreateUser(command);
 }
 
@@ -90,7 +90,7 @@ export async function getRoles(
   sortBy?: string | null,
   sortDescending?: boolean
 ): Promise<PaginatedRolesResponse> {
-  return client().roleManagement_GetAllRoles(
+  return client().getAllRoles_GetAllRoles(
     page,
     pageSize,
     searchTerm ?? undefined,
@@ -100,41 +100,41 @@ export async function getRoles(
 }
 
 export async function getAllRolesUnpaginated(): Promise<RoleDto[]> {
-  return client().roleManagement_GetAllRolesUnpaginated();
+  return client().getAllRolesUnpaginated_GetAllRolesUnpaginated();
 }
 
 export async function getRole(id: string): Promise<RoleDto> {
-  return client().roleManagement_GetRole(id);
+  return client().getRole_GetRole(id);
 }
 
 export async function createRole(request: CreateRoleRequest): Promise<RoleDto> {
-  return client().roleManagement_CreateRole(request);
+  return client().createRole_CreateRole(request);
 }
 
 export async function updateRole(id: string, request: UpdateRoleRequest): Promise<RoleDto> {
-  return client().roleManagement_UpdateRole(id, request);
+  return client().updateRole_UpdateRole(id, request);
 }
 
 export async function deleteRole(id: string): Promise<void> {
-  return client().roleManagement_DeleteRole(id);
+  return client().deleteRole_DeleteRole(id);
 }
 
 export async function assignPermissionsToRole(
   id: string,
-  request: AssignPermissionsRequest
+  request: AssignPermissionsToRoleRequest
 ): Promise<void> {
-  return client().roleManagement_AssignPermissionsToRole(id, request);
+  return client().assignPermissionsToRole_AssignPermissionsToRole(id, request);
 }
 
 export async function removePermissionsFromRole(
   id: string,
-  request: RemovePermissionsRequest
+  request: RemovePermissionsFromRoleRequest
 ): Promise<void> {
-  return client().roleManagement_RemovePermissionsFromRole(id, request);
+  return client().removePermissionsFromRole_RemovePermissionsFromRole(id, request);
 }
 
-export async function getAllPermissions(): Promise<PermissionDto[]> {
-  return client().roleManagement_GetAllPermissions();
+export async function getAllPermissions(): Promise<PermissionCatalogItemDto[]> {
+  return client().getRolePermissionsCatalog_GetAllPermissions();
 }
 
 export async function getModelConfigurationSettings(): Promise<GetModelConfigurationSettingsResponse> {
@@ -406,19 +406,19 @@ export async function activatePresetTheme(themeId: number): Promise<void> {
 export async function getThemeConfiguration(): Promise<
   Record<string, unknown>
 > {
-  return client().extensibleTheme_GetCurrentConfiguration();
+  return client().getExtensibleThemeConfiguration_GetCurrentConfiguration();
 }
 
 export async function updateThemeConfiguration(
   config: Record<string, unknown>
 ): Promise<import("@/lib/api/client").ThemeApplicationResult> {
-  return client().extensibleTheme_UpdateConfiguration(config);
+  return client().updateExtensibleThemeConfiguration_UpdateConfiguration(config);
 }
 
 export async function resetThemeToDefault(): Promise<
   import("@/lib/api/client").ThemeApplicationResult
 > {
-  return client().extensibleTheme_ResetToDefault();
+  return client().resetExtensibleTheme_ResetToDefault();
 }
 
 export interface AdminFontAwesomeSettings {

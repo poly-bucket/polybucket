@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getModeratorActivity } from "@/lib/services/moderationService";
-import type { ModeratorActivity as ModeratorActivityType } from "@/lib/api/client";
+import type { ModeratorActivityItemDto } from "@/lib/api/client";
 import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 interface ModeratorActivityProps {
@@ -25,7 +25,7 @@ function formatDuration(hours?: number): string {
 }
 
 export function ModeratorActivity({ dateRange }: ModeratorActivityProps) {
-  const [activity, setActivity] = useState<ModeratorActivityType[]>([]);
+  const [activity, setActivity] = useState<ModeratorActivityItemDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

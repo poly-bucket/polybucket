@@ -22,7 +22,7 @@ import {
 import { DataTablePagination } from "@/components/primitives/pagination";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { getModerationAuditLogs } from "@/lib/services/moderationService";
-import type { ModerationAuditDto } from "@/lib/api/client";
+import type { ModerationAuditLogItemDto } from "@/lib/api/client";
 import { TableRowsSkeleton } from "@/components/ui/skeletons";
 
 function formatDate(date?: Date | string): string {
@@ -51,7 +51,7 @@ function getActionVariant(
 }
 
 export function AuditLogsTab() {
-  const [logs, setLogs] = useState<ModerationAuditDto[]>([]);
+  const [logs, setLogs] = useState<ModerationAuditLogItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);

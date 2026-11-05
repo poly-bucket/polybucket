@@ -1,10 +1,10 @@
 "use client";
 
-import type { ReportsAnalytics as ReportsAnalyticsType } from "@/lib/api/client";
+import type { ReportsAnalyticsResponseDto } from "@/lib/api/client";
 import { ChartBlockSkeleton } from "@/components/ui/skeletons";
 
 interface ReportsAnalyticsProps {
-  analytics: ReportsAnalyticsType | null;
+  analytics: ReportsAnalyticsResponseDto | null;
   loading: boolean;
   dateRange: { from: string; to: string };
   onRefresh: () => void;

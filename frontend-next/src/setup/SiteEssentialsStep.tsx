@@ -92,7 +92,7 @@ export default function SiteEssentialsStep({
         defaultTheme: base.defaultTheme,
         defaultLanguage: base.defaultLanguage,
       });
-      const response = await client.systemSetup_UpdateSiteSettings(command);
+      const response = await client.updateSiteSettings_UpdateSiteSettings(command);
       if (response?.success) {
         onComplete(formData);
       } else {

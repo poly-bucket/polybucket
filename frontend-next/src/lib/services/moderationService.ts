@@ -2,12 +2,12 @@ import { ApiClientFactory } from "@/lib/api/clientFactory";
 import {
   ResolveReportRequest,
   type ReportsResponse,
-  type ReportsAnalytics,
+  type ReportsAnalyticsResponseDto,
   type BannedUsersListResponse,
-  type ModerationAuditResponse,
+  type ModerationAuditResponseDto,
   type ReportType,
-  type TopReportedItem,
-  type ModeratorActivity,
+  type TopReportedItemDto,
+  type ModeratorActivityItemDto,
 } from "@/lib/api/client";
 
 const client = () => ApiClientFactory.getApiClient();
@@ -29,8 +29,8 @@ export async function getAllReports(
 export async function getReportsAnalytics(
   fromDate?: Date | null,
   toDate?: Date | null
-): Promise<ReportsAnalytics> {
-  return client().getReportAnalytics_GetReportsAnalytics(
+): Promise<ReportsAnalyticsResponseDto> {
+  return client().getReportsAnalytics_GetReportsAnalytics(
     fromDate ?? null,
     toDate ?? null
   );
@@ -38,30 +38,43 @@ export async function getReportsAnalytics(
 
 export async function getTopReportedModels(
   limit?: number
-): Promise<TopReportedItem[]> {
-  return client().getReportAnalytics_GetTopReportedModels(limit ?? 10);
+): Promise<TopReportedItemDto[]> {
+  const response = await client().getTopReportedModels_GetTopReportedModels(
+    limit ?? 10
+  );
+  return (response.items ?? []) as TopReportedItemDto[];
 }
 
 export async function getTopReportedUsers(
   limit?: number
-): Promise<TopReportedItem[]> {
-  return client().getReportAnalytics_GetTopReportedUsers(limit ?? 10);
+): Promise<TopReportedItemDto[]> {
+  const response = await client().getTopReportedUsers_GetTopReportedUsers(
+    limit ?? 10
+  );
+  return (response.items ?? []) as TopReportedItemDto[];
 }
 
 export async function getTopReportedComments(
   limit?: number
-): Promise<TopReportedItem[]> {
-  return client().getReportAnalytics_GetTopReportedComments(limit ?? 10);
+): Promise<TopReportedItemDto[]> {
+  const response = await client().getTopReportedComments_GetTopReportedComments(
+    limit ?? 10
+  );
+  return (response.items ?? []) as TopReportedItemDto[];
 }
 
 export async function getModeratorActivity(
   fromDate?: Date | null,
   toDate?: Date | null
-): Promise<ModeratorActivity[]> {
-  return client().getReportAnalytics_GetModeratorActivity(
+): Promise<ModeratorActivityItemDto[]> {
+  const response = await client().getModeratorReportActivity_GetModeratorActivity(
     fromDate ?? null,
     toDate ?? null
   );
+  if (Array.isArray(response)) {
+    return response as ModeratorActivityItemDto[];
+  }
+  return (response as { items?: ModeratorActivityItemDto[] })?.items ?? [];
 }
 
 export async function resolveReport(
@@ -89,7 +102,7 @@ export async function getModerationAuditLogs(
   action?: string | null,
   userId?: string | null,
   modelId?: string | null
-): Promise<ModerationAuditResponse> {
+): Promise<ModerationAuditResponseDto> {
   return client().getModerationAuditLogs_GetAuditLogs(
     page ?? 1,
     pageSize ?? 20,

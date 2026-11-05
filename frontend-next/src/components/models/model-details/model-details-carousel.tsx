@@ -73,7 +73,7 @@ export function ModelDetailsCarousel({
       if (loadedFiles[key]) return;
       try {
         const client = ApiClientFactory.getApiClient();
-        const resp = await client.streamFile_StreamModelFile(
+        const resp = await client.streamModelFile_StreamModelFile(
           modelId,
           item.fileName,
           undefined

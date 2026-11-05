@@ -54,22 +54,22 @@ import {
   removePermissionsFromRole,
 } from "@/lib/services/adminService";
 import { toast } from "sonner";
-import type { RoleDto, PermissionDto } from "@/lib/api/client";
+import type { RoleDto, PermissionCatalogItemDto } from "@/lib/api/client";
 import { TableRowsSkeleton } from "@/components/ui/skeletons";
 import {
   CreateRoleRequest,
   UpdateRoleRequest,
-  AssignPermissionsRequest,
-  RemovePermissionsRequest,
+  AssignPermissionsToRoleRequest,
+  RemovePermissionsFromRoleRequest,
 } from "@/lib/api/client";
 import { RegistrationDefaultsSection } from "./registration-defaults-section";
 
 const DEFAULT_COLOR = "#3B82F6";
 
 function groupPermissionsByCategory(
-  permissions: PermissionDto[]
-): Map<string, PermissionDto[]> {
-  const map = new Map<string, PermissionDto[]>();
+  permissions: PermissionCatalogItemDto[]
+): Map<string, PermissionCatalogItemDto[]> {
+  const map = new Map<string, PermissionCatalogItemDto[]>();
   for (const p of permissions) {
     if (!p.name) continue;
     const cat = p.category ?? "Other";
@@ -82,7 +82,7 @@ function groupPermissionsByCategory(
 
 export function RolesTab() {
   const [roles, setRoles] = useState<RoleDto[]>([]);
-  const [permissions, setPermissions] = useState<PermissionDto[]>([]);
+  const [permissions, setPermissions] = useState<PermissionCatalogItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -207,13 +207,13 @@ export function RolesTab() {
       if (toAdd.length > 0) {
         await assignPermissionsToRole(
           role.id,
-          new AssignPermissionsRequest({ permissionNames: toAdd })
+          new AssignPermissionsToRoleRequest({ permissionNames: toAdd })
         );
       }
       if (toRemove.length > 0) {
         await removePermissionsFromRole(
           role.id,
-          new RemovePermissionsRequest({ permissionNames: toRemove })
+          new RemovePermissionsFromRoleRequest({ permissionNames: toRemove })
         );
       }
       setPendingPermissions((prev) => {

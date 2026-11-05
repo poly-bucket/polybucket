@@ -229,7 +229,7 @@ export function ModelDetailsPage() {
       setDownloadingFiles((prev) => new Set(prev).add(file.id));
       try {
         const client = ApiClientFactory.getApiClient();
-        const response = await client.streamFile_StreamModelFile(
+        const response = await client.streamModelFile_StreamModelFile(
           model.id,
           file.name,
           true

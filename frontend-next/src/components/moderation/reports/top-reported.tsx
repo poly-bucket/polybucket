@@ -8,7 +8,7 @@ import {
   getTopReportedUsers,
   getTopReportedComments,
 } from "@/lib/services/moderationService";
-import type { TopReportedItem } from "@/lib/api/client";
+import type { TopReportedItemDto } from "@/lib/api/client";
 import { ListRowSkeleton } from "@/components/ui/skeletons";
 
 interface TopReportedProps {
@@ -16,9 +16,9 @@ interface TopReportedProps {
 }
 
 export function TopReported({ dateRange }: TopReportedProps) {
-  const [models, setModels] = useState<TopReportedItem[]>([]);
-  const [users, setUsers] = useState<TopReportedItem[]>([]);
-  const [comments, setComments] = useState<TopReportedItem[]>([]);
+  const [models, setModels] = useState<TopReportedItemDto[]>([]);
+  const [users, setUsers] = useState<TopReportedItemDto[]>([]);
+  const [comments, setComments] = useState<TopReportedItemDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
