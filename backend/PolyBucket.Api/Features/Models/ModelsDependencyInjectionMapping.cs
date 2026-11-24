@@ -23,6 +23,9 @@ public static class ModelsDependencyInjectionMapping
             GetModelVersions.Domain.IGetModelVersionsService,
             GetModelVersions.Domain.GetModelVersionsService>();
 
+        services.AddScoped<UploadValidation.Domain.IModelUploadLimitsProvider, UploadValidation.Repository.ModelUploadLimitsProvider>();
+        services.AddScoped<UploadValidation.Domain.IModelUploadValidator, UploadValidation.Domain.ModelUploadValidator>();
+
         services.AddScoped<CreateModel.Domain.CreateModelService>();
         services.AddTransient<
             CreateModel.Repository.ICreateModelRepository,

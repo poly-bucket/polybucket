@@ -15,12 +15,22 @@ export interface FileTypeSettingsServiceResult {
 
 const client = () => ApiClientFactory.getApiClient();
 
+export const DEFAULT_MAX_FILES_PER_UPLOAD = 5;
+export const DEFAULT_SITE_MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+
+export interface ModelUploadConfig {
+  fileTypes: FileTypeSettingsData[];
+  maxFilesPerUpload: number;
+  siteMaxFileSizeBytes: number;
+}
+
 export async function getFileSettings(): Promise<GetFileSettingsResponse> {
   return client().getFileSettings_GetFileSettings(1, 100, undefined, undefined);
 }
 
-export async function getFileTypesForUpload(): Promise<FileTypeSettingsData[]> {
-  const config = await client().getFileConfig_GetFileConfig();
+function fileTypesFromFileConfig(
+  config: Awaited<ReturnType<ReturnType<typeof client>["getFileConfig_GetFileConfig"]>>
+): FileTypeSettingsData[] {
   const grouped = config.fileTypes ?? {};
   const result: FileTypeSettingsData[] = [];
 
@@ -46,6 +56,22 @@ export async function getFileTypesForUpload(): Promise<FileTypeSettingsData[]> {
   }
 
   return result;
+}
+
+export async function getModelUploadConfig(): Promise<ModelUploadConfig> {
+  const config = await client().getFileConfig_GetFileConfig();
+  return {
+    fileTypes: fileTypesFromFileConfig(config),
+    maxFilesPerUpload:
+      config.maxFilesPerUpload ?? DEFAULT_MAX_FILES_PER_UPLOAD,
+    siteMaxFileSizeBytes:
+      config.maxTotalFileSize ?? DEFAULT_SITE_MAX_FILE_SIZE_BYTES,
+  };
+}
+
+export async function getFileTypesForUpload(): Promise<FileTypeSettingsData[]> {
+  const uploadConfig = await getModelUploadConfig();
+  return uploadConfig.fileTypes;
 }
 
 export function getEnabledFileTypesByCategory(
@@ -81,7 +107,8 @@ export function getExtensionsByCategory(
 
 export function isFileTypeAllowed(
   fileTypes: FileTypeSettingsData[] | undefined,
-  file: File
+  file: File,
+  siteMaxFileSizeBytes: number = DEFAULT_SITE_MAX_FILE_SIZE_BYTES
 ): boolean {
   const ext = file.name
     .toLowerCase()
@@ -92,6 +119,7 @@ export function isFileTypeAllowed(
       (f.fileExtension ?? "").toLowerCase() === ext
   );
   if (!ft) return false;
-  const maxBytes = ft.maxFileSizeBytes ?? 100 * 1024 * 1024;
+  const perTypeMax = ft.maxFileSizeBytes ?? siteMaxFileSizeBytes;
+  const maxBytes = Math.min(siteMaxFileSizeBytes, perTypeMax);
   return file.size <= maxBytes;
 }

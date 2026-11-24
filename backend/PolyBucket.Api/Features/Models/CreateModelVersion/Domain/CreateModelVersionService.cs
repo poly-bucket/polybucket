@@ -8,6 +8,7 @@ using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using System;
 using System.Collections.Generic;
@@ -25,22 +26,24 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
         private readonly IStorageService _storage;
         private readonly IPermissionService _permissionService;
         private readonly IModelPreviewQueue _previewQueue;
+        private readonly IModelUploadValidator _uploadValidator;
         private readonly ILogger<CreateModelVersionService> _logger;
 
-        private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".3mf", ".step", ".stp" };
         private static readonly string[] SupportedImageFormats = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
-        private static readonly string[] SupportedDocumentFormats = { ".pdf", ".md", ".markdown", ".txt" };
-        private static readonly string[] AllSupportedFormats = Supported3DFormats.Concat(SupportedImageFormats).Concat(SupportedDocumentFormats).ToArray();
 
-        private const long MaxFileSize = 100 * 1024 * 1024; // 100MB
-        private const long Max3DModelSize = 500 * 1024 * 1024; // 500MB for 3D models
-
-        public CreateModelVersionService(ICreateModelVersionRepository repository, IStorageService storage, IPermissionService permissionService, IModelPreviewQueue previewQueue, ILogger<CreateModelVersionService> logger)
+        public CreateModelVersionService(
+            ICreateModelVersionRepository repository,
+            IStorageService storage,
+            IPermissionService permissionService,
+            IModelPreviewQueue previewQueue,
+            IModelUploadValidator uploadValidator,
+            ILogger<CreateModelVersionService> logger)
         {
             _repository = repository;
             _storage = storage;
             _permissionService = permissionService;
             _previewQueue = previewQueue;
+            _uploadValidator = uploadValidator;
             _logger = logger;
         }
 
@@ -69,7 +72,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                 throw new UnauthorizedAccessException("You do not have permission to create versions for this model");
             }
 
-            ValidateRequest(request);
+            await ValidateRequestAsync(request, cancellationToken);
 
             var versionId = Guid.NewGuid();
             var versionFiles = new List<ModelFile>();
@@ -164,7 +167,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
             }
         }
 
-        private void ValidateRequest(CreateModelVersionRequest request)
+        private async Task ValidateRequestAsync(CreateModelVersionRequest request, CancellationToken cancellationToken)
         {
             if (request.Files == null || request.Files.Length == 0)
             {
@@ -176,66 +179,11 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                 throw new ValidationException("Version name is required");
             }
 
-            var validationError = ValidateFiles(request.Files);
+            var validationError = await _uploadValidator.ValidateAsync(request.Files, cancellationToken);
             if (validationError != null)
             {
                 throw new ValidationException(validationError);
             }
-        }
-
-        private string? ValidateFiles(IFormFile[] files)
-        {
-            if (files.Length > 20)
-            {
-                return "Too many files. Maximum of 20 files allowed per version.";
-            }
-
-            var has3DModel = false;
-            var totalSize = 0L;
-
-            foreach (var file in files)
-            {
-                if (file.Length == 0)
-                    continue;
-
-                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!AllSupportedFormats.Contains(extension))
-                {
-                    return $"Unsupported file type: {extension}. Supported formats: {string.Join(", ", AllSupportedFormats)}";
-                }
-
-                var maxSize = Is3DModelFile(file.FileName) ? Max3DModelSize : MaxFileSize;
-                if (file.Length > maxSize)
-                {
-                    var maxSizeMB = maxSize / (1024 * 1024);
-                    return $"File {file.FileName} is too large. Maximum size: {maxSizeMB}MB";
-                }
-
-                if (Is3DModelFile(file.FileName))
-                {
-                    has3DModel = true;
-                }
-
-                totalSize += file.Length;
-            }
-
-            if (!has3DModel)
-            {
-                return "At least one 3D model file is required (.stl, .obj, .fbx, .gltf, .glb, .3mf, .step, .stp)";
-            }
-
-            if (totalSize > 1024 * 1024 * 1024)
-            {
-                return "Total upload size exceeds 1GB limit";
-            }
-
-            return null;
-        }
-
-        private static bool Is3DModelFile(string fileName)
-        {
-            var extension = Path.GetExtension(fileName).ToLowerInvariant();
-            return Supported3DFormats.Contains(extension);
         }
 
         private static bool IsImageFile(string fileName)

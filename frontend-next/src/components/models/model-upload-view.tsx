@@ -8,8 +8,9 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { linkModelCategories, uploadModel } from "@/lib/services/modelsService";
 import {
-  getFileTypesForUpload,
+  DEFAULT_MAX_FILES_PER_UPLOAD,
   getExtensionsByCategory,
+  getModelUploadConfig,
   isFileTypeAllowed,
 } from "@/lib/services/fileTypeSettingsService";
 import { getModelConfigurationSettings } from "@/lib/services/modelConfigurationSettingsService";
@@ -28,7 +29,6 @@ import { PrivacySettings } from "@/lib/api/client";
 import ThumbnailGenerator from "./thumbnail-generator";
 import { getUploadDefaults } from "@/lib/services/contentDefaultsService";
 import {
-  MAX_FILES_PER_UPLOAD,
   createUploadedFile,
   getUploadFileType,
   setThumbnailSelection,
@@ -69,6 +69,12 @@ export default function ModelUploadView() {
   const [fileTypeSettings, setFileTypeSettings] = useState<
     FileTypeSettingsData[] | undefined
   >(undefined);
+  const [maxFilesPerUpload, setMaxFilesPerUpload] = useState(
+    DEFAULT_MAX_FILES_PER_UPLOAD
+  );
+  const [siteMaxFileSizeBytes, setSiteMaxFileSizeBytes] = useState(
+    100 * 1024 * 1024
+  );
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
@@ -128,7 +134,7 @@ export default function ModelUploadView() {
     [supported3DFormats, supportedImageFormats, supportedDocFormats, supportedZipFormats]
   );
 
-  const canAddMoreFiles = uploadedFiles.length < MAX_FILES_PER_UPLOAD;
+  const canAddMoreFiles = uploadedFiles.length < maxFilesPerUpload;
 
   const getFileType = useCallback(
     (fileName: string) => {
@@ -167,11 +173,15 @@ export default function ModelUploadView() {
     const load = async () => {
       try {
         setSettingsLoading(true);
-        const [fileTypes, configResp] = await Promise.all([
-          getFileTypesForUpload(),
+        const [uploadConfig, configResp] = await Promise.all([
+          getModelUploadConfig(),
           getModelConfigurationSettings(),
         ]);
-        if (fileTypes.length) setFileTypeSettings(fileTypes);
+        if (uploadConfig.fileTypes.length) {
+          setFileTypeSettings(uploadConfig.fileTypes);
+        }
+        setMaxFilesPerUpload(uploadConfig.maxFilesPerUpload);
+        setSiteMaxFileSizeBytes(uploadConfig.siteMaxFileSizeBytes);
         if (configResp.settings?.defaultPrivacySetting) {
           const p = String(configResp.settings.defaultPrivacySetting).toLowerCase();
           if (p === "public")
@@ -214,7 +224,7 @@ export default function ModelUploadView() {
     async (file: File) => {
       if (!canAddMoreFiles) {
         toast.error(
-          `Maximum of ${MAX_FILES_PER_UPLOAD} files allowed. Remove some before extracting.`
+          `Maximum of ${maxFilesPerUpload} files allowed. Remove some before extracting.`
         );
         return;
       }
@@ -232,7 +242,7 @@ export default function ModelUploadView() {
       }
       const files = convertToFiles(result.files);
       const previousCount = uploadedFiles.length;
-      const remaining = MAX_FILES_PER_UPLOAD - uploadedFiles.length;
+      const remaining = maxFilesPerUpload - uploadedFiles.length;
       const toAdd = files.slice(0, remaining);
       const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
       const newUploaded = toAdd.map((fileItem) => {
@@ -251,7 +261,14 @@ export default function ModelUploadView() {
         `Zip extracted: ${toAdd.length} file(s) added. ${files.length - toAdd.length} skipped (max reached).`
       );
     },
-    [canAddMoreFiles, uploadedFiles, previewFile, getFileType, applyAutoTitleIfNeeded]
+    [
+      canAddMoreFiles,
+      maxFilesPerUpload,
+      uploadedFiles,
+      previewFile,
+      getFileType,
+      applyAutoTitleIfNeeded,
+    ]
   );
 
   const processMarkdownFile = useCallback(
@@ -274,7 +291,7 @@ export default function ModelUploadView() {
       const toProcess: File[] = [];
 
       for (const file of files) {
-        if (!isFileTypeAllowed(fileTypeSettings, file)) {
+        if (!isFileTypeAllowed(fileTypeSettings, file, siteMaxFileSizeBytes)) {
           toast.error(`File ${file.name} is not allowed or exceeds size limit`);
           continue;
         }
@@ -287,10 +304,10 @@ export default function ModelUploadView() {
           toProcess.push(file);
           continue;
         }
-        if (uploadedFiles.length + toAdd.length >= MAX_FILES_PER_UPLOAD) {
+        if (uploadedFiles.length + toAdd.length >= maxFilesPerUpload) {
           toast.warning(
-            `Max ${MAX_FILES_PER_UPLOAD} files. Only first ${
-              MAX_FILES_PER_UPLOAD - uploadedFiles.length
+            `Max ${maxFilesPerUpload} files. Only first ${
+              maxFilesPerUpload - uploadedFiles.length
             } added.`
           );
           break;
@@ -323,6 +340,8 @@ export default function ModelUploadView() {
     },
     [
       fileTypeSettings,
+      siteMaxFileSizeBytes,
+      maxFilesPerUpload,
       supportedZipFormats,
       uploadedFiles,
       previewFile,
@@ -508,7 +527,7 @@ export default function ModelUploadView() {
             acceptFormats={allSupportedFormats}
             formatGroups={formatGroups}
             canAddMore={canAddMoreFiles}
-            maxFiles={MAX_FILES_PER_UPLOAD}
+            maxFiles={maxFilesPerUpload}
             getFileType={getFileType}
             onFilesSelected={handleFilesSelected}
             onSelectFile={handleSelectFile}

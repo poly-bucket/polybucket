@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
@@ -14,7 +14,13 @@ import { Card, CardContent } from "@/components/primitives/card";
 import { Skeleton } from "@/components/ui/glass/skeleton";
 import { ImageIcon } from "lucide-react";
 import {
-  MAX_FILES_PER_UPLOAD,
+  DEFAULT_MAX_FILES_PER_UPLOAD,
+  getExtensionsByCategory,
+  getModelUploadConfig,
+  isFileTypeAllowed,
+} from "@/lib/services/fileTypeSettingsService";
+import type { FileTypeSettingsData } from "@/lib/api/client";
+import {
   SUPPORTED_3D_FORMATS,
   SUPPORTED_DOCUMENT_FORMATS,
   SUPPORTED_IMAGE_FORMATS,
@@ -36,8 +42,6 @@ const ThumbnailGenerator = dynamic(
   }
 );
 
-const SUPPORTED_FORMATS = [...SUPPORTED_3D_FORMATS, ...SUPPORTED_IMAGE_FORMATS, ...SUPPORTED_DOCUMENT_FORMATS];
-
 interface ModelVersionManagerProps {
   model: ModelWithReactions;
   onCreateVersion: () => void;
@@ -58,20 +62,70 @@ export function ModelVersionManager({
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
+  const [fileTypeSettings, setFileTypeSettings] = useState<
+    FileTypeSettingsData[] | undefined
+  >(undefined);
+  const [maxFilesPerUpload, setMaxFilesPerUpload] = useState(
+    DEFAULT_MAX_FILES_PER_UPLOAD
+  );
+  const [siteMaxFileSizeBytes, setSiteMaxFileSizeBytes] = useState(
+    100 * 1024 * 1024
+  );
+
+  const raw3D = getExtensionsByCategory(fileTypeSettings, "3D").map((e) =>
+    e.startsWith(".") ? e : `.${e}`
+  );
+  const rawImage = getExtensionsByCategory(fileTypeSettings, "Image").map((e) =>
+    e.startsWith(".") ? e : `.${e}`
+  );
+  const rawDoc = getExtensionsByCategory(fileTypeSettings, "Document").map((e) =>
+    e.startsWith(".") ? e : `.${e}`
+  );
+
+  const supported3DFormats = raw3D.length ? raw3D : SUPPORTED_3D_FORMATS;
+  const supportedImageFormats = rawImage.length ? rawImage : SUPPORTED_IMAGE_FORMATS;
+  const supportedDocFormats = rawDoc.length ? rawDoc : SUPPORTED_DOCUMENT_FORMATS;
+  const supportedFormats = useMemo(
+    () => [...supported3DFormats, ...supportedImageFormats, ...supportedDocFormats],
+    [supported3DFormats, supportedImageFormats, supportedDocFormats]
+  );
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const uploadConfig = await getModelUploadConfig();
+        if (uploadConfig.fileTypes.length) {
+          setFileTypeSettings(uploadConfig.fileTypes);
+        }
+        setMaxFilesPerUpload(uploadConfig.maxFilesPerUpload);
+        setSiteMaxFileSizeBytes(uploadConfig.siteMaxFileSizeBytes);
+      } catch {
+        toast.error("Failed to load upload limits");
+      }
+    };
+    load();
+  }, []);
 
   const versionCount = model.versions?.length ?? 0;
-  const canAddMore = uploadedFiles.length < MAX_FILES_PER_UPLOAD;
-  const has3DFile = uploadedFiles.some((fileItem) => getUploadFileType(fileItem.name, SUPPORTED_3D_FORMATS, SUPPORTED_IMAGE_FORMATS) === "3d");
-  const first3DFile = uploadedFiles.find((fileItem) => getUploadFileType(fileItem.name, SUPPORTED_3D_FORMATS, SUPPORTED_IMAGE_FORMATS) === "3d");
+  const canAddMore = uploadedFiles.length < maxFilesPerUpload;
+  const has3DFile = uploadedFiles.some(
+    (fileItem) =>
+      getUploadFileType(fileItem.name, supported3DFormats, supportedImageFormats) ===
+      "3d"
+  );
+  const first3DFile = uploadedFiles.find(
+    (fileItem) =>
+      getUploadFileType(fileItem.name, supported3DFormats, supportedImageFormats) ===
+      "3d"
+  );
 
   const handleFilesSelected = useCallback((files: File[]) => {
-    const remaining = MAX_FILES_PER_UPLOAD - uploadedFiles.length;
+    const remaining = maxFilesPerUpload - uploadedFiles.length;
     const takenNames = new Set(uploadedFiles.map((fileItem) => fileItem.name));
     const toAdd = files
-      .filter((fileItem) => {
-        const ext = fileItem.name.toLowerCase().substring(fileItem.name.lastIndexOf("."));
-        return SUPPORTED_FORMATS.includes(ext);
-      })
+      .filter((fileItem) =>
+        isFileTypeAllowed(fileTypeSettings, fileItem, siteMaxFileSizeBytes)
+      )
       .slice(0, remaining);
     const newFiles = toAdd.map((fileItem) => {
       const nextFile = createUploadedFile(fileItem, takenNames);
@@ -82,7 +136,13 @@ export function ModelVersionManager({
     if (!selectedFileId && newFiles.length > 0) {
       setSelectedFileId(newFiles[0].id);
     }
-  }, [uploadedFiles, selectedFileId]);
+  }, [
+    fileTypeSettings,
+    maxFilesPerUpload,
+    siteMaxFileSizeBytes,
+    uploadedFiles,
+    selectedFileId,
+  ]);
 
   const handleSelectFile = useCallback((id: string) => {
     setSelectedFileId(id);
@@ -132,7 +192,8 @@ export function ModelVersionManager({
       const thumbnailFile = uploadedFiles.find(
         (fileItem) =>
           fileItem.id === selectedThumbnailFileId &&
-          getUploadFileType(fileItem.name, SUPPORTED_3D_FORMATS, SUPPORTED_IMAGE_FORMATS) === "image"
+          getUploadFileType(fileItem.name, supported3DFormats, supportedImageFormats) ===
+          "image"
       );
       if (thumbnailFile) {
         formData.append("ThumbnailFileId", thumbnailFile.name);
@@ -219,9 +280,9 @@ export function ModelVersionManager({
         </label>
         <FileDropZone
           onFilesSelected={handleFilesSelected}
-          acceptFormats={SUPPORTED_FORMATS}
+          acceptFormats={supportedFormats}
           canAddMore={canAddMore}
-          maxFiles={MAX_FILES_PER_UPLOAD}
+          maxFiles={maxFilesPerUpload}
           variant="large"
           disabled={isSubmitting}
         />
@@ -249,8 +310,10 @@ export function ModelVersionManager({
           selectedFileId={selectedFileId}
           onSelectFile={handleSelectFile}
           onRemoveFile={handleRemoveFile}
-          getFileType={(fileName) => getUploadFileType(fileName, SUPPORTED_3D_FORMATS, SUPPORTED_IMAGE_FORMATS)}
-          maxFiles={MAX_FILES_PER_UPLOAD}
+          getFileType={(fileName) =>
+            getUploadFileType(fileName, supported3DFormats, supportedImageFormats)
+          }
+          maxFiles={maxFilesPerUpload}
           onClearAll={handleClearAll}
         />
       )}

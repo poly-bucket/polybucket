@@ -8,6 +8,7 @@ using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Entities.Models.Enums;
 using System;
@@ -26,33 +27,30 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         private readonly IStorageService _storage;
         private readonly IModelModerationEnqueueService _moderationEnqueueService;
         private readonly IModelPreviewQueue _previewQueue;
+        private readonly IModelUploadValidator _uploadValidator;
         private readonly ILogger<CreateModelService> _logger;
 
-        private static readonly string[] Supported3DFormats = { ".stl", ".obj", ".fbx", ".gltf", ".glb", ".3mf", ".step", ".stp" };
         private static readonly string[] SupportedImageFormats = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
-        private static readonly string[] SupportedDocumentFormats = { ".pdf", ".md", ".markdown", ".txt" };
-        private static readonly string[] AllSupportedFormats = Supported3DFormats.Concat(SupportedImageFormats).Concat(SupportedDocumentFormats).ToArray();
-
-        private const long MaxFileSize = 100 * 1024 * 1024; // 100MB
-        private const long Max3DModelSize = 500 * 1024 * 1024; // 500MB for 3D models
 
         public CreateModelService(
             ICreateModelRepository repository,
             IStorageService storage,
             IModelModerationEnqueueService moderationEnqueueService,
             IModelPreviewQueue previewQueue,
+            IModelUploadValidator uploadValidator,
             ILogger<CreateModelService> logger)
         {
             _repository = repository;
             _storage = storage;
             _moderationEnqueueService = moderationEnqueueService;
             _previewQueue = previewQueue;
+            _uploadValidator = uploadValidator;
             _logger = logger;
         }
 
         public async Task<CreateModelResponse> CreateModelAsync(CreateModelRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            await ValidateRequestAsync(request);
+            await ValidateRequestAsync(request, cancellationToken);
             
             var userIdClaim = user.FindUserIdClaim();
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
@@ -163,7 +161,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             }
         }
 
-        private async Task ValidateRequestAsync(CreateModelRequest request)
+        private async Task ValidateRequestAsync(CreateModelRequest request, CancellationToken cancellationToken)
         {
             if (request.Files == null || request.Files.Length == 0)
             {
@@ -175,75 +173,11 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                 throw new ValidationException("Model name is required");
             }
 
-            var validationError = await ValidateFilesAsync(request.Files);
+            var validationError = await _uploadValidator.ValidateAsync(request.Files, cancellationToken);
             if (validationError != null)
             {
                 throw new ValidationException(validationError);
             }
-        }
-
-        private async Task<string?> ValidateFilesAsync(IFormFile[] files)
-        {
-            if (files.Length > 20)
-            {
-                return "Too many files. Maximum of 20 files allowed per upload.";
-            }
-
-            var has3DModel = false;
-            var totalSize = 0L;
-
-            foreach (var file in files)
-            {
-                if (file.Length == 0)
-                    continue;
-
-                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!AllSupportedFormats.Contains(extension))
-                {
-                    return $"Unsupported file type: {extension}. Supported formats: {string.Join(", ", AllSupportedFormats)}";
-                }
-
-                if (!FileSignatureValidator.IsTextFile(extension))
-                {
-                    var isValidSignature = await FileSignatureValidator.ValidateFileSignatureAsync(file, extension);
-                    if (!isValidSignature)
-                    {
-                        return $"File {file.FileName} does not match expected file signature for {extension}. File may be corrupted or have incorrect extension.";
-                    }
-                }
-
-                var maxSize = Is3DModelFile(file.FileName) ? Max3DModelSize : MaxFileSize;
-                if (file.Length > maxSize)
-                {
-                    var maxSizeMB = maxSize / (1024 * 1024);
-                    return $"File {file.FileName} is too large. Maximum size: {maxSizeMB}MB";
-                }
-
-                if (Is3DModelFile(file.FileName))
-                {
-                    has3DModel = true;
-                }
-
-                totalSize += file.Length;
-            }
-
-            if (!has3DModel)
-            {
-                return "At least one 3D model file is required (.stl, .obj, .fbx, .gltf, .glb, .3mf, .step, .stp)";
-            }
-
-            if (totalSize > 1024 * 1024 * 1024)
-            {
-                return "Total upload size exceeds 1GB limit";
-            }
-
-            return null;
-        }
-
-        private static bool Is3DModelFile(string fileName)
-        {
-            var extension = Path.GetExtension(fileName).ToLowerInvariant();
-            return Supported3DFormats.Contains(extension);
         }
 
         private static bool IsImageFile(string fileName)

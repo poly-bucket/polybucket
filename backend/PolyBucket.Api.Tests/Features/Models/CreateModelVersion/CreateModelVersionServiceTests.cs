@@ -13,6 +13,7 @@ using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
 using Shouldly;
 using Xunit;
 
@@ -24,6 +25,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModelVersion
         private readonly Mock<IStorageService> _mockStorage;
         private readonly Mock<IPermissionService> _mockPermissionService;
         private readonly Mock<IModelPreviewQueue> _mockPreviewQueue = new();
+        private readonly Mock<IModelUploadValidator> _mockUploadValidator = new();
         private readonly Mock<ILogger<CreateModelVersionService>> _mockLogger;
         private readonly CreateModelVersionService _service;
         private readonly Guid _userId = Guid.NewGuid();
@@ -35,11 +37,15 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModelVersion
             _mockStorage = new Mock<IStorageService>();
             _mockPermissionService = new Mock<IPermissionService>();
             _mockLogger = new Mock<ILogger<CreateModelVersionService>>();
+            _mockUploadValidator
+                .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((string?)null);
             _service = new CreateModelVersionService(
                 _mockRepository.Object,
                 _mockStorage.Object,
                 _mockPermissionService.Object,
                 _mockPreviewQueue.Object,
+                _mockUploadValidator.Object,
                 _mockLogger.Object);
 
             _mockRepository
@@ -54,6 +60,26 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModelVersion
             _mockStorage
                 .Setup(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync("https://storage.example.com/test-file");
+        }
+
+        [Fact(DisplayName = "When upload validation fails, the create model version service throws a ValidationException.")]
+        public async Task CreateModelVersionAsync_WhenUploadValidationFails_ShouldThrowValidationException()
+        {
+            // Arrange
+            _mockUploadValidator
+                .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("File is too large.");
+
+            var request = new CreateModelVersionRequest
+            {
+                Name = "2.0",
+                Notes = "Notes",
+                Files = Create3DFiles()
+            };
+
+            // Act & Assert
+            await Should.ThrowAsync<ValidationException>(async () =>
+                await _service.CreateModelVersionAsync(_modelId, request, CreateUser(), CancellationToken.None));
         }
 
         [Fact(DisplayName = "When creating a model version with only 3D files, the create model version service leaves the thumbnail unset.")]

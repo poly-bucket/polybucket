@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.Models.CreateModel.Repository;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
 using Shouldly;
 using Xunit;
 
@@ -23,6 +24,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
         private readonly Mock<IStorageService> _mockStorage;
         private readonly Mock<IModelModerationEnqueueService> _mockModerationEnqueueService;
         private readonly Mock<IModelPreviewQueue> _mockPreviewQueue;
+        private readonly Mock<IModelUploadValidator> _mockUploadValidator;
         private readonly Mock<ILogger<CreateModelService>> _mockLogger;
         private readonly CreateModelService _service;
 
@@ -32,12 +34,17 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
             _mockStorage = new Mock<IStorageService>();
             _mockModerationEnqueueService = new Mock<IModelModerationEnqueueService>();
             _mockPreviewQueue = new Mock<IModelPreviewQueue>();
+            _mockUploadValidator = new Mock<IModelUploadValidator>();
             _mockLogger = new Mock<ILogger<CreateModelService>>();
+            _mockUploadValidator
+                .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((string?)null);
             _service = new CreateModelService(
                 _mockRepository.Object,
                 _mockStorage.Object,
                 _mockModerationEnqueueService.Object,
                 _mockPreviewQueue.Object,
+                _mockUploadValidator.Object,
                 _mockLogger.Object);
         }
 
@@ -152,6 +159,25 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
             result.Model.ShouldNotBeNull();
             result.Model.ThumbnailUrl.ShouldNotBeNull();
             result.Model.ThumbnailUrl!.ShouldEndWith("preview.png");
+        }
+
+        [Fact(DisplayName = "When upload validation fails, the create model service throws a ValidationException.")]
+        public async Task CreateModelAsync_WhenUploadValidationFails_ShouldThrowValidationException()
+        {
+            // Arrange
+            _mockUploadValidator
+                .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("Too many files.");
+
+            var request = new CreateModelRequest
+            {
+                Name = "Test Model",
+                Files = CreateTestFiles()
+            };
+
+            // Act & Assert
+            await Should.ThrowAsync<ValidationException>(async () =>
+                await _service.CreateModelAsync(request, CreateTestUser(), CancellationToken.None));
         }
 
         [Fact(DisplayName = "When creating a model with an empty name, the create model service throws a ValidationException.")]

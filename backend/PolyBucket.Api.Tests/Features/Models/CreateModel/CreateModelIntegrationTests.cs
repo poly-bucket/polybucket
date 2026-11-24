@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using PolyBucket.Database.Entities.SystemSettings;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api;
 using PolyBucket.Database.Persistence;
@@ -131,6 +132,39 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    [Fact(DisplayName = "When the upload exceeds MaxFilesPerUpload, the create model endpoint returns BadRequest.")]
+    public async Task CreateModel_WhenExceedingMaxFilesPerUpload_ReturnsBadRequest()
+    {
+        // Arrange
+        await ResetStateAsync();
+        await SetMaxFilesPerUploadAsync(1);
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        await DbContext.SaveChangesAsync();
+
+        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent("Test Model"), "Name");
+        content.Add(new StringContent("Test Description"), "Description");
+        content.Add(new StringContent("Public"), "Privacy");
+
+        var stlOne = new ByteArrayContent(Encoding.UTF8.GetBytes("solid a\nendsolid a\n"));
+        stlOne.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(stlOne, "Files", "one.stl");
+
+        var stlTwo = new ByteArrayContent(Encoding.UTF8.GetBytes("solid b\nendsolid b\n"));
+        stlTwo.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(stlTwo, "Files", "two.stl");
+
+        // Act
+        var response = await client.PostAsync("/api/models", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     [Fact(DisplayName = "When creating a model with an invalid file type, the create model endpoint returns BadRequest.")]
     public async Task CreateModel_WithInvalidFileType_ReturnsBadRequest()
     {
@@ -155,6 +189,28 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private async Task SetMaxFilesPerUploadAsync(int maxFiles)
+    {
+        if (!await DbContext.SystemSetups.AnyAsync())
+        {
+            DbContext.SystemSetups.Add(new SystemSetup
+            {
+                Id = Guid.NewGuid(),
+                MaxFilesPerUpload = maxFiles,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            var setup = await DbContext.SystemSetups.FirstAsync();
+            setup.MaxFilesPerUpload = maxFiles;
+            setup.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await DbContext.SaveChangesAsync();
     }
 
     private async Task<string> GetAuthTokenAsync(HttpClient client, string email, string password)

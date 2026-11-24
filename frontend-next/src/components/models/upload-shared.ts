@@ -2,7 +2,7 @@
 
 import type { UploadedFile } from "./file-queue";
 
-export const MAX_FILES_PER_UPLOAD = 20;
+export { DEFAULT_MAX_FILES_PER_UPLOAD as MAX_FILES_PER_UPLOAD } from "@/lib/services/fileTypeSettingsService";
 export const SUPPORTED_3D_FORMATS = [
   ".stl",
   ".obj",
