@@ -13,12 +13,14 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteModelSettings.Domain
         IUpdateSiteModelSettingsRepository repository,
         ILogger<UpdateSiteModelSettingsService> logger,
         IHttpContextAccessor httpContextAccessor,
-        ISitePrivacyState sitePrivacyState) : IUpdateSiteModelSettingsService
+        ISitePrivacyState sitePrivacyState,
+        ISiteModelUploadPolicy siteModelUploadPolicy) : IUpdateSiteModelSettingsService
     {
         private readonly IUpdateSiteModelSettingsRepository _repository = repository;
         private readonly ILogger<UpdateSiteModelSettingsService> _logger = logger;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
+        private readonly ISiteModelUploadPolicy _siteModelUploadPolicy = siteModelUploadPolicy;
 
         public async Task<UpdateSiteModelSettingsResponse> UpdateSiteModelSettingsAsync(UpdateSiteModelSettingsCommand request, CancellationToken cancellationToken = default)
         {
@@ -73,6 +75,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteModelSettings.Domain
 
                 await _repository.Context.SaveChangesAsync(cancellationToken);
                 _sitePrivacyState.Invalidate();
+                _siteModelUploadPolicy.Invalidate();
                 
                 _logger.LogInformation("Site model settings updated successfully by user {UserId}", 
                     userIdClaim?.Value ?? "unknown");

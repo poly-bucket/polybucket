@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Settings;
+using PolyBucket.Api.Seeders;
 using System.Reflection;
 
 
@@ -153,6 +154,8 @@ namespace PolyBucket.Api.Tests
 
             await TestStorageSettingsSeeder.SeedAsync(context);
 
+            var anonymousUploadAuthorSeeder = new AnonymousUploadAuthorSeeder(context, NullLogger<AnonymousUploadAuthorSeeder>.Instance);
+            await anonymousUploadAuthorSeeder.SeedAsync();
 
         }
 

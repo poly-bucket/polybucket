@@ -8,4 +8,10 @@ public interface IGetSiteAccessService
 public class GetSiteAccessResponse
 {
     public bool AllowPublicBrowsing { get; set; }
+
+    public bool RequireLoginForUpload { get; set; }
+
+    public bool AllowAnonymousModelUpload { get; set; }
+
+  public string DefaultModelPrivacy { get; set; } = "Public";
 }

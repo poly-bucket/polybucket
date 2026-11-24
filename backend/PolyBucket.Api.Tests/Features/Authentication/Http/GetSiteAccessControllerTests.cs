@@ -25,7 +25,8 @@ public class GetSiteAccessControllerTests : IDisposable
         _dbContext = new PolyBucketDbContext(dbOptions);
         var cache = new MemoryCache(new MemoryCacheOptions());
         var privacy = new SitePrivacyState(_dbContext, cache, NullLogger<SitePrivacyState>.Instance);
-        _controller = new GetSiteAccessController(new GetSiteAccessService(privacy));
+        var uploadPolicy = new SiteModelUploadPolicy(_dbContext, cache, NullLogger<SiteModelUploadPolicy>.Instance);
+        _controller = new GetSiteAccessController(new GetSiteAccessService(privacy, uploadPolicy));
     }
 
     [Fact(DisplayName = "When no site setup exists, site access reports public browsing is allowed.")]

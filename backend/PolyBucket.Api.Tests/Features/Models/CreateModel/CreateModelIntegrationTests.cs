@@ -72,11 +72,12 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         result.Model.AuthorId.ShouldBe(user.Id);
     }
 
-    [Fact(DisplayName = "When creating a model without authentication, the create model endpoint returns Unauthorized.")]
+    [Fact(DisplayName = "When creating a model without authentication and login is required, the create model endpoint returns Unauthorized.")]
     public async Task CreateModel_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Arrange
         await ResetStateAsync();
+        await SetAnonymousUploadAllowedAsync(allowed: false);
         var client = Factory.CreateClient();
         var content = new MultipartFormDataContent();
         content.Add(new StringContent("Test Model"), "Name");
@@ -86,6 +87,33 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact(DisplayName = "When anonymous uploads are enabled, an unauthenticated create returns Created.")]
+    public async Task CreateModel_WhenAnonymousUploadAllowed_ReturnsCreated()
+    {
+        // Arrange
+        await ResetStateAsync();
+        await SetAnonymousUploadAllowedAsync(allowed: true);
+        var client = Factory.CreateClient();
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent("Anonymous Model"), "Name");
+        content.Add(new StringContent("Test Description"), "Description");
+
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("solid test endsolid"));
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(fileContent, "Files", "test.stl");
+
+        // Act
+        var response = await client.PostAsync("/api/models", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<CreateModelResponse>(responseContent, JsonOptions);
+        result.ShouldNotBeNull();
+        result!.Model.AuthorId.ShouldBe(PolyBucket.Api.Features.Models.Upload.AnonymousUploadAuthor.UserId);
     }
 
     [Fact(DisplayName = "When creating a model with an empty name, the create model endpoint returns BadRequest.")]
@@ -189,6 +217,50 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private async Task SetAnonymousUploadAllowedAsync(bool allowed)
+    {
+        var setup = await DbContext.SystemSetups.FirstOrDefaultAsync();
+        if (setup == null)
+        {
+            setup = new SystemSetup
+            {
+                Id = Guid.NewGuid(),
+                RequireLoginForUpload = !allowed,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            DbContext.SystemSetups.Add(setup);
+        }
+        else
+        {
+            setup.RequireLoginForUpload = !allowed;
+            setup.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var modelSettings = await DbContext.ModelSettings.FirstOrDefaultAsync();
+        if (modelSettings == null)
+        {
+            modelSettings = new ModelSettings
+            {
+                Id = Guid.NewGuid(),
+                AllowAnonUploads = allowed,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            DbContext.ModelSettings.Add(modelSettings);
+        }
+        else
+        {
+            modelSettings.AllowAnonUploads = allowed;
+            modelSettings.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await DbContext.SaveChangesAsync();
+
+        using var scope = Factory.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<PolyBucket.Api.Features.SystemSettings.Services.ISiteModelUploadPolicy>().Invalidate();
     }
 
     private async Task SetMaxFilesPerUploadAsync(int maxFiles)

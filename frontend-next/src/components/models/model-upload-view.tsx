@@ -13,7 +13,6 @@ import {
   getModelUploadConfig,
   isFileTypeAllowed,
 } from "@/lib/services/fileTypeSettingsService";
-import { getModelConfigurationSettings } from "@/lib/services/modelConfigurationSettingsService";
 import {
   parseModelMarkdown,
   isMarkdownFile,
@@ -28,6 +27,8 @@ import type { FileTypeSettingsData } from "@/lib/api/client";
 import { PrivacySettings } from "@/lib/api/client";
 import ThumbnailGenerator from "./thumbnail-generator";
 import { getUploadDefaults } from "@/lib/services/contentDefaultsService";
+import { fetchSiteAccessPolicy } from "@/lib/bff/fetchSiteAccessPolicy";
+import { mayAccessModelUpload } from "@/lib/auth/uploadAccess";
 import {
   createUploadedFile,
   getUploadFileType,
@@ -164,33 +165,51 @@ export default function ModelUploadView() {
   useUnsavedChanges(wizard.isDirty);
 
   useEffect(() => {
-    if (!isAuthenticated && !authLoading) {
-      router.replace("/");
+    if (authLoading) {
+      return;
     }
+
+    let cancelled = false;
+    const verifyAccess = async () => {
+      try {
+        const policy = await fetchSiteAccessPolicy(window.location.origin);
+        if (cancelled) {
+          return;
+        }
+        if (!mayAccessModelUpload(isAuthenticated, policy)) {
+          toast.error("Sign in to upload models on this site");
+          router.replace("/");
+        }
+      } catch {
+        if (!cancelled && !isAuthenticated) {
+          router.replace("/");
+        }
+      }
+    };
+
+    void verifyAccess();
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     const load = async () => {
       try {
         setSettingsLoading(true);
-        const [uploadConfig, configResp] = await Promise.all([
+        const [uploadConfig, siteAccess] = await Promise.all([
           getModelUploadConfig(),
-          getModelConfigurationSettings(),
+          fetchSiteAccessPolicy(window.location.origin),
         ]);
         if (uploadConfig.fileTypes.length) {
           setFileTypeSettings(uploadConfig.fileTypes);
         }
         setMaxFilesPerUpload(uploadConfig.maxFilesPerUpload);
         setSiteMaxFileSizeBytes(uploadConfig.siteMaxFileSizeBytes);
-        if (configResp.settings?.defaultPrivacySetting) {
-          const p = String(configResp.settings.defaultPrivacySetting).toLowerCase();
-          if (p === "public")
-            metadataForm.setValue("privacy", PrivacySettings.Public);
-          else if (p === "private")
-            metadataForm.setValue("privacy", PrivacySettings.Private);
-          else if (p === "unlisted")
-            metadataForm.setValue("privacy", PrivacySettings.Unlisted);
-        }
+        const p = String(siteAccess.defaultModelPrivacy).toLowerCase();
+        if (p === "public") metadataForm.setValue("privacy", PrivacySettings.Public);
+        else if (p === "private") metadataForm.setValue("privacy", PrivacySettings.Private);
+        else if (p === "unlisted") metadataForm.setValue("privacy", PrivacySettings.Unlisted);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load settings");

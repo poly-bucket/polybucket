@@ -13,6 +13,9 @@ using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.Models.Upload;
+using PolyBucket.Api.Features.SystemSettings.Services;
+using PolyBucket.Database.Entities.Models.Enums;
 using Shouldly;
 using Xunit;
 
@@ -25,6 +28,8 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
         private readonly Mock<IModelModerationEnqueueService> _mockModerationEnqueueService;
         private readonly Mock<IModelPreviewQueue> _mockPreviewQueue;
         private readonly Mock<IModelUploadValidator> _mockUploadValidator;
+        private readonly Mock<ISiteModelUploadPolicy> _mockUploadPolicy;
+        private readonly Mock<IAnonymousUploadAuthorProvider> _mockAnonymousAuthor;
         private readonly Mock<ILogger<CreateModelService>> _mockLogger;
         private readonly CreateModelService _service;
 
@@ -35,16 +40,26 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
             _mockModerationEnqueueService = new Mock<IModelModerationEnqueueService>();
             _mockPreviewQueue = new Mock<IModelPreviewQueue>();
             _mockUploadValidator = new Mock<IModelUploadValidator>();
+            _mockUploadPolicy = new Mock<ISiteModelUploadPolicy>();
+            _mockAnonymousAuthor = new Mock<IAnonymousUploadAuthorProvider>();
             _mockLogger = new Mock<ILogger<CreateModelService>>();
             _mockUploadValidator
                 .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string?)null);
+            _mockUploadPolicy
+                .Setup(p => p.GetDefaultModelPrivacyAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(PrivacySettings.Public);
+            _mockUploadPolicy
+                .Setup(p => p.IsAnonymousModelUploadAllowedAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
             _service = new CreateModelService(
                 _mockRepository.Object,
                 _mockStorage.Object,
                 _mockModerationEnqueueService.Object,
                 _mockPreviewQueue.Object,
                 _mockUploadValidator.Object,
+                _mockUploadPolicy.Object,
+                _mockAnonymousAuthor.Object,
                 _mockLogger.Object);
         }
 
@@ -216,7 +231,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
                 await _service.CreateModelAsync(request, user, cancellationToken));
         }
 
-        [Fact(DisplayName = "When creating a model with an invalid user principal, the create model service throws a ValidationException.")]
+        [Fact(DisplayName = "When the caller is unauthenticated and anonymous uploads are off, the create model service throws a ValidationException.")]
         public async Task CreateModelAsync_WithInvalidUser_ShouldThrowValidationException()
         {
             // Arrange
@@ -232,6 +247,36 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
             // Act & Assert
             await Should.ThrowAsync<ValidationException>(async () =>
                 await _service.CreateModelAsync(request, user, cancellationToken));
+        }
+
+        [Fact(DisplayName = "When privacy is omitted, the create model service uses the site default privacy.")]
+        public async Task CreateModelAsync_WhenPrivacyOmitted_UsesSiteDefault()
+        {
+            // Arrange
+            _mockUploadPolicy
+                .Setup(p => p.GetDefaultModelPrivacyAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(PrivacySettings.Unlisted);
+
+            var request = new CreateModelRequest
+            {
+                Name = "Test Model",
+                Privacy = null,
+                Files = CreateTestFiles()
+            };
+
+            Model? captured = null;
+            _mockStorage.Setup(x => x.UploadAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("https://storage.example.com/test-file.stl");
+            _mockRepository.Setup(x => x.CreateModelAsync(It.IsAny<Model>(), It.IsAny<CancellationToken>()))
+                .Callback<Model, CancellationToken>((m, _) => captured = m)
+                .ReturnsAsync((Model model, CancellationToken _) => model);
+
+            // Act
+            await _service.CreateModelAsync(request, CreateTestUser(), CancellationToken.None);
+
+            // Assert
+            captured.ShouldNotBeNull();
+            captured!.Privacy.ShouldBe(PrivacySettings.Unlisted);
         }
 
         private static IFormFile[] CreateTestFiles()

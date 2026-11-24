@@ -9,6 +9,8 @@ using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.Models.Upload;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Entities.Models.Enums;
 using System;
@@ -28,6 +30,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         private readonly IModelModerationEnqueueService _moderationEnqueueService;
         private readonly IModelPreviewQueue _previewQueue;
         private readonly IModelUploadValidator _uploadValidator;
+        private readonly ISiteModelUploadPolicy _uploadPolicy;
+        private readonly IAnonymousUploadAuthorProvider _anonymousUploadAuthorProvider;
         private readonly ILogger<CreateModelService> _logger;
 
         private static readonly string[] SupportedImageFormats = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
@@ -38,6 +42,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             IModelModerationEnqueueService moderationEnqueueService,
             IModelPreviewQueue previewQueue,
             IModelUploadValidator uploadValidator,
+            ISiteModelUploadPolicy uploadPolicy,
+            IAnonymousUploadAuthorProvider anonymousUploadAuthorProvider,
             ILogger<CreateModelService> logger)
         {
             _repository = repository;
@@ -45,18 +51,19 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             _moderationEnqueueService = moderationEnqueueService;
             _previewQueue = previewQueue;
             _uploadValidator = uploadValidator;
+            _uploadPolicy = uploadPolicy;
+            _anonymousUploadAuthorProvider = anonymousUploadAuthorProvider;
             _logger = logger;
         }
 
         public async Task<CreateModelResponse> CreateModelAsync(CreateModelRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
             await ValidateRequestAsync(request, cancellationToken);
-            
-            var userIdClaim = user.FindUserIdClaim();
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
-            {
-                throw new ValidationException("Invalid authentication token");
-            }
+
+            var authorId = await ResolveAuthorIdAsync(user, cancellationToken);
+            var defaultPrivacy = await _uploadPolicy.GetDefaultModelPrivacyAsync(cancellationToken);
+            var resolvedPrivacy = ModelPrivacyResolver.Resolve(request.Privacy, defaultPrivacy);
+            var isPublic = ModelPrivacyResolver.ComputeIsPublic(resolvedPrivacy);
 
             var modelId = Guid.NewGuid();
             var modelFiles = new List<ModelFile>();
@@ -115,13 +122,13 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                     Description = request.Description ?? string.Empty,
                     FileUrl = modelFiles.First().Path, // Store object key
                     ThumbnailUrl = thumbnailObjectKey, // Store object key
-                    Privacy = request.Privacy == "private" ? PrivacySettings.Private : PrivacySettings.Public,
+                    Privacy = resolvedPrivacy,
                     License = ParseLicense(request.License),
                     AIGenerated = request.AIGenerated,
                     WIP = request.WorkInProgress,
                     NSFW = request.NSFW,
                     IsRemix = request.Remix,
-                    IsPublic = request.Privacy != "private",
+                    IsPublic = isPublic,
                     AuthorId = authorId,
                     Files = modelFiles,
                     CreatedAt = DateTime.UtcNow,
@@ -178,6 +185,22 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             {
                 throw new ValidationException(validationError);
             }
+        }
+
+        private async Task<Guid> ResolveAuthorIdAsync(ClaimsPrincipal user, CancellationToken cancellationToken)
+        {
+            var userIdClaim = user.FindUserIdClaim();
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var authorId))
+            {
+                return authorId;
+            }
+
+            if (await _uploadPolicy.IsAnonymousModelUploadAllowedAsync(cancellationToken))
+            {
+                return await _anonymousUploadAuthorProvider.GetAuthorIdAsync(cancellationToken);
+            }
+
+            throw new ValidationException("Authentication required to upload models");
         }
 
         private static bool IsImageFile(string fileName)

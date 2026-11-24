@@ -2,6 +2,9 @@ import { getPolybucketApiUrl } from "./env";
 
 export type SiteAccessPolicy = {
   allowPublicBrowsing: boolean;
+  requireLoginForUpload: boolean;
+  allowAnonymousModelUpload: boolean;
+  defaultModelPrivacy: string;
 };
 
 async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> {
@@ -10,8 +13,18 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
     if (!response.ok) {
       return null;
     }
-    const data = (await response.json()) as { allowPublicBrowsing?: boolean };
-    return { allowPublicBrowsing: data.allowPublicBrowsing === true };
+    const data = (await response.json()) as {
+      allowPublicBrowsing?: boolean;
+      requireLoginForUpload?: boolean;
+      allowAnonymousModelUpload?: boolean;
+      defaultModelPrivacy?: string;
+    };
+    return {
+      allowPublicBrowsing: data.allowPublicBrowsing === true,
+      requireLoginForUpload: data.requireLoginForUpload !== false,
+      allowAnonymousModelUpload: data.allowAnonymousModelUpload === true,
+      defaultModelPrivacy: data.defaultModelPrivacy ?? "Public",
+    };
   } catch {
     return null;
   }
@@ -30,5 +43,10 @@ export async function fetchSiteAccessPolicy(origin: string): Promise<SiteAccessP
     return fromApi;
   }
 
-  return { allowPublicBrowsing: false };
+  return {
+    allowPublicBrowsing: false,
+    requireLoginForUpload: true,
+    allowAnonymousModelUpload: false,
+    defaultModelPrivacy: "Public",
+  };
 }

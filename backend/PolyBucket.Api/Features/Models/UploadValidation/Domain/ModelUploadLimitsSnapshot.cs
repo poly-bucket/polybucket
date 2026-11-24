@@ -5,6 +5,7 @@ public sealed class ModelUploadFileTypeLimit
     public string Extension { get; init; } = string.Empty;
     public string Category { get; init; } = string.Empty;
     public long MaxFileSizeBytes { get; init; }
+    public int MaxPerUpload { get; init; }
 }
 
 public sealed class ModelUploadLimitsSnapshot

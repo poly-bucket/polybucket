@@ -12,14 +12,29 @@ public class ModelUploadValidator(IModelUploadLimitsProvider limitsProvider) : I
     var snapshot = await _limitsProvider.GetSnapshotAsync(cancellationToken);
     var allowed = snapshot.AllowedExtensions;
 
-    if (files.Length > snapshot.MaxFilesPerUpload)
-    {
-      return $"Too many files. Maximum of {snapshot.MaxFilesPerUpload} files allowed per upload.";
-    }
-
     var typeByExtension = snapshot.EnabledFileTypes
       .GroupBy(t => t.Extension, StringComparer.OrdinalIgnoreCase)
       .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+    var maxFilesAllowed = snapshot.MaxFilesPerUpload;
+    foreach (var file in files)
+    {
+      if (file.Length == 0)
+      {
+        continue;
+      }
+
+      var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+      if (typeByExtension.TryGetValue(extension, out var typeLimit) && typeLimit.MaxPerUpload > 0)
+      {
+        maxFilesAllowed = Math.Min(maxFilesAllowed, typeLimit.MaxPerUpload);
+      }
+    }
+
+    if (files.Length > maxFilesAllowed)
+    {
+      return $"Too many files. Maximum of {maxFilesAllowed} files allowed per upload.";
+    }
 
     var has3D = false;
     var totalSize = 0L;

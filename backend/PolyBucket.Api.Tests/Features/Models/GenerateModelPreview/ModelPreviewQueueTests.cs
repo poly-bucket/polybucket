@@ -146,7 +146,7 @@ public class ModelPreviewQueueTests
         preview.ShouldBe(winner);
     }
 
-    [Fact(DisplayName = "When automatic previews are turned off in model settings, new content is not queued.")]
+    [Fact(DisplayName = "When automatic previews are turned off, new content is not queued.")]
     public async Task AutoDisabled_DoesNotQueue()
     {
         // Arrange

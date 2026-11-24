@@ -70,6 +70,9 @@ public static class ApplicationBuilderExtensions
             // Seed model settings
             var modelSettingsSeeder = services.GetRequiredService<ModelSettingsSeeder>();
             await modelSettingsSeeder.SeedAsync();
+
+            var anonymousUploadAuthorSeeder = services.GetRequiredService<AnonymousUploadAuthorSeeder>();
+            await anonymousUploadAuthorSeeder.SeedAsync();
         }
         catch (Exception ex)
         {

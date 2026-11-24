@@ -2,20 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using PolyBucket.Api.Features.ACL.Authorization;
-using PolyBucket.Api.Features.ACL.Domain;
-using PolyBucket.Api.Features.Authentication.Authorization;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
-using PolyBucket.Api.Features.Models.CreateModel.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PolyBucket.Api.Features.Models.CreateModel.Http
 {
-    [Authorize]
+    [AllowAnonymous]
     [ApiController]
     [Route("api/models")]
-    [RequirePermission(PermissionConstants.MODEL_CREATE)]
+    [ServiceFilter(typeof(RequireModelUploadAuthorizationFilter))]
     public class CreateModelController : ControllerBase
     {
         private readonly CreateModelService _createModelService;
@@ -27,8 +23,10 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Http
             _logger = logger;
         }
 
+        /// <summary>
+        /// Creates a new model with file uploads.
+        /// </summary>
         [HttpPost]
-        [RequireVerifiedEmail]
         [DisableRequestSizeLimit]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(CreateModelResponse), StatusCodes.Status201Created)]
@@ -77,4 +75,4 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Http
             }
         }
     }
-} 
+}

@@ -33,7 +33,8 @@ public class ModelUploadLimitsProvider(PolyBucketDbContext context) : IModelUplo
       {
         Extension = NormalizeExtension(ft.FileExtension),
         Category = ft.Category ?? string.Empty,
-        MaxFileSizeBytes = ft.MaxFileSizeBytes
+        MaxFileSizeBytes = ft.MaxFileSizeBytes,
+        MaxPerUpload = ft.MaxPerUpload
       })
       .Where(t => !string.IsNullOrEmpty(t.Extension))
       .ToList();
@@ -47,7 +48,8 @@ public class ModelUploadLimitsProvider(PolyBucketDbContext context) : IModelUplo
         {
           Extension = ext,
           Category = extensionCategories.TryGetValue(ext, out var cat) ? cat : string.Empty,
-          MaxFileSizeBytes = siteMaxFileSize
+          MaxFileSizeBytes = siteMaxFileSize,
+          MaxPerUpload = maxFilesPerUpload
         })
         .ToList();
     }

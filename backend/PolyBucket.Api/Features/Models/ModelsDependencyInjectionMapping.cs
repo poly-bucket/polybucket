@@ -26,6 +26,8 @@ public static class ModelsDependencyInjectionMapping
         services.AddScoped<UploadValidation.Domain.IModelUploadLimitsProvider, UploadValidation.Repository.ModelUploadLimitsProvider>();
         services.AddScoped<UploadValidation.Domain.IModelUploadValidator, UploadValidation.Domain.ModelUploadValidator>();
 
+        services.AddScoped<Upload.IAnonymousUploadAuthorProvider, Upload.AnonymousUploadAuthorProvider>();
+        services.AddScoped<CreateModel.Http.RequireModelUploadAuthorizationFilter>();
         services.AddScoped<CreateModel.Domain.CreateModelService>();
         services.AddTransient<
             CreateModel.Repository.ICreateModelRepository,

@@ -9,16 +9,22 @@ namespace PolyBucket.Api.Features.Authentication.GetSiteAccess.Http;
 public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService) : ControllerBase
 {
     /// <summary>
-    /// Returns whether anonymous users may browse the site without signing in.
+    /// Returns public site access flags for browsing and model uploads.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Public browsing availability flag</returns>
+    /// <returns>Public browsing and upload policy flags</returns>
     [HttpGet("site-access")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GetSiteAccessResponse), 200)]
     public async Task<IActionResult> GetSiteAccess(CancellationToken cancellationToken)
     {
         var result = await getSiteAccessService.GetSiteAccessAsync(cancellationToken);
-        return Ok(new { allowPublicBrowsing = result.AllowPublicBrowsing });
+        return Ok(new
+        {
+            allowPublicBrowsing = result.AllowPublicBrowsing,
+            requireLoginForUpload = result.RequireLoginForUpload,
+            allowAnonymousModelUpload = result.AllowAnonymousModelUpload,
+            defaultModelPrivacy = result.DefaultModelPrivacy
+        });
     }
 }

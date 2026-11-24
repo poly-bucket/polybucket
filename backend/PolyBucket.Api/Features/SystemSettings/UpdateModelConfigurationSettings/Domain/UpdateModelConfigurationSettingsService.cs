@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Database.Entities.Models.Enums;
 using System.Security.Claims;
 
@@ -11,11 +12,13 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
     public class UpdateModelConfigurationSettingsService(
         IUpdateModelConfigurationSettingsRepository repository,
         ILogger<UpdateModelConfigurationSettingsService> logger,
-        IHttpContextAccessor httpContextAccessor) : IUpdateModelConfigurationSettingsService
+        IHttpContextAccessor httpContextAccessor,
+        ISiteModelUploadPolicy siteModelUploadPolicy) : IUpdateModelConfigurationSettingsService
     {
         private readonly IUpdateModelConfigurationSettingsRepository _repository = repository;
         private readonly ILogger<UpdateModelConfigurationSettingsService> _logger = logger;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly ISiteModelUploadPolicy _siteModelUploadPolicy = siteModelUploadPolicy;
 
         public async Task<UpdateModelConfigurationSettingsResponse> UpdateModelConfigurationSettingsAsync(UpdateModelConfigurationSettingsCommand request, CancellationToken cancellationToken = default)
         {
@@ -120,7 +123,8 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
                 }
 
                 await _repository.Context.SaveChangesAsync(cancellationToken);
-                
+                _siteModelUploadPolicy.Invalidate();
+
                 _logger.LogInformation("Model settings updated successfully by user {UserId}", 
                     userIdClaim?.Value ?? "unknown");
 

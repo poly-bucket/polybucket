@@ -224,6 +224,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<PolyBucket.Api.Seeders.CategorySeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.FileTypeSettingsSeeder>();
         services.AddTransient<PolyBucket.Api.Seeders.ModelSettingsSeeder>();
+        services.AddTransient<PolyBucket.Api.Seeders.AnonymousUploadAuthorSeeder>();
         
 
         // Categories

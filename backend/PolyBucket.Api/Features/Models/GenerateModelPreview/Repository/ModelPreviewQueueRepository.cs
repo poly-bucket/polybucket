@@ -30,11 +30,19 @@ public class ModelPreviewQueueRepository(PolyBucketDbContext context) : IModelPr
 
     public async Task<bool> IsAutoGenerateEnabledAsync(CancellationToken cancellationToken)
     {
-        var enabled = await context.ModelSettings
+        var siteEnabled = await context.SystemSetups
+            .AsNoTracking()
+            .Select(s => (bool?)s.AutoGeneratePreviews)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var modelEnabled = await context.ModelSettings
             .AsNoTracking()
             .Select(s => (bool?)s.AutoGenerateModelPreviews)
             .FirstOrDefaultAsync(cancellationToken);
-        return enabled ?? true;
+
+        var site = siteEnabled ?? true;
+        var model = modelEnabled ?? true;
+        return site && model;
     }
 
     public async Task<bool> TryAddAsync(ModelPreview preview, CancellationToken cancellationToken)
