@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/primitives/button";
@@ -44,7 +44,6 @@ export default function LoginPage() {
   const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
 
   const { login } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect");
 
@@ -75,17 +74,18 @@ export default function LoginPage() {
   }, [phase, useBackupCode]);
 
   const navigateAfterSuccess = (result: LoginResult) => {
-    if (result.requiresFirstTimeSetup && result.isAdmin) {
-      router.push("/setup");
-    } else if (
-      redirectTo &&
-      typeof window !== "undefined" &&
-      isSafeInternalRedirect(redirectTo, window.location.origin)
-    ) {
-      router.push(redirectTo);
-    } else {
-      router.push("/");
+    if (typeof window === "undefined") {
+      return;
     }
+    if (result.requiresFirstTimeSetup && result.isAdmin) {
+      window.location.assign("/setup");
+      return;
+    }
+    if (redirectTo && isSafeInternalRedirect(redirectTo, window.location.origin)) {
+      window.location.assign(redirectTo);
+      return;
+    }
+    window.location.assign("/");
   };
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {

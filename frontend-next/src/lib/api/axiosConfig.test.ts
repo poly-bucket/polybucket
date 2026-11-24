@@ -1,6 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
+
+vi.mock("@/lib/auth/authSession", () => ({
+  clearSession: vi.fn(async () => undefined),
+  fetchSessionFromBff: vi.fn(async () => null),
+  getOrCreateRefreshPromise: vi.fn(async () => null),
+  getStoredUser: vi.fn(() => null),
+}));
+
 import axiosInstance from "./axiosConfig";
+import { clearSession, fetchSessionFromBff, getOrCreateRefreshPromise } from "@/lib/auth/authSession";
 
 function makeUnauthorizedError(headers: Record<string, string>): AxiosError {
   const response = {
@@ -26,6 +35,9 @@ const originalAdapter = axiosInstance.defaults.adapter;
 beforeEach(() => {
   window.localStorage.clear();
   assignMock.mockClear();
+  vi.mocked(fetchSessionFromBff).mockResolvedValue(null);
+  vi.mocked(getOrCreateRefreshPromise).mockResolvedValue(null);
+  vi.mocked(clearSession).mockClear();
   Object.defineProperty(window, "location", {
     configurable: true,
     value: { pathname: "/models/123", assign: assignMock },

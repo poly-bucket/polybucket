@@ -66,7 +66,9 @@ export interface LoginResult {
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() =>
+    typeof window !== "undefined" ? getStoredUser() : null
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUserFromMe = useCallback(async () => {

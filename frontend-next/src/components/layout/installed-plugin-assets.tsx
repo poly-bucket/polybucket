@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { getInstalledPlugins } from "@/lib/services/pluginsAdminService";
 
 export function InstalledPluginAssets() {
+  const { isAuthenticated, isLoading } = useAuth();
   const [stylesheetHrefs, setStylesheetHrefs] = useState<string[]>([]);
 
   useEffect(() => {
+    if (isLoading || !isAuthenticated) {
+      setStylesheetHrefs([]);
+      return;
+    }
+
     let cancelled = false;
 
     getInstalledPlugins()
@@ -27,7 +34,7 @@ export function InstalledPluginAssets() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated, isLoading]);
 
   return (
     <>

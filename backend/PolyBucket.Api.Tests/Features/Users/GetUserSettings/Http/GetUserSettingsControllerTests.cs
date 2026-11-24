@@ -1,6 +1,8 @@
 using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -46,5 +48,30 @@ public class GetUserSettingsControllerTests
 
         // Assert
         response.Result.ShouldBeOfType<UnauthorizedResult>();
+    }
+
+    [Fact(DisplayName = "When the token stores the user id in sub, get user settings returns Ok.")]
+    public async Task GetUserSettings_SubClaim_ReturnsOk()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var result = new GetUserSettingsResult { Settings = new PolyBucket.Database.Entities.Users.UserSettings() };
+        _service
+            .Setup(s => s.GetUserSettingsAsync(It.Is<GetUserSettingsRequest>(r => r.UserId == userId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+        var controller = new GetUserSettingsController(_service.Object, _logger.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("sub", userId.ToString()) }, "Test"))
+            }
+        };
+
+        // Act
+        var response = await controller.GetUserSettings(CancellationToken.None);
+
+        // Assert
+        response.Result.ShouldBeOfType<OkObjectResult>().Value.ShouldBe(result);
     }
 }
