@@ -17,6 +17,7 @@ export interface UserProfileData {
   avatar?: string;
   profilePictureUrl?: string;
   country?: string;
+  email?: string;
   roleName?: string;
   roles?: string[];
   createdAt?: Date | string;

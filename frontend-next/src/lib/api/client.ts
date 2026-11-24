@@ -21,8 +21,8 @@ export interface IApiClient {
     markEmailVerified_MarkEmailVerified(userId: string,  cancelToken?: CancelToken): Promise<MarkEmailVerifiedResponse>;
     getUsers_GetUsers(page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, roleFilter: string | null | undefined, statusFilter: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUsersResult>;
     createUser_CreateUser(command: CreateUserCommand,  cancelToken?: CancelToken): Promise<CreateUserResponseDto>;
-    getUserProfile_GetUserProfileById(id: string,  cancelToken?: CancelToken): Promise<PrivateProfileResponse>;
-    getUserProfile_GetUserProfileByUsername(username: string,  cancelToken?: CancelToken): Promise<PrivateProfileResponse>;
+    getUserProfile_GetUserProfileById(id: string,  cancelToken?: CancelToken): Promise<GetUserProfileResponse>;
+    getUserProfile_GetUserProfileByUsername(username: string,  cancelToken?: CancelToken): Promise<GetUserProfileResponse>;
     getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserPrintersResult>;
     getUserPrinters_GetUserPrintersByUsername(username: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined,  cancelToken?: CancelToken): Promise<GetUserPrintersResult>;
     getUserModels_GetUserPublicModels(username: string, page: number | undefined, pageSize: number | undefined,  cancelToken?: CancelToken): Promise<GetUserModelsResult>;
@@ -970,7 +970,7 @@ export class ApiClient implements IApiClient {
         return Promise.resolve<CreateUserResponseDto>(null as any);
     }
 
-    getUserProfile_GetUserProfileById(id: string, cancelToken?: CancelToken): Promise<PrivateProfileResponse> {
+    getUserProfile_GetUserProfileById(id: string, cancelToken?: CancelToken): Promise<GetUserProfileResponse> {
         let url_ = this.baseUrl + "/api/users/profile/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -997,7 +997,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserProfile_GetUserProfileById(response: AxiosResponse): Promise<PrivateProfileResponse> {
+    protected processGetUserProfile_GetUserProfileById(response: AxiosResponse): Promise<GetUserProfileResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1011,8 +1011,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = PrivateProfileResponse.fromJS(resultData200);
-            return Promise.resolve<PrivateProfileResponse>(result200);
+            result200 = GetUserProfileResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserProfileResponse>(result200);
 
         } else if (status === 404) {
             const _responseText = response.data;
@@ -1029,10 +1029,10 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<PrivateProfileResponse>(null as any);
+        return Promise.resolve<GetUserProfileResponse>(null as any);
     }
 
-    getUserProfile_GetUserProfileByUsername(username: string, cancelToken?: CancelToken): Promise<PrivateProfileResponse> {
+    getUserProfile_GetUserProfileByUsername(username: string, cancelToken?: CancelToken): Promise<GetUserProfileResponse> {
         let url_ = this.baseUrl + "/api/users/profile/by-username/{username}";
         if (username === undefined || username === null)
             throw new globalThis.Error("The parameter 'username' must be defined.");
@@ -1059,7 +1059,7 @@ export class ApiClient implements IApiClient {
         });
     }
 
-    protected processGetUserProfile_GetUserProfileByUsername(response: AxiosResponse): Promise<PrivateProfileResponse> {
+    protected processGetUserProfile_GetUserProfileByUsername(response: AxiosResponse): Promise<GetUserProfileResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1073,8 +1073,8 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             let result200: any = null;
             let resultData200  = _responseText;
-            result200 = PrivateProfileResponse.fromJS(resultData200);
-            return Promise.resolve<PrivateProfileResponse>(result200);
+            result200 = GetUserProfileResponse.fromJS(resultData200);
+            return Promise.resolve<GetUserProfileResponse>(result200);
 
         } else if (status === 404) {
             const _responseText = response.data;
@@ -1091,7 +1091,7 @@ export class ApiClient implements IApiClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<PrivateProfileResponse>(null as any);
+        return Promise.resolve<GetUserProfileResponse>(null as any);
     }
 
     getUserPrinters_GetUserPrinters(userId: string, page: number | undefined, pageSize: number | undefined, searchQuery: string | null | undefined, sortBy: string | null | undefined, sortDescending: boolean | undefined, cancelToken?: CancelToken): Promise<GetUserPrintersResult> {
@@ -19605,6 +19605,96 @@ export interface IPrivateProfileResponse {
     username?: string;
     isProfilePublic?: boolean;
     message?: string;
+}
+
+export class GetUserProfileResponse implements IGetUserProfileResponse {
+    id?: string;
+    username?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    bio?: string | undefined;
+    avatar?: string | undefined;
+    profilePictureUrl?: string | undefined;
+    country?: string | undefined;
+    email?: string | undefined;
+    roleName?: string;
+    createdAt?: Date;
+    lastLoginAt?: Date | undefined;
+    isBanned?: boolean;
+    totalModels?: number | undefined;
+    totalCollections?: number | undefined;
+    totalLikes?: number | undefined;
+    totalDownloads?: number | undefined;
+    totalFollowers?: number | undefined;
+    totalFollowing?: number | undefined;
+    isProfilePublic?: boolean;
+    isFollowedByCurrentUser?: boolean;
+    showEmail?: boolean | undefined;
+    showLastLogin?: boolean | undefined;
+    showStatistics?: boolean | undefined;
+    websiteUrl?: string | undefined;
+    twitterUrl?: string | undefined;
+    instagramUrl?: string | undefined;
+    youTubeUrl?: string | undefined;
+    message?: string | undefined;
+
+    constructor(data?: IGetUserProfileResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (const property of Object.keys(_data)) {
+                (this as any)[property] = _data[property];
+            }
+            if (_data["createdAt"]) this.createdAt = new Date(_data["createdAt"].toString());
+            if (_data["lastLoginAt"]) this.lastLoginAt = new Date(_data["lastLoginAt"].toString());
+        }
+    }
+
+    static fromJS(data: any): GetUserProfileResponse {
+        data = typeof data === 'object' ? data : {};
+        const result = new GetUserProfileResponse();
+        result.init(data);
+        return result;
+    }
+}
+
+export interface IGetUserProfileResponse {
+    id?: string;
+    username?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    bio?: string | undefined;
+    avatar?: string | undefined;
+    profilePictureUrl?: string | undefined;
+    country?: string | undefined;
+    email?: string | undefined;
+    roleName?: string;
+    createdAt?: Date;
+    lastLoginAt?: Date | undefined;
+    isBanned?: boolean;
+    totalModels?: number | undefined;
+    totalCollections?: number | undefined;
+    totalLikes?: number | undefined;
+    totalDownloads?: number | undefined;
+    totalFollowers?: number | undefined;
+    totalFollowing?: number | undefined;
+    isProfilePublic?: boolean;
+    isFollowedByCurrentUser?: boolean;
+    showEmail?: boolean | undefined;
+    showLastLogin?: boolean | undefined;
+    showStatistics?: boolean | undefined;
+    websiteUrl?: string | undefined;
+    twitterUrl?: string | undefined;
+    instagramUrl?: string | undefined;
+    youTubeUrl?: string | undefined;
+    message?: string | undefined;
 }
 
 export class GetUserPrintersResult implements IGetUserPrintersResult {

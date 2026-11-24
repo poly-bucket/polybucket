@@ -11,21 +11,21 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
+const mockUseAuth = vi.fn(() => ({ user: { id: "other" }, isAdmin: false }));
+
 vi.mock("@/contexts/AuthContext", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/contexts/AuthContext")>();
   return {
     ...actual,
-    useAuth: () => ({ user: { id: "other" } }),
+    useAuth: () => mockUseAuth(),
   };
 });
 
+const mockFetchUserProfile = vi.fn();
+
 vi.mock("@/lib/services/userProfileService", () => ({
-  fetchUserProfile: vi.fn().mockResolvedValue({
-    id: "maker-id",
-    username: "maker",
-    isProfilePublic: true,
-    showStatistics: true,
-  }),
+  fetchUserProfile: (...args: unknown[]) => mockFetchUserProfile(...args),
+  enrichOwnProfileFromMe: vi.fn((p: unknown) => Promise.resolve(p)),
 }));
 
 vi.mock("@/lib/plugins", () => ({
@@ -40,10 +40,43 @@ vi.mock("./profile-header", () => ({
 describe("ProfilePageContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseAuth.mockReturnValue({ user: { id: "other" }, isAdmin: false });
+    mockFetchUserProfile.mockResolvedValue({
+      id: "maker-id",
+      username: "maker",
+      isProfilePublic: true,
+      showStatistics: true,
+      createdAt: "2026-01-01T00:00:00Z",
+    });
   });
 
   it("renders profile header when profile loads", async () => {
     render(<ProfilePageContent />);
     await screen.findByTestId("profile-header");
+  });
+
+  it("shows private wall for another user's private profile stub", async () => {
+    mockFetchUserProfile.mockResolvedValue({
+      id: "private-id",
+      username: "private",
+      isProfilePublic: false,
+      message: "This profile is private",
+    });
+    render(<ProfilePageContent />);
+    await screen.findByText("Profile is Private");
+    expect(screen.queryByTestId("profile-header")).not.toBeInTheDocument();
+  });
+
+  it("renders profile header when owner views their private profile", async () => {
+    mockUseAuth.mockReturnValue({ user: { id: "maker-id" }, isAdmin: false });
+    mockFetchUserProfile.mockResolvedValue({
+      id: "maker-id",
+      username: "maker",
+      isProfilePublic: false,
+      createdAt: "2026-01-01T00:00:00Z",
+    });
+    render(<ProfilePageContent />);
+    await screen.findByTestId("profile-header");
+    await screen.findByText(/Your profile is private/);
   });
 });

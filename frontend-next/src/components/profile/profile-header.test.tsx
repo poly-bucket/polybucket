@@ -92,6 +92,37 @@ describe("ProfileHeader", () => {
     expect(screen.queryByText("Followers over time")).not.toBeInTheDocument();
   });
 
+  it("shows email and last active for owner when present", () => {
+    render(
+      <ProfileHeader
+        profile={baseProfile({
+          email: "maker@example.com",
+          lastLoginAt: "2026-11-04T15:41:31.923499Z",
+          totalModels: 2,
+        })}
+        isOwnProfile={true}
+      />
+    );
+    expect(screen.getByRole("link", { name: "maker@example.com" })).toBeInTheDocument();
+    expect(screen.getByText(/Last active/)).toBeInTheDocument();
+    expect(screen.getByText("Models")).toBeInTheDocument();
+  });
+
+  it("hides stats and email for visitor when API omits them", () => {
+    render(
+      <ProfileHeader
+        profile={baseProfile({
+          email: undefined,
+          totalModels: undefined,
+          totalCollections: undefined,
+        })}
+        isOwnProfile={false}
+      />
+    );
+    expect(screen.queryByText("Models")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /@/ })).not.toBeInTheDocument();
+  });
+
   it("shows member since and role labels when profile data is present", () => {
     render(
       <ProfileHeader

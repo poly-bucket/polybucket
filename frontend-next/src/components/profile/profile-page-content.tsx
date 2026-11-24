@@ -19,6 +19,8 @@ export function ProfilePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user: currentUser } = useAuth();
+  const isAdmin =
+    currentUser?.roles?.some((r) => r.toLowerCase() === "admin") ?? false;
   const idOrUsername = params?.idOrUsername as string | undefined;
 
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
@@ -118,7 +120,16 @@ export function ProfilePageContent() {
     notFound();
   }
 
-  if (!profile.isProfilePublic) {
+  const isOwnProfile =
+    !!currentUser?.id && !!profile.id && currentUser.id === profile.id;
+  const hasFullProfile = profile.createdAt != null;
+  const showPrivateWall =
+    profile.isProfilePublic === false &&
+    !isOwnProfile &&
+    !(isAdmin && hasFullProfile) &&
+    !hasFullProfile;
+
+  if (showPrivateWall) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8 text-center sm:px-6 lg:px-8">
         <Lock className="mx-auto mb-4 h-16 w-16 text-white/40" />
@@ -134,14 +145,16 @@ export function ProfilePageContent() {
       </div>
     );
   }
-
-  const isOwnProfile =
-    !!currentUser?.id && !!profile.id && currentUser.id === profile.id;
   const username = profile.username ?? "";
   const profileId = profile.id ?? "";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      {isOwnProfile && profile.isProfilePublic === false ? (
+        <div className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-100">
+          Your profile is private. Only you and site admins can view this page.
+        </div>
+      ) : null}
       <ProfileHeader
         profile={profile}
         isOwnProfile={isOwnProfile}

@@ -24,6 +24,7 @@ public class GetUserProfileController : ControllerBase
     /// <summary>
     /// Get user profile by ID.
     /// Private profiles are visible to the profile owner and admins; other viewers receive a private-profile response.
+    /// Email, last login, and statistics are omitted for other viewers when the profile owner's privacy toggles are off.
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(200, Type = typeof(GetUserProfileResponse))]
@@ -62,6 +63,7 @@ public class GetUserProfileController : ControllerBase
     /// <summary>
     /// Get user profile by username.
     /// Private profiles are visible to the profile owner and admins; other viewers receive a private-profile response.
+    /// Email, last login, and statistics are omitted for other viewers when the profile owner's privacy toggles are off.
     /// </summary>
     [HttpGet("by-username/{username}")]
     [ProducesResponseType(200, Type = typeof(GetUserProfileResponse))]

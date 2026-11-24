@@ -20,6 +20,7 @@ public class GetUserProfileResponse
     public string? Avatar { get; set; }
     public string? ProfilePictureUrl { get; set; }
     public string? Country { get; set; }
+    public string? Email { get; set; }
     public string RoleName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
@@ -27,17 +28,17 @@ public class GetUserProfileResponse
     public DateTime? BannedAt { get; set; }
     public string? BanReason { get; set; }
     public DateTime? BanExpiresAt { get; set; }
-    public int TotalModels { get; set; }
-    public int TotalCollections { get; set; }
-    public int TotalLikes { get; set; }
-    public int TotalDownloads { get; set; }
-    public int TotalFollowers { get; set; }
-    public int TotalFollowing { get; set; }
+    public int? TotalModels { get; set; }
+    public int? TotalCollections { get; set; }
+    public int? TotalLikes { get; set; }
+    public int? TotalDownloads { get; set; }
+    public int? TotalFollowers { get; set; }
+    public int? TotalFollowing { get; set; }
     public bool IsProfilePublic { get; set; }
     public bool IsFollowedByCurrentUser { get; set; }
-    public bool ShowEmail { get; set; }
-    public bool ShowLastLogin { get; set; }
-    public bool ShowStatistics { get; set; }
+    public bool? ShowEmail { get; set; }
+    public bool? ShowLastLogin { get; set; }
+    public bool? ShowStatistics { get; set; }
     public string? WebsiteUrl { get; set; }
     public string? TwitterUrl { get; set; }
     public string? InstagramUrl { get; set; }

@@ -61,6 +61,11 @@ public class GetUserProfileService(
                 cancellationToken);
         }
 
+        var canViewSensitive = CanViewSensitive(query, user.Id);
+        var showEmail = canViewSensitive || user.ShowEmail;
+        var showLastLogin = canViewSensitive || user.ShowLastLogin;
+        var showStatistics = canViewSensitive || user.ShowStatistics;
+
         return new GetUserProfileResponse
         {
             Id = user.Id,
@@ -71,28 +76,33 @@ public class GetUserProfileService(
             Avatar = user.Avatar,
             ProfilePictureUrl = user.ProfilePictureUrl,
             Country = user.Country,
+            Email = showEmail ? user.Email : null,
             RoleName = user.Role?.Name ?? "Unknown",
             CreatedAt = user.CreatedAt,
-            LastLoginAt = user.LastLoginAt,
+            LastLoginAt = showLastLogin ? user.LastLoginAt : null,
             IsBanned = user.IsBanned,
             BannedAt = user.BannedAt,
             BanReason = user.BanReason,
             BanExpiresAt = user.BanExpiresAt,
-            TotalModels = statistics.TotalModels,
-            TotalCollections = statistics.TotalCollections,
-            TotalLikes = statistics.TotalLikes,
-            TotalDownloads = statistics.TotalDownloads,
-            TotalFollowers = statistics.TotalFollowers,
-            TotalFollowing = statistics.TotalFollowing,
+            TotalModels = showStatistics ? statistics.TotalModels : null,
+            TotalCollections = showStatistics ? statistics.TotalCollections : null,
+            TotalLikes = showStatistics ? statistics.TotalLikes : null,
+            TotalDownloads = showStatistics ? statistics.TotalDownloads : null,
+            TotalFollowers = showStatistics ? statistics.TotalFollowers : null,
+            TotalFollowing = showStatistics ? statistics.TotalFollowing : null,
             IsProfilePublic = user.IsProfilePublic,
             IsFollowedByCurrentUser = isFollowedByCurrentUser,
-            ShowEmail = user.ShowEmail,
-            ShowLastLogin = user.ShowLastLogin,
-            ShowStatistics = user.ShowStatistics,
+            ShowEmail = canViewSensitive ? user.ShowEmail : null,
+            ShowLastLogin = canViewSensitive ? user.ShowLastLogin : null,
+            ShowStatistics = canViewSensitive ? user.ShowStatistics : null,
             WebsiteUrl = user.WebsiteUrl,
             TwitterUrl = user.TwitterUrl,
             InstagramUrl = user.InstagramUrl,
             YouTubeUrl = user.YouTubeUrl
         };
     }
+
+    private static bool CanViewSensitive(GetUserProfileQuery query, Guid userId) =>
+        query.IsRequestingUserAdmin
+        || (query.RequestingUserId.HasValue && query.RequestingUserId.Value == userId);
 }

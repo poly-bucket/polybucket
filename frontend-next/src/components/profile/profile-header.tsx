@@ -13,6 +13,8 @@ import {
   Youtube,
   Instagram,
   Settings,
+  Mail,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/primitives/button";
@@ -118,6 +120,14 @@ export function ProfileHeader({
     return single || null;
   })();
 
+  const showStats =
+    profile.totalModels != null ||
+    profile.totalCollections != null ||
+    profile.totalFollowers != null ||
+    profile.totalFollowing != null ||
+    profile.totalLikes != null ||
+    profile.totalDownloads != null;
+
   const handleFollowClick = async () => {
     if (!profile.id) return;
     if (!isAuthenticated) {
@@ -196,7 +206,7 @@ export function ProfileHeader({
               {profile.bio}
             </p>
           )}
-          {profile.showStatistics && (
+          {showStats && (
             <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
               <StatButton
                 count={profile.totalModels}
@@ -247,6 +257,23 @@ export function ProfileHeader({
               <Calendar className="h-3 w-3" />
               Member since {formatDate(profile.createdAt)}
             </div>
+            {profile.lastLoginAt && (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Last active {formatDate(profile.lastLoginAt)}
+              </div>
+            )}
+            {profile.email && (
+              <div className="flex items-center gap-1">
+                <Mail className="h-3 w-3" />
+                <a
+                  href={`mailto:${profile.email}`}
+                  className="text-blue-400 transition-colors hover:text-blue-300"
+                >
+                  {profile.email}
+                </a>
+              </div>
+            )}
             {rolesLabel && (
               <div className="flex items-center gap-1">
                 <User className="h-3 w-3" />
