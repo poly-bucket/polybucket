@@ -18456,9 +18456,6 @@ export class UserSettings extends BaseEntity implements IUserSettings {
     cardSize?: string;
     cardSpacing?: string;
     gridColumns?: number;
-    showProfileInSearch?: boolean;
-    allowDirectMessages?: boolean;
-    showActivityStatus?: boolean;
     notifyOnMentions?: boolean;
     notifyOnFollows?: boolean;
     notifyOnLikes?: boolean;
@@ -18485,9 +18482,6 @@ export class UserSettings extends BaseEntity implements IUserSettings {
             this.cardSize = _data["cardSize"];
             this.cardSpacing = _data["cardSpacing"];
             this.gridColumns = _data["gridColumns"];
-            this.showProfileInSearch = _data["showProfileInSearch"];
-            this.allowDirectMessages = _data["allowDirectMessages"];
-            this.showActivityStatus = _data["showActivityStatus"];
             this.notifyOnMentions = _data["notifyOnMentions"];
             this.notifyOnFollows = _data["notifyOnFollows"];
             this.notifyOnLikes = _data["notifyOnLikes"];
@@ -18524,9 +18518,6 @@ export class UserSettings extends BaseEntity implements IUserSettings {
         data["cardSize"] = this.cardSize;
         data["cardSpacing"] = this.cardSpacing;
         data["gridColumns"] = this.gridColumns;
-        data["showProfileInSearch"] = this.showProfileInSearch;
-        data["allowDirectMessages"] = this.allowDirectMessages;
-        data["showActivityStatus"] = this.showActivityStatus;
         data["notifyOnMentions"] = this.notifyOnMentions;
         data["notifyOnFollows"] = this.notifyOnFollows;
         data["notifyOnLikes"] = this.notifyOnLikes;
@@ -18557,9 +18548,6 @@ export interface IUserSettings extends IBaseEntity {
     cardSize?: string;
     cardSpacing?: string;
     gridColumns?: number;
-    showProfileInSearch?: boolean;
-    allowDirectMessages?: boolean;
-    showActivityStatus?: boolean;
     notifyOnMentions?: boolean;
     notifyOnFollows?: boolean;
     notifyOnLikes?: boolean;

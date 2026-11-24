@@ -3190,9 +3190,6 @@ namespace PolyBucket.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("AllowDirectMessages")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("AutoRotateModels")
                         .HasColumnType("boolean");
 
@@ -3235,12 +3232,6 @@ namespace PolyBucket.Database.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("NotifyOnMentions")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("ShowActivityStatus")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("ShowProfileInSearch")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Theme")

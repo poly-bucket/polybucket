@@ -23,11 +23,7 @@ namespace PolyBucket.Database.Entities.Users
         public string CardSize { get; set; } = "medium"; // "small", "medium", "large"
         public string CardSpacing { get; set; } = "normal"; // "compact", "normal", "spacious"
         public int GridColumns { get; set; } = 4; // Number of columns in grid view
-        
-        // Profile settings
-        public bool ShowProfileInSearch { get; set; } = true;
-        public bool AllowDirectMessages { get; set; } = true;
-        public bool ShowActivityStatus { get; set; } = true;
+
         public bool NotifyOnMentions { get; set; } = true;
         public bool NotifyOnFollows { get; set; } = true;
         public bool NotifyOnLikes { get; set; } = true;
