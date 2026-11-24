@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Domain;
 using PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Http;
-using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Http;
 
@@ -26,10 +26,10 @@ public class GetModerationAuditLogsController(IGetModerationAuditLogsService ser
         [FromQuery] string? modelId = null,
         CancellationToken cancellationToken = default)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = User.FindUserIdClaim();
         if (!Guid.TryParse(userIdClaim, out var currentUserId))
         {
-            return Unauthorized("Invalid user token");
+            return Unauthorized();
         }
 
         var query = new GetModerationAuditLogsQuery
@@ -44,7 +44,7 @@ public class GetModerationAuditLogsController(IGetModerationAuditLogsService ser
         var response = await service.GetAuditLogsAsync(currentUserId, query, cancellationToken);
         if (response == null)
         {
-            return Forbid("Admin privileges required to view audit logs");
+            return Forbid();
         }
 
         return Ok(response);

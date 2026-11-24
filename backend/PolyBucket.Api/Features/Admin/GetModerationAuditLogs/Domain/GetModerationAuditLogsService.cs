@@ -20,7 +20,11 @@ public class GetModerationAuditLogsService(
         CancellationToken cancellationToken = default)
     {
         var user = await context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
-        if (user == null || user.Role == null || user.Role.Name != "Admin")
+        var roleName = user?.Role?.Name;
+        var canViewAuditLogs = roleName != null &&
+            (roleName.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+             roleName.Equals("Moderator", StringComparison.OrdinalIgnoreCase));
+        if (!canViewAuditLogs)
         {
             return null;
         }

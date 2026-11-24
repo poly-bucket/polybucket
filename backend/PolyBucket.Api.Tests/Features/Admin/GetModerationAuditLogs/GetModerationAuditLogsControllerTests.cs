@@ -1,6 +1,8 @@
 using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PolyBucket.Api.Features.Admin.GetModerationAuditLogs.Domain;
@@ -42,7 +44,33 @@ public class GetModerationAuditLogsControllerTests
         var result = await CreateController(null).GetAuditLogs();
 
         // Assert
-        result.Result.ShouldBeOfType<UnauthorizedObjectResult>();
+        result.Result.ShouldBeOfType<UnauthorizedResult>();
+    }
+
+    [Fact(DisplayName = "When the caller identity only has a sub claim, GetAuditLogs returns Ok.")]
+    public async Task GetAuditLogs_SubClaim_ReturnsOk()
+    {
+        // Arrange
+        var body = new ModerationAuditResponseDto { TotalCount = 0 };
+        _service.Setup(s => s.GetAuditLogsAsync(_adminUserId, It.IsAny<GetModerationAuditLogsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(body);
+        var controller = new GetModerationAuditLogsController(_service.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [new Claim("sub", _adminUserId.ToString())],
+                    "Test"))
+            }
+        };
+
+        // Act
+        var result = await controller.GetAuditLogs();
+
+        // Assert
+        var ok = result.Result.ShouldBeOfType<OkObjectResult>();
+        ok.Value.ShouldBeOfType<ModerationAuditResponseDto>().TotalCount.ShouldBe(0);
     }
 
     [Fact(DisplayName = "When the caller is not an admin, GetAuditLogs returns Forbid.")]
@@ -56,6 +84,7 @@ public class GetModerationAuditLogsControllerTests
         var result = await CreateController(Guid.NewGuid()).GetAuditLogs();
 
         // Assert
-        result.Result.ShouldBeOfType<ForbidResult>();
+        var forbid = result.Result.ShouldBeOfType<ForbidResult>();
+        forbid.AuthenticationSchemes.ShouldBeEmpty();
     }
 }
