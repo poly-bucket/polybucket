@@ -13,7 +13,7 @@ namespace PolyBucket.Api.Features.Authentication.ChangePassword.Domain
         public string CurrentPassword { get; set; } = string.Empty;
         
         [Required(ErrorMessage = "New password is required")]
-        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
+        [MinLength(1)]
         public string NewPassword { get; set; } = string.Empty;
         
         [Required(ErrorMessage = "Password confirmation is required")]

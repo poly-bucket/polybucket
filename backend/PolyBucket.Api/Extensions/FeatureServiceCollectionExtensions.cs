@@ -143,6 +143,7 @@ public static class FeatureServiceCollectionExtensions
         services.AddTransient<Features.Authentication.RequestEmailChange.Domain.RequestEmailChangeCommandHandler>();
         services.AddScoped<Features.Authentication.Services.IEmailVerificationGate, Features.Authentication.Services.EmailVerificationGate>();
         services.AddScoped<Features.Authentication.Services.IUserRegistrationGate, Features.Authentication.Services.UserRegistrationGate>();
+        services.AddScoped<Features.Authentication.Services.IPasswordPolicyService, Features.Authentication.Services.PasswordPolicyService>();
 
         services.AddSingleton<Features.Authentication.Services.IRecoveryCodeProtector, Features.Authentication.Services.RecoveryCodeProtector>();
         services.AddScoped<Features.Authentication.Services.IRecoveryCodeService, Features.Authentication.Services.RecoveryCodeService>();

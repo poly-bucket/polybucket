@@ -16,7 +16,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         public string Username { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(100, MinimumLength = 6)]
+        [StringLength(100, MinimumLength = 1)]
         public string Password { get; set; } = string.Empty;
 
         [Required]

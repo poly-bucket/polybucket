@@ -17,6 +17,7 @@ namespace PolyBucket.Api.Features.Authentication.Repository
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<User> CreateUserAsync(User user);
         Task CreateLoginRecordAsync(UserLogin userLogin);
+        Task<int> CountRecentFailedLoginsAsync(Guid userId, DateTime since, CancellationToken cancellationToken = default);
         Task<bool> IsEmailTakenAsync(string email);
         Task<bool> IsUsernameTakenAsync(string username);
         

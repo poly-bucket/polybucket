@@ -28,6 +28,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
         private readonly Mock<IEmailSettingsResolver> _emailSettingsResolverMock;
         private readonly Mock<IAccountEmailService> _accountEmailServiceMock;
         private readonly Mock<ILogger<RegisterCommandHandler>> _loggerMock;
+        private readonly Mock<IPasswordPolicyService> _passwordPolicyMock;
         private readonly PolyBucketDbContext _dbContext;
         private readonly RegisterController _controller;
         private readonly RegisterCommandHandler _handler;
@@ -39,6 +40,10 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
             _emailSettingsResolverMock = new Mock<IEmailSettingsResolver>();
             _accountEmailServiceMock = new Mock<IAccountEmailService>();
             _loggerMock = new Mock<ILogger<RegisterCommandHandler>>();
+            _passwordPolicyMock = new Mock<IPasswordPolicyService>();
+            _passwordPolicyMock
+                .Setup(p => p.ValidateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((true, string.Empty));
             var dbOptions = new DbContextOptionsBuilder<PolyBucketDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
@@ -81,6 +86,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
                 _accountEmailServiceMock.Object,
                 registrationGate,
                 recoveryCodeProvisioningMock.Object,
+                _passwordPolicyMock.Object,
                 _loggerMock.Object);
 
             _controller = new RegisterController(_handler, Mock.Of<ILogger<RegisterController>>())
@@ -422,6 +428,33 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
             // Verify both checks were made but no user created
             _authRepositoryMock.Verify(x => x.IsEmailTakenAsync(command.Email), Times.Once);
             _authRepositoryMock.Verify(x => x.IsUsernameTakenAsync(command.Username), Times.Once);
+            _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact(DisplayName = "When the password fails policy validation, the register controller returns BadRequest.")]
+        public async Task Register_PasswordPolicyFails_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var command = new RegisterCommand
+            {
+                Email = "test@example.com",
+                Username = "testuser",
+                Password = "weak",
+                ConfirmPassword = "weak",
+                UserAgent = "Test User Agent"
+            };
+
+            _authRepositoryMock.Setup(x => x.IsEmailTakenAsync(command.Email)).ReturnsAsync(false);
+            _authRepositoryMock.Setup(x => x.IsUsernameTakenAsync(command.Username)).ReturnsAsync(false);
+            _passwordPolicyMock
+                .Setup(p => p.ValidateAsync(command.Password, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((false, "Password must be at least 8 characters long."));
+
+            // Act
+            var result = await _controller.Register(command, CancellationToken.None);
+
+            // Assert
+            result.ShouldBeOfType<BadRequestObjectResult>();
             _authRepositoryMock.Verify(x => x.CreateUserAsync(It.IsAny<User>()), Times.Never);
         }
 

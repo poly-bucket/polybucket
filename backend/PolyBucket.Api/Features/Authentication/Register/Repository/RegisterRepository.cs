@@ -1,4 +1,6 @@
+using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PolyBucket.Database.Entities.Authentication;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Persistence;
@@ -6,9 +8,10 @@ using RefreshTokenModel = PolyBucket.Database.Entities.Authentication.RefreshTok
 
 namespace PolyBucket.Api.Features.Authentication.Register.Repository;
 
-public class RegisterRepository(PolyBucketDbContext context) : IRegisterRepository
+public class RegisterRepository(PolyBucketDbContext context, ILogger<RegisterRepository> logger) : IRegisterRepository
 {
     private readonly PolyBucketDbContext _context = context;
+    private readonly ILogger<RegisterRepository> _logger = logger;
 
     public async Task<bool> IsEmailTakenAsync(string email)
     {
@@ -22,7 +25,21 @@ public class RegisterRepository(PolyBucketDbContext context) : IRegisterReposito
 
     public async Task<Guid?> GetDefaultUserRoleIdAsync(CancellationToken cancellationToken)
     {
-        var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User", cancellationToken);
+        var systemSetup = await _context.SystemSetups.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+        var roleName = string.IsNullOrWhiteSpace(systemSetup?.DefaultUserRole) ? "User" : systemSetup.DefaultUserRole.Trim();
+
+        var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
+        if (role != null)
+        {
+            return role.Id;
+        }
+
+        if (!string.Equals(roleName, "User", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Default user role {RoleName} was not found; falling back to User", roleName);
+        }
+
+        role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User", cancellationToken);
         return role?.Id;
     }
 

@@ -13,6 +13,7 @@ public class ChangePasswordCommandHandler(
     IPasswordHasher passwordHasher,
     IAccountEmailService accountEmailService,
     IRecoveryCodePresentationService recoveryCodePresentationService,
+    IPasswordPolicyService passwordPolicyService,
     ILogger<ChangePasswordCommandHandler> logger,
     IHttpContextAccessor httpContextAccessor) : IRequestHandler<ChangePasswordCommand, ChangePasswordResponse>
 {
@@ -20,6 +21,7 @@ public class ChangePasswordCommandHandler(
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly IAccountEmailService _accountEmailService = accountEmailService;
     private readonly IRecoveryCodePresentationService _recoveryCodePresentationService = recoveryCodePresentationService;
+    private readonly IPasswordPolicyService _passwordPolicyService = passwordPolicyService;
     private readonly ILogger<ChangePasswordCommandHandler> _logger = logger;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
@@ -55,6 +57,17 @@ public class ChangePasswordCommandHandler(
                 {
                     Success = false,
                     Message = "Current password is incorrect",
+                    RequiresFirstTimeSetup = false
+                };
+            }
+
+            var (passwordValid, passwordMessage) = await _passwordPolicyService.ValidateAsync(command.NewPassword, cancellationToken);
+            if (!passwordValid)
+            {
+                return new ChangePasswordResponse
+                {
+                    Success = false,
+                    Message = passwordMessage,
                     RequiresFirstTimeSetup = false
                 };
             }

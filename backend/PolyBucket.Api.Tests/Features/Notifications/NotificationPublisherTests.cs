@@ -33,11 +33,17 @@ public class NotificationPublisherTests
     private NotificationPublisher CreatePublisher() =>
         new(_repository.Object, _emailQueue.Object, _settingsResolver.Object, TimeProvider.System, NullLogger<NotificationPublisher>.Instance);
 
-    private void UseRecipient(bool emailNotifications = true, bool notifyOnLikes = true, bool notifyOnComments = true)
+    private void UseRecipient(
+        bool emailNotifications = true,
+        bool notifyOnLikes = true,
+        bool notifyOnComments = true,
+        bool notifyOnFollows = true,
+        bool notifyOnMentions = true)
     {
         _repository
             .Setup(r => r.GetRecipientAsync(RecipientId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new NotificationRecipient(RecipientId, "maker", "maker@example.com", emailNotifications, notifyOnLikes, notifyOnComments, true));
+            .ReturnsAsync(new NotificationRecipient(
+                RecipientId, "maker", "maker@example.com", emailNotifications, notifyOnLikes, notifyOnComments, notifyOnFollows, notifyOnMentions));
     }
 
     private void UseEmailSettings(EffectiveEmailSettings settings)
@@ -137,6 +143,21 @@ public class NotificationPublisherTests
 
         // Act
         var published = await publisher.PublishAsync(Request(type));
+
+        // Assert
+        published.ShouldBeFalse();
+        _repository.Verify(r => r.Add(It.IsAny<Notification>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "Recipients who turned off mention notifications do not receive UserMentioned.")]
+    public async Task PublishAsync_WhenMentionsDisabled_DoesNothing()
+    {
+        // Arrange
+        UseRecipient(notifyOnMentions: false);
+        var publisher = CreatePublisher();
+
+        // Act
+        var published = await publisher.PublishAsync(Request(NotificationType.UserMentioned));
 
         // Assert
         published.ShouldBeFalse();

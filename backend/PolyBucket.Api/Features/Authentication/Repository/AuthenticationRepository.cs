@@ -61,6 +61,11 @@ namespace PolyBucket.Api.Features.Authentication.Repository
             await _context.SaveChangesAsync();
         }
 
+        public Task<int> CountRecentFailedLoginsAsync(Guid userId, DateTime since, CancellationToken cancellationToken = default) =>
+            _context.UserLogins.CountAsync(
+                l => l.UserId == userId && l.Successful == false && l.CreatedAt >= since,
+                cancellationToken);
+
         public async Task<bool> IsEmailTakenAsync(string email)
         {
             return await _context.Users.AnyAsync(u => u.Email == email);

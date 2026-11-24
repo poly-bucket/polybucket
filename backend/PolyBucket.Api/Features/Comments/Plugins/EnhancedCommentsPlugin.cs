@@ -4,6 +4,7 @@ using PolyBucket.Api.Features.Comments.LikeComment.Domain;
 using PolyBucket.Api.Features.Comments.LikeComment.Repository;
 using PolyBucket.Api.Common.Plugins;
 using PolyBucket.Api.Features.Reports.Domain;
+using PolyBucket.Api.Features.Comments.Domain;
 using PolyBucket.Api.Features.Notifications.Domain;
 using System;
 using System.Collections.Generic;
@@ -212,6 +213,60 @@ namespace PolyBucket.Api.Features.Comments.Plugins
                     ActionUrl = actionUrl,
                     RelatedEntityId = comment.Id,
                     RelatedEntityType = "Comment"
+                });
+            }
+
+            await PublishMentionNotificationsAsync(comment, actionUrl, modelAuthorId, repliedToAuthorId);
+        }
+
+        private async Task PublishMentionNotificationsAsync(
+            EnhancedComment comment,
+            string? actionUrl,
+            Guid? modelAuthorId,
+            Guid? repliedToAuthorId)
+        {
+            var mentionedNames = CommentMentionParser.ExtractUsernames(comment.Content);
+            if (mentionedNames.Count == 0)
+            {
+                return;
+            }
+
+            var activeUsers = await _context.Users.AsNoTracking()
+                .Where(u => u.DeletedAt == null)
+                .Select(u => new { u.Id, u.Username })
+                .ToListAsync();
+
+            var usernameToId = activeUsers.ToDictionary(u => u.Username, u => u.Id, StringComparer.OrdinalIgnoreCase);
+            var alreadyNotified = new HashSet<Guid> { comment.AuthorId };
+            if (modelAuthorId.HasValue)
+            {
+                alreadyNotified.Add(modelAuthorId.Value);
+            }
+
+            if (repliedToAuthorId.HasValue)
+            {
+                alreadyNotified.Add(repliedToAuthorId.Value);
+            }
+
+            foreach (var username in mentionedNames)
+            {
+                if (!usernameToId.TryGetValue(username, out var recipientId) || alreadyNotified.Contains(recipientId))
+                {
+                    continue;
+                }
+
+                alreadyNotified.Add(recipientId);
+                await _notificationPublisher.PublishAsync(new NotificationRequest
+                {
+                    RecipientUserId = recipientId,
+                    ActorUserId = comment.AuthorId,
+                    Type = NotificationType.UserMentioned,
+                    Title = $"{NotificationRequest.ActorToken} mentioned you in a comment",
+                    Message = $"{NotificationRequest.ActorToken} mentioned you: {Preview(comment.Content)}",
+                    ActionUrl = actionUrl,
+                    RelatedEntityId = comment.Id,
+                    RelatedEntityType = "Comment",
+                    DedupeKey = $"mention:{comment.Id}:{recipientId}"
                 });
             }
         }

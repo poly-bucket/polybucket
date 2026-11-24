@@ -17,6 +17,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         IAccountEmailService accountEmailService,
         IUserRegistrationGate registrationGate,
         IRecoveryCodeProvisioningService recoveryCodeProvisioningService,
+        IPasswordPolicyService passwordPolicyService,
         ILogger<RegisterCommandHandler> logger)
     {
         public static readonly TimeSpan EmailVerificationLifetime = TimeSpan.FromHours(24);
@@ -27,6 +28,7 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
         private readonly IAccountEmailService _accountEmailService = accountEmailService;
         private readonly IUserRegistrationGate _registrationGate = registrationGate;
         private readonly IRecoveryCodeProvisioningService _recoveryCodeProvisioningService = recoveryCodeProvisioningService;
+        private readonly IPasswordPolicyService _passwordPolicyService = passwordPolicyService;
         private readonly ILogger<RegisterCommandHandler> _logger = logger;
 
         public async Task<RegisterCommandResponse> Handle(RegisterCommand command, CancellationToken cancellationToken)
@@ -41,6 +43,12 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
             if (await _registerRepository.IsUsernameTakenAsync(command.Username))
             {
                 throw new InvalidOperationException("Username is already taken");
+            }
+
+            var (passwordValid, passwordMessage) = await _passwordPolicyService.ValidateAsync(command.Password, cancellationToken);
+            if (!passwordValid)
+            {
+                throw new InvalidOperationException(passwordMessage);
             }
 
             var salt = BCrypt.Net.BCrypt.GenerateSalt();

@@ -45,8 +45,13 @@ public class LoginCommandHandlerTests
             .ReturnsAsync(new AuthenticationSettings
             {
                 AllowEmailLogin = true,
-                AllowUsernameLogin = true
+                AllowUsernameLogin = true,
+                MaxFailedLoginAttempts = 5,
+                LockoutDurationMinutes = 15
             });
+        _mockAuthRepository
+            .Setup(x => x.CountRecentFailedLoginsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         _handler = new LoginCommandHandler(
             _mockAuthRepository.Object,
@@ -191,6 +196,38 @@ public class LoginCommandHandlerTests
         {
             await _handler.Handle(command, CancellationToken.None);
         });
+    }
+
+    [Fact(DisplayName = "When recent failed login attempts exceed the limit, login is rejected before password verification.")]
+    public async Task Handle_AccountLocked_ShouldThrowBeforePasswordVerify()
+    {
+        // Arrange
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "test@example.com",
+            Password = "password123"
+        };
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@example.com",
+            Username = "testuser",
+            PasswordHash = "hashedpassword"
+        };
+
+        _mockAuthRepository.Setup(x => x.GetUserByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
+        _mockAuthRepository
+            .Setup(x => x.CountRecentFailedLoginsAsync(user.Id, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(5);
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<UnauthorizedAccessException>(async () =>
+        {
+            await _handler.Handle(command, CancellationToken.None);
+        });
+        ex.Message.ShouldContain("locked");
+        _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact(DisplayName = "When handling a login for a user that is not found, the login command handler throws an UnauthorizedAccessException.")]

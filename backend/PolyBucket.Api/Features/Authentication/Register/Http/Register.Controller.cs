@@ -51,6 +51,11 @@ namespace PolyBucket.Api.Features.Authentication.Register.Http
                 _logger.LogWarning(ex, "Registration failed - duplicate data for {Email}", command.Email);
                 return Conflict(new { message = ex.Message });
             }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Registration validation failed for {Email}", command.Email);
+                return BadRequest(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during registration for {Email}", command.Email);

@@ -9,13 +9,15 @@ public sealed record NotificationRecipient(
     bool EmailNotifications,
     bool NotifyOnLikes,
     bool NotifyOnComments,
-    bool NotifyOnFollows)
+    bool NotifyOnFollows,
+    bool NotifyOnMentions)
 {
     public bool Allows(NotificationType type) => type switch
     {
         NotificationType.ModelLiked or NotificationType.CommentLiked => NotifyOnLikes,
         NotificationType.CommentAdded or NotificationType.CommentReplied => NotifyOnComments,
         NotificationType.UserFollowed => NotifyOnFollows,
+        NotificationType.UserMentioned => NotifyOnMentions,
         _ => true
     };
 }

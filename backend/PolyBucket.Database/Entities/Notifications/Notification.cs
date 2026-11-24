@@ -40,7 +40,8 @@ namespace PolyBucket.Database.Entities.Notifications
         Custom,
         ModelApproved,
         ModelRejected,
-        CommentReplied
+        CommentReplied,
+        UserMentioned
     }
 
     public enum NotificationPriority

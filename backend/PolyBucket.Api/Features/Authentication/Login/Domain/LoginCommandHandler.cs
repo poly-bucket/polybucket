@@ -99,6 +99,17 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
+            if (authSettings.MaxFailedLoginAttempts > 0)
+            {
+                var lockoutSince = DateTime.UtcNow.AddMinutes(-authSettings.LockoutDurationMinutes);
+                var failedCount = await _authRepository.CountRecentFailedLoginsAsync(user.Id, lockoutSince, cancellationToken);
+                if (failedCount >= authSettings.MaxFailedLoginAttempts)
+                {
+                    _logger.LogWarning("Login rejected for locked account {UserId}", user.Id);
+                    throw new UnauthorizedAccessException("Account is temporarily locked. Try again later.");
+                }
+            }
+
             if (!_passwordHasher.VerifyPassword(command.Password, user.PasswordHash))
             {
                 _logger.LogWarning("Invalid password for user: {UserId}", user.Id);

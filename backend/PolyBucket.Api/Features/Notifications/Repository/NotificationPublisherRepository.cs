@@ -20,7 +20,8 @@ public class NotificationPublisherRepository(PolyBucketDbContext context) : INot
                 u.Settings == null || u.Settings.EmailNotifications,
                 u.Settings == null || u.Settings.NotifyOnLikes,
                 u.Settings == null || u.Settings.NotifyOnComments,
-                u.Settings == null || u.Settings.NotifyOnFollows))
+                u.Settings == null || u.Settings.NotifyOnFollows,
+                u.Settings == null || u.Settings.NotifyOnMentions))
             .FirstOrDefaultAsync(cancellationToken);
 
     public Task<string?> GetUsernameAsync(Guid userId, CancellationToken cancellationToken) =>
