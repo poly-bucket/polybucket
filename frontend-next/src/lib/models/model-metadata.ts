@@ -121,7 +121,7 @@ export function createModelMetadataSchema(rules: ModelMetadataRules) {
         );
 
   const licenseSchema = rules.requireLicenseSelection
-    ? z.nativeEnum(LicenseTypes, { required_error: "License is required" })
+    ? z.nativeEnum(LicenseTypes, { error: "License is required" })
     : z.nativeEnum(LicenseTypes);
 
   const modelMetadataFieldsSchema = z.object({
