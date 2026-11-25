@@ -28,6 +28,8 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
         private readonly Mock<IModelModerationEnqueueService> _mockModerationEnqueueService;
         private readonly Mock<IModelPreviewQueue> _mockPreviewQueue;
         private readonly Mock<IModelUploadValidator> _mockUploadValidator;
+        private readonly Mock<IModelMetadataValidator> _mockMetadataValidator;
+        private readonly Mock<IModelMetadataPolicy> _mockMetadataPolicy;
         private readonly Mock<ISiteModelUploadPolicy> _mockUploadPolicy;
         private readonly Mock<IAnonymousUploadAuthorProvider> _mockAnonymousAuthor;
         private readonly Mock<ILogger<CreateModelService>> _mockLogger;
@@ -46,6 +48,21 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
             _mockUploadValidator
                 .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string?)null);
+            _mockMetadataValidator = new Mock<IModelMetadataValidator>();
+            _mockMetadataPolicy = new Mock<IModelMetadataPolicy>();
+            _mockMetadataPolicy
+                .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(ModelMetadataPolicySnapshot.FailClosed with { RequireModelDescription = false, RequireLicenseSelection = false, RequireThumbnail = false });
+            _mockMetadataValidator
+                .Setup(v => v.ValidateCreateMetadata(
+                    It.IsAny<ModelMetadataPolicySnapshot>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<LicenseTypes?>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<IFormFile[]>()))
+                .Returns((string?)null);
             _mockUploadPolicy
                 .Setup(p => p.GetDefaultModelPrivacyAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(PrivacySettings.Public);
@@ -58,6 +75,8 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
                 _mockModerationEnqueueService.Object,
                 _mockPreviewQueue.Object,
                 _mockUploadValidator.Object,
+                _mockMetadataValidator.Object,
+                _mockMetadataPolicy.Object,
                 _mockUploadPolicy.Object,
                 _mockAnonymousAuthor.Object,
                 _mockLogger.Object);

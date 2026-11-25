@@ -6,6 +6,8 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -23,7 +25,20 @@ public class AddCategoryToModelServiceTests
         _mockRepository = new Mock<IAddCategoryToModelRepository>();
         _mockPermissionService = new Mock<IPermissionService>();
         _mockLogger = new Mock<ILogger<AddCategoryToModelService>>();
-        _service = new AddCategoryToModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
+        var mockMetadataValidator = new Mock<IModelMetadataValidator>();
+        var mockMetadataPolicy = new Mock<IModelMetadataPolicy>();
+        mockMetadataValidator
+            .Setup(v => v.ValidateAddCategory(It.IsAny<ModelMetadataPolicySnapshot>(), It.IsAny<int>()))
+            .Returns((string?)null);
+        mockMetadataPolicy
+            .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ModelMetadataPolicySnapshot.FailClosed with { MaxCategoriesPerModel = 100 });
+        _service = new AddCategoryToModelService(
+            _mockRepository.Object,
+            _mockPermissionService.Object,
+            mockMetadataValidator.Object,
+            mockMetadataPolicy.Object,
+            _mockLogger.Object);
     }
 
     [Fact(DisplayName = "When adding a category as the owner, the add category service links the category.")]

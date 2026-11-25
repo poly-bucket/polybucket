@@ -5,7 +5,9 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
 using PolyBucket.Api.Features.Models.UpdateModel.Repository;
 using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
 using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Entities.Models.Enums;
 using System;
@@ -20,17 +22,23 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
         private readonly IUpdateModelRepository _repository;
         private readonly IPermissionService _permissionService;
         private readonly IModelModerationEnqueueService _moderationEnqueueService;
+        private readonly IModelMetadataValidator _metadataValidator;
+        private readonly IModelMetadataPolicy _metadataPolicy;
         private readonly ILogger<UpdateModelService> _logger;
 
         public UpdateModelService(
             IUpdateModelRepository repository,
             IPermissionService permissionService,
             IModelModerationEnqueueService moderationEnqueueService,
+            IModelMetadataValidator metadataValidator,
+            IModelMetadataPolicy metadataPolicy,
             ILogger<UpdateModelService> logger)
         {
             _repository = repository;
             _permissionService = permissionService;
             _moderationEnqueueService = moderationEnqueueService;
+            _metadataValidator = metadataValidator;
+            _metadataPolicy = metadataPolicy;
             _logger = logger;
         }
 
@@ -63,6 +71,47 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
             if (request.Name != null && string.IsNullOrWhiteSpace(request.Name))
             {
                 throw new ValidationException("Model name cannot be empty");
+            }
+
+            var metadataPolicy = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
+
+            if (request.Description != null)
+            {
+                var descriptionError = _metadataValidator.ValidateUpdateDescription(metadataPolicy, request.Description);
+                if (descriptionError != null)
+                {
+                    throw new ValidationException(descriptionError);
+                }
+            }
+
+            if (request.License.HasValue)
+            {
+                var licenseError = _metadataValidator.ValidateUpdateLicense(
+                    metadataPolicy,
+                    request.License.Value.ToString(),
+                    request.License);
+                if (licenseError != null)
+                {
+                    throw new ValidationException(licenseError);
+                }
+            }
+
+            if (request.NSFW.HasValue)
+            {
+                var nsfwError = _metadataValidator.ValidateUpdateNsfw(metadataPolicy, request.NSFW.Value);
+                if (nsfwError != null)
+                {
+                    throw new ValidationException(nsfwError);
+                }
+            }
+
+            if (request.AIGenerated.HasValue)
+            {
+                var aiError = _metadataValidator.ValidateUpdateAiGenerated(metadataPolicy, request.AIGenerated.Value);
+                if (aiError != null)
+                {
+                    throw new ValidationException(aiError);
+                }
             }
 
             // Update model properties

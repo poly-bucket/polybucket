@@ -16,27 +16,140 @@ export const MODEL_CATEGORIES = [
 
 export type ModelCategoryName = (typeof MODEL_CATEGORIES)[number];
 
-const modelMetadataFieldsSchema = z.object({
-  name: z.string().min(1, "Name is required").max(255),
-  description: z.string().max(2000).optional().or(z.literal("")),
-  privacy: z.nativeEnum(PrivacySettings),
-  license: z.nativeEnum(LicenseTypes),
-  aiGenerated: z.boolean(),
-  wip: z.boolean(),
-  nsfw: z.boolean(),
-  isRemix: z.boolean(),
-  remixUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
-});
+export type ModelMetadataRules = {
+  requireModelDescription: boolean;
+  minDescriptionLength: number;
+  maxDescriptionLength: number;
+  requireLicenseSelection: boolean;
+  allowCustomLicenses: boolean;
+  allowNsfwContent: boolean;
+  allowAiGeneratedContent: boolean;
+  requireThumbnail: boolean;
+  maxTagsPerModel: number;
+  requireModelTags: boolean;
+  maxCategoriesPerModel: number;
+  requireCategorySelection: boolean;
+};
 
-export const modelMetadataSchema = modelMetadataFieldsSchema.refine(
-  (data) => !data.isRemix || (data.remixUrl && data.remixUrl.length > 0),
-  {
-    message: "Remix URL is required when marking as remix",
-    path: ["remixUrl"],
+export const defaultModelMetadataRules: ModelMetadataRules = {
+  requireModelDescription: true,
+  minDescriptionLength: 10,
+  maxDescriptionLength: 2000,
+  requireLicenseSelection: true,
+  allowCustomLicenses: false,
+  allowNsfwContent: false,
+  allowAiGeneratedContent: true,
+  requireThumbnail: false,
+  maxTagsPerModel: 10,
+  requireModelTags: false,
+  maxCategoriesPerModel: 3,
+  requireCategorySelection: false,
+};
+
+export function parseModelMetadataRules(
+  raw: Partial<ModelMetadataRules> | null | undefined
+): ModelMetadataRules {
+  if (!raw) {
+    return defaultModelMetadataRules;
   }
-);
+  return {
+    requireModelDescription:
+      raw.requireModelDescription ?? defaultModelMetadataRules.requireModelDescription,
+    minDescriptionLength:
+      raw.minDescriptionLength ?? defaultModelMetadataRules.minDescriptionLength,
+    maxDescriptionLength:
+      raw.maxDescriptionLength ?? defaultModelMetadataRules.maxDescriptionLength,
+    requireLicenseSelection:
+      raw.requireLicenseSelection ?? defaultModelMetadataRules.requireLicenseSelection,
+    allowCustomLicenses:
+      raw.allowCustomLicenses ?? defaultModelMetadataRules.allowCustomLicenses,
+    allowNsfwContent: raw.allowNsfwContent ?? defaultModelMetadataRules.allowNsfwContent,
+    allowAiGeneratedContent:
+      raw.allowAiGeneratedContent ?? defaultModelMetadataRules.allowAiGeneratedContent,
+    requireThumbnail: raw.requireThumbnail ?? defaultModelMetadataRules.requireThumbnail,
+    maxTagsPerModel: raw.maxTagsPerModel ?? defaultModelMetadataRules.maxTagsPerModel,
+    requireModelTags: raw.requireModelTags ?? defaultModelMetadataRules.requireModelTags,
+    maxCategoriesPerModel:
+      raw.maxCategoriesPerModel ?? defaultModelMetadataRules.maxCategoriesPerModel,
+    requireCategorySelection:
+      raw.requireCategorySelection ?? defaultModelMetadataRules.requireCategorySelection,
+  };
+}
 
-export type ModelMetadataFormValues = z.infer<typeof modelMetadataFieldsSchema>;
+export function createModelMetadataSchema(rules: ModelMetadataRules) {
+  const descriptionBase = z.string().max(
+    rules.maxDescriptionLength > 0 ? rules.maxDescriptionLength : 2000,
+    `Description cannot exceed ${rules.maxDescriptionLength} characters`
+  );
+
+  const descriptionSchema = rules.requireModelDescription
+    ? descriptionBase
+        .min(1, "Description is required")
+        .refine(
+          (val) =>
+            rules.minDescriptionLength <= 0 ||
+            val.trim().length >= rules.minDescriptionLength,
+          {
+            message: `Description must be at least ${rules.minDescriptionLength} characters`,
+          }
+        )
+    : descriptionBase
+        .optional()
+        .or(z.literal(""))
+        .refine(
+          (val) => {
+            const trimmed = (val ?? "").trim();
+            if (trimmed.length === 0) {
+              return true;
+            }
+            return (
+              rules.minDescriptionLength <= 0 ||
+              trimmed.length >= rules.minDescriptionLength
+            );
+          },
+          {
+            message: `Description must be at least ${rules.minDescriptionLength} characters`,
+          }
+        );
+
+  const licenseSchema = rules.requireLicenseSelection
+    ? z.nativeEnum(LicenseTypes, { required_error: "License is required" })
+    : z.nativeEnum(LicenseTypes);
+
+  const modelMetadataFieldsSchema = z.object({
+    name: z.string().min(1, "Name is required").max(255),
+    description: descriptionSchema,
+    privacy: z.nativeEnum(PrivacySettings),
+    license: licenseSchema,
+    aiGenerated: z
+      .boolean()
+      .refine((v) => !v || rules.allowAiGeneratedContent, {
+        message: "AI-generated content is not allowed on this site",
+      }),
+    wip: z.boolean(),
+    nsfw: z
+      .boolean()
+      .refine((v) => !v || rules.allowNsfwContent, {
+        message: "NSFW content is not allowed on this site",
+      }),
+    isRemix: z.boolean(),
+    remixUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
+  });
+
+  return modelMetadataFieldsSchema.refine(
+    (data) => !data.isRemix || (data.remixUrl && data.remixUrl.length > 0),
+    {
+      message: "Remix URL is required when marking as remix",
+      path: ["remixUrl"],
+    }
+  );
+}
+
+export const modelMetadataSchema = createModelMetadataSchema(defaultModelMetadataRules);
+
+export type ModelMetadataFormValues = z.infer<
+  ReturnType<typeof createModelMetadataSchema>
+>;
 
 export function parseLicenseDefault(license: string): LicenseTypes {
   const values = Object.values(LicenseTypes) as string[];
@@ -58,4 +171,25 @@ export function titleFromFileName(fileName: string): string {
   const lastDot = fileName.lastIndexOf(".");
   const base = lastDot > 0 ? fileName.slice(0, lastDot) : fileName;
   return base.replace(/[-_]+/g, " ").trim();
+}
+
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".bmp",
+]);
+
+export function fileNameHasImageExtension(fileName: string): boolean {
+  const lastDot = fileName.lastIndexOf(".");
+  if (lastDot < 0) {
+    return false;
+  }
+  return IMAGE_EXTENSIONS.has(fileName.slice(lastDot).toLowerCase());
+}
+
+export function uploadBundleHasImage(fileNames: string[]): boolean {
+  return fileNames.some(fileNameHasImageExtension);
 }

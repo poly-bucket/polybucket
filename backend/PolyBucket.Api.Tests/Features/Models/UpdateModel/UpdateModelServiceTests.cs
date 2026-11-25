@@ -12,6 +12,8 @@ using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Http;
 using PolyBucket.Api.Features.Models.UpdateModel.Repository;
 using PolyBucket.Api.Features.ModelModeration.Domain;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -22,6 +24,8 @@ namespace PolyBucket.Api.Tests.Features.Models.UpdateModel
         private readonly Mock<IUpdateModelRepository> _mockRepository;
         private readonly Mock<IPermissionService> _mockPermissionService;
         private readonly Mock<IModelModerationEnqueueService> _mockModerationEnqueueService;
+        private readonly Mock<IModelMetadataValidator> _mockMetadataValidator;
+        private readonly Mock<IModelMetadataPolicy> _mockMetadataPolicy;
         private readonly Mock<ILogger<UpdateModelService>> _mockLogger;
         private readonly UpdateModelService _service;
 
@@ -30,11 +34,23 @@ namespace PolyBucket.Api.Tests.Features.Models.UpdateModel
             _mockRepository = new Mock<IUpdateModelRepository>();
             _mockPermissionService = new Mock<IPermissionService>();
             _mockModerationEnqueueService = new Mock<IModelModerationEnqueueService>();
+            _mockMetadataValidator = new Mock<IModelMetadataValidator>();
+            _mockMetadataPolicy = new Mock<IModelMetadataPolicy>();
             _mockLogger = new Mock<ILogger<UpdateModelService>>();
+            _mockMetadataPolicy
+                .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(ModelMetadataPolicySnapshot.FailClosed with
+                {
+                    RequireModelDescription = false,
+                    MaxDescriptionLength = 10000,
+                    RequireLicenseSelection = false
+                });
             _service = new UpdateModelService(
                 _mockRepository.Object,
                 _mockPermissionService.Object,
                 _mockModerationEnqueueService.Object,
+                _mockMetadataValidator.Object,
+                _mockMetadataPolicy.Object,
                 _mockLogger.Object);
         }
 

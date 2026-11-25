@@ -11,6 +11,7 @@ using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Features.Models.UploadValidation.Domain;
 using PolyBucket.Api.Features.Models.Upload;
 using PolyBucket.Api.Features.SystemSettings.Services;
+using ModelLicenseParser = PolyBucket.Api.Features.Models.Common.ModelLicenseParser;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Entities.Models.Enums;
 using System;
@@ -30,6 +31,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         private readonly IModelModerationEnqueueService _moderationEnqueueService;
         private readonly IModelPreviewQueue _previewQueue;
         private readonly IModelUploadValidator _uploadValidator;
+        private readonly IModelMetadataValidator _metadataValidator;
+        private readonly IModelMetadataPolicy _metadataPolicy;
         private readonly ISiteModelUploadPolicy _uploadPolicy;
         private readonly IAnonymousUploadAuthorProvider _anonymousUploadAuthorProvider;
         private readonly ILogger<CreateModelService> _logger;
@@ -42,6 +45,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             IModelModerationEnqueueService moderationEnqueueService,
             IModelPreviewQueue previewQueue,
             IModelUploadValidator uploadValidator,
+            IModelMetadataValidator metadataValidator,
+            IModelMetadataPolicy metadataPolicy,
             ISiteModelUploadPolicy uploadPolicy,
             IAnonymousUploadAuthorProvider anonymousUploadAuthorProvider,
             ILogger<CreateModelService> logger)
@@ -51,6 +56,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             _moderationEnqueueService = moderationEnqueueService;
             _previewQueue = previewQueue;
             _uploadValidator = uploadValidator;
+            _metadataValidator = metadataValidator;
+            _metadataPolicy = metadataPolicy;
             _uploadPolicy = uploadPolicy;
             _anonymousUploadAuthorProvider = anonymousUploadAuthorProvider;
             _logger = logger;
@@ -123,7 +130,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                     FileUrl = modelFiles.First().Path, // Store object key
                     ThumbnailUrl = thumbnailObjectKey, // Store object key
                     Privacy = resolvedPrivacy,
-                    License = ParseLicense(request.License),
+                    License = ModelLicenseParser.Parse(request.License),
                     AIGenerated = request.AIGenerated,
                     WIP = request.WorkInProgress,
                     NSFW = request.NSFW,
@@ -185,6 +192,21 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             {
                 throw new ValidationException(validationError);
             }
+
+            var metadataPolicy = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
+            var parsedLicense = ModelLicenseParser.Parse(request.License);
+            var metadataError = _metadataValidator.ValidateCreateMetadata(
+                metadataPolicy,
+                request.Description,
+                request.License,
+                parsedLicense,
+                request.NSFW,
+                request.AIGenerated,
+                request.Files);
+            if (metadataError != null)
+            {
+                throw new ValidationException(metadataError);
+            }
         }
 
         private async Task<Guid> ResolveAuthorIdAsync(ClaimsPrincipal user, CancellationToken cancellationToken)
@@ -209,18 +231,6 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             return SupportedImageFormats.Contains(extension);
         }
 
-        private static LicenseTypes? ParseLicense(string? license)
-        {
-            return license?.Trim().ToLowerInvariant() switch
-            {
-                "mit" => LicenseTypes.MIT,
-                "gpl" => LicenseTypes.GPLv3,
-                "creative commons" or "ccby4" or "cc-by-4.0" => LicenseTypes.CCBy4,
-                "commercial" => LicenseTypes.MIT,
-                "custom" => LicenseTypes.MIT,
-                _ => null
-            };
-        }
     }
 
     public class ValidationException : Exception

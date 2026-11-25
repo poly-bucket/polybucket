@@ -7,6 +7,8 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.RemoveCategoryFromModel.Domain;
 using Category = PolyBucket.Database.Entities.Models.Category;
 using PolyBucket.Api.Features.Models.RemoveCategoryFromModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -24,7 +26,20 @@ public class RemoveCategoryFromModelServiceTests
         _mockRepository = new Mock<IRemoveCategoryFromModelRepository>();
         _mockPermissionService = new Mock<IPermissionService>();
         _mockLogger = new Mock<ILogger<RemoveCategoryFromModelService>>();
-        _service = new RemoveCategoryFromModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
+        var mockMetadataValidator = new Mock<IModelMetadataValidator>();
+        mockMetadataValidator
+            .Setup(v => v.ValidateRemoveCategory(It.IsAny<ModelMetadataPolicySnapshot>(), It.IsAny<int>()))
+            .Returns((string?)null);
+        var mockMetadataPolicy = new Mock<IModelMetadataPolicy>();
+        mockMetadataPolicy
+            .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ModelMetadataPolicySnapshot.FailClosed);
+        _service = new RemoveCategoryFromModelService(
+            _mockRepository.Object,
+            _mockPermissionService.Object,
+            mockMetadataValidator.Object,
+            mockMetadataPolicy.Object,
+            _mockLogger.Object);
     }
 
     [Fact(DisplayName = "When removing a linked category as the owner, the remove category service unlinks the category.")]

@@ -4,10 +4,12 @@ namespace PolyBucket.Api.Features.Authentication.GetSiteAccess.Domain;
 
 public class GetSiteAccessService(
     ISitePrivacyState sitePrivacyState,
-    ISiteModelUploadPolicy uploadPolicy) : IGetSiteAccessService
+    ISiteModelUploadPolicy uploadPolicy,
+    IModelMetadataPolicy metadataPolicy) : IGetSiteAccessService
 {
     private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
     private readonly ISiteModelUploadPolicy _uploadPolicy = uploadPolicy;
+    private readonly IModelMetadataPolicy _metadataPolicy = metadataPolicy;
 
     public async Task<GetSiteAccessResponse> GetSiteAccessAsync(CancellationToken cancellationToken)
     {
@@ -15,13 +17,29 @@ public class GetSiteAccessService(
         var allowAnonymousModelUpload = await _uploadPolicy.IsAnonymousModelUploadAllowedAsync(cancellationToken);
         var requireLoginForUpload = await _uploadPolicy.IsLoginRequiredForUnauthenticatedUploadAsync(cancellationToken);
         var defaultPrivacy = await _uploadPolicy.GetDefaultModelPrivacyAsync(cancellationToken);
+        var metadata = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
 
         return new GetSiteAccessResponse
         {
             AllowPublicBrowsing = allowPublicBrowsing,
             RequireLoginForUpload = requireLoginForUpload,
             AllowAnonymousModelUpload = allowAnonymousModelUpload,
-            DefaultModelPrivacy = defaultPrivacy.ToString()
+            DefaultModelPrivacy = defaultPrivacy.ToString(),
+            ModelMetadataRules = new ModelMetadataRulesDto
+            {
+                RequireModelDescription = metadata.RequireModelDescription,
+                MinDescriptionLength = metadata.MinDescriptionLength,
+                MaxDescriptionLength = metadata.MaxDescriptionLength,
+                RequireLicenseSelection = metadata.RequireLicenseSelection,
+                AllowCustomLicenses = metadata.AllowCustomLicenses,
+                AllowNsfwContent = metadata.AllowNsfwContent,
+                AllowAiGeneratedContent = metadata.AllowAiGeneratedContent,
+                RequireThumbnail = metadata.RequireThumbnail,
+                MaxTagsPerModel = metadata.MaxTagsPerModel,
+                RequireModelTags = metadata.RequireModelTags,
+                MaxCategoriesPerModel = metadata.MaxCategoriesPerModel,
+                RequireCategorySelection = metadata.RequireCategorySelection
+            }
         };
     }
 }

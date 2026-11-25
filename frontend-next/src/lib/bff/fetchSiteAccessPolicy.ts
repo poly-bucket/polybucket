@@ -1,3 +1,8 @@
+import {
+  defaultModelMetadataRules,
+  parseModelMetadataRules,
+  type ModelMetadataRules,
+} from "@/lib/models/model-metadata";
 import { getPolybucketApiUrl } from "./env";
 
 export type SiteAccessPolicy = {
@@ -5,6 +10,7 @@ export type SiteAccessPolicy = {
   requireLoginForUpload: boolean;
   allowAnonymousModelUpload: boolean;
   defaultModelPrivacy: string;
+  modelMetadataRules: ModelMetadataRules;
 };
 
 async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> {
@@ -18,12 +24,14 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       requireLoginForUpload?: boolean;
       allowAnonymousModelUpload?: boolean;
       defaultModelPrivacy?: string;
+      modelMetadataRules?: Partial<ModelMetadataRules>;
     };
     return {
       allowPublicBrowsing: data.allowPublicBrowsing === true,
       requireLoginForUpload: data.requireLoginForUpload !== false,
       allowAnonymousModelUpload: data.allowAnonymousModelUpload === true,
       defaultModelPrivacy: data.defaultModelPrivacy ?? "Public",
+      modelMetadataRules: parseModelMetadataRules(data.modelMetadataRules),
     };
   } catch {
     return null;
@@ -48,5 +56,6 @@ export async function fetchSiteAccessPolicy(origin: string): Promise<SiteAccessP
     requireLoginForUpload: true,
     allowAnonymousModelUpload: false,
     defaultModelPrivacy: "Public",
+    modelMetadataRules: defaultModelMetadataRules,
   };
 }

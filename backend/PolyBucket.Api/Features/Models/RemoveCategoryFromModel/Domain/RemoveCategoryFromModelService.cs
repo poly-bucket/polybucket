@@ -3,6 +3,8 @@ using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.RemoveCategoryFromModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Models.RemoveCategoryFromModel.Domain;
@@ -11,15 +13,21 @@ public class RemoveCategoryFromModelService : IRemoveCategoryFromModelService
 {
     private readonly IRemoveCategoryFromModelRepository _repository;
     private readonly IPermissionService _permissionService;
+    private readonly IModelMetadataValidator _metadataValidator;
+    private readonly IModelMetadataPolicy _metadataPolicy;
     private readonly ILogger<RemoveCategoryFromModelService> _logger;
 
     public RemoveCategoryFromModelService(
         IRemoveCategoryFromModelRepository repository,
         IPermissionService permissionService,
+        IModelMetadataValidator metadataValidator,
+        IModelMetadataPolicy metadataPolicy,
         ILogger<RemoveCategoryFromModelService> logger)
     {
         _repository = repository;
         _permissionService = permissionService;
+        _metadataValidator = metadataValidator;
+        _metadataPolicy = metadataPolicy;
         _logger = logger;
     }
 
@@ -52,6 +60,13 @@ public class RemoveCategoryFromModelService : IRemoveCategoryFromModelService
         if (category == null)
         {
             throw new ModelNotFoundException($"Category {categoryId} is not linked to model {modelId}");
+        }
+
+        var metadataPolicy = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
+        var removeError = _metadataValidator.ValidateRemoveCategory(metadataPolicy, model.Categories.Count);
+        if (removeError != null)
+        {
+            throw new ValidationException(removeError);
         }
 
         model.Categories.Remove(category);

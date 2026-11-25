@@ -193,6 +193,63 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    [Fact(DisplayName = "When NSFW is disallowed in model settings, creating an NSFW model returns BadRequest.")]
+    public async Task CreateModel_WhenNsfwDisallowed_ReturnsBadRequest()
+    {
+        // Arrange
+        await ResetStateAsync();
+        await SetModelMetadataPolicyAsync(allowNsfw: false);
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        await DbContext.SaveChangesAsync();
+
+        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent("Test Model"), "Name");
+        content.Add(new StringContent("Enough description here"), "Description");
+        content.Add(new StringContent("true"), "NSFW");
+
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("solid test endsolid"));
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(fileContent, "Files", "test.stl");
+
+        // Act
+        var response = await client.PostAsync("/api/models", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact(DisplayName = "When thumbnail is required, creating a model without an image file returns BadRequest.")]
+    public async Task CreateModel_WhenThumbnailRequiredWithoutImage_ReturnsBadRequest()
+    {
+        // Arrange
+        await ResetStateAsync();
+        await SetModelMetadataPolicyAsync(requireThumbnail: true);
+        var client = Factory.CreateClient();
+        var user = await UserFactory.CreateTestUser();
+        await DbContext.SaveChangesAsync();
+
+        var token = await GetAuthTokenAsync(client, user.Email, "TestPassword123!");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent("Test Model"), "Name");
+        content.Add(new StringContent("Enough description here"), "Description");
+
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("solid test endsolid"));
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(fileContent, "Files", "test.stl");
+
+        // Act
+        var response = await client.PostAsync("/api/models", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     [Fact(DisplayName = "When creating a model with an invalid file type, the create model endpoint returns BadRequest.")]
     public async Task CreateModel_WithInvalidFileType_ReturnsBadRequest()
     {
@@ -217,6 +274,40 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private async Task SetModelMetadataPolicyAsync(
+        bool? allowNsfw = null,
+        bool? requireThumbnail = null)
+    {
+        var modelSettings = await DbContext.ModelSettings.FirstOrDefaultAsync();
+        if (modelSettings == null)
+        {
+            modelSettings = new ModelSettings
+            {
+                Id = Guid.NewGuid(),
+                RequireModelDescription = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            DbContext.ModelSettings.Add(modelSettings);
+        }
+
+        if (allowNsfw.HasValue)
+        {
+            modelSettings.AllowNSFWContent = allowNsfw.Value;
+        }
+
+        if (requireThumbnail.HasValue)
+        {
+            modelSettings.RequireThumbnail = requireThumbnail.Value;
+        }
+
+        modelSettings.UpdatedAt = DateTime.UtcNow;
+        await DbContext.SaveChangesAsync();
+
+        using var scope = Factory.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<PolyBucket.Api.Features.SystemSettings.Services.IModelMetadataPolicy>().Invalidate();
     }
 
     private async Task SetAnonymousUploadAllowedAsync(bool allowed)
@@ -261,6 +352,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
 
         using var scope = Factory.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<PolyBucket.Api.Features.SystemSettings.Services.ISiteModelUploadPolicy>().Invalidate();
+        scope.ServiceProvider.GetRequiredService<PolyBucket.Api.Features.SystemSettings.Services.IModelMetadataPolicy>().Invalidate();
     }
 
     private async Task SetMaxFilesPerUploadAsync(int maxFiles)

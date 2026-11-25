@@ -6,6 +6,8 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.AddTagToModel.Domain;
 using PolyBucket.Api.Features.Models.AddTagToModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -23,7 +25,20 @@ public class AddTagToModelServiceTests
         _mockRepository = new Mock<IAddTagToModelRepository>();
         _mockPermissionService = new Mock<IPermissionService>();
         _mockLogger = new Mock<ILogger<AddTagToModelService>>();
-        _service = new AddTagToModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
+        var mockMetadataValidator = new Mock<IModelMetadataValidator>();
+        var mockMetadataPolicy = new Mock<IModelMetadataPolicy>();
+        mockMetadataValidator
+            .Setup(v => v.ValidateAddTag(It.IsAny<ModelMetadataPolicySnapshot>(), It.IsAny<int>(), It.IsAny<bool>()))
+            .Returns((string?)null);
+        mockMetadataPolicy
+            .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ModelMetadataPolicySnapshot.FailClosed with { MaxTagsPerModel = 100 });
+        _service = new AddTagToModelService(
+            _mockRepository.Object,
+            _mockPermissionService.Object,
+            mockMetadataValidator.Object,
+            mockMetadataPolicy.Object,
+            _mockLogger.Object);
     }
 
     [Fact(DisplayName = "When adding a tag as the owner, the add tag service links a new tag.")]

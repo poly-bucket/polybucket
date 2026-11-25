@@ -3,6 +3,8 @@ using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.AddTagToModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Models.AddTagToModel.Domain;
@@ -11,15 +13,21 @@ public class AddTagToModelService : IAddTagToModelService
 {
     private readonly IAddTagToModelRepository _repository;
     private readonly IPermissionService _permissionService;
+    private readonly IModelMetadataValidator _metadataValidator;
+    private readonly IModelMetadataPolicy _metadataPolicy;
     private readonly ILogger<AddTagToModelService> _logger;
 
     public AddTagToModelService(
         IAddTagToModelRepository repository,
         IPermissionService permissionService,
+        IModelMetadataValidator metadataValidator,
+        IModelMetadataPolicy metadataPolicy,
         ILogger<AddTagToModelService> logger)
     {
         _repository = repository;
         _permissionService = permissionService;
+        _metadataValidator = metadataValidator;
+        _metadataPolicy = metadataPolicy;
         _logger = logger;
     }
 
@@ -57,6 +65,14 @@ public class AddTagToModelService : IAddTagToModelService
         if (model.Tags.Any(t => t.DeletedAt == null && string.Equals(t.Name, trimmed, StringComparison.OrdinalIgnoreCase)))
         {
             return;
+        }
+
+        var activeTagCount = model.Tags.Count(t => t.DeletedAt == null);
+        var metadataPolicy = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
+        var tagError = _metadataValidator.ValidateAddTag(metadataPolicy, activeTagCount, isNewLink: true);
+        if (tagError != null)
+        {
+            throw new ValidationException(tagError);
         }
 
         var tag = await _repository.GetActiveTagByNameAsync(trimmed, cancellationToken);

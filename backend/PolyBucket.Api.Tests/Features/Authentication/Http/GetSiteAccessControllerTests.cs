@@ -26,7 +26,8 @@ public class GetSiteAccessControllerTests : IDisposable
         var cache = new MemoryCache(new MemoryCacheOptions());
         var privacy = new SitePrivacyState(_dbContext, cache, NullLogger<SitePrivacyState>.Instance);
         var uploadPolicy = new SiteModelUploadPolicy(_dbContext, cache, NullLogger<SiteModelUploadPolicy>.Instance);
-        _controller = new GetSiteAccessController(new GetSiteAccessService(privacy, uploadPolicy));
+        var metadataPolicy = new ModelMetadataPolicy(_dbContext, cache, NullLogger<ModelMetadataPolicy>.Instance);
+        _controller = new GetSiteAccessController(new GetSiteAccessService(privacy, uploadPolicy, metadataPolicy));
     }
 
     [Fact(DisplayName = "When no site setup exists, site access reports public browsing is allowed.")]
@@ -84,6 +85,33 @@ public class GetSiteAccessControllerTests : IDisposable
         var ok = result.ShouldBeOfType<OkObjectResult>();
         var allowed = ok.Value!.GetType().GetProperty("allowPublicBrowsing")!.GetValue(ok.Value);
         allowed.ShouldBe(true);
+    }
+
+    [Fact(DisplayName = "When model settings exist, site access includes model metadata rules.")]
+    public async Task GetSiteAccess_IncludesModelMetadataRules()
+    {
+        // Arrange
+        _dbContext.ModelSettings.Add(new ModelSettings
+        {
+            Id = Guid.NewGuid(),
+            AllowNSFWContent = false,
+            MinDescriptionLength = 15,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetSiteAccess(CancellationToken.None);
+
+        // Assert
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var rules = ok.Value!.GetType().GetProperty("modelMetadataRules")!.GetValue(ok.Value);
+        rules.ShouldNotBeNull();
+        var allowNsfw = rules!.GetType().GetProperty("allowNsfwContent")!.GetValue(rules);
+        allowNsfw.ShouldBe(false);
+        var minDesc = rules.GetType().GetProperty("minDescriptionLength")!.GetValue(rules);
+        minDesc.ShouldBe(15);
     }
 
     public void Dispose()

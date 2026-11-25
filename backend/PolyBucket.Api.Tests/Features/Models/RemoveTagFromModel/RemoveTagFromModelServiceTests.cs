@@ -7,6 +7,8 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.RemoveTagFromModel.Domain;
 using Tag = PolyBucket.Database.Entities.Models.Tag;
 using PolyBucket.Api.Features.Models.RemoveTagFromModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -24,7 +26,20 @@ public class RemoveTagFromModelServiceTests
         _mockRepository = new Mock<IRemoveTagFromModelRepository>();
         _mockPermissionService = new Mock<IPermissionService>();
         _mockLogger = new Mock<ILogger<RemoveTagFromModelService>>();
-        _service = new RemoveTagFromModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
+        var mockMetadataValidator = new Mock<IModelMetadataValidator>();
+        mockMetadataValidator
+            .Setup(v => v.ValidateRemoveTag(It.IsAny<ModelMetadataPolicySnapshot>(), It.IsAny<int>()))
+            .Returns((string?)null);
+        var mockMetadataPolicy = new Mock<IModelMetadataPolicy>();
+        mockMetadataPolicy
+            .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ModelMetadataPolicySnapshot.FailClosed);
+        _service = new RemoveTagFromModelService(
+            _mockRepository.Object,
+            _mockPermissionService.Object,
+            mockMetadataValidator.Object,
+            mockMetadataPolicy.Object,
+            _mockLogger.Object);
     }
 
     [Fact(DisplayName = "When removing a linked tag as the owner, the remove tag service unlinks the tag.")]

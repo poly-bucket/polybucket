@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,10 +42,13 @@ import { UploadDetailsStep } from "./upload/upload-details-step";
 import { UploadReviewStep } from "./upload/upload-review-step";
 import { useUploadWizard } from "./upload/use-upload-wizard";
 import {
-  modelMetadataSchema,
+  createModelMetadataSchema,
+  defaultModelMetadataRules,
   parseLicenseDefault,
   parsePrivacyDefault,
+  uploadBundleHasImage,
   type ModelMetadataFormValues,
+  type ModelMetadataRules,
 } from "@/lib/models/model-metadata";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
@@ -86,12 +89,21 @@ export default function ModelUploadView() {
   const [isUploading, setIsUploading] = useState(false);
   const [isExtractingZip, setIsExtractingZip] = useState(false);
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false);
+  const [metadataRules, setMetadataRules] =
+    useState<ModelMetadataRules>(defaultModelMetadataRules);
+  const metadataSchemaRef = useRef(createModelMetadataSchema(metadataRules));
 
   const metadataForm = useForm<ModelMetadataFormValues>({
-    resolver: zodResolver(modelMetadataSchema),
+    resolver: async (values, context, options) =>
+      zodResolver(metadataSchemaRef.current)(values, context, options),
     defaultValues: buildInitialMetadata(),
     mode: "onChange",
   });
+
+  useEffect(() => {
+    metadataSchemaRef.current = createModelMetadataSchema(metadataRules);
+    void metadataForm.trigger();
+  }, [metadataRules, metadataForm]);
 
   const metadataValues = metadataForm.watch();
 
@@ -206,6 +218,7 @@ export default function ModelUploadView() {
         }
         setMaxFilesPerUpload(uploadConfig.maxFilesPerUpload);
         setSiteMaxFileSizeBytes(uploadConfig.siteMaxFileSizeBytes);
+        setMetadataRules(siteAccess.modelMetadataRules);
         const p = String(siteAccess.defaultModelPrivacy).toLowerCase();
         if (p === "public") metadataForm.setValue("privacy", PrivacySettings.Public);
         else if (p === "private") metadataForm.setValue("privacy", PrivacySettings.Private);
@@ -456,8 +469,19 @@ export default function ModelUploadView() {
     return uploadedFiles.find((fileItem) => fileItem.id === selectedThumbnailFileId)?.name;
   };
 
+  const thumbnailRequirementMet = useMemo(() => {
+    if (!metadataRules.requireThumbnail) {
+      return true;
+    }
+    return uploadBundleHasImage(uploadedFiles.map((f) => f.name));
+  }, [metadataRules.requireThumbnail, uploadedFiles]);
+
   const handleUpload = async () => {
     if (uploadedFiles.length === 0 || !metadataValid) return;
+    if (!thumbnailRequirementMet) {
+      toast.error("At least one image file is required for the model thumbnail");
+      return;
+    }
     const data = metadataForm.getValues();
     setIsUploading(true);
     try {

@@ -3,6 +3,8 @@ using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.AddCategoryToModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Models.AddCategoryToModel.Domain;
@@ -11,15 +13,21 @@ public class AddCategoryToModelService : IAddCategoryToModelService
 {
     private readonly IAddCategoryToModelRepository _repository;
     private readonly IPermissionService _permissionService;
+    private readonly IModelMetadataValidator _metadataValidator;
+    private readonly IModelMetadataPolicy _metadataPolicy;
     private readonly ILogger<AddCategoryToModelService> _logger;
 
     public AddCategoryToModelService(
         IAddCategoryToModelRepository repository,
         IPermissionService permissionService,
+        IModelMetadataValidator metadataValidator,
+        IModelMetadataPolicy metadataPolicy,
         ILogger<AddCategoryToModelService> logger)
     {
         _repository = repository;
         _permissionService = permissionService;
+        _metadataValidator = metadataValidator;
+        _metadataPolicy = metadataPolicy;
         _logger = logger;
     }
 
@@ -51,6 +59,13 @@ public class AddCategoryToModelService : IAddCategoryToModelService
         if (model.Categories.Any(c => c.Id == categoryId))
         {
             return;
+        }
+
+        var metadataPolicy = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
+        var categoryError = _metadataValidator.ValidateAddCategory(metadataPolicy, model.Categories.Count);
+        if (categoryError != null)
+        {
+            throw new ValidationException(categoryError);
         }
 
         var category = await _repository.GetActiveCategoryAsync(categoryId, cancellationToken);

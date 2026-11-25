@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -9,10 +9,13 @@ import {
   PrivacySettings,
   UpdateModelRequest,
 } from "@/lib/api/client";
+import { fetchSiteAccessPolicy } from "@/lib/bff/fetchSiteAccessPolicy";
 import {
   MODEL_CATEGORIES,
-  modelMetadataSchema,
+  createModelMetadataSchema,
+  defaultModelMetadataRules,
   type ModelMetadataFormValues,
+  type ModelMetadataRules,
 } from "@/lib/models/model-metadata";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
@@ -53,6 +56,21 @@ export function ModelEditForm({
     () => model.tags?.map((t) => t.name ?? "").filter(Boolean) ?? []
   );
   const [newTag, setNewTag] = useState("");
+  const [metadataRules, setMetadataRules] =
+    useState<ModelMetadataRules>(defaultModelMetadataRules);
+  const metadataSchemaRef = useRef(createModelMetadataSchema(metadataRules));
+
+  useEffect(() => {
+    const loadRules = async () => {
+      try {
+        const policy = await fetchSiteAccessPolicy(window.location.origin);
+        setMetadataRules(policy.modelMetadataRules);
+      } catch {
+        setMetadataRules(defaultModelMetadataRules);
+      }
+    };
+    void loadRules();
+  }, []);
 
   const {
     register,
@@ -61,8 +79,10 @@ export function ModelEditForm({
     formState: { isDirty, isSubmitting, errors },
     reset,
     watch,
+    trigger,
   } = useForm<EditModelFormData>({
-    resolver: zodResolver(modelMetadataSchema),
+    resolver: async (values, context, options) =>
+      zodResolver(metadataSchemaRef.current)(values, context, options),
     defaultValues: {
       name: model.name ?? "",
       description: model.description ?? "",
@@ -75,6 +95,11 @@ export function ModelEditForm({
       remixUrl: model.remixUrl ?? "",
     },
   });
+
+  useEffect(() => {
+    metadataSchemaRef.current = createModelMetadataSchema(metadataRules);
+    void trigger();
+  }, [metadataRules, trigger]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);

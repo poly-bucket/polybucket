@@ -3,6 +3,8 @@ using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.RemoveTagFromModel.Repository;
+using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.Models.RemoveTagFromModel.Domain;
@@ -11,15 +13,21 @@ public class RemoveTagFromModelService : IRemoveTagFromModelService
 {
     private readonly IRemoveTagFromModelRepository _repository;
     private readonly IPermissionService _permissionService;
+    private readonly IModelMetadataValidator _metadataValidator;
+    private readonly IModelMetadataPolicy _metadataPolicy;
     private readonly ILogger<RemoveTagFromModelService> _logger;
 
     public RemoveTagFromModelService(
         IRemoveTagFromModelRepository repository,
         IPermissionService permissionService,
+        IModelMetadataValidator metadataValidator,
+        IModelMetadataPolicy metadataPolicy,
         ILogger<RemoveTagFromModelService> logger)
     {
         _repository = repository;
         _permissionService = permissionService;
+        _metadataValidator = metadataValidator;
+        _metadataPolicy = metadataPolicy;
         _logger = logger;
     }
 
@@ -52,6 +60,14 @@ public class RemoveTagFromModelService : IRemoveTagFromModelService
         if (tag == null)
         {
             throw new ModelNotFoundException($"Tag {tagId} is not linked to model {modelId}");
+        }
+
+        var activeTagCount = model.Tags.Count(t => t.DeletedAt == null);
+        var metadataPolicy = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
+        var removeError = _metadataValidator.ValidateRemoveTag(metadataPolicy, activeTagCount);
+        if (removeError != null)
+        {
+            throw new ValidationException(removeError);
         }
 
         model.Tags.Remove(tag);
