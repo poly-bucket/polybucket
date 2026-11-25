@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using PolyBucket.Api.Features.Collections.RemoveModelFromCollection.Domain;
 using System;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace PolyBucket.Api.Features.Collections.RemoveModelFromCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
+    [ServiceFilter(typeof(RequireCollectionsWriteAccessFilter))]
     public class RemoveModelFromCollectionController(IMediator mediator) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;

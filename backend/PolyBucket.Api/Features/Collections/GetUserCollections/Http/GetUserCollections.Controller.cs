@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.Collections.GetUserCollections.Domain;
 using System;
@@ -10,6 +11,7 @@ namespace PolyBucket.Api.Features.Collections.GetUserCollections.Http
 {
     [ApiController]
     [Route("api/collections")]
+    [ServiceFilter(typeof(RequireCollectionsReadAccessFilter))]
     public class GetUserCollectionsController(IGetUserCollectionsService getUserCollectionsService) : ControllerBase
     {
         private readonly IGetUserCollectionsService _getUserCollectionsService = getUserCollectionsService;

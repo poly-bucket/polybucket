@@ -11,6 +11,7 @@ namespace PolyBucket.Api.Features.Comments.ModerateAllUserComments.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize(Roles = "Admin,Moderator")]
+[ServiceFilter(typeof(RequireCommentsWriteAccessFilter))]
 public class ModerateAllUserCommentsController(IModerateAllUserCommentsService moderateAllUserCommentsService) : ControllerBase
 {
     /// <summary>

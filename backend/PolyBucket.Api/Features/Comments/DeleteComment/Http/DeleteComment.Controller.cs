@@ -11,6 +11,7 @@ namespace PolyBucket.Api.Features.Comments.DeleteComment.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize]
+[ServiceFilter(typeof(RequireCommentsWriteAccessFilter))]
 public class DeleteCommentController(IDeleteCommentService deleteCommentService) : ControllerBase
 {
     /// <summary>

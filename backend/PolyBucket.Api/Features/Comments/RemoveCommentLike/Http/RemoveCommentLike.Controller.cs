@@ -12,6 +12,7 @@ namespace PolyBucket.Api.Features.Comments.RemoveCommentLike.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize]
+[ServiceFilter(typeof(RequireCommentsWriteAccessFilter))]
 public class RemoveCommentLikeController(IRemoveCommentLikeService removeCommentLikeService) : ControllerBase
 {
     /// <summary>

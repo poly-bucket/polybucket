@@ -5,6 +5,7 @@ using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Database.Entities.Models.Enums;
+using PolyBucket.Database.Entities.SystemSettings;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain
@@ -15,7 +16,8 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
         IHttpContextAccessor httpContextAccessor,
         ISiteModelUploadPolicy siteModelUploadPolicy,
         ISiteModelDownloadPolicy siteModelDownloadPolicy,
-        IModelMetadataPolicy modelMetadataPolicy) : IUpdateModelConfigurationSettingsService
+        IModelMetadataPolicy modelMetadataPolicy,
+        ISiteModelFeaturePolicy siteModelFeaturePolicy) : IUpdateModelConfigurationSettingsService
     {
         private readonly IUpdateModelConfigurationSettingsRepository _repository = repository;
         private readonly ILogger<UpdateModelConfigurationSettingsService> _logger = logger;
@@ -23,6 +25,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
         private readonly ISiteModelUploadPolicy _siteModelUploadPolicy = siteModelUploadPolicy;
         private readonly ISiteModelDownloadPolicy _siteModelDownloadPolicy = siteModelDownloadPolicy;
         private readonly IModelMetadataPolicy _modelMetadataPolicy = modelMetadataPolicy;
+        private readonly ISiteModelFeaturePolicy _siteModelFeaturePolicy = siteModelFeaturePolicy;
 
         public async Task<UpdateModelConfigurationSettingsResponse> UpdateModelConfigurationSettingsAsync(UpdateModelConfigurationSettingsCommand request, CancellationToken cancellationToken = default)
         {
@@ -49,6 +52,24 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
                     };
                 }
 
+                if (!Enum.TryParse<FeatureDisabledMode>(request.CommentsDisabledMode, true, out var commentsDisabledMode))
+                {
+                    return new UpdateModelConfigurationSettingsResponse
+                    {
+                        Success = false,
+                        Message = "Invalid comments disabled mode value"
+                    };
+                }
+
+                if (!Enum.TryParse<FeatureDisabledMode>(request.CollectionsDisabledMode, true, out var collectionsDisabledMode))
+                {
+                    return new UpdateModelConfigurationSettingsResponse
+                    {
+                        Success = false,
+                        Message = "Invalid collections disabled mode value"
+                    };
+                }
+
                 // Update model settings
                 modelSettings.AllowAnonUploads = request.AllowAnonUploads;
                 modelSettings.RequireUploadModeration = request.RequireUploadModeration;
@@ -69,11 +90,13 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
                 modelSettings.RequireRemixAttribution = request.RequireRemixAttribution;
                 modelSettings.MaxModelsPerUser = request.MaxModelsPerUser;
                 modelSettings.EnableModelComments = request.EnableModelComments;
+                modelSettings.CommentsDisabledMode = commentsDisabledMode;
                 modelSettings.EnableModelLikes = request.EnableModelLikes;
                 modelSettings.EnableModelDownloads = request.EnableModelDownloads;
                 modelSettings.RequireLicenseSelection = request.RequireLicenseSelection;
                 modelSettings.AllowCustomLicenses = request.AllowCustomLicenses;
                 modelSettings.EnableModelCollections = request.EnableModelCollections;
+                modelSettings.CollectionsDisabledMode = collectionsDisabledMode;
                 modelSettings.RequireCategorySelection = request.RequireCategorySelection;
                 modelSettings.MaxCategoriesPerModel = request.MaxCategoriesPerModel;
                 modelSettings.EnableModelSharing = request.EnableModelSharing;
@@ -130,6 +153,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
                 _siteModelUploadPolicy.Invalidate();
                 _siteModelDownloadPolicy.Invalidate();
                 _modelMetadataPolicy.Invalidate();
+                _siteModelFeaturePolicy.Invalidate();
 
                 _logger.LogInformation("Model settings updated successfully by user {UserId}", 
                     userIdClaim?.Value ?? "unknown");

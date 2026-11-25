@@ -26,11 +26,13 @@ namespace PolyBucket.Database.Entities.SystemSettings
         public bool RequireRemixAttribution { get; set; } = true;
         public int MaxModelsPerUser { get; set; } = 100;
         public bool EnableModelComments { get; set; } = true;
+        public FeatureDisabledMode CommentsDisabledMode { get; set; } = FeatureDisabledMode.ReadOnly;
         public bool EnableModelLikes { get; set; } = true;
         public bool EnableModelDownloads { get; set; } = true;
         public bool RequireLicenseSelection { get; set; } = true;
         public bool AllowCustomLicenses { get; set; } = false;
         public bool EnableModelCollections { get; set; } = true;
+        public FeatureDisabledMode CollectionsDisabledMode { get; set; } = FeatureDisabledMode.ReadOnly;
         public bool RequireCategorySelection { get; set; } = false;
         public int MaxCategoriesPerModel { get; set; } = 3;
         public bool EnableModelSharing { get; set; } = true;

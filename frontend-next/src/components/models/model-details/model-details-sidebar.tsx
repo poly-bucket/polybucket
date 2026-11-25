@@ -42,6 +42,7 @@ interface ModelDetailsSidebarProps {
   onEdit?: () => void;
   onCreateVersion?: () => void;
   onReactionUpdate?: (result: ModelReactionResult) => void;
+  showAddToCollection?: boolean;
 }
 
 export function ModelDetailsSidebar({
@@ -57,6 +58,7 @@ export function ModelDetailsSidebar({
   onEdit,
   onCreateVersion,
   onReactionUpdate,
+  showAddToCollection = true,
 }: ModelDetailsSidebarProps) {
   const downloads = model.downloads ?? 0;
   const views = model.views ?? 0;
@@ -239,7 +241,7 @@ export function ModelDetailsSidebar({
               </>
             )}
 
-            {isAuthenticated && !isFederated && model.id && (
+            {showAddToCollection && isAuthenticated && !isFederated && model.id && (
               <AddToCollectionPopover modelId={model.id} />
             )}
 

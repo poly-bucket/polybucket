@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PolyBucket.Api.Features.Authentication.GetSiteAccess.Domain;
 using PolyBucket.Api.Features.Authentication.GetSiteAccess.Http;
 using PolyBucket.Api.Features.SystemSettings.Services;
+using Moq;
+using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Database.Entities.ACL;
 using PolyBucket.Database.Entities.SystemSettings;
 using PolyBucket.Database.Persistence;
 using Shouldly;
@@ -28,7 +31,16 @@ public class GetSiteAccessControllerTests : IDisposable
         var uploadPolicy = new SiteModelUploadPolicy(_dbContext, cache, NullLogger<SiteModelUploadPolicy>.Instance);
         var downloadPolicy = new SiteModelDownloadPolicy(_dbContext, cache, NullLogger<SiteModelDownloadPolicy>.Instance);
         var metadataPolicy = new ModelMetadataPolicy(_dbContext, cache, NullLogger<ModelMetadataPolicy>.Instance);
-        _controller = new GetSiteAccessController(new GetSiteAccessService(privacy, uploadPolicy, downloadPolicy, metadataPolicy));
+        var permissions = new Mock<IPermissionService>();
+        permissions.Setup(p => p.IsAdminAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+        permissions.Setup(p => p.GetUserRoleAsync(It.IsAny<Guid>())).ReturnsAsync((Role?)null);
+        var featurePolicy = new SiteModelFeaturePolicy(
+            _dbContext,
+            cache,
+            permissions.Object,
+            NullLogger<SiteModelFeaturePolicy>.Instance);
+        _controller = new GetSiteAccessController(
+            new GetSiteAccessService(privacy, uploadPolicy, downloadPolicy, metadataPolicy, featurePolicy));
     }
 
     [Fact(DisplayName = "When no site setup exists, site access reports public browsing is allowed.")]
@@ -142,4 +154,5 @@ public class GetSiteAccessControllerTests : IDisposable
     {
         _dbContext.Dispose();
     }
+
 }

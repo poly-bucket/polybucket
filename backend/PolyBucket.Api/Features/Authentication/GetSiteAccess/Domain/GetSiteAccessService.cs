@@ -6,12 +6,14 @@ public class GetSiteAccessService(
     ISitePrivacyState sitePrivacyState,
     ISiteModelUploadPolicy uploadPolicy,
     ISiteModelDownloadPolicy downloadPolicy,
-    IModelMetadataPolicy metadataPolicy) : IGetSiteAccessService
+    IModelMetadataPolicy metadataPolicy,
+    ISiteModelFeaturePolicy featurePolicy) : IGetSiteAccessService
 {
     private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
     private readonly ISiteModelUploadPolicy _uploadPolicy = uploadPolicy;
     private readonly ISiteModelDownloadPolicy _downloadPolicy = downloadPolicy;
     private readonly IModelMetadataPolicy _metadataPolicy = metadataPolicy;
+    private readonly ISiteModelFeaturePolicy _featurePolicy = featurePolicy;
 
     public async Task<GetSiteAccessResponse> GetSiteAccessAsync(CancellationToken cancellationToken)
     {
@@ -22,6 +24,8 @@ public class GetSiteAccessService(
         var modelDownloadsEnabled = await _downloadPolicy.AreModelDownloadsEnabledAsync(cancellationToken);
         var defaultPrivacy = await _uploadPolicy.GetDefaultModelPrivacyAsync(cancellationToken);
         var metadata = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
+        var commentsAccess = await _featurePolicy.GetCommentsAccessLevelAsync(cancellationToken);
+        var collectionsAccess = await _featurePolicy.GetCollectionsAccessLevelAsync(cancellationToken);
 
         return new GetSiteAccessResponse
         {
@@ -30,6 +34,8 @@ public class GetSiteAccessService(
             AllowAnonymousModelUpload = allowAnonymousModelUpload,
             AllowAnonymousModelDownload = allowAnonymousModelDownload,
             ModelDownloadsEnabled = modelDownloadsEnabled,
+            ModelCommentsAccess = commentsAccess.ToString(),
+            ModelCollectionsAccess = collectionsAccess.ToString(),
             DefaultModelPrivacy = defaultPrivacy.ToString(),
             ModelMetadataRules = new ModelMetadataRulesDto
             {

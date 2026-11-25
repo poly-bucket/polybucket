@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.Federation.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Database.Entities.Models.Enums;
 using System;
 using System.Collections.Generic;
@@ -18,12 +19,14 @@ namespace PolyBucket.Api.Features.Federation.Services
         IFederationRepository federationRepository,
         PolyBucketDbContext context,
         IHttpContextAccessor httpContextAccessor,
-        IHttpClientFactory httpClientFactory) : IFederationImportService
+        IHttpClientFactory httpClientFactory,
+        ISiteModelFeaturePolicy featurePolicy) : IFederationImportService
     {
         private readonly IFederationRepository _federationRepository = federationRepository;
         private readonly PolyBucketDbContext _context = context;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private readonly ISiteModelFeaturePolicy _featurePolicy = featurePolicy;
 
         public async Task<Model> ImportModelAsync(string instanceId, string remoteModelId)
         {
@@ -49,6 +52,12 @@ namespace PolyBucket.Api.Features.Federation.Services
             var remoteModel = await FetchRemoteModelMetadataAsync(instance.BaseUrl, remoteModelId);
 
             var localAuthor = await GetOrCreateFederatedUserAsync(remoteModel.Author, instanceId, instance.BaseUrl);
+
+            var quotaOutcome = await _featurePolicy.ValidateModelCreationQuotaAsync(localAuthor.Id);
+            if (quotaOutcome.Kind != ModelCreationQuotaKind.Allowed)
+            {
+                throw new InvalidOperationException(quotaOutcome.Message ?? "Model import is not allowed.");
+            }
 
             var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim))

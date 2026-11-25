@@ -16,6 +16,8 @@ function basePolicy(
     allowAnonymousModelUpload: false,
     allowAnonymousModelDownload: false,
     modelDownloadsEnabled: true,
+    modelCommentsAccess: "Full",
+    modelCollectionsAccess: "Full",
     defaultModelPrivacy: "Public",
     modelMetadataRules: defaultModelMetadataRules,
     ...overrides,

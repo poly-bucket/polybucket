@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Comments.Http;
 using PolyBucket.Api.Features.Comments.GetCommentStatistics.Domain;
 using PolyBucket.Api.Features.Comments.Plugins;
 
@@ -11,6 +12,7 @@ namespace PolyBucket.Api.Features.Comments.GetCommentStatistics.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize]
+[ServiceFilter(typeof(RequireCommentsReadAccessFilter))]
 public class GetCommentStatisticsController(IGetCommentStatisticsService getCommentStatisticsService) : ControllerBase
 {
     /// <summary>

@@ -4,6 +4,14 @@ import {
   type ModelMetadataRules,
 } from "@/lib/models/model-metadata";
 import { getPolybucketApiUrl } from "./env";
+import type { FeatureAccessLevel } from "@/lib/auth/featureAccess";
+
+function parseAccessLevel(value?: string): FeatureAccessLevel {
+  if (value === "Hidden" || value === "ReadOnly" || value === "Full") {
+    return value;
+  }
+  return "Full";
+}
 
 export type SiteAccessPolicy = {
   allowPublicBrowsing: boolean;
@@ -11,6 +19,8 @@ export type SiteAccessPolicy = {
   allowAnonymousModelUpload: boolean;
   allowAnonymousModelDownload: boolean;
   modelDownloadsEnabled: boolean;
+  modelCommentsAccess: FeatureAccessLevel;
+  modelCollectionsAccess: FeatureAccessLevel;
   defaultModelPrivacy: string;
   modelMetadataRules: ModelMetadataRules;
 };
@@ -27,6 +37,8 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       allowAnonymousModelUpload?: boolean;
       allowAnonymousModelDownload?: boolean;
       modelDownloadsEnabled?: boolean;
+      modelCommentsAccess?: string;
+      modelCollectionsAccess?: string;
       defaultModelPrivacy?: string;
       modelMetadataRules?: Partial<ModelMetadataRules>;
     };
@@ -36,6 +48,8 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       allowAnonymousModelUpload: data.allowAnonymousModelUpload === true,
       allowAnonymousModelDownload: data.allowAnonymousModelDownload === true,
       modelDownloadsEnabled: data.modelDownloadsEnabled !== false,
+      modelCommentsAccess: parseAccessLevel(data.modelCommentsAccess),
+      modelCollectionsAccess: parseAccessLevel(data.modelCollectionsAccess),
       defaultModelPrivacy: data.defaultModelPrivacy ?? "Public",
       modelMetadataRules: parseModelMetadataRules(data.modelMetadataRules),
     };
@@ -63,6 +77,8 @@ export async function fetchSiteAccessPolicy(origin: string): Promise<SiteAccessP
     allowAnonymousModelUpload: false,
     allowAnonymousModelDownload: false,
     modelDownloadsEnabled: true,
+    modelCommentsAccess: "Full",
+    modelCollectionsAccess: "Full",
     defaultModelPrivacy: "Public",
     modelMetadataRules: defaultModelMetadataRules,
   };

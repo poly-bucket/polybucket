@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using PolyBucket.Api.Features.Collections.GetCollectionById.Domain;
 using System;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace PolyBucket.Api.Features.Collections.GetCollectionById.Http
 {
     [ApiController]
     [Route("api/collections")]
+    [ServiceFilter(typeof(RequireCollectionsReadAccessFilter))]
     public class GetCollectionByIdController(IMediator mediator) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;

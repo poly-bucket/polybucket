@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using PolyBucket.Api.Features.Authentication.Authorization;
 using PolyBucket.Api.Features.Collections.UpdateCollection.Domain;
 using System;
@@ -11,6 +12,7 @@ namespace PolyBucket.Api.Features.Collections.UpdateCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
+    [ServiceFilter(typeof(RequireCollectionsWriteAccessFilter))]
     public class UpdateCollectionController(IMediator mediator) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;

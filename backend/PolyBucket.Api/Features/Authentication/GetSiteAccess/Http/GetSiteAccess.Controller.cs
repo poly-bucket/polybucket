@@ -27,6 +27,8 @@ public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService)
             allowAnonymousModelUpload = result.AllowAnonymousModelUpload,
             allowAnonymousModelDownload = result.AllowAnonymousModelDownload,
             modelDownloadsEnabled = result.ModelDownloadsEnabled,
+            modelCommentsAccess = result.ModelCommentsAccess,
+            modelCollectionsAccess = result.ModelCollectionsAccess,
             defaultModelPrivacy = result.DefaultModelPrivacy,
             modelMetadataRules = new
             {

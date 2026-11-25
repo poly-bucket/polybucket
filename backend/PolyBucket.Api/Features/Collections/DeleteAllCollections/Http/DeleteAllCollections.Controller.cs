@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
@@ -14,6 +15,7 @@ namespace PolyBucket.Api.Features.Collections.DeleteAllCollections.Http
     [Route("api/admin/collections")]
     [Authorize]
     [RequirePermission(PermissionConstants.COLLECTION_DELETE_ANY)]
+    [ServiceFilter(typeof(RequireCollectionsWriteAccessFilter))]
     public class DeleteAllCollectionsController(
         IDeleteAllCollectionsService deleteAllCollectionsService,
         ILogger<DeleteAllCollectionsController> logger) : ControllerBase

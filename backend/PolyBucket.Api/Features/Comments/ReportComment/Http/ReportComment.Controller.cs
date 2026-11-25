@@ -11,6 +11,7 @@ namespace PolyBucket.Api.Features.Comments.ReportComment.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize]
+[ServiceFilter(typeof(RequireCommentsWriteAccessFilter))]
 public class ReportCommentController(IReportCommentService reportCommentService) : ControllerBase
 {
     /// <summary>

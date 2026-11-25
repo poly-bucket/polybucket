@@ -12,6 +12,7 @@ namespace PolyBucket.Api.Features.Comments.GetCommentsForTarget.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize]
+[ServiceFilter(typeof(RequireCommentsReadAccessFilter))]
 public class GetCommentsForTargetController(IGetCommentsForTargetService getCommentsForTargetService) : ControllerBase
 {
     /// <summary>

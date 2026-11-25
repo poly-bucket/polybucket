@@ -6,6 +6,8 @@ public static class CommentsDependencyInjectionMapping
 {
     public static IServiceCollection AddCommentsFeature(this IServiceCollection services)
     {
+        services.AddScoped<Http.RequireCommentsReadAccessFilter>();
+        services.AddScoped<Http.RequireCommentsWriteAccessFilter>();
         services.AddScoped<Plugins.IEnhancedCommentsPlugin, Plugins.EnhancedCommentsPlugin>();
 
         services.AddTransient<LikeComment.Repository.CommentReactionPersistence>();

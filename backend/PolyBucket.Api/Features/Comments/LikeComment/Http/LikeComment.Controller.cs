@@ -12,6 +12,7 @@ namespace PolyBucket.Api.Features.Comments.LikeComment.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize]
+[ServiceFilter(typeof(RequireCommentsWriteAccessFilter))]
 public class LikeCommentController(ILikeCommentService likeCommentService) : ControllerBase
 {
     /// <summary>

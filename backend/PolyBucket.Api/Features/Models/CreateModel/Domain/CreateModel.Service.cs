@@ -34,6 +34,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         private readonly IModelMetadataValidator _metadataValidator;
         private readonly IModelMetadataPolicy _metadataPolicy;
         private readonly ISiteModelUploadPolicy _uploadPolicy;
+        private readonly ISiteModelFeaturePolicy _featurePolicy;
         private readonly IAnonymousUploadAuthorProvider _anonymousUploadAuthorProvider;
         private readonly ILogger<CreateModelService> _logger;
 
@@ -48,6 +49,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             IModelMetadataValidator metadataValidator,
             IModelMetadataPolicy metadataPolicy,
             ISiteModelUploadPolicy uploadPolicy,
+            ISiteModelFeaturePolicy featurePolicy,
             IAnonymousUploadAuthorProvider anonymousUploadAuthorProvider,
             ILogger<CreateModelService> logger)
         {
@@ -59,6 +61,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             _metadataValidator = metadataValidator;
             _metadataPolicy = metadataPolicy;
             _uploadPolicy = uploadPolicy;
+            _featurePolicy = featurePolicy;
             _anonymousUploadAuthorProvider = anonymousUploadAuthorProvider;
             _logger = logger;
         }
@@ -68,6 +71,13 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             await ValidateRequestAsync(request, cancellationToken);
 
             var authorId = await ResolveAuthorIdAsync(user, cancellationToken);
+
+            var quotaOutcome = await _featurePolicy.ValidateModelCreationQuotaAsync(authorId, cancellationToken);
+            if (quotaOutcome.Kind != ModelCreationQuotaKind.Allowed)
+            {
+                throw new ValidationException(quotaOutcome.Message ?? "Model creation is not allowed.");
+            }
+
             var defaultPrivacy = await _uploadPolicy.GetDefaultModelPrivacyAsync(cancellationToken);
             var resolvedPrivacy = ModelPrivacyResolver.Resolve(request.Privacy, defaultPrivacy);
             var isPublic = ModelPrivacyResolver.ComputeIsPublic(resolvedPrivacy);

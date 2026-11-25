@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolyBucket.Database.Persistence;
-using PolyBucket.Api.Features.SystemSettings.Domain;
+using PolyBucket.Database.Entities.SystemSettings;
 using Microsoft.Extensions.Logging;
 
 namespace PolyBucket.Api.Seeders
@@ -50,11 +50,13 @@ namespace PolyBucket.Api.Seeders
                 RequireRemixAttribution = true,
                 MaxModelsPerUser = 100,
                 EnableModelComments = true,
+                CommentsDisabledMode = FeatureDisabledMode.ReadOnly,
                 EnableModelLikes = true,
                 EnableModelDownloads = true,
                 RequireLicenseSelection = true,
                 AllowCustomLicenses = false,
                 EnableModelCollections = true,
+                CollectionsDisabledMode = FeatureDisabledMode.ReadOnly,
                 RequireCategorySelection = false,
                 MaxCategoriesPerModel = 3,
                 EnableModelSharing = true,

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.Collections.GetFavoriteCollections.Repository;
 using System;
@@ -12,6 +13,7 @@ namespace PolyBucket.Api.Features.Collections.GetFavoriteCollections.Http
     /// </summary>
     [ApiController]
     [Route("api/collections")]
+    [ServiceFilter(typeof(RequireCollectionsReadAccessFilter))]
     public class GetFavoriteCollectionsController : ControllerBase
     {
         private readonly IGetFavoriteCollectionsRepository _repository;

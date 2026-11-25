@@ -31,6 +31,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
         private readonly Mock<IModelMetadataValidator> _mockMetadataValidator;
         private readonly Mock<IModelMetadataPolicy> _mockMetadataPolicy;
         private readonly Mock<ISiteModelUploadPolicy> _mockUploadPolicy;
+        private readonly Mock<ISiteModelFeaturePolicy> _mockFeaturePolicy;
         private readonly Mock<IAnonymousUploadAuthorProvider> _mockAnonymousAuthor;
         private readonly Mock<ILogger<CreateModelService>> _mockLogger;
         private readonly CreateModelService _service;
@@ -43,6 +44,10 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
             _mockPreviewQueue = new Mock<IModelPreviewQueue>();
             _mockUploadValidator = new Mock<IModelUploadValidator>();
             _mockUploadPolicy = new Mock<ISiteModelUploadPolicy>();
+            _mockFeaturePolicy = new Mock<ISiteModelFeaturePolicy>();
+            _mockFeaturePolicy
+                .Setup(p => p.ValidateModelCreationQuotaAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(ModelCreationQuotaOutcome.Allowed);
             _mockAnonymousAuthor = new Mock<IAnonymousUploadAuthorProvider>();
             _mockLogger = new Mock<ILogger<CreateModelService>>();
             _mockUploadValidator
@@ -78,6 +83,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
                 _mockMetadataValidator.Object,
                 _mockMetadataPolicy.Object,
                 _mockUploadPolicy.Object,
+                _mockFeaturePolicy.Object,
                 _mockAnonymousAuthor.Object,
                 _mockLogger.Object);
         }

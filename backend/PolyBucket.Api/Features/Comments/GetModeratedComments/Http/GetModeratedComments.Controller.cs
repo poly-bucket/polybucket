@@ -12,6 +12,7 @@ namespace PolyBucket.Api.Features.Comments.GetModeratedComments.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize(Roles = "Admin,Moderator")]
+[ServiceFilter(typeof(RequireCommentsReadAccessFilter))]
 public class GetModeratedCommentsController(IGetModeratedCommentsService getModeratedCommentsService) : ControllerBase
 {
     /// <summary>

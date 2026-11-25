@@ -26,6 +26,11 @@ import {
   areModelDownloadsEnabled,
   mayDownloadModel,
 } from "@/lib/auth/downloadAccess";
+import {
+  canShowCommentsSection,
+  canWriteComments,
+  canMutateCollections,
+} from "@/lib/auth/featureAccess";
 import type { ModelReactionResult } from "@/lib/services/modelReactionsService";
 import { ModelDetailsCarousel, type CarouselItem } from "./model-details-carousel";
 import { ModelDetailsSidebar } from "./model-details-sidebar";
@@ -210,6 +215,32 @@ export function ModelDetailsPage() {
     isAuthenticated &&
     user &&
     (user.id === model.authorId || user.id === model.author?.id);
+
+  const isAdminOrModerator = useMemo(() => {
+    const roles = user?.roles?.map((r) => r.toLowerCase()) ?? [];
+    return roles.includes("admin") || roles.includes("moderator");
+  }, [user?.roles]);
+
+  const canPostComments = useMemo(() => {
+    if (!siteAccessPolicy) {
+      return false;
+    }
+    return canWriteComments(siteAccessPolicy, isAdminOrModerator);
+  }, [siteAccessPolicy, isAdminOrModerator]);
+
+  const showComments = useMemo(() => {
+    if (!siteAccessPolicy) {
+      return true;
+    }
+    return canShowCommentsSection(siteAccessPolicy);
+  }, [siteAccessPolicy]);
+
+  const showAddToCollection = useMemo(() => {
+    if (!siteAccessPolicy) {
+      return true;
+    }
+    return canMutateCollections(siteAccessPolicy, isAdminOrModerator);
+  }, [siteAccessPolicy, isAdminOrModerator]);
 
   const canDownload = useMemo(() => {
     if (!model || !siteAccessPolicy) {
@@ -488,7 +519,9 @@ export function ModelDetailsPage() {
             onFileDownload={handleFileDownload}
           />
 
-          {!model.isFederated && <ModelComments modelId={model.id!} />}
+          {!model.isFederated && showComments && (
+            <ModelComments modelId={model.id!} canWrite={canPostComments} />
+          )}
         </div>
 
         <div className="lg:col-span-2">
@@ -502,6 +535,7 @@ export function ModelDetailsPage() {
             onDownload={handleDownload}
             onDelete={() => setShowDeleteConfirm(true)}
             onShare={handleShare}
+            showAddToCollection={showAddToCollection}
             onEdit={handleOpenEditDetails}
             onCreateVersion={handleOpenCreateVersion}
             onReactionUpdate={handleReactionUpdate}

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using PolyBucket.Api.Features.Collections.FavoriteCollection.Domain;
 using System;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace PolyBucket.Api.Features.Collections.FavoriteCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
+    [ServiceFilter(typeof(RequireCollectionsWriteAccessFilter))]
     public class FavoriteCollectionController : ControllerBase
     {
         private readonly IMediator _mediator;

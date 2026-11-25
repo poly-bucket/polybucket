@@ -2571,6 +2571,12 @@ namespace PolyBucket.Database.Migrations
                     b.Property<bool>("AutoGenerateModelPreviews")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("CollectionsDisabledMode")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CommentsDisabledMode")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 

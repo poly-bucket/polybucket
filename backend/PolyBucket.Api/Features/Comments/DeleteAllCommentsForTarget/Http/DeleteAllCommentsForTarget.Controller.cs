@@ -11,6 +11,7 @@ namespace PolyBucket.Api.Features.Comments.DeleteAllCommentsForTarget.Http;
 [ApiController]
 [Route("api/comments")]
 [Authorize(Roles = "Admin")]
+[ServiceFilter(typeof(RequireCommentsWriteAccessFilter))]
 public class DeleteAllCommentsForTargetController(IDeleteAllCommentsForTargetService deleteAllCommentsForTargetService) : ControllerBase
 {
     /// <summary>

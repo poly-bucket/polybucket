@@ -95,13 +95,14 @@ function CommentComposer({ label, submitLabel, placeholder, autoFocus, onSubmit,
 interface CommentRowProps {
   comment: CommentItem;
   isReply?: boolean;
+  canWrite: boolean;
   onReact: (comment: CommentItem, reaction: CommentReaction) => void;
   onReply?: (comment: CommentItem) => void;
   onDelete: (comment: CommentItem) => void;
   onReport: (comment: CommentItem) => void;
 }
 
-function CommentRow({ comment, isReply, onReact, onReply, onDelete, onReport }: CommentRowProps) {
+function CommentRow({ comment, isReply, canWrite, onReact, onReply, onDelete, onReport }: CommentRowProps) {
   return (
     <article
       aria-label={`Comment by ${comment.authorUsername}`}
@@ -117,58 +118,61 @@ function CommentRow({ comment, isReply, onReact, onReply, onDelete, onReport }: 
         {comment.isEdited && <span className="text-xs text-white/40">(edited)</span>}
       </header>
       <p className="mt-1 whitespace-pre-wrap break-words text-white/80">{comment.content}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-1 text-white/60">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-pressed={comment.userHasLiked}
-          aria-label={`Like (${comment.likes})`}
-          onClick={() => onReact(comment, "like")}
-          className={comment.userHasLiked ? "text-white" : undefined}
-        >
-          <ThumbsUp className="h-4 w-4" />
-          <span>{comment.likes}</span>
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-pressed={comment.userHasDisliked}
-          aria-label={`Dislike (${comment.dislikes})`}
-          onClick={() => onReact(comment, "dislike")}
-          className={comment.userHasDisliked ? "text-white" : undefined}
-        >
-          <ThumbsDown className="h-4 w-4" />
-          <span>{comment.dislikes}</span>
-        </Button>
-        {onReply && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => onReply(comment)}>
-            <Reply className="h-4 w-4" />
-            Reply
+      {canWrite && (
+        <div className="mt-2 flex flex-wrap items-center gap-1 text-white/60">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-pressed={comment.userHasLiked}
+            aria-label={`Like (${comment.likes})`}
+            onClick={() => onReact(comment, "like")}
+            className={comment.userHasLiked ? "text-white" : undefined}
+          >
+            <ThumbsUp className="h-4 w-4" />
+            <span>{comment.likes}</span>
           </Button>
-        )}
-        {comment.canDelete ? (
-          <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(comment)}>
-            <Trash2 className="h-4 w-4" />
-            Delete
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-pressed={comment.userHasDisliked}
+            aria-label={`Dislike (${comment.dislikes})`}
+            onClick={() => onReact(comment, "dislike")}
+            className={comment.userHasDisliked ? "text-white" : undefined}
+          >
+            <ThumbsDown className="h-4 w-4" />
+            <span>{comment.dislikes}</span>
           </Button>
-        ) : (
-          <Button type="button" variant="ghost" size="sm" onClick={() => onReport(comment)}>
-            <Flag className="h-4 w-4" />
-            Report
-          </Button>
-        )}
-      </div>
+          {onReply && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => onReply(comment)}>
+              <Reply className="h-4 w-4" />
+              Reply
+            </Button>
+          )}
+          {comment.canDelete ? (
+            <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(comment)}>
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          ) : (
+            <Button type="button" variant="ghost" size="sm" onClick={() => onReport(comment)}>
+              <Flag className="h-4 w-4" />
+              Report
+            </Button>
+          )}
+        </div>
+      )}
     </article>
   );
 }
 
 export interface ModelCommentsProps {
   modelId: string;
+  canWrite?: boolean;
 }
 
-export function ModelComments({ modelId }: ModelCommentsProps) {
+export function ModelComments({ modelId, canWrite = true }: ModelCommentsProps) {
   const { isAuthenticated } = useAuth();
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -293,12 +297,14 @@ export function ModelComments({ modelId }: ModelCommentsProps) {
           </p>
         ) : (
           <>
-            <CommentComposer
-              label="Write a comment"
-              submitLabel="Post comment"
-              placeholder="Share feedback, print settings, or questions"
-              onSubmit={handleCreate}
-            />
+            {canWrite && (
+              <CommentComposer
+                label="Write a comment"
+                submitLabel="Post comment"
+                placeholder="Share feedback, print settings, or questions"
+                onSubmit={handleCreate}
+              />
+            )}
 
             {loadError && (
               <div role="alert" className="flex items-center justify-between gap-2 text-sm text-red-300">
@@ -318,8 +324,9 @@ export function ModelComments({ modelId }: ModelCommentsProps) {
                 <li key={comment.id} className="space-y-3">
                   <CommentRow
                     comment={comment}
+                    canWrite={canWrite}
                     onReact={handleReact}
-                    onReply={(c) => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                    onReply={canWrite ? (c) => setReplyingTo(replyingTo === c.id ? null : c.id) : undefined}
                     onDelete={handleDelete}
                     onReport={handleReport}
                   />
@@ -330,6 +337,7 @@ export function ModelComments({ modelId }: ModelCommentsProps) {
                           <CommentRow
                             comment={reply}
                             isReply
+                            canWrite={canWrite}
                             onReact={handleReact}
                             onDelete={handleDelete}
                             onReport={handleReport}
@@ -338,7 +346,7 @@ export function ModelComments({ modelId }: ModelCommentsProps) {
                       ))}
                     </ul>
                   )}
-                  {replyingTo === comment.id && (
+                  {canWrite && replyingTo === comment.id && (
                     <div className="ml-4">
                       <CommentComposer
                         label={`Reply to ${comment.authorUsername}`}

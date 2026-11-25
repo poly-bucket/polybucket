@@ -44,6 +44,8 @@ public static class FeatureServiceCollectionExtensions
         services.AddNotificationsFeature();
 
         // Collections
+        services.AddScoped<Features.Collections.Http.RequireCollectionsReadAccessFilter>();
+        services.AddScoped<Features.Collections.Http.RequireCollectionsWriteAccessFilter>();
         services.AddTransient<Features.Collections.CreateCollection.Repository.ICollectionRepository, Features.Collections.CreateCollection.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.GetCollectionById.Repository.ICollectionRepository, Features.Collections.GetCollectionById.Repository.CollectionRepository>();
         services.AddTransient<Features.Collections.UpdateCollection.Repository.ICollectionRepository, Features.Collections.UpdateCollection.Repository.CollectionRepository>();

@@ -331,6 +331,27 @@ function ConfigurationTab() {
                 handleConfigChange({ enableModelComments: v })
               }
             />
+            {!(modelConfig.enableModelComments ?? true) && (
+              <SettingsField
+                label="When comments are disabled"
+                description="Read-only shows existing comments without user posting. Hidden removes comments from the site."
+              >
+                <Select
+                  value={modelConfig.commentsDisabledMode ?? "ReadOnly"}
+                  onValueChange={(v) =>
+                    handleConfigChange({ commentsDisabledMode: v })
+                  }
+                >
+                  <SelectTrigger variant="glass">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent variant="glass">
+                    <SelectItem value="ReadOnly">Read-only</SelectItem>
+                    <SelectItem value="Hidden">Hidden</SelectItem>
+                  </SelectContent>
+                </Select>
+              </SettingsField>
+            )}
             <SettingsToggle
               label="Enable likes"
               checked={modelConfig.enableModelLikes ?? true}
@@ -352,6 +373,27 @@ function ConfigurationTab() {
                 handleConfigChange({ enableModelCollections: v })
               }
             />
+            {!(modelConfig.enableModelCollections ?? true) && (
+              <SettingsField
+                label="When collections are disabled"
+                description="Read-only keeps existing collections visible. Hidden blocks collection pages and tools."
+              >
+                <Select
+                  value={modelConfig.collectionsDisabledMode ?? "ReadOnly"}
+                  onValueChange={(v) =>
+                    handleConfigChange({ collectionsDisabledMode: v })
+                  }
+                >
+                  <SelectTrigger variant="glass">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent variant="glass">
+                    <SelectItem value="ReadOnly">Read-only</SelectItem>
+                    <SelectItem value="Hidden">Hidden</SelectItem>
+                  </SelectContent>
+                </Select>
+              </SettingsField>
+            )}
             <ModelConfigurationAdvancedSection
               config={modelConfig}
               onChange={handleConfigChange}

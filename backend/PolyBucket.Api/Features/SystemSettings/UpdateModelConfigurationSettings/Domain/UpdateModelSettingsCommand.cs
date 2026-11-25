@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using MediatR;
 using PolyBucket.Database.Entities.Models.Enums;
+using PolyBucket.Database.Entities.SystemSettings;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain
 {
@@ -41,11 +42,17 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
         public int MaxModelsPerUser { get; set; } = 100;
         
         public bool EnableModelComments { get; set; } = true;
+
+        [Required(ErrorMessage = "Comments disabled mode is required")]
+        public string CommentsDisabledMode { get; set; } = "ReadOnly";
         public bool EnableModelLikes { get; set; } = true;
         public bool EnableModelDownloads { get; set; } = true;
         public bool RequireLicenseSelection { get; set; } = true;
         public bool AllowCustomLicenses { get; set; } = false;
         public bool EnableModelCollections { get; set; } = true;
+
+        [Required(ErrorMessage = "Collections disabled mode is required")]
+        public string CollectionsDisabledMode { get; set; } = "ReadOnly";
         public bool RequireCategorySelection { get; set; } = false;
         
         [Range(0, 20, ErrorMessage = "Max categories per model must be between 0 and 20")]
@@ -109,6 +116,16 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
             if (!Enum.TryParse<PrivacySettings>(DefaultPrivacySetting, true, out _))
             {
                 validationResults.Add(new ValidationResult("Invalid default privacy setting value. Must be one of: Public, Private, Unlisted", new[] { nameof(DefaultPrivacySetting) }));
+            }
+
+            if (!Enum.TryParse<FeatureDisabledMode>(CommentsDisabledMode, true, out _))
+            {
+                validationResults.Add(new ValidationResult("Invalid comments disabled mode. Must be ReadOnly or Hidden", new[] { nameof(CommentsDisabledMode) }));
+            }
+
+            if (!Enum.TryParse<FeatureDisabledMode>(CollectionsDisabledMode, true, out _))
+            {
+                validationResults.Add(new ValidationResult("Invalid collections disabled mode. Must be ReadOnly or Hidden", new[] { nameof(CollectionsDisabledMode) }));
             }
             
             // Validate MinDescriptionLength <= MaxDescriptionLength

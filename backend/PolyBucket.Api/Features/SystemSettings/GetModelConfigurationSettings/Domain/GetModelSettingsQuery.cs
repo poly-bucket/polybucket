@@ -34,11 +34,13 @@ namespace PolyBucket.Api.Features.SystemSettings.GetModelConfigurationSettings.D
         public bool RequireRemixAttribution { get; set; }
         public int MaxModelsPerUser { get; set; }
         public bool EnableModelComments { get; set; }
+        public string CommentsDisabledMode { get; set; } = "ReadOnly";
         public bool EnableModelLikes { get; set; }
         public bool EnableModelDownloads { get; set; }
         public bool RequireLicenseSelection { get; set; }
         public bool AllowCustomLicenses { get; set; }
         public bool EnableModelCollections { get; set; }
+        public string CollectionsDisabledMode { get; set; } = "ReadOnly";
         public bool RequireCategorySelection { get; set; }
         public int MaxCategoriesPerModel { get; set; }
         public bool EnableModelSharing { get; set; }

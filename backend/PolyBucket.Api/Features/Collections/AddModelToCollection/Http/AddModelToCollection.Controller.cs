@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Collections.Http;
 using PolyBucket.Api.Features.Authentication.Authorization;
 using PolyBucket.Api.Features.Collections.AddModelToCollection.Domain;
 using System;
@@ -11,6 +12,7 @@ namespace PolyBucket.Api.Features.Collections.AddModelToCollection.Http
     [ApiController]
     [Route("api/collections")]
     [Authorize]
+    [ServiceFilter(typeof(RequireCollectionsWriteAccessFilter))]
     public class AddModelToCollectionController(IMediator mediator) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;
