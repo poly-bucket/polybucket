@@ -1,9 +1,8 @@
 using System.Net.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using PolyBucket.Api.Features.Federation.InitiateHandshake.Http;
 using PolyBucket.Api.Features.Federation.InitiateHandshake.Repository;
+using PolyBucket.Api.Features.Federation.Services;
 
 namespace PolyBucket.Api.Features.Federation.InitiateHandshake.Domain;
 
@@ -14,9 +13,8 @@ public interface IInitiateHandshakeService
 
 public class InitiateHandshakeService(
     IInitiateHandshakeRepository repository,
-    IConfiguration configuration,
-    IHttpClientFactory httpClientFactory,
-    IHttpContextAccessor httpContextAccessor) : IInitiateHandshakeService
+    IFederationInstanceIdentity instanceIdentity,
+    IHttpClientFactory httpClientFactory) : IInitiateHandshakeService
 {
     public async Task<ActionResult<InitiateHandshakeResponse>> InitiateHandshakeAsync(
         InitiateHandshakeRequest request,
@@ -43,11 +41,13 @@ public class InitiateHandshakeService(
             return new UnprocessableEntityObjectResult("Could not verify remote instance as a valid PolyBucket instance");
         }
 
+        var identity = await instanceIdentity.GetSnapshotAsync(cancellationToken);
+
         var handshake = new FederationHandshake
         {
             Id = Guid.NewGuid(),
             InitiatorUrl = request.InitiatorUrl.TrimEnd('/'),
-            ResponderUrl = GetThisInstanceUrl(),
+            ResponderUrl = identity.BaseUrl,
             Status = HandshakeStatus.Accepted,
             HandshakeToken = Guid.NewGuid().ToString(),
             ExpiresAt = DateTime.UtcNow.AddHours(24),
@@ -63,7 +63,7 @@ public class InitiateHandshakeService(
             HandshakeId = handshake.Id,
             Status = "Accepted",
             ResponderUrl = handshake.ResponderUrl,
-            ResponderName = configuration["Instance:Name"] ?? "PolyBucket Instance",
+            ResponderName = identity.InstanceName,
             HandshakeToken = handshake.HandshakeToken,
             ExpiresAt = handshake.ExpiresAt,
             Message = "Handshake accepted. Proceed to token exchange."
@@ -86,15 +86,4 @@ public class InitiateHandshakeService(
         }
     }
 
-    private string GetThisInstanceUrl()
-    {
-        var configuredUrl = configuration["Instance:BaseUrl"];
-        if (!string.IsNullOrWhiteSpace(configuredUrl))
-        {
-            return configuredUrl.TrimEnd('/');
-        }
-
-        var request = httpContextAccessor.HttpContext!.Request;
-        return $"{request.Scheme}://{request.Host}{request.PathBase}".TrimEnd('/');
-    }
 }

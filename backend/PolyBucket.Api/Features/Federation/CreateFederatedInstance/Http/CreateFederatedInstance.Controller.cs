@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.Federation.CreateFederatedInstance.Domain;
 using PolyBucket.Api.Features.Federation.GetFederatedInstance.Http;
+using PolyBucket.Api.Features.Federation.Http;
 
 namespace PolyBucket.Api.Features.Federation.CreateFederatedInstance.Http;
 
 [ApiController]
 [Route("api/federation/instances")]
+[RequireFederationEnabled(FederationGateMode.Mutation)]
 [Authorize]
 [ApiExplorerSettings(GroupName = "v1")]
 [Tags("Federation")]

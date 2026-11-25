@@ -5,10 +5,13 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Federation.ImportFederatedModel.Domain;
 using PolyBucket.Api.Features.Federation.ImportFederatedModel.Http;
 
+using PolyBucket.Api.Features.Federation.Http;
+
 namespace PolyBucket.Api.Features.Federation.ImportFederatedModel.Http;
 
 [ApiController]
     [Route("api/federation/models")]
+    [RequireFederationEnabled(FederationGateMode.Mutation)]
     [Authorize]
     [ApiExplorerSettings(GroupName = "v1")]
     [Tags("Federation")]

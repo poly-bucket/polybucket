@@ -5,11 +5,14 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Federation.UpdateFederatedInstance.Domain;
 using PolyBucket.Api.Features.Federation.UpdateFederatedInstance.Http;
 
+using PolyBucket.Api.Features.Federation.Http;
+
 namespace PolyBucket.Api.Features.Federation.UpdateFederatedInstance.Http;
 
 [ApiController]
-    [Route("api/federation/instances")]
-    [Authorize]
+[Route("api/federation/instances")]
+[RequireFederationEnabled(FederationGateMode.Mutation)]
+[Authorize]
     [ApiExplorerSettings(GroupName = "v1")]
     [Tags("Federation")]
     public class UpdateFederatedInstanceController(IUpdateFederatedInstanceService service) : ControllerBase

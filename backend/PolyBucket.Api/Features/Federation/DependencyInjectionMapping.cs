@@ -9,6 +9,7 @@ public static class FederationDependencyInjectionMapping
         services.AddTransient<Repository.IFederationRepository, Repository.FederationRepository>();
         services.AddTransient<Services.IFederationImportService, Services.FederationImportService>();
         services.AddSingleton<Services.IFederationTokenService, Services.FederationTokenService>();
+        services.AddScoped<Services.IFederationInstanceIdentity, Services.FederationInstanceIdentityService>();
 
         Register<CreateFederatedInstance.Domain.ICreateFederatedInstanceService, CreateFederatedInstance.Domain.CreateFederatedInstanceService,
             CreateFederatedInstance.Repository.ICreateFederatedInstanceRepository, CreateFederatedInstance.Repository.CreateFederatedInstanceRepository>(services);

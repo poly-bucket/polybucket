@@ -5,10 +5,13 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Federation.GetFederationHealth.Domain;
 using PolyBucket.Api.Features.Federation.GetFederationHealth.Http;
 
+using PolyBucket.Api.Features.Federation.Http;
+
 namespace PolyBucket.Api.Features.Federation.GetFederationHealth.Http;
 
 [ApiController]
     [Route("api/federation/health")]
+    [RequireFederationEnabled(FederationGateMode.AdminRead)]
     [Authorize]
     [ApiExplorerSettings(GroupName = "v1")]
     [Tags("Federation")]

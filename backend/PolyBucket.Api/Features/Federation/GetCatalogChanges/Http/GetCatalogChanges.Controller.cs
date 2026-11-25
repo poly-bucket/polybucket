@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.Federation.GetCatalogChanges.Domain;
 using PolyBucket.Api.Features.Federation.GetCatalogChanges.Http;
 
+using PolyBucket.Api.Features.Federation.Http;
+
 namespace PolyBucket.Api.Features.Federation.GetCatalogChanges.Http;
 
 [ApiController]
 [Route("api/federation/catalog")]
+[RequireFederationEnabled(FederationGateMode.Peer)]
 [AllowAnonymous]
 [ApiExplorerSettings(GroupName = "v1")]
 [Tags("Federation Catalog")]

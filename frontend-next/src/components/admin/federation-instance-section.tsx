@@ -14,12 +14,21 @@ import {
 import type { SiteSettingsData } from "@/lib/services/siteSettingsTypes";
 import { toast } from "sonner";
 import { ProfileSettingsFormSkeleton } from "@/components/ui/skeletons";
+import { getEmailSettings } from "@/lib/services/emailService";
+import Link from "next/link";
 
-export function FederationInstanceSection() {
+type FederationInstanceSectionProps = {
+  onFederationEnabledChange?: (enabled: boolean) => void;
+};
+
+export function FederationInstanceSection({
+  onFederationEnabledChange,
+}: FederationInstanceSectionProps) {
   const [base, setBase] = useState<SiteSettingsData | null>(null);
   const [form, setForm] = useState<SiteSettingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [missingPublicUrl, setMissingPublicUrl] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -38,6 +47,32 @@ export function FederationInstanceSection() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    onFederationEnabledChange?.(form?.enableFederation ?? false);
+  }, [form?.enableFederation, onFederationEnabledChange]);
+
+  useEffect(() => {
+    if (!form?.enableFederation) {
+      setMissingPublicUrl(false);
+      return;
+    }
+    let cancelled = false;
+    getEmailSettings()
+      .then((email) => {
+        if (!cancelled) {
+          setMissingPublicUrl(!email.publicBaseUrl?.trim());
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMissingPublicUrl(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form?.enableFederation]);
+
   const patch = (updates: Partial<SiteSettingsData>) => {
     setForm((prev) => (prev ? mergeSiteSettingsPatch(prev, updates) : prev));
   };
@@ -47,6 +82,10 @@ export function FederationInstanceSection() {
 
   const save = async () => {
     if (!form) return;
+    if (form.enableFederation && !form.instanceName?.trim()) {
+      toast.error("Instance name is required when federation is enabled.");
+      return;
+    }
     setSaving(true);
     try {
       const result = await updateSiteSettingsMerged(form);
@@ -82,6 +121,16 @@ export function FederationInstanceSection() {
         checked={form.enableFederation ?? false}
         onCheckedChange={(v) => patch({ enableFederation: v })}
       />
+      {missingPublicUrl && (
+        <p className="text-sm text-amber-400/90 mb-2">
+          Peer instances need a public site URL. Set it in{" "}
+          <Link href="/admin/system" className="underline hover:text-amber-300">
+            Admin → System (Email)
+          </Link>{" "}
+          (or configure Instance:BaseUrl on the server). Until then, catalog and
+          handshake peer endpoints return 503.
+        </p>
+      )}
       <SettingsField label="Instance name">
         <Input
           variant="glass"

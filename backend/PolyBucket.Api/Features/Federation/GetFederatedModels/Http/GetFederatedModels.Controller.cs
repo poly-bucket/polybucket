@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.Federation.GetFederatedModels.Domain;
 
+using PolyBucket.Api.Features.Federation.Http;
+
 namespace PolyBucket.Api.Features.Federation.GetFederatedModels.Http;
 
 [ApiController]
 [Route("api/federation/models")]
+[RequireFederationEnabled(FederationGateMode.AdminRead)]
 [Authorize]
 [ApiExplorerSettings(GroupName = "v1")]
 [Tags("Federation")]

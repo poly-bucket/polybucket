@@ -16,6 +16,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
         IHttpContextAccessor httpContextAccessor,
         ISitePrivacyState sitePrivacyState,
         ISiteBrandingState siteBrandingState,
+        ISiteFederationPolicy siteFederationPolicy,
         IEmailSettingsResolver emailSettingsResolver) : IUpdateSiteSettingsService
     {
         private readonly IUpdateSiteSettingsRepository _repository = repository;
@@ -23,6 +24,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
         private readonly ISiteBrandingState _siteBrandingState = siteBrandingState;
+        private readonly ISiteFederationPolicy _siteFederationPolicy = siteFederationPolicy;
         private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
 
         public async Task<UpdateSiteSettingsResponse> UpdateSiteSettingsAsync(UpdateSiteSettingsCommand request, CancellationToken cancellationToken = default)
@@ -95,6 +97,16 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
                 systemSetup.DefaultLanguage = request.DefaultLanguage;
                 systemSetup.ShowAdvancedOptions = request.ShowAdvancedOptions;
                 
+                if (request.EnableFederation && string.IsNullOrWhiteSpace(request.InstanceName))
+                {
+                    return new UpdateSiteSettingsResponse
+                    {
+                        Success = false,
+                        Message = "Instance name is required when federation is enabled.",
+                        NextStep = "site"
+                    };
+                }
+
                 // Federation settings
                 systemSetup.EnableFederation = request.EnableFederation;
                 systemSetup.InstanceName = request.InstanceName;
@@ -121,6 +133,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
                 await _repository.Context.SaveChangesAsync(cancellationToken);
                 _sitePrivacyState.Invalidate();
                 _siteBrandingState.Invalidate();
+                _siteFederationPolicy.Invalidate();
                 _emailSettingsResolver.Invalidate();
                 
                 _logger.LogInformation("Site settings updated successfully by user {UserId}", 

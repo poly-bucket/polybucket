@@ -1,10 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using PolyBucket.Api.Features.Federation.ExchangeToken.Http;
 using PolyBucket.Api.Features.Federation.ExchangeToken.Repository;
 using PolyBucket.Api.Features.Federation.Services;
@@ -19,8 +17,7 @@ public interface IExchangeTokenService
 public class ExchangeTokenService(
     IExchangeTokenRepository repository,
     IFederationTokenService tokenService,
-    IConfiguration configuration,
-    IHttpContextAccessor httpContextAccessor) : IExchangeTokenService
+    IFederationInstanceIdentity instanceIdentity) : IExchangeTokenService
 {
     public async Task<ActionResult<ExchangeTokenResponse>> ExchangeTokenAsync(ExchangeTokenRequest request, CancellationToken cancellationToken = default)
     {
@@ -54,9 +51,10 @@ public class ExchangeTokenService(
             return new UnauthorizedObjectResult("Handshake has expired");
         }
 
-        var instance = await GetOrCreateFederatedInstanceAsync(request, handshake, cancellationToken);
+        var identity = await instanceIdentity.GetSnapshotAsync(cancellationToken);
+        var instance = await GetOrCreateFederatedInstanceAsync(request, handshake, identity.BaseUrl, cancellationToken);
         var thisInstanceId = instance.Id;
-        var thisInstanceUrl = GetThisInstanceUrl();
+        var thisInstanceUrl = identity.BaseUrl;
 
         var federationToken = await tokenService.GenerateTokenAsync(
             thisInstanceId,
@@ -102,9 +100,9 @@ public class ExchangeTokenService(
     private async Task<FederatedInstance> GetOrCreateFederatedInstanceAsync(
         ExchangeTokenRequest request,
         FederationHandshake handshake,
+        string thisInstanceUrl,
         CancellationToken cancellationToken)
     {
-        var thisInstanceUrl = GetThisInstanceUrl();
         var isInitiator = handshake.InitiatorUrl != thisInstanceUrl;
         var remoteUrl = isInitiator ? handshake.ResponderUrl : handshake.InitiatorUrl;
         var remoteName = request.InstanceName ?? "Remote Instance";
@@ -140,15 +138,4 @@ public class ExchangeTokenService(
         return instance;
     }
 
-    private string GetThisInstanceUrl()
-    {
-        var configuredUrl = configuration["Instance:BaseUrl"];
-        if (!string.IsNullOrWhiteSpace(configuredUrl))
-        {
-            return configuredUrl.TrimEnd('/');
-        }
-
-        var request = httpContextAccessor.HttpContext!.Request;
-        return $"{request.Scheme}://{request.Host}{request.PathBase}".TrimEnd('/');
-    }
 }

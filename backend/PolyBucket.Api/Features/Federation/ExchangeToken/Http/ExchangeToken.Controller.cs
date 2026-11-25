@@ -5,10 +5,13 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Federation.ExchangeToken.Domain;
 using PolyBucket.Api.Features.Federation.ExchangeToken.Http;
 
+using PolyBucket.Api.Features.Federation.Http;
+
 namespace PolyBucket.Api.Features.Federation.ExchangeToken.Http;
 
 [ApiController]
     [Route("api/federation/handshake")]
+    [RequireFederationEnabled(FederationGateMode.Mutation)]
     [AllowAnonymous] // Allow anonymous since tokens are being exchanged
     [ApiExplorerSettings(GroupName = "v1")]
     [Tags("Federation Handshake")]

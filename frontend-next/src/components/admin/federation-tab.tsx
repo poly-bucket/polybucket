@@ -53,7 +53,7 @@ function statusBadgeClass(status?: string): string {
   }
 }
 
-function InstancesTab() {
+function InstancesTab({ federationEnabled }: { federationEnabled: boolean }) {
   const {
     data: instances,
     isLoading,
@@ -183,6 +183,11 @@ function InstancesTab() {
       title="Federated Instances"
       description="Manage connected federation instances"
     >
+      {!federationEnabled && (
+        <p className="text-sm text-white/60 mb-4">
+          Enable federation above to add or change peer instances.
+        </p>
+      )}
       {error && (
         <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-400 mb-4">
           {error}
@@ -190,7 +195,11 @@ function InstancesTab() {
       )}
 
       <div className="flex justify-end mb-4">
-        <Button variant="glass" onClick={() => setAddOpen(true)}>
+        <Button
+          variant="glass"
+          onClick={() => setAddOpen(true)}
+          disabled={!federationEnabled}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Instance
         </Button>
@@ -267,6 +276,7 @@ function InstancesTab() {
                         variant="ghost"
                         size="icon"
                         onClick={() => openEdit(inst)}
+                        disabled={!federationEnabled}
                         className="text-white/80 hover:text-white"
                       >
                         <Pencil className="h-4 w-4" />
@@ -275,6 +285,7 @@ function InstancesTab() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeleteTarget(inst)}
+                        disabled={!federationEnabled}
                         className="text-red-400 hover:text-red-300"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -496,7 +507,7 @@ function InstancesTab() {
   );
 }
 
-function HandshakesTab() {
+function HandshakesTab({ federationEnabled }: { federationEnabled: boolean }) {
   const [initiateOpen, setInitiateOpen] = useState(false);
   const [remoteUrl, setRemoteUrl] = useState("");
   const [remoteName, setRemoteName] = useState("");
@@ -530,8 +541,17 @@ function HandshakesTab() {
       title="Handshakes"
       description="Initiate federation handshakes with remote instances"
     >
+      {!federationEnabled && (
+        <p className="text-sm text-white/60 mb-4">
+          Enable federation above to initiate handshakes.
+        </p>
+      )}
       <div className="flex justify-end mb-4">
-        <Button variant="glass" onClick={() => setInitiateOpen(true)}>
+        <Button
+          variant="glass"
+          onClick={() => setInitiateOpen(true)}
+          disabled={!federationEnabled}
+        >
           <Link2 className="h-4 w-4 mr-2" />
           Initiate Handshake
         </Button>
@@ -601,11 +621,15 @@ function HandshakesTab() {
 }
 
 export function FederationTab() {
+  const [federationEnabled, setFederationEnabled] = useState(false);
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white">Federation</h2>
 
-      <FederationInstanceSection />
+      <FederationInstanceSection
+        onFederationEnabledChange={setFederationEnabled}
+      />
 
       <Tabs defaultValue="instances" className="w-full">
         <TabsList variant="glass">
@@ -617,10 +641,10 @@ export function FederationTab() {
           </TabsTrigger>
         </TabsList>
         <TabsContent variant="glass" value="instances">
-          <InstancesTab />
+          <InstancesTab federationEnabled={federationEnabled} />
         </TabsContent>
         <TabsContent variant="glass" value="handshakes">
-          <HandshakesTab />
+          <HandshakesTab federationEnabled={federationEnabled} />
         </TabsContent>
       </Tabs>
     </div>

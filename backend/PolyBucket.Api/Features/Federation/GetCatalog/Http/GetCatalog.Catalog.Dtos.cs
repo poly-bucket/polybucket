@@ -4,6 +4,9 @@ public class CatalogResponse
 {
     public Guid InstanceId { get; set; }
     public string InstanceName { get; set; } = string.Empty;
+    public string InstanceDescription { get; set; } = string.Empty;
+    public string AdminContact { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = string.Empty;
     public int TotalModels { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
