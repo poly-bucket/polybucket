@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 export interface UploadMetadataFormProps {
   form: UseFormReturn<ModelMetadataFormValues>;
   categories: string[];
+  allowModelRemixing?: boolean;
   onCategoriesChange: (categories: string[]) => void;
   onValidityChange: (valid: boolean) => void;
   onDirtyChange: (dirty: boolean) => void;
@@ -27,6 +28,7 @@ export interface UploadMetadataFormProps {
 export function UploadMetadataForm({
   form,
   categories,
+  allowModelRemixing = true,
   onCategoriesChange,
   onValidityChange,
   onDirtyChange,
@@ -155,7 +157,9 @@ export function UploadMetadataForm({
               { name: "aiGenerated" as const, label: "AI Generated" },
               { name: "wip" as const, label: "Work in Progress" },
               { name: "nsfw" as const, label: "NSFW" },
-              { name: "isRemix" as const, label: "Remix of Another Model" },
+              ...(allowModelRemixing
+                ? [{ name: "isRemix" as const, label: "Remix of Another Model" }]
+                : []),
             ] as const
           ).map(({ name, label }) => (
             <label key={name} className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
@@ -172,7 +176,7 @@ export function UploadMetadataForm({
         </div>
       </div>
 
-      {isRemix && (
+      {allowModelRemixing && isRemix && (
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">Original model URL</label>
           <Input

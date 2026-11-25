@@ -57,5 +57,28 @@ public class ModelMetadataPolicyTests : IDisposable
         snapshot.MaxTagsPerModel.ShouldBe(7);
     }
 
-  public void Dispose() => _dbContext.Dispose();
+    [Fact(DisplayName = "When remix flags are stored, the metadata policy snapshot includes them.")]
+    public async Task GetSnapshot_IncludesRemixFlags()
+    {
+        // Arrange
+        _dbContext.ModelSettings.Add(new ModelSettings
+        {
+            Id = Guid.NewGuid(),
+            AllowModelRemixing = false,
+            RequireRemixAttribution = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await _dbContext.SaveChangesAsync();
+        _policy.Invalidate();
+
+        // Act
+        var snapshot = await _policy.GetSnapshotAsync();
+
+        // Assert
+        snapshot.AllowModelRemixing.ShouldBeFalse();
+        snapshot.RequireRemixAttribution.ShouldBeFalse();
+    }
+
+    public void Dispose() => _dbContext.Dispose();
 }

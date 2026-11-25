@@ -9,6 +9,7 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.DeleteModel.Domain;
 using PolyBucket.Api.Features.Models.DeleteModel.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -18,6 +19,7 @@ namespace PolyBucket.Api.Tests.Features.Models.DeleteModel
     {
         private readonly Mock<IDeleteModelRepository> _mockRepository;
         private readonly Mock<IPermissionService> _mockPermissionService;
+        private readonly Mock<ISiteModelAdvancedPolicy> _mockAdvancedPolicy;
         private readonly Mock<ILogger<DeleteModelService>> _mockLogger;
         private readonly DeleteModelService _service;
 
@@ -25,8 +27,16 @@ namespace PolyBucket.Api.Tests.Features.Models.DeleteModel
         {
             _mockRepository = new Mock<IDeleteModelRepository>();
             _mockPermissionService = new Mock<IPermissionService>();
+            _mockAdvancedPolicy = new Mock<ISiteModelAdvancedPolicy>();
+            _mockAdvancedPolicy
+                .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(SiteModelAdvancedPolicySnapshot.FailClosed with { EnableModelDeletion = true });
             _mockLogger = new Mock<ILogger<DeleteModelService>>();
-            _service = new DeleteModelService(_mockRepository.Object, _mockPermissionService.Object, _mockLogger.Object);
+            _service = new DeleteModelService(
+                _mockRepository.Object,
+                _mockPermissionService.Object,
+                _mockAdvancedPolicy.Object,
+                _mockLogger.Object);
         }
 
         [Fact(DisplayName = "When deleting a model with a valid request, the delete model service deletes the model.")]
@@ -53,6 +63,28 @@ namespace PolyBucket.Api.Tests.Features.Models.DeleteModel
 
             // Assert
             _mockRepository.Verify(x => x.DeleteModelAsync(It.IsAny<Model>(), cancellationToken), Times.Once);
+        }
+
+        [Fact(DisplayName = "When owner deletion is disabled, the owner cannot delete their model.")]
+        public async Task DeleteModelAsync_Owner_WhenDeletionDisabled_ThrowsUnauthorized()
+        {
+            // Arrange
+            var modelId = Guid.NewGuid();
+            var userId = Guid.NewGuid();
+            var user = CreateTestUser(userId);
+            var model = CreateTestModel(modelId, userId);
+
+            _mockRepository.Setup(x => x.GetModelByIdAsync(modelId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(model);
+            _mockPermissionService.Setup(x => x.HasPermissionAsync(userId, It.IsAny<string>()))
+                .ReturnsAsync(false);
+            _mockAdvancedPolicy
+                .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(SiteModelAdvancedPolicySnapshot.FailClosed with { EnableModelDeletion = false });
+
+            // Act & Assert
+            await Should.ThrowAsync<UnauthorizedAccessException>(async () =>
+                await _service.DeleteModelAsync(modelId, user, CancellationToken.None));
         }
 
         [Fact(DisplayName = "When deleting a model that does not exist, the delete model service throws a ModelNotFoundException.")]

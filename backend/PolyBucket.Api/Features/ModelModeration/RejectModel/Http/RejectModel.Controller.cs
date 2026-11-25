@@ -27,6 +27,7 @@ public class RejectModelController(IRejectModelService service) : ControllerBase
     [ProducesResponseType(404)]
     [ProducesResponseType(409)]
     [ProducesResponseType(403)]
+    [ProducesResponseType(400)]
     public async Task<IActionResult> RejectModel(
         Guid id,
         [FromBody] RejectModelRequestDto? request,
@@ -56,6 +57,14 @@ public class RejectModelController(IRejectModelService service) : ControllerBase
         catch (ConflictException)
         {
             return Conflict("Model is not pending moderation");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }

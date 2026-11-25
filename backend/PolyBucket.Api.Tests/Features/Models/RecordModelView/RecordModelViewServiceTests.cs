@@ -8,6 +8,7 @@ using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.RecordModelView.Domain;
 using PolyBucket.Api.Features.Models.RecordModelView.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -17,14 +18,19 @@ public class RecordModelViewServiceTests
 {
     private readonly Mock<IRecordModelViewRepository> _repository = new();
     private readonly Mock<IPermissionService> _permissionService = new();
+    private readonly Mock<ISiteModelAdvancedPolicy> _advancedPolicy = new();
     private readonly RecordModelViewService _service;
     private static readonly string ViewerKey = "u:00000000-0000-0000-0000-000000000001";
 
     public RecordModelViewServiceTests()
     {
+        _advancedPolicy
+            .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SiteModelAdvancedPolicySnapshot.FailClosed with { EnableModelAnalytics = true });
         _service = new RecordModelViewService(
             _repository.Object,
             _permissionService.Object,
+            _advancedPolicy.Object,
             TimeProvider.System);
     }
 
@@ -132,6 +138,36 @@ public class RecordModelViewServiceTests
 
         outcome.Counted.ShouldBeFalse();
         outcome.Views.ShouldBe(10);
+    }
+
+    [Fact(DisplayName = "When analytics are disabled, RecordViewAsync does not write dedup records.")]
+    public async Task RecordView_AnalyticsDisabled_ReturnsNotCounted()
+    {
+        // Arrange
+        var modelId = Guid.NewGuid();
+        var viewerId = Guid.NewGuid();
+        var model = CreatePublicModel(modelId, Guid.NewGuid(), views: 5);
+        var user = CreateUser(viewerId);
+        _repository.Setup(r => r.GetModelForViewAsync(modelId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(model);
+        _advancedPolicy
+            .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SiteModelAdvancedPolicySnapshot.FailClosed with { EnableModelAnalytics = false });
+
+        // Act
+        var outcome = await _service.RecordViewAsync(modelId, user, $"u:{viewerId}", CancellationToken.None);
+
+        // Assert
+        outcome.Counted.ShouldBeFalse();
+        outcome.Views.ShouldBe(5);
+        _repository.Verify(
+            r => r.TryRecordViewAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     private static Model CreatePublicModel(Guid modelId, Guid authorId, int views)

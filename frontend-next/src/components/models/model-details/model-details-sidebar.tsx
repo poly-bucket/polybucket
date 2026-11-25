@@ -44,6 +44,7 @@ interface ModelDetailsSidebarProps {
   versioningDisabled?: boolean;
   onReactionUpdate?: (result: ModelReactionResult) => void;
   showAddToCollection?: boolean;
+  showShare?: boolean;
 }
 
 export function ModelDetailsSidebar({
@@ -61,6 +62,7 @@ export function ModelDetailsSidebar({
   versioningDisabled = false,
   onReactionUpdate,
   showAddToCollection = true,
+  showShare = true,
 }: ModelDetailsSidebarProps) {
   const downloads = model.downloads ?? 0;
   const views = model.views ?? 0;
@@ -249,14 +251,12 @@ export function ModelDetailsSidebar({
               <AddToCollectionPopover modelId={model.id} />
             )}
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={onShare}
-            >
-              <Share2 className="h-4 w-4" />
-              Share
-            </Button>
+            {showShare && (
+              <Button variant="outline" className="w-full" onClick={onShare}>
+                <Share2 className="h-4 w-4" />
+                Share
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

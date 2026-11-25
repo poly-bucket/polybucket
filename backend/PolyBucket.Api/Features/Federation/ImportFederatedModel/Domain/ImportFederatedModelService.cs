@@ -46,6 +46,10 @@ public class ImportFederatedModelService(IImportFederatedModelRepository reposit
                     CreatedAt = model.CreatedAt
                 });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return new ObjectResult(ex.Message) { StatusCode = StatusCodes.Status403Forbidden };
+        }
         catch (InvalidOperationException ex)
         {
             return new BadRequestObjectResult(ex.Message);

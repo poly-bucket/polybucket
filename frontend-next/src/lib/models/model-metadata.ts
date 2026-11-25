@@ -29,6 +29,8 @@ export type ModelMetadataRules = {
   requireModelTags: boolean;
   maxCategoriesPerModel: number;
   requireCategorySelection: boolean;
+  allowModelRemixing: boolean;
+  requireRemixAttribution: boolean;
 };
 
 export const defaultModelMetadataRules: ModelMetadataRules = {
@@ -44,6 +46,8 @@ export const defaultModelMetadataRules: ModelMetadataRules = {
   requireModelTags: false,
   maxCategoriesPerModel: 3,
   requireCategorySelection: false,
+  allowModelRemixing: true,
+  requireRemixAttribution: true,
 };
 
 export function parseModelMetadataRules(
@@ -73,6 +77,10 @@ export function parseModelMetadataRules(
       raw.maxCategoriesPerModel ?? defaultModelMetadataRules.maxCategoriesPerModel,
     requireCategorySelection:
       raw.requireCategorySelection ?? defaultModelMetadataRules.requireCategorySelection,
+    allowModelRemixing:
+      raw.allowModelRemixing ?? defaultModelMetadataRules.allowModelRemixing,
+    requireRemixAttribution:
+      raw.requireRemixAttribution ?? defaultModelMetadataRules.requireRemixAttribution,
   };
 }
 
@@ -136,13 +144,21 @@ export function createModelMetadataSchema(rules: ModelMetadataRules) {
     remixUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
   });
 
-  return modelMetadataFieldsSchema.refine(
-    (data) => !data.isRemix || (data.remixUrl && data.remixUrl.length > 0),
-    {
-      message: "Remix URL is required when marking as remix",
-      path: ["remixUrl"],
-    }
-  );
+  return modelMetadataFieldsSchema
+    .refine((data) => !data.isRemix || rules.allowModelRemixing, {
+      message: "Model remixing is not allowed on this site",
+      path: ["isRemix"],
+    })
+    .refine(
+      (data) =>
+        !data.isRemix ||
+        !rules.requireRemixAttribution ||
+        (data.remixUrl && data.remixUrl.length > 0),
+      {
+        message: "Remix URL is required when marking as remix",
+        path: ["remixUrl"],
+      }
+    );
 }
 
 export const modelMetadataSchema = createModelMetadataSchema(defaultModelMetadataRules);

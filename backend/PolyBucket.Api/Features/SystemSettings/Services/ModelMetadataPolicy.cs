@@ -53,7 +53,9 @@ public sealed class ModelMetadataPolicy(
                     s.MaxTagsPerModel,
                     s.RequireModelTags,
                     s.MaxCategoriesPerModel,
-                    s.RequireCategorySelection
+                    s.RequireCategorySelection,
+                    s.AllowModelRemixing,
+                    s.RequireRemixAttribution
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -74,7 +76,9 @@ public sealed class ModelMetadataPolicy(
                 settings.MaxTagsPerModel,
                 settings.RequireModelTags,
                 settings.MaxCategoriesPerModel,
-                settings.RequireCategorySelection);
+                settings.RequireCategorySelection,
+                settings.AllowModelRemixing,
+                settings.RequireRemixAttribution);
         }
         catch (Exception ex)
         {

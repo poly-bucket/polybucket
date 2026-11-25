@@ -8,7 +8,8 @@ public class GetSiteAccessService(
     ISiteModelDownloadPolicy downloadPolicy,
     IModelMetadataPolicy metadataPolicy,
     ISiteModelFeaturePolicy featurePolicy,
-    ISiteModelVersioningPolicy versioningPolicy) : IGetSiteAccessService
+    ISiteModelVersioningPolicy versioningPolicy,
+    ISiteModelAdvancedPolicy advancedPolicy) : IGetSiteAccessService
 {
     private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
     private readonly ISiteModelUploadPolicy _uploadPolicy = uploadPolicy;
@@ -16,6 +17,7 @@ public class GetSiteAccessService(
     private readonly IModelMetadataPolicy _metadataPolicy = metadataPolicy;
     private readonly ISiteModelFeaturePolicy _featurePolicy = featurePolicy;
     private readonly ISiteModelVersioningPolicy _versioningPolicy = versioningPolicy;
+    private readonly ISiteModelAdvancedPolicy _advancedPolicy = advancedPolicy;
 
     public async Task<GetSiteAccessResponse> GetSiteAccessAsync(CancellationToken cancellationToken)
     {
@@ -29,6 +31,7 @@ public class GetSiteAccessService(
         var metadata = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
         var commentsAccess = await _featurePolicy.GetCommentsAccessLevelAsync(cancellationToken);
         var collectionsAccess = await _featurePolicy.GetCollectionsAccessLevelAsync(cancellationToken);
+        var advanced = await _advancedPolicy.GetSnapshotAsync(cancellationToken);
 
         return new GetSiteAccessResponse
         {
@@ -38,6 +41,8 @@ public class GetSiteAccessService(
             AllowAnonymousModelDownload = allowAnonymousModelDownload,
             ModelDownloadsEnabled = modelDownloadsEnabled,
             ModelVersioningEnabled = modelVersioningEnabled,
+            ModelSharingEnabled = advanced.EnableModelSharing,
+            ModelReportingEnabled = advanced.EnableModelReporting,
             ModelCommentsAccess = commentsAccess.ToString(),
             ModelCollectionsAccess = collectionsAccess.ToString(),
             DefaultModelPrivacy = defaultPrivacy.ToString(),
@@ -54,7 +59,9 @@ public class GetSiteAccessService(
                 MaxTagsPerModel = metadata.MaxTagsPerModel,
                 RequireModelTags = metadata.RequireModelTags,
                 MaxCategoriesPerModel = metadata.MaxCategoriesPerModel,
-                RequireCategorySelection = metadata.RequireCategorySelection
+                RequireCategorySelection = metadata.RequireCategorySelection,
+                AllowModelRemixing = metadata.AllowModelRemixing,
+                RequireRemixAttribution = metadata.RequireRemixAttribution
             }
         };
     }

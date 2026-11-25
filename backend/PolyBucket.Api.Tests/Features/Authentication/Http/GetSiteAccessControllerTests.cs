@@ -44,8 +44,16 @@ public class GetSiteAccessControllerTests : IDisposable
             cache,
             permissions.Object,
             NullLogger<SiteModelVersioningPolicy>.Instance);
+        var advancedPolicy = new SiteModelAdvancedPolicy(_dbContext, cache, NullLogger<SiteModelAdvancedPolicy>.Instance);
         _controller = new GetSiteAccessController(
-            new GetSiteAccessService(privacy, uploadPolicy, downloadPolicy, metadataPolicy, featurePolicy, versioningPolicy));
+            new GetSiteAccessService(
+                privacy,
+                uploadPolicy,
+                downloadPolicy,
+                metadataPolicy,
+                featurePolicy,
+                versioningPolicy,
+                advancedPolicy));
     }
 
     [Fact(DisplayName = "When no site setup exists, site access reports public browsing is allowed.")]

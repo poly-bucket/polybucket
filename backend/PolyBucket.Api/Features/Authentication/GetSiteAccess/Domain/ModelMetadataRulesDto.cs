@@ -25,4 +25,8 @@ public class ModelMetadataRulesDto
     public int MaxCategoriesPerModel { get; set; }
 
     public bool RequireCategorySelection { get; set; }
+
+    public bool AllowModelRemixing { get; set; } = true;
+
+    public bool RequireRemixAttribution { get; set; } = true;
 }

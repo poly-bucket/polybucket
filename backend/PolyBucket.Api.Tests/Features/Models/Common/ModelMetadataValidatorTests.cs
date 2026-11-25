@@ -24,7 +24,9 @@ public class ModelMetadataValidatorTests
             MaxTagsPerModel: 10,
             RequireModelTags: false,
             MaxCategoriesPerModel: 3,
-            RequireCategorySelection: false);
+            RequireCategorySelection: false,
+            AllowModelRemixing: true,
+            RequireRemixAttribution: true);
 
     [Fact(DisplayName = "When NSFW is disallowed, create metadata validation returns an error for NSFW models.")]
     public void ValidateCreate_NsfwDenied_ReturnsError()
@@ -40,6 +42,8 @@ public class ModelMetadataValidatorTests
             parsedLicense: LicenseTypes.MIT,
             nsfw: true,
             aiGenerated: false,
+            remix: false,
+            remixUrl: null,
             files: [CreateFormFile("model.stl")]);
 
         // Assert
@@ -61,6 +65,8 @@ public class ModelMetadataValidatorTests
             parsedLicense: null,
             nsfw: false,
             aiGenerated: false,
+            remix: false,
+            remixUrl: null,
             files: [CreateFormFile("model.stl")]);
         var withImage = _validator.ValidateCreateMetadata(
             policy,
@@ -69,6 +75,8 @@ public class ModelMetadataValidatorTests
             parsedLicense: null,
             nsfw: false,
             aiGenerated: false,
+            remix: false,
+            remixUrl: null,
             files: [CreateFormFile("model.stl"), CreateFormFile("thumb.png")]);
 
         // Assert
@@ -84,6 +92,51 @@ public class ModelMetadataValidatorTests
 
         // Act
         var error = _validator.ValidateRemoveTag(policy, currentTagCount: 1);
+
+        // Assert
+        error.ShouldNotBeNull();
+    }
+
+    [Fact(DisplayName = "When remixing is disallowed, create metadata validation returns an error for remix models.")]
+    public void ValidateCreate_RemixDenied_ReturnsError()
+    {
+        // Arrange
+        var policy = PermissivePolicy() with { AllowModelRemixing = false };
+
+        // Act
+        var error = _validator.ValidateCreateMetadata(
+            policy,
+            description: "ok",
+            license: "mit",
+            parsedLicense: LicenseTypes.MIT,
+            nsfw: false,
+            aiGenerated: false,
+            remix: true,
+            remixUrl: "https://example.com/model/1",
+            files: [CreateFormFile("model.stl")]);
+
+        // Assert
+        error.ShouldNotBeNull();
+        error.ToLowerInvariant().ShouldContain("remix");
+    }
+
+    [Fact(DisplayName = "When remix attribution is required, create validation requires a remix URL.")]
+    public void ValidateCreate_RemixRequiresUrl_ReturnsError()
+    {
+        // Arrange
+        var policy = PermissivePolicy() with { RequireRemixAttribution = true };
+
+        // Act
+        var error = _validator.ValidateCreateMetadata(
+            policy,
+            description: "ok",
+            license: "mit",
+            parsedLicense: LicenseTypes.MIT,
+            nsfw: false,
+            aiGenerated: false,
+            remix: true,
+            remixUrl: null,
+            files: [CreateFormFile("model.stl")]);
 
         // Assert
         error.ShouldNotBeNull();

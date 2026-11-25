@@ -20,16 +20,24 @@ namespace PolyBucket.Api.Features.Federation.Services
         PolyBucketDbContext context,
         IHttpContextAccessor httpContextAccessor,
         IHttpClientFactory httpClientFactory,
-        ISiteModelFeaturePolicy featurePolicy) : IFederationImportService
+        ISiteModelFeaturePolicy featurePolicy,
+        ISiteModelAdvancedPolicy advancedPolicy) : IFederationImportService
     {
         private readonly IFederationRepository _federationRepository = federationRepository;
         private readonly PolyBucketDbContext _context = context;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly ISiteModelFeaturePolicy _featurePolicy = featurePolicy;
+        private readonly ISiteModelAdvancedPolicy _advancedPolicy = advancedPolicy;
 
         public async Task<Model> ImportModelAsync(string instanceId, string remoteModelId)
         {
+            var advanced = await _advancedPolicy.GetSnapshotAsync();
+            if (!advanced.EnableModelImport)
+            {
+                throw new UnauthorizedAccessException("Model import is disabled on this site.");
+            }
+
             var instance = await _federationRepository.GetFederatedInstanceAsync(Guid.Parse(instanceId));
             if (instance == null)
             {

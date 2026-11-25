@@ -13,7 +13,16 @@ public interface IModelMetadataValidator
         LicenseTypes? parsedLicense,
         bool nsfw,
         bool aiGenerated,
+        bool remix,
+        string? remixUrl,
         IFormFile[] files);
+
+    string? ValidateUpdateRemix(
+        ModelMetadataPolicySnapshot policy,
+        bool currentIsRemix,
+        string? currentRemixUrl,
+        bool? requestedIsRemix,
+        string? requestedRemixUrl);
 
     string? ValidateUpdateDescription(ModelMetadataPolicySnapshot policy, string description);
 

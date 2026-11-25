@@ -16,8 +16,16 @@ public sealed class ModelMetadataValidator : IModelMetadataValidator
         LicenseTypes? parsedLicense,
         bool nsfw,
         bool aiGenerated,
+        bool remix,
+        string? remixUrl,
         IFormFile[] files)
     {
+        var remixError = ValidateRemixState(policy, remix, remixUrl);
+        if (remixError != null)
+        {
+            return remixError;
+        }
+
         var descriptionError = ValidateDescription(policy, description);
         if (descriptionError != null)
         {
@@ -64,6 +72,38 @@ public sealed class ModelMetadataValidator : IModelMetadataValidator
         aiGenerated && !policy.AllowAiGeneratedContent
             ? "AI-generated content is not allowed on this site."
             : null;
+
+    public string? ValidateUpdateRemix(
+        ModelMetadataPolicySnapshot policy,
+        bool currentIsRemix,
+        string? currentRemixUrl,
+        bool? requestedIsRemix,
+        string? requestedRemixUrl)
+    {
+        if (requestedIsRemix == false)
+        {
+            return null;
+        }
+
+        var effectiveIsRemix = requestedIsRemix ?? currentIsRemix;
+        if (!effectiveIsRemix)
+        {
+            return null;
+        }
+
+        if (!policy.AllowModelRemixing)
+        {
+            return "Model remixing is not allowed on this site.";
+        }
+
+        var effectiveUrl = requestedRemixUrl ?? currentRemixUrl;
+        if (requestedRemixUrl != null && string.IsNullOrWhiteSpace(requestedRemixUrl))
+        {
+            effectiveUrl = null;
+        }
+
+        return ValidateRemixAttribution(policy, effectiveUrl);
+    }
 
     public string? ValidateAddTag(ModelMetadataPolicySnapshot policy, int currentTagCount, bool isNewLink)
     {
@@ -147,6 +187,42 @@ public sealed class ModelMetadataValidator : IModelMetadataValidator
         if (policy.RequireLicenseSelection && parsedLicense == null)
         {
             return "A license must be selected.";
+        }
+
+        return null;
+    }
+
+    private static string? ValidateRemixState(ModelMetadataPolicySnapshot policy, bool remix, string? remixUrl)
+    {
+        if (!remix)
+        {
+            return null;
+        }
+
+        if (!policy.AllowModelRemixing)
+        {
+            return "Model remixing is not allowed on this site.";
+        }
+
+        return ValidateRemixAttribution(policy, remixUrl);
+    }
+
+    private static string? ValidateRemixAttribution(ModelMetadataPolicySnapshot policy, string? remixUrl)
+    {
+        if (!policy.RequireRemixAttribution)
+        {
+            return null;
+        }
+
+        var trimmed = remixUrl?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return "Remix URL is required when marking a model as a remix.";
+        }
+
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out _))
+        {
+            return "Remix URL must be a valid absolute URL.";
         }
 
         return null;

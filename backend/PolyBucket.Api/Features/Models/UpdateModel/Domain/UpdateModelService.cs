@@ -114,6 +114,20 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
                 }
             }
 
+            if (request.IsRemix.HasValue || request.RemixUrl != null)
+            {
+                var remixError = _metadataValidator.ValidateUpdateRemix(
+                    metadataPolicy,
+                    model.IsRemix,
+                    model.RemixUrl,
+                    request.IsRemix,
+                    request.RemixUrl);
+                if (remixError != null)
+                {
+                    throw new ValidationException(remixError);
+                }
+            }
+
             // Update model properties
             if (!string.IsNullOrWhiteSpace(request.Name))
             {
@@ -155,11 +169,15 @@ namespace PolyBucket.Api.Features.Models.UpdateModel.Domain
             if (request.IsRemix.HasValue)
             {
                 model.IsRemix = request.IsRemix.Value;
+                if (!request.IsRemix.Value)
+                {
+                    model.RemixUrl = null;
+                }
             }
 
-            if (request.RemixUrl != null)
+            if (request.RemixUrl != null && model.IsRemix)
             {
-                model.RemixUrl = request.RemixUrl;
+                model.RemixUrl = string.IsNullOrWhiteSpace(request.RemixUrl) ? null : request.RemixUrl.Trim();
             }
 
             if (request.IsFeatured.HasValue)

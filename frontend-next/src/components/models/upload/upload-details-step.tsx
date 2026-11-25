@@ -24,6 +24,7 @@ interface UploadDetailsStepProps {
   onCategoriesChange: (categories: string[]) => void;
   onMetadataValidityChange: (valid: boolean) => void;
   onMetadataDirtyChange: (dirty: boolean) => void;
+  allowModelRemixing?: boolean;
 }
 
 export function UploadDetailsStep({
@@ -41,6 +42,7 @@ export function UploadDetailsStep({
   onCategoriesChange,
   onMetadataValidityChange,
   onMetadataDirtyChange,
+  allowModelRemixing,
 }: UploadDetailsStepProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
@@ -65,6 +67,7 @@ export function UploadDetailsStep({
           <UploadMetadataForm
             form={metadataForm}
             categories={categories}
+            allowModelRemixing={allowModelRemixing}
             onCategoriesChange={onCategoriesChange}
             onValidityChange={onMetadataValidityChange}
             onDirtyChange={onMetadataDirtyChange}

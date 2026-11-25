@@ -19,6 +19,10 @@ public class GetSiteAccessResponse
 
     public bool ModelVersioningEnabled { get; set; } = true;
 
+    public bool ModelSharingEnabled { get; set; } = true;
+
+    public bool ModelReportingEnabled { get; set; } = true;
+
     public string ModelCommentsAccess { get; set; } = "Full";
 
     public string ModelCollectionsAccess { get; set; } = "Full";

@@ -23,10 +23,12 @@ public class ReportCommentController(IReportCommentService reportCommentService)
     /// <response code="200">The report was submitted.</response>
     /// <response code="400">The report could not be submitted.</response>
     /// <response code="401">The caller is not signed in.</response>
+    /// <response code="403">Reporting is disabled on this site.</response>
     [HttpPost("{commentId:guid}/report")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> ReportComment(Guid commentId, [FromBody] ReportCommentRequest request, CancellationToken cancellationToken)
     {
         var userId = User.GetCommentUserId();
@@ -35,9 +37,20 @@ public class ReportCommentController(IReportCommentService reportCommentService)
             return Unauthorized();
         }
 
-        var reported = await reportCommentService.ReportAsync(commentId, userId.Value, request.Reason.Trim(), cancellationToken);
-        return reported
-            ? Ok(new { message = "Comment reported successfully" })
-            : BadRequest(new { message = "Unable to report comment" });
+        try
+        {
+            var reported = await reportCommentService.ReportAsync(commentId, userId.Value, request.Reason.Trim(), cancellationToken);
+            return reported
+                ? Ok(new { message = "Comment reported successfully" })
+                : BadRequest(new { message = "Unable to report comment" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

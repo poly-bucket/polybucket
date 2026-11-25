@@ -12,7 +12,7 @@ public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService)
     /// Returns public site access flags for browsing, model uploads, and downloads.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Public browsing, upload policy flags, and model metadata validation rules for the upload UI</returns>
+    /// <returns>Public browsing, upload policy flags, model sharing/reporting gates, and metadata validation rules for the upload UI</returns>
     [HttpGet("site-access")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GetSiteAccessResponse), 200)]
@@ -28,6 +28,8 @@ public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService)
             allowAnonymousModelDownload = result.AllowAnonymousModelDownload,
             modelDownloadsEnabled = result.ModelDownloadsEnabled,
             modelVersioningEnabled = result.ModelVersioningEnabled,
+            modelSharingEnabled = result.ModelSharingEnabled,
+            modelReportingEnabled = result.ModelReportingEnabled,
             modelCommentsAccess = result.ModelCommentsAccess,
             modelCollectionsAccess = result.ModelCollectionsAccess,
             defaultModelPrivacy = result.DefaultModelPrivacy,
@@ -44,7 +46,9 @@ public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService)
                 maxTagsPerModel = rules.MaxTagsPerModel,
                 requireModelTags = rules.RequireModelTags,
                 maxCategoriesPerModel = rules.MaxCategoriesPerModel,
-                requireCategorySelection = rules.RequireCategorySelection
+                requireCategorySelection = rules.RequireCategorySelection,
+                allowModelRemixing = rules.AllowModelRemixing,
+                requireRemixAttribution = rules.RequireRemixAttribution
             }
         });
     }

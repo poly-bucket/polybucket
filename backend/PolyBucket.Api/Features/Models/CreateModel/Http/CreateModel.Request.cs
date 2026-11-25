@@ -26,5 +26,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Http
         public bool NSFW { get; set; }
         
         public bool Remix { get; set; }
+
+        public string? RemixUrl { get; set; }
     }
 } 

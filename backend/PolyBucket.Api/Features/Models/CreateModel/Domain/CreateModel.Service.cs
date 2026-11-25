@@ -145,6 +145,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                     WIP = request.WorkInProgress,
                     NSFW = request.NSFW,
                     IsRemix = request.Remix,
+                    RemixUrl = request.Remix ? request.RemixUrl?.Trim() : null,
                     IsPublic = isPublic,
                     AuthorId = authorId,
                     Files = modelFiles,
@@ -212,6 +213,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                 parsedLicense,
                 request.NSFW,
                 request.AIGenerated,
+                request.Remix,
+                request.RemixUrl,
                 request.Files);
             if (metadataError != null)
             {

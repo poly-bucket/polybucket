@@ -354,7 +354,9 @@ export function ModelEditForm({
               { name: "aiGenerated" as const, label: "AI Generated" },
               { name: "wip" as const, label: "Work in Progress" },
               { name: "nsfw" as const, label: "NSFW (Not Safe for Work)" },
-              { name: "isRemix" as const, label: "Remix of Another Model" },
+              ...(metadataRules.allowModelRemixing
+                ? [{ name: "isRemix" as const, label: "Remix of Another Model" }]
+                : []),
             ] as const
           ).map(({ name, label }) => (
             <div key={name} className="flex items-center gap-3">
@@ -374,7 +376,7 @@ export function ModelEditForm({
         </div>
       </div>
 
-      {isRemix && (
+      {metadataRules.allowModelRemixing && isRemix && (
         <SettingsField label="Original Model URL" error={errors.remixUrl?.message}>
           <Input
             {...register("remixUrl")}

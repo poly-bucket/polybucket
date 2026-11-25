@@ -25,6 +25,7 @@ namespace PolyBucket.Api.Features.Models.DeleteModel.Http
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult> DeleteModel(Guid id, CancellationToken cancellationToken)
         {
             try

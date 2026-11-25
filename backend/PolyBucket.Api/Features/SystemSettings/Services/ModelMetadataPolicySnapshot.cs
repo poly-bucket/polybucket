@@ -12,7 +12,9 @@ public sealed record ModelMetadataPolicySnapshot(
     int MaxTagsPerModel,
     bool RequireModelTags,
     int MaxCategoriesPerModel,
-    bool RequireCategorySelection)
+    bool RequireCategorySelection,
+    bool AllowModelRemixing,
+    bool RequireRemixAttribution)
 {
     public static ModelMetadataPolicySnapshot FailClosed { get; } = new(
         RequireModelDescription: true,
@@ -26,5 +28,7 @@ public sealed record ModelMetadataPolicySnapshot(
         MaxTagsPerModel: 10,
         RequireModelTags: false,
         MaxCategoriesPerModel: 3,
-        RequireCategorySelection: false);
+        RequireCategorySelection: false,
+        AllowModelRemixing: false,
+        RequireRemixAttribution: true);
 }

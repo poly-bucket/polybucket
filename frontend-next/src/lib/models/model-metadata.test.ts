@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { LicenseTypes, PrivacySettings } from "@/lib/api/client";
-import { modelMetadataSchema } from "./model-metadata";
+import {
+  createModelMetadataSchema,
+  defaultModelMetadataRules,
+  modelMetadataSchema,
+} from "./model-metadata";
 
 describe("modelMetadataSchema", () => {
   it("requires a title", () => {
@@ -29,6 +33,25 @@ describe("modelMetadataSchema", () => {
       nsfw: false,
       isRemix: true,
       remixUrl: "",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects remix when remixing is disabled on the site", () => {
+    const schema = createModelMetadataSchema({
+      ...defaultModelMetadataRules,
+      allowModelRemixing: false,
+    });
+    const result = schema.safeParse({
+      name: "Test Model",
+      description: "Hello",
+      privacy: PrivacySettings.Public,
+      license: LicenseTypes.MIT,
+      aiGenerated: false,
+      wip: false,
+      nsfw: false,
+      isRemix: true,
+      remixUrl: "https://example.com/model/1",
     });
     expect(result.success).toBe(false);
   });

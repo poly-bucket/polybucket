@@ -7,12 +7,14 @@ using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.RecordModelView.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 
 namespace PolyBucket.Api.Features.Models.RecordModelView.Domain;
 
 public class RecordModelViewService(
     IRecordModelViewRepository repository,
     IPermissionService permissionService,
+  ISiteModelAdvancedPolicy advancedPolicy,
     TimeProvider timeProvider) : IRecordModelViewService
 {
     private static readonly TimeSpan DedupWindow = TimeSpan.FromHours(24);
@@ -42,6 +44,12 @@ public class RecordModelViewService(
         if (!await CanUserAccessModelAsync(model, currentUserId, cancellationToken))
         {
             return RecordModelViewOutcome.Forbid();
+        }
+
+        var advanced = await advancedPolicy.GetSnapshotAsync(cancellationToken);
+        if (!advanced.EnableModelAnalytics)
+        {
+            return RecordModelViewOutcome.Ok(model.Views, counted: false);
         }
 
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;

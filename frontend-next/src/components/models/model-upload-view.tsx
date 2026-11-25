@@ -596,6 +596,7 @@ export default function ModelUploadView() {
             onCategoriesChange={setCategories}
             onMetadataValidityChange={setMetadataValid}
             onMetadataDirtyChange={setMetadataDirty}
+            allowModelRemixing={metadataRules.allowModelRemixing}
           />
         )}
 

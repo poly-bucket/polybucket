@@ -1,6 +1,7 @@
 using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.ModelModeration.RejectModel.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Api.Features.Notifications.Domain;
 using System;
 using System.Text.Json;
@@ -12,11 +13,13 @@ namespace PolyBucket.Api.Features.ModelModeration.RejectModel.Domain;
 public class RejectModelService(
     IRejectModelRepository repository,
     IModerationAuditLogWriter auditLogWriter,
-    INotificationPublisher notificationPublisher) : IRejectModelService
+    INotificationPublisher notificationPublisher,
+    ISiteModelAdvancedPolicy advancedPolicy) : IRejectModelService
 {
     private readonly IRejectModelRepository _repository = repository;
     private readonly IModerationAuditLogWriter _auditLogWriter = auditLogWriter;
     private readonly INotificationPublisher _notificationPublisher = notificationPublisher;
+    private readonly ISiteModelAdvancedPolicy _advancedPolicy = advancedPolicy;
 
     public async Task RejectAsync(
         Guid modelId,
@@ -26,6 +29,17 @@ public class RejectModelService(
         string? userAgent,
         CancellationToken cancellationToken = default)
     {
+        var advanced = await _advancedPolicy.GetSnapshotAsync(cancellationToken);
+        if (!advanced.EnableModelRejection)
+        {
+            throw new UnauthorizedAccessException("Model rejection is disabled on this site.");
+        }
+
+        if (advanced.RequireRejectionReason && string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentException("A rejection reason is required.");
+        }
+
         var model = await _repository.GetModelAsync(modelId, cancellationToken);
         if (model == null)
         {

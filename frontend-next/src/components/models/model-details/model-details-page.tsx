@@ -284,6 +284,13 @@ export function ModelDetailsPage() {
     toast.error("Downloads are disabled on this site");
   }, [siteAccessPolicy]);
 
+  const showShare = useMemo(() => {
+    if (!siteAccessPolicy) {
+      return true;
+    }
+    return siteAccessPolicy.modelSharingEnabled;
+  }, [siteAccessPolicy]);
+
   const handleDownload = useCallback(async () => {
     if (!model?.id || !canDownload) {
       rejectDownloadAttempt();
@@ -560,6 +567,7 @@ export function ModelDetailsPage() {
             onDownload={handleDownload}
             onDelete={() => setShowDeleteConfirm(true)}
             onShare={handleShare}
+            showShare={showShare}
             showAddToCollection={showAddToCollection}
             onEdit={handleOpenEditDetails}
             onCreateVersion={

@@ -43,6 +43,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Http
             [FromForm] bool workInProgress,
             [FromForm] bool nSFW,
             [FromForm] bool remix,
+            [FromForm] string? remixUrl,
             CancellationToken cancellationToken)
         {
             try
@@ -58,7 +59,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Http
                     AIGenerated = aiGenerated,
                     WorkInProgress = workInProgress,
                     NSFW = nSFW,
-                    Remix = remix
+                    Remix = remix,
+                    RemixUrl = remixUrl
                 };
                 var response = await _createModelService.CreateModelAsync(request, User, cancellationToken);
                 return CreatedAtAction(nameof(CreateModel), new { id = response.Model.Id }, response);

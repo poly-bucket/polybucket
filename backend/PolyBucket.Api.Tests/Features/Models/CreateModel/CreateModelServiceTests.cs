@@ -66,6 +66,8 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
                     It.IsAny<LicenseTypes?>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<string?>(),
                     It.IsAny<IFormFile[]>()))
                 .Returns((string?)null);
             _mockUploadPolicy

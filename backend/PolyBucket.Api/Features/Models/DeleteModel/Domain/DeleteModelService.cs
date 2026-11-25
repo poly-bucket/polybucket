@@ -3,6 +3,7 @@ using PolyBucket.Api.Common;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.DeleteModel.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using System;
 using System.Security.Claims;
 using System.Threading;
@@ -14,12 +15,18 @@ namespace PolyBucket.Api.Features.Models.DeleteModel.Domain
     {
         private readonly IDeleteModelRepository _repository;
         private readonly IPermissionService _permissionService;
+        private readonly ISiteModelAdvancedPolicy _advancedPolicy;
         private readonly ILogger<DeleteModelService> _logger;
 
-        public DeleteModelService(IDeleteModelRepository repository, IPermissionService permissionService, ILogger<DeleteModelService> logger)
+        public DeleteModelService(
+            IDeleteModelRepository repository,
+            IPermissionService permissionService,
+            ISiteModelAdvancedPolicy advancedPolicy,
+            ILogger<DeleteModelService> logger)
         {
             _repository = repository;
             _permissionService = permissionService;
+            _advancedPolicy = advancedPolicy;
             _logger = logger;
         }
 
@@ -42,11 +49,16 @@ namespace PolyBucket.Api.Features.Models.DeleteModel.Domain
                 throw new ModelNotFoundException($"Model with ID {modelId} not found");
             }
 
-            // Check ownership - user can only delete their own models unless they have MODEL_DELETE_ANY permission
             var hasAnyPermission = await _permissionService.HasPermissionAsync(userId, PermissionConstants.MODEL_DELETE_ANY);
             if (!hasAnyPermission && model.AuthorId != userId)
             {
                 throw new UnauthorizedAccessException("You do not have permission to delete this model");
+            }
+
+            var advanced = await _advancedPolicy.GetSnapshotAsync(cancellationToken);
+            if (!advanced.EnableModelDeletion && !hasAnyPermission)
+            {
+                throw new UnauthorizedAccessException("Model deletion is disabled on this site.");
             }
 
             // Soft delete the model
