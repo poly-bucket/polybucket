@@ -75,7 +75,8 @@ namespace PolyBucket.Api.Tests
                     ["AppSettings:Security:JwtAudience"] = "polybucket-test-client",
                     ["AppSettings:Security:AccessTokenExpiryMinutes"] = "60",
                     ["AppSettings:Security:RefreshTokenExpiryDays"] = "7",
-                    ["ModelPreviews:WorkerEnabled"] = "false"
+                    ["ModelPreviews:WorkerEnabled"] = "false",
+                    ["RateLimiting:Enabled"] = "false"
                 });
             });
             

@@ -9,8 +9,13 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
+using PolyBucket.Api.Features.SystemSettings.Services;
+using PolyBucket.Api.Seeders;
 using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Entities.SystemSettings;
 using System.Net.Http.Headers;
+using PolyBucket.Email;
 using PolyBucket.Storage;
 using Xunit;
 
@@ -107,14 +112,82 @@ namespace PolyBucket.Api.Tests
 
                 await TestDatabaseManager.ReseedRolePermissionsIfEmptyAsync(ctx);
                 await TestStorageSettingsSeeder.SeedAsync(ctx);
-                var storageResolver = _serviceScope!.ServiceProvider.GetService<IStorageSettingsResolver>();
-                storageResolver?.Invalidate();
+                await EnsureUploadFileTypesAsync(ctx);
+                await new AnonymousUploadAuthorSeeder(ctx, NullLogger<AnonymousUploadAuthorSeeder>.Instance).SeedAsync();
+                if (!await ctx.ModelSettings.AnyAsync())
+                {
+                    ctx.ModelSettings.Add(new ModelSettings
+                    {
+                        RequireUploadModeration = false,
+                        RequireModelDescription = false,
+                        RequireLicenseSelection = false,
+                        RequireModeratorApproval = false,
+                        RequireModelApproval = false,
+                        EnableModelComments = true,
+                        EnableModelCollections = true
+                    });
+                    await ctx.SaveChangesAsync();
+                }
+
+                var services = _serviceScope!.ServiceProvider;
+                services.GetService<IStorageSettingsResolver>()?.Invalidate();
+                services.GetService<ISiteModelFeaturePolicy>()?.Invalidate();
+                services.GetService<IModelMetadataPolicy>()?.Invalidate();
+                services.GetService<ISitePrivacyState>()?.Invalidate();
+                services.GetService<ISiteModelUploadPolicy>()?.Invalidate();
+                services.GetService<ISiteModelVersioningPolicy>()?.Invalidate();
+                services.GetService<IEmailSettingsResolver>()?.Invalidate();
                 ctx.ChangeTracker.Clear();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Warning: Database cleanup failed: {ex.Message}");
             }
+        }
+
+        private static async Task EnsureUploadFileTypesAsync(PolyBucketDbContext ctx)
+        {
+            if (await ctx.FileTypeSettings.AnyAsync())
+                return;
+
+            var adminRole = await ctx.Roles.FirstAsync(r => r.Name == "Admin");
+            var seedUser = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "filetype-seed@polybucket.test",
+                Username = "filetype-seed",
+                PasswordHash = "seed",
+                Salt = "seed",
+                RoleId = adminRole.Id,
+                EmailVerifiedAt = DateTime.UtcNow,
+                HasCompletedFirstTimeSetup = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            ctx.Users.Add(seedUser);
+            await ctx.SaveChangesAsync();
+
+            var extensions = new[] { ".stl", ".obj", ".png", ".jpg", ".jpeg", ".gif", ".glb", ".gltf", ".webp" };
+            var now = DateTime.UtcNow;
+            ctx.FileTypeSettings.AddRange(extensions.Select((extension, index) => new FileTypeSettings
+            {
+                Id = Guid.NewGuid(),
+                FileExtension = extension,
+                Enabled = true,
+                MaxFileSizeBytes = 500L * 1024 * 1024,
+                MaxPerUpload = 10,
+                DisplayName = extension,
+                Description = extension,
+                MimeType = "application/octet-stream",
+                Category = "3D",
+                Priority = index + 1,
+                IsDefault = extension == ".stl",
+                CreatedAt = now,
+                CreatedById = seedUser.Id,
+                UpdatedAt = now,
+                UpdatedById = seedUser.Id
+            }));
+            await ctx.SaveChangesAsync();
         }
 
         protected async Task<User> CreateTestUser(string? email = null, string password = "TestPassword123!")
@@ -133,11 +206,12 @@ namespace PolyBucket.Api.Tests
             };
 
             var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginCommand);
+            var json = await loginResponse.Content.ReadAsStringAsync();
 
             if (!loginResponse.IsSuccessStatusCode)
-                return string.Empty;
+                throw new InvalidOperationException(
+                    $"Login failed for '{email}' with {(int)loginResponse.StatusCode} {loginResponse.StatusCode}: {TrimBody(json)}");
 
-            var json = await loginResponse.Content.ReadAsStringAsync();
             return ExtractAccessTokenFromLoginJson(json);
         }
 
@@ -152,12 +226,22 @@ namespace PolyBucket.Api.Tests
             };
 
             var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginCommand);
+            var json = await loginResponse.Content.ReadAsStringAsync();
 
             if (!loginResponse.IsSuccessStatusCode)
-                return string.Empty;
+                throw new InvalidOperationException(
+                    $"Login failed for '{email}' with {(int)loginResponse.StatusCode} {loginResponse.StatusCode}: {TrimBody(json)}");
 
-            var json = await loginResponse.Content.ReadAsStringAsync();
             return ExtractAccessTokenFromLoginJson(json);
+        }
+
+        private static string TrimBody(string body)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+                return "(empty body)";
+
+            const int max = 500;
+            return body.Length <= max ? body : body[..max];
         }
 
         private static string ExtractAccessTokenFromLoginJson(string json)
@@ -188,11 +272,12 @@ namespace PolyBucket.Api.Tests
                     && prop.Value.ValueKind == JsonValueKind.String)
                 {
                     var token = prop.Value.GetString();
-                    return string.IsNullOrEmpty(token) ? string.Empty : token;
+                    if (!string.IsNullOrEmpty(token))
+                        return token;
                 }
             }
 
-            return string.Empty;
+            throw new InvalidOperationException("Login succeeded but the response did not contain an access token.");
         }
 
         protected HttpRequestMessage GetAuthHeaders(string token)

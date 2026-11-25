@@ -116,16 +116,25 @@ public class ModelModerationIntegrationTests : BaseIntegrationTest
             setup.AutoApproveModels = autoApprove;
         }
 
-        if (!await DbContext.ModelSettings.AnyAsync())
+        var modelSettings = await DbContext.ModelSettings.FirstOrDefaultAsync();
+        if (modelSettings == null)
         {
             DbContext.ModelSettings.Add(new ModelSettings
             {
                 Id = Guid.NewGuid(),
                 RequireUploadModeration = true,
                 RequireModeratorApproval = true,
+                AutoApproveVerifiedUsers = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             });
+        }
+        else
+        {
+            modelSettings.RequireUploadModeration = true;
+            modelSettings.RequireModeratorApproval = true;
+            modelSettings.AutoApproveVerifiedUsers = false;
+            modelSettings.UpdatedAt = DateTime.UtcNow;
         }
 
         await DbContext.SaveChangesAsync();

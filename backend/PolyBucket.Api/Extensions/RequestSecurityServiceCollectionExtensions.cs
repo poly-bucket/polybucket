@@ -48,6 +48,11 @@ public static class RequestSecurityServiceCollectionExtensions
         var settings = configuration.GetSection(RateLimitingSettings.SectionName).Get<RateLimitingSettings>()
             ?? new RateLimitingSettings();
 
+        if (IsTestHost() && !IsForcedRateLimit())
+        {
+            settings.Enabled = false;
+        }
+
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -69,6 +74,12 @@ public static class RequestSecurityServiceCollectionExtensions
 
         return services;
     }
+
+    private static bool IsTestHost() =>
+        string.Equals(Environment.GetEnvironmentVariable("POLYBUCKET_TEST_HOST"), "true", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsForcedRateLimit() =>
+        string.Equals(Environment.GetEnvironmentVariable("POLYBUCKET_FORCE_RATE_LIMIT"), "true", StringComparison.OrdinalIgnoreCase);
 
     private static RateLimitPartition<string> CreatePartition(
         HttpContext httpContext,

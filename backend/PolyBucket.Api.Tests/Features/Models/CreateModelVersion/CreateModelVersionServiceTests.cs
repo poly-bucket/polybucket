@@ -14,6 +14,7 @@ using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.UploadValidation.Domain;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -26,6 +27,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModelVersion
         private readonly Mock<IPermissionService> _mockPermissionService;
         private readonly Mock<IModelPreviewQueue> _mockPreviewQueue = new();
         private readonly Mock<IModelUploadValidator> _mockUploadValidator = new();
+        private readonly Mock<ISiteUploadCompressionPolicy> _mockCompressionPolicy = new();
         private readonly Mock<ILogger<CreateModelVersionService>> _mockLogger;
         private readonly CreateModelVersionService _service;
         private readonly Guid _userId = Guid.NewGuid();
@@ -40,12 +42,16 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModelVersion
             _mockUploadValidator
                 .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string?)null);
+            _mockCompressionPolicy
+                .Setup(p => p.ShouldCompressAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
             _service = new CreateModelVersionService(
                 _mockRepository.Object,
                 _mockStorage.Object,
                 _mockPermissionService.Object,
                 _mockPreviewQueue.Object,
                 _mockUploadValidator.Object,
+                _mockCompressionPolicy.Object,
                 _mockLogger.Object);
 
             _mockRepository

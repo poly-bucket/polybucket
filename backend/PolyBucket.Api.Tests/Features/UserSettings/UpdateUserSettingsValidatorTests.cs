@@ -28,7 +28,11 @@ public class UpdateUserSettingsValidatorTests
     [Fact]
     public void Validate_WhenPrinterIdIsUnknown_Throws()
     {
-        var command = new UpdateUserSettingsCommand { DefaultPrinterId = Guid.NewGuid() };
+        var command = new UpdateUserSettingsCommand
+        {
+            ApplyDefaultPrinterId = true,
+            DefaultPrinterId = Guid.NewGuid()
+        };
 
         Should.Throw<UpdateUserSettingsValidationException>(() => UpdateUserSettingsValidator.Validate(command));
     }

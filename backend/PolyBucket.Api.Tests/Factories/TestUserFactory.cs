@@ -58,6 +58,7 @@ namespace PolyBucket.Api.Tests.Factories
                 Salt = salt,
                 RoleId = userRole.Id,
                 IsBanned = false,
+                EmailVerifiedAt = DateTime.UtcNow,
                 HasCompletedFirstTimeSetup = true,
                 RequiresPasswordChange = false,
                 CreatedAt = DateTime.UtcNow,

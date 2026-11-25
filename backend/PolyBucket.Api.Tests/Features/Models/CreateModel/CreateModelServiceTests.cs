@@ -33,6 +33,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
         private readonly Mock<ISiteModelUploadPolicy> _mockUploadPolicy;
         private readonly Mock<ISiteModelFeaturePolicy> _mockFeaturePolicy;
         private readonly Mock<IAnonymousUploadAuthorProvider> _mockAnonymousAuthor;
+        private readonly Mock<ISiteUploadCompressionPolicy> _mockCompressionPolicy;
         private readonly Mock<ILogger<CreateModelService>> _mockLogger;
         private readonly CreateModelService _service;
 
@@ -49,6 +50,10 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
                 .Setup(p => p.ValidateModelCreationQuotaAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(ModelCreationQuotaOutcome.Allowed);
             _mockAnonymousAuthor = new Mock<IAnonymousUploadAuthorProvider>();
+            _mockCompressionPolicy = new Mock<ISiteUploadCompressionPolicy>();
+            _mockCompressionPolicy
+                .Setup(p => p.ShouldCompressAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
             _mockLogger = new Mock<ILogger<CreateModelService>>();
             _mockUploadValidator
                 .Setup(v => v.ValidateAsync(It.IsAny<IFormFile[]>(), It.IsAny<CancellationToken>()))
@@ -87,6 +92,7 @@ namespace PolyBucket.Api.Tests.Features.Models.CreateModel
                 _mockUploadPolicy.Object,
                 _mockFeaturePolicy.Object,
                 _mockAnonymousAuthor.Object,
+                _mockCompressionPolicy.Object,
                 _mockLogger.Object);
         }
 

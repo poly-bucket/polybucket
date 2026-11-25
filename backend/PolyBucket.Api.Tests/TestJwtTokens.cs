@@ -19,6 +19,7 @@ public static class TestJwtTokens
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(PolyBucket.Api.Features.Authentication.Services.TokenService.EmailVerifiedClaim, "true"),
         };
         var token = new JwtSecurityToken(
             issuer: Issuer,

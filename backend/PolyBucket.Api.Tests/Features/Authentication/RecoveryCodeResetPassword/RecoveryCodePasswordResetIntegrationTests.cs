@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using PolyBucket.Api.Features.Authentication.Login.Domain;
 using PolyBucket.Api.Features.Authentication.RecoveryCodeResetPassword.Domain;
 using PolyBucket.Api.Features.Authentication.Register.Domain;
 using PolyBucket.Database.Entities.SystemSettings;
@@ -51,7 +52,13 @@ public class RecoveryCodePasswordResetIntegrationTests : BaseIntegrationTest
 
         // Assert
         resetResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await GetAuthToken(email, originalPassword)).ShouldBeEmpty();
+
+        var oldPasswordLogin = await Client.PostAsJsonAsync("/api/auth/login", new LoginCommand
+        {
+            EmailOrUsername = email,
+            Password = originalPassword
+        });
+        oldPasswordLogin.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         (await GetAuthToken(email, newPassword)).ShouldNotBeNullOrEmpty();
 
         var reuseResponse = await Client.PostAsJsonAsync("/api/auth/recovery-code/reset-password", new RecoveryCodeResetPasswordCommand

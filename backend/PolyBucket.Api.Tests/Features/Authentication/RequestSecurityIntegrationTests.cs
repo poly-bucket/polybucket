@@ -6,7 +6,6 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api.Features.Authentication.Login.Domain;
@@ -71,25 +70,34 @@ public class RequestSecurityIntegrationTests : BaseIntegrationTest
     {
         // Arrange
         await ResetStateAsync();
-        await using var limitedFactory = Factory.WithWebHostBuilder(builder =>
+        Environment.SetEnvironmentVariable("POLYBUCKET_FORCE_RATE_LIMIT", "true");
+        Environment.SetEnvironmentVariable("RateLimiting__Enabled", "true");
+        Environment.SetEnvironmentVariable("RateLimiting__AuthStrict__PermitLimit", "2");
+        Environment.SetEnvironmentVariable("RateLimiting__AuthStrict__WindowSeconds", "60");
+        try
         {
-            builder.UseSetting("RateLimiting:Enabled", "true");
-            builder.UseSetting("RateLimiting:AuthStrict:PermitLimit", "2");
-            builder.UseSetting("RateLimiting:AuthStrict:WindowSeconds", "60");
-        });
-        var client = limitedFactory.CreateClient();
-        var command = new LoginCommand { EmailOrUsername = "nobody@test.com", Password = "wrong-password" };
+            await using var limitedFactory = Factory.WithWebHostBuilder(_ => { });
+            var client = limitedFactory.CreateClient();
+            var command = new LoginCommand { EmailOrUsername = "nobody@test.com", Password = "wrong-password" };
 
-        // Act
-        var first = await client.PostAsJsonAsync("/api/auth/login", command);
-        var second = await client.PostAsJsonAsync("/api/auth/login", command);
-        var third = await client.PostAsJsonAsync("/api/auth/login", command);
+            // Act
+            var first = await client.PostAsJsonAsync("/api/auth/login", command);
+            var second = await client.PostAsJsonAsync("/api/auth/login", command);
+            var third = await client.PostAsJsonAsync("/api/auth/login", command);
 
-        // Assert
-        first.StatusCode.ShouldNotBe(HttpStatusCode.TooManyRequests);
-        second.StatusCode.ShouldNotBe(HttpStatusCode.TooManyRequests);
-        third.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
-        third.Headers.Contains("Retry-After").ShouldBeTrue();
+            // Assert
+            first.StatusCode.ShouldNotBe(HttpStatusCode.TooManyRequests);
+            second.StatusCode.ShouldNotBe(HttpStatusCode.TooManyRequests);
+            third.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+            third.Headers.Contains("Retry-After").ShouldBeTrue();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("POLYBUCKET_FORCE_RATE_LIMIT", null);
+            Environment.SetEnvironmentVariable("RateLimiting__Enabled", null);
+            Environment.SetEnvironmentVariable("RateLimiting__AuthStrict__PermitLimit", null);
+            Environment.SetEnvironmentVariable("RateLimiting__AuthStrict__WindowSeconds", null);
+        }
     }
 
     [Fact(DisplayName = "When a trusted proxy forwards a client IP, login records and refresh tokens store the forwarded IP.")]

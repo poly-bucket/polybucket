@@ -2,8 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Database.Entities.SystemSettings;
+using PolyBucket.Email;
 using Shouldly;
 using Xunit;
 
@@ -72,6 +74,10 @@ public class PublicRegistrationIntegrationTests : BaseIntegrationTest
             new SystemSetting { Key = EmailSystemSettingKeys.EmailPublicBaseUrl, Value = "https://models.polybucket.test" },
             new SystemSetting { Key = EmailSystemSettingKeys.EmailRequireVerification, Value = "true" });
         await DbContext.SaveChangesAsync();
+        using (var scope = Factory.Services.CreateScope())
+        {
+            scope.ServiceProvider.GetRequiredService<IEmailSettingsResolver>().Invalidate();
+        }
 
         // Act
         var response = await Client.PostAsJsonAsync("/api/auth/register", RegisterPayload("verify@test.com"));

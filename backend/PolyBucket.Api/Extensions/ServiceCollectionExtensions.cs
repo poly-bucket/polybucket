@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Common.OpenApi;
@@ -129,6 +131,24 @@ public static class ServiceCollectionExtensions
                 NameClaimType = "name",
                 RoleClaimType = "role",
                 SaveSigninToken = true
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    if (context.Principal?.Identity is not ClaimsIdentity identity)
+                        return Task.CompletedTask;
+
+                    if (identity.FindFirst(ClaimTypes.NameIdentifier) != null)
+                        return Task.CompletedTask;
+
+                    var userId = identity.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                        ?? identity.FindFirst("sub")?.Value;
+                    if (!string.IsNullOrEmpty(userId))
+                        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userId));
+
+                    return Task.CompletedTask;
+                }
             };
         });
 

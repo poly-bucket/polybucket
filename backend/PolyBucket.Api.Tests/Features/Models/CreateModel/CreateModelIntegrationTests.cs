@@ -100,6 +100,7 @@ public class CreateModelIntegrationTests : BaseIntegrationTest
         var content = new MultipartFormDataContent();
         content.Add(new StringContent("Anonymous Model"), "Name");
         content.Add(new StringContent("Test Description"), "Description");
+        content.Add(new StringContent("CCBy4"), "License");
 
         var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes("solid test endsolid"));
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");

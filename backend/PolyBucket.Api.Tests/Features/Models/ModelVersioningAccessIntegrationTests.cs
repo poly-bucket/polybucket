@@ -51,6 +51,8 @@ public class ModelVersioningAccessIntegrationTests : BaseIntegrationTest
         await SetVersioningEnabledAsync(false);
         var owner = await UserFactory.CreateTestUser();
         var model = await ModelFactory.CreateTestModel(owner.Id);
+        model.IsPublic = true;
+        await DbContext.SaveChangesAsync();
         await SeedModelVersionAsync(model.Id);
 
         var client = Factory.CreateClient();
@@ -64,7 +66,7 @@ public class ModelVersioningAccessIntegrationTests : BaseIntegrationTest
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var json = await response.Content.ReadAsStringAsync();
-        json.ShouldContain("\"versions\":[]");
+        json.ShouldContain("\"versions\": []");
     }
 
     [Fact(DisplayName = "When site versioning is disabled, the owner still lists stored versions.")]
