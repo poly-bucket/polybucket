@@ -7,13 +7,15 @@ public class GetSiteAccessService(
     ISiteModelUploadPolicy uploadPolicy,
     ISiteModelDownloadPolicy downloadPolicy,
     IModelMetadataPolicy metadataPolicy,
-    ISiteModelFeaturePolicy featurePolicy) : IGetSiteAccessService
+    ISiteModelFeaturePolicy featurePolicy,
+    ISiteModelVersioningPolicy versioningPolicy) : IGetSiteAccessService
 {
     private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
     private readonly ISiteModelUploadPolicy _uploadPolicy = uploadPolicy;
     private readonly ISiteModelDownloadPolicy _downloadPolicy = downloadPolicy;
     private readonly IModelMetadataPolicy _metadataPolicy = metadataPolicy;
     private readonly ISiteModelFeaturePolicy _featurePolicy = featurePolicy;
+    private readonly ISiteModelVersioningPolicy _versioningPolicy = versioningPolicy;
 
     public async Task<GetSiteAccessResponse> GetSiteAccessAsync(CancellationToken cancellationToken)
     {
@@ -22,6 +24,7 @@ public class GetSiteAccessService(
         var requireLoginForUpload = await _uploadPolicy.IsLoginRequiredForUnauthenticatedUploadAsync(cancellationToken);
         var allowAnonymousModelDownload = await _downloadPolicy.IsAnonymousModelDownloadAllowedAsync(cancellationToken);
         var modelDownloadsEnabled = await _downloadPolicy.AreModelDownloadsEnabledAsync(cancellationToken);
+        var modelVersioningEnabled = await _versioningPolicy.IsModelVersioningEnabledAsync(cancellationToken);
         var defaultPrivacy = await _uploadPolicy.GetDefaultModelPrivacyAsync(cancellationToken);
         var metadata = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
         var commentsAccess = await _featurePolicy.GetCommentsAccessLevelAsync(cancellationToken);
@@ -34,6 +37,7 @@ public class GetSiteAccessService(
             AllowAnonymousModelUpload = allowAnonymousModelUpload,
             AllowAnonymousModelDownload = allowAnonymousModelDownload,
             ModelDownloadsEnabled = modelDownloadsEnabled,
+            ModelVersioningEnabled = modelVersioningEnabled,
             ModelCommentsAccess = commentsAccess.ToString(),
             ModelCollectionsAccess = collectionsAccess.ToString(),
             DefaultModelPrivacy = defaultPrivacy.ToString(),

@@ -17,7 +17,8 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
         ISiteModelUploadPolicy siteModelUploadPolicy,
         ISiteModelDownloadPolicy siteModelDownloadPolicy,
         IModelMetadataPolicy modelMetadataPolicy,
-        ISiteModelFeaturePolicy siteModelFeaturePolicy) : IUpdateModelConfigurationSettingsService
+        ISiteModelFeaturePolicy siteModelFeaturePolicy,
+        ISiteModelVersioningPolicy siteModelVersioningPolicy) : IUpdateModelConfigurationSettingsService
     {
         private readonly IUpdateModelConfigurationSettingsRepository _repository = repository;
         private readonly ILogger<UpdateModelConfigurationSettingsService> _logger = logger;
@@ -26,6 +27,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
         private readonly ISiteModelDownloadPolicy _siteModelDownloadPolicy = siteModelDownloadPolicy;
         private readonly IModelMetadataPolicy _modelMetadataPolicy = modelMetadataPolicy;
         private readonly ISiteModelFeaturePolicy _siteModelFeaturePolicy = siteModelFeaturePolicy;
+        private readonly ISiteModelVersioningPolicy _siteModelVersioningPolicy = siteModelVersioningPolicy;
 
         public async Task<UpdateModelConfigurationSettingsResponse> UpdateModelConfigurationSettingsAsync(UpdateModelConfigurationSettingsCommand request, CancellationToken cancellationToken = default)
         {
@@ -154,6 +156,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
                 _siteModelDownloadPolicy.Invalidate();
                 _modelMetadataPolicy.Invalidate();
                 _siteModelFeaturePolicy.Invalidate();
+                _siteModelVersioningPolicy.Invalidate();
 
                 _logger.LogInformation("Model settings updated successfully by user {UserId}", 
                     userIdClaim?.Value ?? "unknown");

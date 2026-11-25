@@ -17,6 +17,8 @@ public class GetSiteAccessResponse
 
     public bool ModelDownloadsEnabled { get; set; } = true;
 
+    public bool ModelVersioningEnabled { get; set; } = true;
+
     public string ModelCommentsAccess { get; set; } = "Full";
 
     public string ModelCollectionsAccess { get; set; } = "Full";

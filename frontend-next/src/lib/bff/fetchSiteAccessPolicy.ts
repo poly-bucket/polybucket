@@ -19,6 +19,7 @@ export type SiteAccessPolicy = {
   allowAnonymousModelUpload: boolean;
   allowAnonymousModelDownload: boolean;
   modelDownloadsEnabled: boolean;
+  modelVersioningEnabled: boolean;
   modelCommentsAccess: FeatureAccessLevel;
   modelCollectionsAccess: FeatureAccessLevel;
   defaultModelPrivacy: string;
@@ -37,6 +38,7 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       allowAnonymousModelUpload?: boolean;
       allowAnonymousModelDownload?: boolean;
       modelDownloadsEnabled?: boolean;
+      modelVersioningEnabled?: boolean;
       modelCommentsAccess?: string;
       modelCollectionsAccess?: string;
       defaultModelPrivacy?: string;
@@ -48,6 +50,7 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       allowAnonymousModelUpload: data.allowAnonymousModelUpload === true,
       allowAnonymousModelDownload: data.allowAnonymousModelDownload === true,
       modelDownloadsEnabled: data.modelDownloadsEnabled !== false,
+      modelVersioningEnabled: data.modelVersioningEnabled !== false,
       modelCommentsAccess: parseAccessLevel(data.modelCommentsAccess),
       modelCollectionsAccess: parseAccessLevel(data.modelCollectionsAccess),
       defaultModelPrivacy: data.defaultModelPrivacy ?? "Public",
@@ -77,6 +80,7 @@ export async function fetchSiteAccessPolicy(origin: string): Promise<SiteAccessP
     allowAnonymousModelUpload: false,
     allowAnonymousModelDownload: false,
     modelDownloadsEnabled: true,
+    modelVersioningEnabled: true,
     modelCommentsAccess: "Full",
     modelCollectionsAccess: "Full",
     defaultModelPrivacy: "Public",

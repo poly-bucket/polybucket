@@ -19,6 +19,7 @@ public class GetModelVersionsController(IGetModelVersionsService getModelVersion
     /// Follows the same visibility rules as the model itself: public, approved models are visible to anyone;
     /// unlisted models to signed-in users; private, pending, or rejected models only to the owner, admins, and moderators.
     /// Models the caller cannot see return 404 so their existence is not revealed.
+    /// When site model versioning is disabled, returns an empty version list unless the caller is the model owner, an admin, or a moderator.
     /// </remarks>
     /// <param name="id">The model id.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

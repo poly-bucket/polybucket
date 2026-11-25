@@ -23,6 +23,8 @@ interface EditModelModalProps {
   onModelUpdate?: (model: ModelWithReactions) => void;
   onVersionCreated?: () => void;
   onVersionUpdate?: (versionId: string, updated: ExtendedModelVersion) => void;
+  canMutateVersions?: boolean;
+  canViewVersionHistory?: boolean;
 }
 
 type EditModelTab = NonNullable<EditModelModalProps["initialTab"]>;
@@ -35,15 +37,24 @@ export function EditModelModal({
   onModelUpdate,
   onVersionCreated,
   onVersionUpdate,
+  canMutateVersions = true,
+  canViewVersionHistory = true,
 }: EditModelModalProps) {
   const [activeTab, setActiveTab] = useState<EditModelTab>(initialTab);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setActiveTab(initialTab);
+      let tab = initialTab;
+      if (tab === "version" && !canMutateVersions) {
+        tab = "edit";
+      }
+      if (tab === "editVersion" && !canViewVersionHistory) {
+        tab = "edit";
+      }
+      setActiveTab(tab);
     }
-  }, [open, initialTab]);
+  }, [open, initialTab, canMutateVersions, canViewVersionHistory]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -107,14 +118,18 @@ export function EditModelModal({
               <Pencil className="h-4 w-4 mr-2" />
               Edit Details
             </TabsTrigger>
-            <TabsTrigger variant="glass" value="version">
-              <CloudUpload className="h-4 w-4 mr-2" />
-              New Version
-            </TabsTrigger>
-            <TabsTrigger variant="glass" value="editVersion">
-              <FileEdit className="h-4 w-4 mr-2" />
-              Edit Versions
-            </TabsTrigger>
+            {canMutateVersions && (
+              <TabsTrigger variant="glass" value="version">
+                <CloudUpload className="h-4 w-4 mr-2" />
+                New Version
+              </TabsTrigger>
+            )}
+            {canViewVersionHistory && (
+              <TabsTrigger variant="glass" value="editVersion">
+                <FileEdit className="h-4 w-4 mr-2" />
+                {canMutateVersions ? "Edit Versions" : "View Versions"}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <div className="flex-1 overflow-y-auto mt-4 min-h-0">
@@ -129,7 +144,7 @@ export function EditModelModal({
               </TabsContent>
             )}
 
-            {activeTab === "version" && (
+            {activeTab === "version" && canMutateVersions && (
               <TabsContent value="version" variant="glass" className="mt-0">
                 <ModelVersionManager
                   model={model}
@@ -139,12 +154,13 @@ export function EditModelModal({
               </TabsContent>
             )}
 
-            {activeTab === "editVersion" && (
+            {activeTab === "editVersion" && canViewVersionHistory && (
               <TabsContent value="editVersion" variant="glass" className="mt-0">
                 <VersionEditor
                   model={model}
                   onVersionUpdate={onVersionUpdate ?? (() => {})}
                   onCancel={handleCancel}
+                  readOnly={!canMutateVersions}
                 />
               </TabsContent>
             )}

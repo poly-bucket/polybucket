@@ -10,6 +10,7 @@ using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.GetModelById.Domain;
 using PolyBucket.Api.Features.Models.GetModelById.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -22,6 +23,7 @@ namespace PolyBucket.Api.Tests.Features.Models.GetModelById
         private readonly Mock<IPermissionService> _mockPermissionService;
         private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
         private readonly Mock<IStorageService> _mockStorage;
+        private readonly Mock<ISiteModelVersioningPolicy> _mockVersioningPolicy;
         private readonly GetModelByIdQueryHandler _handler;
 
         public GetModelByIdSanitizationTests()
@@ -31,12 +33,17 @@ namespace PolyBucket.Api.Tests.Features.Models.GetModelById
             _mockPermissionService = new Mock<IPermissionService>();
             _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
             _mockStorage = new Mock<IStorageService>();
+            _mockVersioningPolicy = new Mock<ISiteModelVersioningPolicy>();
+            _mockVersioningPolicy
+                .Setup(v => v.IsModelVersioningEnabledAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
             _handler = new GetModelByIdQueryHandler(
                 _mockRepository.Object,
                 _mockLogger.Object,
                 _mockPermissionService.Object,
                 _mockHttpContextAccessor.Object,
-                _mockStorage.Object);
+                _mockStorage.Object,
+                _mockVersioningPolicy.Object);
         }
 
         [Fact(DisplayName = "When getting a public model, the handler returns the author without leaking credentials or other sensitive account data.")]

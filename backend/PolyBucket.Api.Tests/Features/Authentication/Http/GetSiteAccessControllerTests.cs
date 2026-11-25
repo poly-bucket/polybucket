@@ -39,8 +39,13 @@ public class GetSiteAccessControllerTests : IDisposable
             cache,
             permissions.Object,
             NullLogger<SiteModelFeaturePolicy>.Instance);
+        var versioningPolicy = new SiteModelVersioningPolicy(
+            _dbContext,
+            cache,
+            permissions.Object,
+            NullLogger<SiteModelVersioningPolicy>.Instance);
         _controller = new GetSiteAccessController(
-            new GetSiteAccessService(privacy, uploadPolicy, downloadPolicy, metadataPolicy, featurePolicy));
+            new GetSiteAccessService(privacy, uploadPolicy, downloadPolicy, metadataPolicy, featurePolicy, versioningPolicy));
     }
 
     [Fact(DisplayName = "When no site setup exists, site access reports public browsing is allowed.")]
@@ -148,6 +153,27 @@ public class GetSiteAccessControllerTests : IDisposable
         var ok = result.ShouldBeOfType<OkObjectResult>();
         ok.Value!.GetType().GetProperty("allowAnonymousModelDownload")!.GetValue(ok.Value).ShouldBe(true);
         ok.Value.GetType().GetProperty("modelDownloadsEnabled")!.GetValue(ok.Value).ShouldBe(false);
+    }
+
+    [Fact(DisplayName = "When model versioning is disabled in model settings, site access reports versioning off.")]
+    public async Task GetSiteAccess_VersioningDisabled_ReturnsFalse()
+    {
+        // Arrange
+        _dbContext.ModelSettings.Add(new ModelSettings
+        {
+            Id = Guid.NewGuid(),
+            EnableModelVersioning = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetSiteAccess(CancellationToken.None);
+
+        // Assert
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        ok.Value!.GetType().GetProperty("modelVersioningEnabled")!.GetValue(ok.Value).ShouldBe(false);
     }
 
     public void Dispose()

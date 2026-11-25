@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Moq;
 using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
 using PolyBucket.Api.Features.Models.GetModelVersions.Domain;
+using Microsoft.AspNetCore.Http;
+using Moq;
 using PolyBucket.Api.Features.Models.GetModelVersions.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using Xunit;
 
@@ -23,10 +25,15 @@ public class GetModelVersionsServiceTests
     private readonly Mock<IGetModelVersionsRepository> _repository = new();
     private readonly Mock<IPermissionService> _permissions = new();
     private readonly Mock<IStorageService> _storage = new();
+    private readonly Mock<ISiteModelVersioningPolicy> _versioning = new();
+    private readonly IHttpContextAccessor _httpContextAccessor = new HttpContextAccessor();
     private readonly GetModelVersionsService _service;
 
     public GetModelVersionsServiceTests()
     {
+        _versioning
+            .Setup(v => v.IsModelVersioningEnabledAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _storage
             .Setup(s => s.GetPresignedUrlAsync(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string key, TimeSpan _, CancellationToken _) => $"https://storage.test/{key}");
@@ -45,7 +52,12 @@ public class GetModelVersionsServiceTests
                 },
                 new() { Id = Guid.NewGuid(), ModelId = ModelId, Name = "v1", VersionNumber = 1 }
             });
-        _service = new GetModelVersionsService(_repository.Object, _permissions.Object, _storage.Object);
+        _service = new GetModelVersionsService(
+            _repository.Object,
+            _permissions.Object,
+            _storage.Object,
+            _versioning.Object,
+            _httpContextAccessor);
     }
 
     private void GivenAccess(PrivacySettings privacy, bool isPublic = true, bool passedModeration = true)
@@ -174,5 +186,29 @@ public class GetModelVersionsServiceTests
         // Assert
         anonymous.ShouldBeNull();
         signedIn.ShouldNotBeNull();
+    }
+
+    [Fact(DisplayName = "When site versioning is disabled, anonymous viewers get an empty version list.")]
+    public async Task VersioningDisabled_Anonymous_ReturnsEmptyVersions()
+    {
+        // Arrange
+        GivenAccess(PrivacySettings.Public);
+        _versioning
+            .Setup(v => v.IsModelVersioningEnabledAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _versioning
+            .Setup(v => v.CanViewVersionHistoryWhenDisabledAsync(
+                It.IsAny<System.Security.Claims.ClaimsPrincipal>(),
+                AuthorId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _service.GetModelVersionsAsync(ModelId, null, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result!.Versions.ShouldBeEmpty();
+        _repository.Verify(r => r.GetVersionsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

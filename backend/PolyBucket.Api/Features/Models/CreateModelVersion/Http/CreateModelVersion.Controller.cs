@@ -6,6 +6,7 @@ using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Authentication.Authorization;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Domain;
+using PolyBucket.Api.Features.Models.Http;
 using System;
 using System.Threading.Tasks;
 using System.Threading;
@@ -22,13 +23,17 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Http
         private readonly ICreateModelVersionService _createModelVersionService = createModelVersionService;
         private readonly ILogger<CreateModelVersionController> _logger = logger;
 
+        /// <summary>Creates a new version for a model.</summary>
+        /// <response code="403">Model versioning is disabled on this site.</response>
         [HttpPost("{id}/versions")]
+        [ServiceFilter(typeof(RequireModelVersioningEnabledFilter))]
         [RequireVerifiedEmail]
         [DisableRequestSizeLimit]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(CreateModelVersionResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<CreateModelVersionResponse>> CreateModelVersion(
             Guid id,

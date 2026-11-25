@@ -34,6 +34,7 @@ interface VersionEditorProps {
   model: ModelWithReactions;
   onVersionUpdate: (versionId: string, updated: ExtendedModelVersion) => void;
   onCancel: () => void;
+  readOnly?: boolean;
 }
 
 function defaultPrintSettings(versionId: string): PrintSettings {
@@ -57,6 +58,7 @@ export function VersionEditor({
   model,
   onVersionUpdate,
   onCancel,
+  readOnly = false,
 }: VersionEditorProps) {
   const [extendedData, setExtendedData] = useState<
     Record<string, { billOfMaterials: BillOfMaterial[]; printSettings: PrintSettings }>
@@ -97,7 +99,7 @@ export function VersionEditor({
 
   const saveVersion = useCallback(
     async (name: string, notes: string) => {
-      if (!model.id || !selectedVersionId) return;
+      if (readOnly || !model.id || !selectedVersionId) return;
       if (
         name === lastSavedRef.current.name &&
         notes === lastSavedRef.current.notes
@@ -122,11 +124,12 @@ export function VersionEditor({
         toast.error(err instanceof Error ? err.message : "Failed to save version");
       }
     },
-    [model.id, selectedVersionId, selectedVersion, onVersionUpdate]
+    [readOnly, model.id, selectedVersionId, selectedVersion, onVersionUpdate]
   );
 
   useEffect(() => {
     if (
+      !readOnly &&
       selectedVersion &&
       selectedVersionId &&
       debouncedName === localName &&
@@ -134,7 +137,16 @@ export function VersionEditor({
     ) {
       saveVersion(debouncedName, debouncedNotes);
     }
-  }, [debouncedName, debouncedNotes, localName, localNotes, selectedVersion, selectedVersionId, saveVersion]);
+  }, [
+    readOnly,
+    debouncedName,
+    debouncedNotes,
+    localName,
+    localNotes,
+    selectedVersion,
+    selectedVersionId,
+    saveVersion,
+  ]);
 
   const handleBOMUpdate = useCallback(
     (bom: BillOfMaterial[]) => {
@@ -197,7 +209,7 @@ export function VersionEditor({
     <div className="space-y-6 py-4">
       <div>
         <label className="block text-sm font-medium text-white mb-2">
-          Select Version to Edit
+          {readOnly ? "Select Version" : "Select Version to Edit"}
         </label>
         <Select
           value={selectedVersionId}
@@ -249,6 +261,7 @@ export function VersionEditor({
                     value={localName}
                     onChange={(e) => setLocalName(e.target.value)}
                     placeholder="Version name"
+                    disabled={readOnly}
                   />
                 </div>
                 <div>
@@ -271,6 +284,7 @@ export function VersionEditor({
                   placeholder="What's new in this version?"
                   rows={4}
                   className="resize-none"
+                  disabled={readOnly}
                 />
               </div>
               <div>
@@ -299,7 +313,9 @@ export function VersionEditor({
                   )}
                 </div>
               </div>
-              <p className="text-xs text-white/40">Changes save automatically</p>
+              {!readOnly && (
+                <p className="text-xs text-white/40">Changes save automatically</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

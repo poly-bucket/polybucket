@@ -14,8 +14,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 using PolyBucket.Api.Features.Models.Common;
-using PolyBucket.Database.Entities.Models.Enums;
-
+using PolyBucket.Api.Features.SystemSettings.Services;
 namespace PolyBucket.Api.Features.Models.GetModelById.Domain
 {
     public class GetModelByIdQueryHandler : IRequestHandler<GetModelByIdQuery, GetModelByIdResponse>
@@ -25,19 +24,22 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
         private readonly IPermissionService _permissionService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IStorageService _storageService;
+        private readonly ISiteModelVersioningPolicy _versioningPolicy;
 
         public GetModelByIdQueryHandler(
             IGetModelByIdRepository repository, 
             ILogger<GetModelByIdQueryHandler> logger,
             IPermissionService permissionService,
             IHttpContextAccessor httpContextAccessor,
-            IStorageService storageService)
+            IStorageService storageService,
+            ISiteModelVersioningPolicy versioningPolicy)
         {
             _repository = repository;
             _logger = logger;
             _permissionService = permissionService;
             _httpContextAccessor = httpContextAccessor;
             _storageService = storageService;
+            _versioningPolicy = versioningPolicy;
         }
 
         public async Task<GetModelByIdResponse> Handle(GetModelByIdQuery request, CancellationToken cancellationToken)
@@ -95,6 +97,13 @@ namespace PolyBucket.Api.Features.Models.GetModelById.Domain
                 _logger.LogDebug("Returning model response");
 
                 var modelDto = ModelDtoMapper.ToDto(model);
+                var httpUser = _httpContextAccessor.HttpContext?.User;
+                if (!await ModelVersionExposure.ShouldExposeVersionHistoryAsync(
+                        _versioningPolicy, httpUser, model.AuthorId, cancellationToken))
+                {
+                    modelDto.Versions = [];
+                }
+
                 var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var currentUserId))
                 {

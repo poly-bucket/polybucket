@@ -41,6 +41,7 @@ interface ModelDetailsSidebarProps {
   onShare: () => void;
   onEdit?: () => void;
   onCreateVersion?: () => void;
+  versioningDisabled?: boolean;
   onReactionUpdate?: (result: ModelReactionResult) => void;
   showAddToCollection?: boolean;
 }
@@ -57,6 +58,7 @@ export function ModelDetailsSidebar({
   onShare,
   onEdit,
   onCreateVersion,
+  versioningDisabled = false,
   onReactionUpdate,
   showAddToCollection = true,
 }: ModelDetailsSidebarProps) {
@@ -218,7 +220,9 @@ export function ModelDetailsSidebar({
                   title={
                     isFederated
                       ? "Federated models cannot be versioned locally"
-                      : "Create a new model version"
+                      : versioningDisabled
+                        ? "Model versioning is disabled on this site"
+                        : "Create a new model version"
                   }
                 >
                   <GitCommitHorizontal className="h-5 w-5" />

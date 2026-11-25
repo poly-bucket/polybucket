@@ -5,14 +5,18 @@ using System.Threading.Tasks;
 using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.Models.Common;
+using Microsoft.AspNetCore.Http;
 using PolyBucket.Api.Features.Models.GetModelVersions.Repository;
+using PolyBucket.Api.Features.SystemSettings.Services;
 
 namespace PolyBucket.Api.Features.Models.GetModelVersions.Domain;
 
 public class GetModelVersionsService(
     IGetModelVersionsRepository repository,
     IPermissionService permissionService,
-    IStorageService storageService) : IGetModelVersionsService
+    IStorageService storageService,
+    ISiteModelVersioningPolicy versioningPolicy,
+    IHttpContextAccessor httpContextAccessor) : IGetModelVersionsService
 {
     private static readonly TimeSpan PresignedUrlLifetime = TimeSpan.FromHours(1);
 
@@ -22,6 +26,17 @@ public class GetModelVersionsService(
         if (access == null || !await CanViewAsync(access, viewerId))
         {
             return null;
+        }
+
+        var user = httpContextAccessor.HttpContext?.User;
+        if (!await ModelVersionExposure.ShouldExposeVersionHistoryAsync(
+                versioningPolicy, user, access.AuthorId, cancellationToken))
+        {
+            return new GetModelVersionsResponse
+            {
+                ModelId = modelId,
+                Versions = []
+            };
         }
 
         var versions = await repository.GetVersionsAsync(modelId, cancellationToken);

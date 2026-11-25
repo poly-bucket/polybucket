@@ -31,6 +31,10 @@ import {
   canWriteComments,
   canMutateCollections,
 } from "@/lib/auth/featureAccess";
+import {
+  canMutateModelVersions,
+  canViewModelVersionHistory,
+} from "@/lib/auth/versioningAccess";
 import type { ModelReactionResult } from "@/lib/services/modelReactionsService";
 import { ModelDetailsCarousel, type CarouselItem } from "./model-details-carousel";
 import { ModelDetailsSidebar } from "./model-details-sidebar";
@@ -254,6 +258,23 @@ export function ModelDetailsPage() {
     );
   }, [model, siteAccessPolicy, isAuthenticated]);
 
+  const canMutateVersions = useMemo(() => {
+    if (!siteAccessPolicy) {
+      return false;
+    }
+    return canMutateModelVersions(siteAccessPolicy);
+  }, [siteAccessPolicy]);
+
+  const canViewVersions = useMemo(() => {
+    if (!siteAccessPolicy) {
+      return true;
+    }
+    return canViewModelVersionHistory(siteAccessPolicy, {
+      isOwner: !!isOwner,
+      isAdminOrModerator,
+    });
+  }, [siteAccessPolicy, isOwner, isAdminOrModerator]);
+
   const rejectDownloadAttempt = useCallback(() => {
     if (!siteAccessPolicy || areModelDownloadsEnabled(siteAccessPolicy)) {
       toast.error("Sign in to download models");
@@ -386,9 +407,13 @@ export function ModelDetailsPage() {
   }, []);
 
   const handleOpenCreateVersion = useCallback(() => {
+    if (!canMutateVersions) {
+      toast.error("Model versioning is disabled on this site");
+      return;
+    }
     setEditModalInitialTab("version");
     setShowEditModal(true);
-  }, []);
+  }, [canMutateVersions]);
 
   const handleVersionCreated = useCallback(() => {
     setShowEditModal(false);
@@ -537,7 +562,10 @@ export function ModelDetailsPage() {
             onShare={handleShare}
             showAddToCollection={showAddToCollection}
             onEdit={handleOpenEditDetails}
-            onCreateVersion={handleOpenCreateVersion}
+            onCreateVersion={
+              canMutateVersions ? handleOpenCreateVersion : undefined
+            }
+            versioningDisabled={!canMutateVersions}
             onReactionUpdate={handleReactionUpdate}
           />
         </div>
@@ -559,6 +587,8 @@ export function ModelDetailsPage() {
         onModelUpdate={handleModelUpdate}
         onVersionCreated={handleVersionCreated}
         onVersionUpdate={handleVersionUpdate}
+        canMutateVersions={canMutateVersions}
+        canViewVersionHistory={canViewVersions}
       />
     </div>
   );

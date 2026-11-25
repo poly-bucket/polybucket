@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.UpdateModelVersion.Domain;
+using PolyBucket.Api.Features.Models.Http;
 using System;
 using System.Threading.Tasks;
 using System.Threading;
@@ -20,10 +21,14 @@ namespace PolyBucket.Api.Features.Models.UpdateModelVersion.Http
         private readonly IUpdateModelVersionService _updateModelVersionService = updateModelVersionService;
         private readonly ILogger<UpdateModelVersionController> _logger = logger;
 
+        /// <summary>Updates version metadata for a model.</summary>
+        /// <response code="403">Model versioning is disabled on this site.</response>
         [HttpPut("{modelId}/versions/{versionId}")]
+        [ServiceFilter(typeof(RequireModelVersioningEnabledFilter))]
         [ProducesResponseType(typeof(UpdateModelVersionResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<UpdateModelVersionResponse>> UpdateModelVersion(Guid modelId, Guid versionId, [FromBody] UpdateModelVersionRequest request, CancellationToken cancellationToken)
         {

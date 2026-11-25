@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.ACL.Authorization;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.DeleteModelVersion.Domain;
+using PolyBucket.Api.Features.Models.Http;
 using System;
 using System.Threading.Tasks;
 using System.Threading;
@@ -20,10 +21,14 @@ namespace PolyBucket.Api.Features.Models.DeleteModelVersion.Http
         private readonly IDeleteModelVersionService _deleteModelVersionService = deleteModelVersionService;
         private readonly ILogger<DeleteModelVersionController> _logger = logger;
 
+        /// <summary>Deletes a model version.</summary>
+        /// <response code="403">Model versioning is disabled on this site.</response>
         [HttpDelete("{modelId}/versions/{versionId}")]
+        [ServiceFilter(typeof(RequireModelVersioningEnabledFilter))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> DeleteModelVersion(Guid modelId, Guid versionId, CancellationToken cancellationToken)
         {
