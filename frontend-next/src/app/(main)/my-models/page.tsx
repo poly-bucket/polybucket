@@ -7,6 +7,8 @@ import { ApiClientFactory } from "@/lib/api/clientFactory";
 import type { Model } from "@/lib/api/client";
 import { toast } from "sonner";
 import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
+import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { Button } from "@/components/primitives/button";
 import { DeleteModelDialog } from "@/components/models/model-details/delete-model-dialog";
 import { CheckSquare, Square, Trash2 } from "lucide-react";
@@ -14,6 +16,7 @@ import { CheckSquare, Square, Trash2 } from "lucide-react";
 const PAGE_SIZE = 24;
 
 export default function MyModelsPage() {
+  const layout = useModelBrowseLayout();
   const { user } = useAuth();
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,11 +121,11 @@ export default function MyModelsPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <ModelBrowseGrid layout={layout}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <ModelCardSkeleton key={i} />
+            <ModelCardSkeleton key={i} size={layout.cardSize} />
           ))}
-        </div>
+        </ModelBrowseGrid>
       ) : models.length === 0 ? (
         <div className="rounded-xl border border-white/20 bg-white/5 px-8 py-12 text-center">
           <p className="mb-4 text-white/60">You haven&apos;t uploaded any models yet</p>
@@ -131,7 +134,7 @@ export default function MyModelsPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <ModelBrowseGrid layout={layout}>
           {models.map((model) => {
             const isSelected = model.id ? selectedIds.has(model.id) : false;
             return (
@@ -154,11 +157,11 @@ export default function MyModelsPage() {
                     </button>
                   </div>
                 )}
-                <ModelCard model={model} />
+                <ModelCard model={model} size={layout.cardSize} />
               </div>
             );
           })}
-        </div>
+        </ModelBrowseGrid>
       )}
 
       <DeleteModelDialog

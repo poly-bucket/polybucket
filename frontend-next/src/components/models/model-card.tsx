@@ -7,6 +7,12 @@ import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { Skeleton } from "@/components/ui/glass/skeleton";
 import { cn } from "@/lib/utils";
 import { isImageUrl } from "@/lib/utils/modelUtils";
+import type { ModelCardSize } from "@/lib/layout/model-browse-layout";
+import {
+  modelCardShellClass,
+  modelCardSizeClasses,
+  modelCardSkeletonShellClass,
+} from "@/lib/layout/model-card-size-styles";
 
 function formatNumber(num: number | undefined): string {
   if (!num) return "0";
@@ -19,9 +25,11 @@ interface ModelCardProps {
   model: ModelWithReactions;
   onClick?: (model: ModelWithReactions) => void;
   className?: string;
+  size?: ModelCardSize;
 }
 
-export function ModelCard({ model, onClick, className }: ModelCardProps) {
+export function ModelCard({ model, onClick, className, size = "medium" }: ModelCardProps) {
+  const sizeStyles = modelCardSizeClasses(size);
   const thumbnailUrl = isImageUrl(model.thumbnailUrl)
     ? model.thumbnailUrl
     : undefined;
@@ -51,7 +59,7 @@ export function ModelCard({ model, onClick, className }: ModelCardProps) {
 
   const content = (
     <>
-      <div className="relative h-40 overflow-hidden bg-white/10 sm:h-48">
+      <div className={cn("relative overflow-hidden bg-white/10", sizeStyles.thumb)}>
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
@@ -77,8 +85,13 @@ export function ModelCard({ model, onClick, className }: ModelCardProps) {
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <h3 className="mb-1 min-h-[2.5rem] font-semibold leading-tight text-white line-clamp-2 text-sm">
+      <div className={cn("flex flex-1 flex-col", sizeStyles.bodyPad)}>
+        <h3
+          className={cn(
+            "mb-1 font-semibold leading-tight text-white line-clamp-2",
+            sizeStyles.title
+          )}
+        >
           {model.name ?? "Untitled Model"}
         </h3>
         <p className="mb-2 text-xs text-white/60 sm:mb-3">by {authorName}</p>
@@ -104,10 +117,7 @@ export function ModelCard({ model, onClick, className }: ModelCardProps) {
     </>
   );
 
-  const cardClasses = cn(
-    "group flex h-72 cursor-pointer flex-col overflow-hidden transition-all duration-200 sm:h-80",
-    className
-  );
+  const cardClasses = modelCardShellClass(size, className);
 
   if (model.id) {
     return (
@@ -134,11 +144,12 @@ export function ModelCard({ model, onClick, className }: ModelCardProps) {
   );
 }
 
-export function ModelCardSkeleton() {
+export function ModelCardSkeleton({ size = "medium" }: { size?: ModelCardSize }) {
+  const sizeStyles = modelCardSizeClasses(size);
   return (
-    <Card variant="glass" className="flex h-72 flex-col overflow-hidden border-white/20 py-0 sm:h-80">
-      <Skeleton className="h-40 flex-shrink-0 sm:h-48" />
-      <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+    <Card variant="glass" className={modelCardSkeletonShellClass(size)}>
+      <Skeleton className={cn("flex-shrink-0", sizeStyles.thumb)} />
+      <div className={cn("flex flex-1 flex-col gap-2", sizeStyles.bodyPad)}>
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/3" />
         <div className="mt-auto flex gap-4">

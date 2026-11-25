@@ -2,6 +2,7 @@ import React from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import { Providers } from "@/components/providers/providers";
 import { AuthContext, type AuthUser } from "@/contexts/AuthContext";
+import { UserSettingsProvider } from "@/contexts/UserSettingsContext";
 import type { LoginOptions, LoginResult } from "@/contexts/AuthContext";
 import { vi } from "vitest";
 
@@ -43,13 +44,17 @@ function createWrapper(mockAuth: MockAuthValue | null) {
     return function Wrapper({ children }: { children: React.ReactNode }) {
       return (
         <MockProvider>
-          {children}
+          <UserSettingsProvider>{children}</UserSettingsProvider>
         </MockProvider>
       );
     };
   }
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <Providers>{children}</Providers>;
+    return (
+      <Providers>
+        <UserSettingsProvider>{children}</UserSettingsProvider>
+      </Providers>
+    );
   };
 }
 

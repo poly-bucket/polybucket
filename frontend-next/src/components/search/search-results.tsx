@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Box, Download, FolderOpen, Heart, Users } from "lucide-react";
 import { Card } from "@/components/primitives/card";
 import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
+import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { splitAvatarForDisplay } from "@/lib/avatar/minidenticon";
 import type { SearchResult } from "@/lib/services/searchService";
@@ -129,6 +131,7 @@ export function SearchResults({
   loading,
   searchType = SearchType.All,
 }: SearchResultsProps) {
+  const layout = useModelBrowseLayout();
   const models = results.filter((r) => r.kind === "model");
   const users = results.filter((r) => r.kind === "user");
   const collections = results.filter((r) => r.kind === "collection");
@@ -147,11 +150,11 @@ export function SearchResults({
       );
     }
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ModelBrowseGrid layout={layout}>
         {Array.from({ length: 8 }).map((_, i) => (
-          <ModelCardSkeleton key={i} />
+          <ModelCardSkeleton key={i} size={layout.cardSize} />
         ))}
-      </div>
+      </ModelBrowseGrid>
     );
   }
 
@@ -176,11 +179,15 @@ export function SearchResults({
             Models
             <span className="text-white/40">({models.length})</span>
           </h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <ModelBrowseGrid layout={layout}>
             {models.map((result) => (
-              <ModelCard key={result.id} model={toModel(result)} />
+              <ModelCard
+                key={result.id}
+                model={toModel(result)}
+                size={layout.cardSize}
+              />
             ))}
-          </div>
+          </ModelBrowseGrid>
         </section>
       )}
 

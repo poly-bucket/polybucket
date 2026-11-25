@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
+import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { SimplePagination } from "@/components/collections/simple-pagination";
 import { fetchUserModels } from "@/lib/services/userProfileService";
 import type { Model } from "@/lib/api/client";
@@ -30,6 +32,7 @@ export function ProfileModelsTab({
   page,
   onPageChange,
 }: ProfileModelsTabProps) {
+  const layout = useModelBrowseLayout();
   const [models, setModels] = useState<UserModelListItemDto[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -62,11 +65,11 @@ export function ProfileModelsTab({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ModelBrowseGrid layout={layout}>
         {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-          <ModelCardSkeleton key={i} />
+          <ModelCardSkeleton key={i} size={layout.cardSize} />
         ))}
-      </div>
+      </ModelBrowseGrid>
     );
   }
 
@@ -82,11 +85,11 @@ export function ProfileModelsTab({
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ModelBrowseGrid layout={layout}>
         {modelsForCard.map((model) => (
-          <ModelCard key={model.id} model={model} />
+          <ModelCard key={model.id} model={model} size={layout.cardSize} />
         ))}
-      </div>
+      </ModelBrowseGrid>
       <SimplePagination
         page={page}
         totalPages={totalPages}

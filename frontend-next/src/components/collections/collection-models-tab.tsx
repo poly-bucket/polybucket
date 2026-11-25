@@ -1,6 +1,8 @@
 "use client";
 
 import { ModelCard } from "@/components/models/model-card";
+import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
+import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { useCollectionDetail } from "@/contexts/CollectionDetailContext";
 import type { Collection } from "@/lib/services/collectionsService";
 import type { Model } from "@/lib/api/client";
@@ -34,6 +36,7 @@ interface CollectionModelsTabProps {
 }
 
 export function CollectionModelsTab({ collection }: CollectionModelsTabProps) {
+  const layout = useModelBrowseLayout();
   const ctx = useCollectionDetail();
   const isOwner = ctx?.isOwner ?? false;
   const onRemoveModel = ctx?.onRemoveModel;
@@ -60,7 +63,7 @@ export function CollectionModelsTab({ collection }: CollectionModelsTabProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <ModelBrowseGrid layout={layout}>
       {models.map((model) => (
         <div key={model.id} className="relative">
           {isOwner && onRemoveModel && (
@@ -73,9 +76,9 @@ export function CollectionModelsTab({ collection }: CollectionModelsTabProps) {
               {removingModelId === model.id ? "Removing..." : "Remove"}
             </button>
           )}
-          <ModelCard model={model} />
+          <ModelCard model={model} size={layout.cardSize} />
         </div>
       ))}
-    </div>
+    </ModelBrowseGrid>
   );
 }

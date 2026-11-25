@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
+import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { SimplePagination } from "@/components/collections/simple-pagination";
 import { fetchUserLikedModels } from "@/lib/services/userLikedModelsService";
 import type { Model, UserLikedModelListItemDto } from "@/lib/api/client";
@@ -23,6 +25,7 @@ function mapToModel(userModel: UserLikedModelListItemDto, authorUsername: string
 }
 
 export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTabProps) {
+  const layout = useModelBrowseLayout();
   const [models, setModels] = useState<UserLikedModelListItemDto[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -52,11 +55,11 @@ export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTa
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ModelBrowseGrid layout={layout}>
         {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-          <ModelCardSkeleton key={i} />
+          <ModelCardSkeleton key={i} size={layout.cardSize} />
         ))}
-      </div>
+      </ModelBrowseGrid>
     );
   }
 
@@ -70,14 +73,15 @@ export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTa
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ModelBrowseGrid layout={layout}>
         {models.map((model) => (
           <ModelCard
             key={model.id}
             model={mapToModel(model, model.author?.username ?? "unknown")}
+            size={layout.cardSize}
           />
         ))}
-      </div>
+      </ModelBrowseGrid>
       {totalPages > 1 && (
         <SimplePagination
           page={page}

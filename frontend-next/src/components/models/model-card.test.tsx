@@ -45,4 +45,10 @@ describe("ModelCard", () => {
 
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
+
+  it("applies small size shell classes when size is small", () => {
+    const { container } = render(<ModelCard model={baseModel} size="small" />);
+    const link = container.querySelector("a");
+    expect(link?.className).toContain("h-60");
+  });
 });
