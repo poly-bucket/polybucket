@@ -22,6 +22,7 @@ import { Card } from "@/components/primitives/card";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { formatNumber } from "@/lib/utils/modelUtils";
 import { formatDate } from "@/lib/utils/format";
+import { useUserLocale } from "@/lib/locale/user-locale";
 import type { UserProfileData } from "@/lib/services/userProfileService";
 import { safeExternalHref } from "@/lib/security/safeUrl";
 import { followUser, unfollowUser } from "@/lib/services/userFollowService";
@@ -99,6 +100,7 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { timeZone } = useUserLocale();
   const [isFollowing, setIsFollowing] = useState(profile.isFollowedByCurrentUser ?? false);
   const [followPending, setFollowPending] = useState(false);
 
@@ -255,12 +257,12 @@ export function ProfileHeader({
             )}
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              Member since {formatDate(profile.createdAt)}
+              Member since {formatDate(profile.createdAt, { timeZone })}
             </div>
             {profile.lastLoginAt && (
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                Last active {formatDate(profile.lastLoginAt)}
+                Last active {formatDate(profile.lastLoginAt, { timeZone })}
               </div>
             )}
             {profile.email && (

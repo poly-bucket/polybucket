@@ -281,6 +281,9 @@ export default function ModelViewer({
 }: ModelViewerProps) {
   const [fileData, setFileData] = useState<ArrayBuffer | null>(null);
   const [autoRotateState, setAutoRotateState] = useState(autoRotate);
+  useEffect(() => {
+    setAutoRotateState(autoRotate);
+  }, [autoRotate]);
   const [isToolboxOpen, setIsToolboxOpen] = useState(false);
   const [cameraSettings, setCameraSettings] = useState({
     position: [0, 0, 5] as [number, number, number],

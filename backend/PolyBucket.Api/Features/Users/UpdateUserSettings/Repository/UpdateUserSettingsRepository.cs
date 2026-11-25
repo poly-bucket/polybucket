@@ -27,7 +27,10 @@ public class UpdateUserSettingsRepository(PolyBucketDbContext context) : IUpdate
         if (request.Language != null) settings.Language = request.Language;
         if (request.Theme != null) settings.Theme = request.Theme;
         if (request.EmailNotifications.HasValue) settings.EmailNotifications = request.EmailNotifications.Value;
-        if (request.DefaultPrinterId.HasValue) settings.DefaultPrinterId = request.DefaultPrinterId;
+        if (request.ApplyDefaultPrinterId)
+        {
+            settings.DefaultPrinterId = request.DefaultPrinterId;
+        }
         if (request.MeasurementSystem != null) settings.MeasurementSystem = request.MeasurementSystem;
         if (request.TimeZone != null) settings.TimeZone = request.TimeZone;
         if (request.AutoRotateModels.HasValue) settings.AutoRotateModels = request.AutoRotateModels.Value;

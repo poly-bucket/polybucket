@@ -68,7 +68,11 @@ export const notificationsService = {
   },
 };
 
-export function formatNotificationTime(createdAt: string, now: Date = new Date()): string {
+export function formatNotificationTime(
+  createdAt: string,
+  now: Date = new Date(),
+  timeZone?: string
+): string {
   const seconds = Math.max(0, Math.floor((now.getTime() - new Date(createdAt).getTime()) / 1000));
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
@@ -77,5 +81,13 @@ export function formatNotificationTime(createdAt: string, now: Date = new Date()
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(createdAt).toLocaleDateString();
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      timeZone: timeZone ?? "UTC",
+      month: "short",
+      day: "numeric",
+    }).format(new Date(createdAt));
+  } catch {
+    return new Date(createdAt).toLocaleDateString();
+  }
 }

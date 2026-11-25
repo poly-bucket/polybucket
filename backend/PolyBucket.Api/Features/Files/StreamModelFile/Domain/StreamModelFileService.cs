@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using PolyBucket.Api.Features.Files.Domain;
 using PolyBucket.Api.Features.Files.StreamModelFile.Repository;
+using PolyBucket.Api.Features.Models.Common;
 
 namespace PolyBucket.Api.Features.Files.StreamModelFile.Domain;
 
@@ -66,11 +67,13 @@ public class StreamModelFileService(
             return new StreamModelFileResult(StreamModelFileStatus.InvalidPath, null, null, null, 0, false, null);
         }
 
-        var stream = await repository.DownloadAsync(objectKey, cancellationToken);
-        if (stream == null)
+        var rawStream = await repository.DownloadAsync(objectKey, cancellationToken);
+        if (rawStream == null)
         {
             return new StreamModelFileResult(StreamModelFileStatus.StorageMissing, null, null, null, 0, false, null);
         }
+
+        var stream = await ModelStorageContentHelper.OpenStoredContentAsync(rawStream, objectKey, cancellationToken);
 
         var downloads = 0;
         var counted = false;

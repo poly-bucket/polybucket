@@ -24,6 +24,8 @@ import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { BillOfMaterialsManager, type BillOfMaterial } from "./bill-of-materials-manager";
 import { PrintSettingsEditor, type PrintSettings } from "./print-settings-editor";
 import { FileText, Package, Settings } from "lucide-react";
+import { useUserLocale } from "@/lib/locale/user-locale";
+import { formatNozzleDiameter } from "@/lib/utils/format-length";
 
 export interface ExtendedModelVersion extends IModelVersion {
   billOfMaterials?: BillOfMaterial[];
@@ -37,7 +39,10 @@ interface VersionEditorProps {
   readOnly?: boolean;
 }
 
-function defaultPrintSettings(versionId: string): PrintSettings {
+function defaultPrintSettings(
+  versionId: string,
+  measurement: "metric" | "imperial"
+): PrintSettings {
   return {
     id: versionId,
     layerHeight: "0.2mm",
@@ -47,7 +52,7 @@ function defaultPrintSettings(versionId: string): PrintSettings {
     nozzleTemp: "210°C",
     bedTemp: "60°C",
     material: "PLA",
-    nozzleSize: "0.4mm",
+    nozzleSize: formatNozzleDiameter(measurement),
     retraction: "6mm",
     buildPlateAdhesion: "skirt",
     notes: "",
@@ -60,6 +65,7 @@ export function VersionEditor({
   onCancel,
   readOnly = false,
 }: VersionEditorProps) {
+  const { measurementSystem } = useUserLocale();
   const [extendedData, setExtendedData] = useState<
     Record<string, { billOfMaterials: BillOfMaterial[]; printSettings: PrintSettings }>
   >({});
@@ -70,7 +76,7 @@ export function VersionEditor({
     return {
       ...v,
       billOfMaterials: ext?.billOfMaterials ?? [],
-      printSettings: ext?.printSettings ?? defaultPrintSettings(vid),
+      printSettings: ext?.printSettings ?? defaultPrintSettings(vid, measurementSystem),
     };
   });
 
@@ -157,7 +163,7 @@ export function VersionEditor({
           billOfMaterials: bom,
           printSettings:
             prev[selectedVersionId]?.printSettings ??
-            defaultPrintSettings(selectedVersionId),
+            defaultPrintSettings(selectedVersionId, measurementSystem),
         },
       }));
     },
@@ -336,7 +342,7 @@ export function VersionEditor({
           </p>
           <PrintSettingsEditor
             printSettings={
-              selectedVersion.printSettings ?? defaultPrintSettings(selectedVersionId)
+              selectedVersion.printSettings ?? defaultPrintSettings(selectedVersionId, measurementSystem)
             }
             onUpdate={handlePrintSettingsUpdate}
           />

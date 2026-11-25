@@ -36,6 +36,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
         private readonly ISiteModelUploadPolicy _uploadPolicy;
         private readonly ISiteModelFeaturePolicy _featurePolicy;
         private readonly IAnonymousUploadAuthorProvider _anonymousUploadAuthorProvider;
+        private readonly ISiteUploadCompressionPolicy _compressionPolicy;
         private readonly ILogger<CreateModelService> _logger;
 
         private static readonly string[] SupportedImageFormats = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
@@ -51,6 +52,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             ISiteModelUploadPolicy uploadPolicy,
             ISiteModelFeaturePolicy featurePolicy,
             IAnonymousUploadAuthorProvider anonymousUploadAuthorProvider,
+            ISiteUploadCompressionPolicy compressionPolicy,
             ILogger<CreateModelService> logger)
         {
             _repository = repository;
@@ -63,6 +65,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
             _uploadPolicy = uploadPolicy;
             _featurePolicy = featurePolicy;
             _anonymousUploadAuthorProvider = anonymousUploadAuthorProvider;
+            _compressionPolicy = compressionPolicy;
             _logger = logger;
         }
 
@@ -95,15 +98,32 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
 
                     var objectKey = $"models/{modelId}/{file.FileName}";
                     await using var stream = file.OpenReadStream();
-                    await _storage.UploadAsync(objectKey, stream, file.ContentType, cancellationToken);
+
+                    string storedPath;
+                    long storedSize;
+                    if (await _compressionPolicy.ShouldCompressAsync(file.FileName, cancellationToken))
+                    {
+                        (storedPath, storedSize) = await ModelStorageContentHelper.CompressAndUploadAsync(
+                            _storage,
+                            objectKey,
+                            stream,
+                            file.ContentType,
+                            cancellationToken);
+                    }
+                    else
+                    {
+                        await _storage.UploadAsync(objectKey, stream, file.ContentType, cancellationToken);
+                        storedPath = objectKey;
+                        storedSize = file.Length;
+                    }
 
                     var modelFile = new ModelFile
                     {
                         Id = Guid.NewGuid(),
                         ModelId = modelId,
                         Name = file.FileName,
-                        Path = objectKey, // Store the object key, not the presigned URL
-                        Size = file.Length,
+                        Path = storedPath,
+                        Size = storedSize,
                         MimeType = file.ContentType,
                         CreatedAt = DateTime.UtcNow,
                         CreatedById = authorId,
@@ -116,7 +136,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                     // Check if this file should be the thumbnail - only images are valid thumbnails
                     if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId) && IsImageFile(file.FileName))
                     {
-                        thumbnailObjectKey = objectKey;
+                        thumbnailObjectKey = storedPath;
                     }
                 }
 

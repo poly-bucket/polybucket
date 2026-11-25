@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/glass/skeleton";
 import type { ModelWithReactions } from "@/lib/types/modelReactions";
 import { formatNumber } from "@/lib/utils/modelUtils";
 import { formatDate } from "@/lib/utils/format";
+import { useUserLocale } from "@/lib/locale/user-locale";
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -51,6 +52,7 @@ function toModel(result: SearchResult): ModelWithReactions {
 }
 
 function UserResultCard({ result }: { result: SearchResult }) {
+  const { timeZone } = useUserLocale();
   const av = splitAvatarForDisplay(result.avatar);
   return (
     <Link href={`/profile/${result.username ?? result.id}`}>
@@ -77,7 +79,7 @@ function UserResultCard({ result }: { result: SearchResult }) {
         </div>
         {result.createdAt && (
           <span className="shrink-0 text-xs text-white/40">
-            Joined {formatDate(result.createdAt)}
+            Joined {formatDate(result.createdAt, { timeZone })}
           </span>
         )}
       </Card>
@@ -86,6 +88,7 @@ function UserResultCard({ result }: { result: SearchResult }) {
 }
 
 function CollectionResultCard({ result }: { result: SearchResult }) {
+  const { timeZone } = useUserLocale();
   return (
     <Link href={`/collections/${result.id}`}>
       <Card
@@ -118,7 +121,7 @@ function CollectionResultCard({ result }: { result: SearchResult }) {
         </div>
         {result.createdAt && (
           <span className="shrink-0 text-xs text-white/40">
-            {formatDate(result.createdAt)}
+            {formatDate(result.createdAt, { timeZone })}
           </span>
         )}
       </Card>

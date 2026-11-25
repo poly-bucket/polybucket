@@ -5,6 +5,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Flag, MessageSquare, Reply, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatDate } from "@/lib/utils/format";
+import { useUserLocale } from "@/lib/locale/user-locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
 import { Textarea } from "@/components/ui/glass/textarea";
@@ -103,6 +105,7 @@ interface CommentRowProps {
 }
 
 function CommentRow({ comment, isReply, canWrite, onReact, onReply, onDelete, onReport }: CommentRowProps) {
+  const { timeZone } = useUserLocale();
   return (
     <article
       aria-label={`Comment by ${comment.authorUsername}`}
@@ -113,7 +116,7 @@ function CommentRow({ comment, isReply, canWrite, onReact, onReply, onDelete, on
           {comment.authorUsername}
         </Link>
         <time dateTime={comment.createdAt} className="text-white/50">
-          {new Date(comment.createdAt).toLocaleDateString()}
+          {formatDate(comment.createdAt, { timeZone })}
         </time>
         {comment.isEdited && <span className="text-xs text-white/40">(edited)</span>}
       </header>

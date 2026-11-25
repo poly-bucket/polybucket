@@ -10,6 +10,7 @@ public class UpdateUserSettingsCommand
     public string? Theme { get; set; }
     public bool? EmailNotifications { get; set; }
     public Guid? DefaultPrinterId { get; set; }
+    public bool ApplyDefaultPrinterId { get; set; }
     public string? MeasurementSystem { get; set; }
     public string? TimeZone { get; set; }
     public bool? AutoRotateModels { get; set; }

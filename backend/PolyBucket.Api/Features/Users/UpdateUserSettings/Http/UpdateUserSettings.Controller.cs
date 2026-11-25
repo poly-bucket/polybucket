@@ -49,7 +49,14 @@ public class UpdateUserSettingsController : ControllerBase
                 Language = request.Language,
                 Theme = request.Theme,
                 EmailNotifications = request.EmailNotifications,
-                DefaultPrinterId = !string.IsNullOrEmpty(request.DefaultPrinterId) && Guid.TryParse(request.DefaultPrinterId, out var printerId) ? printerId : null,
+                ApplyDefaultPrinterId = request.DefaultPrinterId != null,
+                DefaultPrinterId = request.DefaultPrinterId switch
+                {
+                    null => null,
+                    "" => null,
+                    _ when Guid.TryParse(request.DefaultPrinterId, out var printerId) => printerId,
+                    _ => null
+                },
                 MeasurementSystem = request.MeasurementSystem,
                 TimeZone = request.TimeZone,
                 AutoRotateModels = request.AutoRotateModels,
@@ -67,6 +74,10 @@ public class UpdateUserSettingsController : ControllerBase
             await _updateUserSettingsService.UpdateAsync(command, cancellationToken);
             _logger.LogInformation("{Controller}: User settings updated successfully", nameof(UpdateUserSettingsController));
             return Ok(new { message = "User settings updated successfully" });
+        }
+        catch (UpdateUserSettingsValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {

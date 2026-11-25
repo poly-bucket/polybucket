@@ -9,6 +9,7 @@ import MarkdownViewer from "@/components/viewers/markdown-viewer";
 import { cn } from "@/lib/utils";
 import type { UploadedFile } from "./file-queue";
 import type { UploadFileType } from "./upload-shared";
+import { useUserSettings } from "@/contexts/UserSettingsContext";
 
 interface UploadPreviewCarouselProps {
   files: UploadedFile[];
@@ -40,6 +41,7 @@ export default function UploadPreviewCarousel({
   onActiveFileChange,
   onOpenThumbnailGenerator,
 }: UploadPreviewCarouselProps) {
+  const { settings } = useUserSettings();
   const activeFile = files.find((file) => file.id === activeFileId) ?? null;
   const activeFileType = activeFile ? getFileType(activeFile.name) : "unknown";
 
@@ -62,7 +64,11 @@ export default function UploadPreviewCarousel({
           {activeFile ? (
             <>
               {activeFileType === "3d" && (
-                <ModelViewer file={activeFile.file} fileName={activeFile.name} autoRotate />
+                <ModelViewer
+                  file={activeFile.file}
+                  fileName={activeFile.name}
+                  autoRotate={settings?.autoRotateModels ?? false}
+                />
               )}
               {activeFileType === "image" && <ImagePreview file={activeFile.file} />}
               {activeFileType === "pdf" && (

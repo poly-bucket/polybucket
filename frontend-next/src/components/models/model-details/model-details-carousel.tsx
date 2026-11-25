@@ -11,6 +11,7 @@ import { Card } from "@/components/primitives/card";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import { PreviewPanelSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
+import { useUserSettings } from "@/contexts/UserSettingsContext";
 import { safeExternalHrefForImage } from "@/lib/security/safeUrl";
 
 const allowHttpImages = process.env.NODE_ENV !== "production";
@@ -61,6 +62,7 @@ export function ModelDetailsCarousel({
   items,
   onLoadError,
 }: ModelDetailsCarouselProps) {
+  const { settings } = useUserSettings();
   const [activeIndex, setActiveIndex] = useState(0);
   const [loadedFiles, setLoadedFiles] = useState<Record<string, File>>({});
 
@@ -151,7 +153,11 @@ export function ModelDetailsCarousel({
       }
       return (
         <Suspense fallback={<ModelViewerFallback />}>
-          <ModelViewer file={file} fileName={activeItem.fileName} />
+          <ModelViewer
+            file={file}
+            fileName={activeItem.fileName}
+            autoRotate={settings?.autoRotateModels ?? false}
+          />
         </Suspense>
       );
     }

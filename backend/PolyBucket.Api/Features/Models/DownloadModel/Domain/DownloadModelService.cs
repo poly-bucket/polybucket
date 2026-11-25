@@ -64,7 +64,8 @@ public class DownloadModelService(
 
                 try
                 {
-                    var fileStream = await storageService.DownloadAsync(objectKey);
+                    var rawStream = await storageService.DownloadAsync(objectKey);
+                    var fileStream = await ModelStorageContentHelper.OpenStoredContentAsync(rawStream, objectKey, cancellationToken);
                     _logger.LogInformation("Successfully downloaded single file {FileName} for model {ModelId}", file.Name, bundle.Id);
                     var (downloads, counted) = await RecordDownloadAsync(id, user, cancellationToken);
                     return DownloadModelOutcome.OkSingle(
@@ -100,7 +101,8 @@ public class DownloadModelService(
                             continue;
                         }
 
-                        await using var fileStream = await storageService.DownloadAsync(objectKey);
+                        await using var rawFileStream = await storageService.DownloadAsync(objectKey);
+                        await using var fileStream = await ModelStorageContentHelper.OpenStoredContentAsync(rawFileStream, objectKey, cancellationToken);
                         if (fileStream is not { Length: > 0 })
                         {
                             _logger.LogWarning("File stream is null or empty for file: {FileName}", file.Name);

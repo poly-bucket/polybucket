@@ -6,6 +6,7 @@ using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
 using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.CreateModel.Domain;
 using PolyBucket.Api.Features.Models.UploadValidation.Domain;
@@ -27,6 +28,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
         private readonly IPermissionService _permissionService;
         private readonly IModelPreviewQueue _previewQueue;
         private readonly IModelUploadValidator _uploadValidator;
+        private readonly ISiteUploadCompressionPolicy _compressionPolicy;
         private readonly ILogger<CreateModelVersionService> _logger;
 
         private static readonly string[] SupportedImageFormats = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
@@ -37,6 +39,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
             IPermissionService permissionService,
             IModelPreviewQueue previewQueue,
             IModelUploadValidator uploadValidator,
+            ISiteUploadCompressionPolicy compressionPolicy,
             ILogger<CreateModelVersionService> logger)
         {
             _repository = repository;
@@ -44,6 +47,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
             _permissionService = permissionService;
             _previewQueue = previewQueue;
             _uploadValidator = uploadValidator;
+            _compressionPolicy = compressionPolicy;
             _logger = logger;
         }
 
@@ -87,15 +91,32 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
 
                     var objectKey = $"models/{model.Id}/versions/{versionId}/{Guid.NewGuid()}_{file.FileName}";
                     await using var stream = file.OpenReadStream();
-                    await _storage.UploadAsync(objectKey, stream, file.ContentType, cancellationToken);
+
+                    string storedPath;
+                    long storedSize;
+                    if (await _compressionPolicy.ShouldCompressAsync(file.FileName, cancellationToken))
+                    {
+                        (storedPath, storedSize) = await ModelStorageContentHelper.CompressAndUploadAsync(
+                            _storage,
+                            objectKey,
+                            stream,
+                            file.ContentType,
+                            cancellationToken);
+                    }
+                    else
+                    {
+                        await _storage.UploadAsync(objectKey, stream, file.ContentType, cancellationToken);
+                        storedPath = objectKey;
+                        storedSize = file.Length;
+                    }
 
                     var modelFile = new ModelFile
                     {
                         Id = Guid.NewGuid(),
                         ModelId = model.Id,
                         Name = file.FileName,
-                        Path = objectKey, // Store the object key, not the presigned URL
-                        Size = file.Length,
+                        Path = storedPath,
+                        Size = storedSize,
                         MimeType = file.ContentType
                     };
 
@@ -104,7 +125,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                     // Check if this file should be the thumbnail - only images are valid thumbnails
                     if (request.ThumbnailFileId != null && file.FileName.Contains(request.ThumbnailFileId) && IsImageFile(file.FileName))
                     {
-                        thumbnailObjectKey = objectKey;
+                        thumbnailObjectKey = storedPath;
                     }
                 }
 

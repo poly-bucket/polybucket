@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/notificationsService";
 import { ListRowSkeleton } from "@/components/ui/skeletons";
 import { safeNotificationHref } from "@/lib/security/safeUrl";
+import { useUserLocale } from "@/lib/locale/user-locale";
 
 export const NOTIFICATION_POLL_INTERVAL_MS = 60_000;
 const DROPDOWN_PAGE_SIZE = 10;
@@ -20,6 +21,7 @@ function badgeLabel(count: number): string {
 }
 
 export function NotificationBell() {
+  const { timeZone } = useUserLocale();
   const panelId = useId();
   const anchorRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -207,7 +209,7 @@ export function NotificationBell() {
                       </span>
                       <span className="mt-0.5 line-clamp-2 block text-xs text-white/60">{notification.message}</span>
                       <span className="mt-1 block text-[11px] text-white/40">
-                        {formatNotificationTime(notification.createdAt)}
+                        {formatNotificationTime(notification.createdAt, new Date(), timeZone)}
                       </span>
                     </>
                   );

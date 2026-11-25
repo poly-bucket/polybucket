@@ -6,8 +6,9 @@ namespace PolyBucket.Api.Features.Users.UpdateUserSettings.Domain;
 
 public class UpdateUserSettingsService(IUpdateUserSettingsRepository repository) : IUpdateUserSettingsService
 {
-    public Task UpdateAsync(UpdateUserSettingsCommand command, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(UpdateUserSettingsCommand command, CancellationToken cancellationToken = default)
     {
-        return repository.ApplyUpdateAsync(command, cancellationToken);
+        UpdateUserSettingsValidator.Validate(command);
+        await repository.ApplyUpdateAsync(command, cancellationToken);
     }
 }

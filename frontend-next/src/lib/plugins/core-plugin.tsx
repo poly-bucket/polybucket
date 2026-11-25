@@ -15,6 +15,7 @@ import {
   FolderOpen,
   Upload,
   LayoutGrid,
+  SlidersHorizontal,
   AlertTriangle,
   Shield,
   LayoutDashboard,
@@ -307,6 +308,7 @@ export const corePlugin: PluginDefinition = {
       { id: "collections", label: "Collections", group: "Content", icon: FolderOpen, path: "/settings/collections" },
       { id: "uploads", label: "Model Uploads", group: "Content", icon: Upload, path: "/settings/uploads" },
       { id: "layout-preferences", label: "Layout Preferences", group: "Display", icon: LayoutGrid, path: "/settings/layout-preferences" },
+      { id: "preferences", label: "Preferences", group: "Display", icon: SlidersHorizontal, path: "/settings/preferences" },
       { id: "danger-zone", label: "Danger Zone", group: "Danger Zone", icon: AlertTriangle, path: "/settings/danger-zone" },
     ],
     adminNavItems: [

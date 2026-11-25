@@ -15,6 +15,7 @@ public static class SystemSettingsDependencyInjectionMapping
         services.AddScoped<Services.ISiteModelAdvancedPolicy, Services.SiteModelAdvancedPolicy>();
         services.AddScoped<Services.IModelMetadataPolicy, Services.ModelMetadataPolicy>();
         services.AddScoped<Services.ISiteModelFeaturePolicy, Services.SiteModelFeaturePolicy>();
+        services.AddScoped<Services.ISiteUploadCompressionPolicy, Services.SiteUploadCompressionPolicy>();
 
         services.AddTransient<GetAuthenticationSettings.Repository.AuthenticationSettingsPersistence>();
         services.AddTransient<GetAuthenticationSettings.Repository.IGetAuthenticationSettingsRepository>(sp => sp.GetRequiredService<GetAuthenticationSettings.Repository.AuthenticationSettingsPersistence>());
