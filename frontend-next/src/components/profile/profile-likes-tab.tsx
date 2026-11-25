@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseModel, ModelBrowseModelSkeleton } from "@/components/models/model-browse-model";
 import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
 import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { SimplePagination } from "@/components/collections/simple-pagination";
@@ -57,7 +57,7 @@ export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTa
     return (
       <ModelBrowseGrid layout={layout}>
         {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-          <ModelCardSkeleton key={i} size={layout.cardSize} />
+          <ModelBrowseModelSkeleton key={i} layout={layout} />
         ))}
       </ModelBrowseGrid>
     );
@@ -75,10 +75,10 @@ export function ProfileLikesTab({ username, page, onPageChange }: ProfileLikesTa
     <div className="space-y-6">
       <ModelBrowseGrid layout={layout}>
         {models.map((model) => (
-          <ModelCard
+          <ModelBrowseModel
             key={model.id}
             model={mapToModel(model, model.author?.username ?? "unknown")}
-            size={layout.cardSize}
+            layout={layout}
           />
         ))}
       </ModelBrowseGrid>

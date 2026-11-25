@@ -64,14 +64,12 @@ public sealed class SiteModelUploadPolicy(
 
             var modelSettings = await _context.ModelSettings
                 .AsNoTracking()
-                .Select(s => new { s.AllowAnonUploads, s.DefaultPrivacySetting })
+                .Select(s => new { s.AllowAnonUploads })
                 .FirstOrDefaultAsync(cancellationToken);
 
             var requireLoginForUpload = systemSetup?.RequireLoginForUpload ?? true;
             var allowAnon = modelSettings?.AllowAnonUploads ?? false;
-            var defaultPrivacy = systemSetup?.DefaultModelPrivacy
-                ?? modelSettings?.DefaultPrivacySetting
-                ?? PrivacySettings.Public;
+            var defaultPrivacy = systemSetup?.DefaultModelPrivacy ?? PrivacySettings.Public;
 
             return new SiteModelUploadPolicySnapshot(requireLoginForUpload, allowAnon, defaultPrivacy);
         }

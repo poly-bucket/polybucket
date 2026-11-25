@@ -46,16 +46,6 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
                     };
                 }
 
-                // Parse and validate the privacy settings enum
-                if (!Enum.TryParse<PrivacySettings>(request.DefaultPrivacySetting, true, out var privacySettings))
-                {
-                    return new UpdateModelConfigurationSettingsResponse
-                    {
-                        Success = false,
-                        Message = "Invalid default privacy setting value"
-                    };
-                }
-
                 if (!Enum.TryParse<FeatureDisabledMode>(request.CommentsDisabledMode, true, out var commentsDisabledMode))
                 {
                     return new UpdateModelConfigurationSettingsResponse
@@ -77,7 +67,6 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
                 // Update model settings
                 modelSettings.AllowAnonUploads = request.AllowAnonUploads;
                 modelSettings.RequireUploadModeration = request.RequireUploadModeration;
-                modelSettings.DefaultPrivacySetting = privacySettings;
                 modelSettings.AllowAnonDownloads = request.AllowAnonDownloads;
                 modelSettings.EnableModelVersioning = request.EnableModelVersioning;
                 modelSettings.LimitTotalModels = request.LimitTotalModels;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchRecentModels, RECENT_MODELS_SKELETON_COUNT } from "@/lib/services/modelsService";
 import type { GetModelsResponse } from "@/lib/api/client";
-import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseModel, ModelBrowseModelSkeleton } from "@/components/models/model-browse-model";
 import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
 import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { Button } from "@/components/primitives/button";
@@ -39,7 +39,7 @@ export function RecentModelsSection() {
         <h2 className="mb-4 text-lg font-semibold text-white">Recent Models</h2>
         <ModelBrowseGrid layout={layout}>
           {Array.from({ length: RECENT_MODELS_SKELETON_COUNT }).map((_, i) => (
-            <ModelCardSkeleton key={i} size={layout.cardSize} />
+            <ModelBrowseModelSkeleton key={i} layout={layout} />
           ))}
         </ModelBrowseGrid>
       </section>
@@ -77,7 +77,7 @@ export function RecentModelsSection() {
       <h2 className="mb-4 text-lg font-semibold text-white">Recent Models</h2>
       <ModelBrowseGrid layout={layout}>
         {models.map((model) => (
-          <ModelCard key={model.id} model={model} size={layout.cardSize} />
+          <ModelBrowseModel key={model.id} model={model} layout={layout} />
         ))}
       </ModelBrowseGrid>
     </section>

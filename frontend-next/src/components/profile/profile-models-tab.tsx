@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseModel, ModelBrowseModelSkeleton } from "@/components/models/model-browse-model";
 import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
 import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { SimplePagination } from "@/components/collections/simple-pagination";
@@ -67,7 +67,7 @@ export function ProfileModelsTab({
     return (
       <ModelBrowseGrid layout={layout}>
         {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-          <ModelCardSkeleton key={i} size={layout.cardSize} />
+          <ModelBrowseModelSkeleton key={i} layout={layout} />
         ))}
       </ModelBrowseGrid>
     );
@@ -87,7 +87,7 @@ export function ProfileModelsTab({
     <div>
       <ModelBrowseGrid layout={layout}>
         {modelsForCard.map((model) => (
-          <ModelCard key={model.id} model={model} size={layout.cardSize} />
+          <ModelBrowseModel key={model.id} model={model} layout={layout} />
         ))}
       </ModelBrowseGrid>
       <SimplePagination

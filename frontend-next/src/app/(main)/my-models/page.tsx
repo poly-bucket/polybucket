@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import type { Model } from "@/lib/api/client";
 import { toast } from "sonner";
-import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseModel, ModelBrowseModelSkeleton } from "@/components/models/model-browse-model";
 import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
 import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { Button } from "@/components/primitives/button";
@@ -123,7 +123,7 @@ export default function MyModelsPage() {
       {loading ? (
         <ModelBrowseGrid layout={layout}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <ModelCardSkeleton key={i} size={layout.cardSize} />
+            <ModelBrowseModelSkeleton key={i} layout={layout} />
           ))}
         </ModelBrowseGrid>
       ) : models.length === 0 ? (
@@ -157,7 +157,7 @@ export default function MyModelsPage() {
                     </button>
                   </div>
                 )}
-                <ModelCard model={model} size={layout.cardSize} />
+                <ModelBrowseModel model={model} layout={layout} />
               </div>
             );
           })}

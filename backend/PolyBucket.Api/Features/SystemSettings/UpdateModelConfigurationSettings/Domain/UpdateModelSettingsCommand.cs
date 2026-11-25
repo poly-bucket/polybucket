@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using MediatR;
-using PolyBucket.Database.Entities.Models.Enums;
 using PolyBucket.Database.Entities.SystemSettings;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSettings.Domain
@@ -9,9 +8,6 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
     {
         public bool AllowAnonUploads { get; set; } = false;
         public bool RequireUploadModeration { get; set; } = true;
-        
-        [Required(ErrorMessage = "Default privacy setting is required")]
-        public string DefaultPrivacySetting { get; set; } = "Public";
         
         public bool AllowAnonDownloads { get; set; } = true;
         public bool EnableModelVersioning { get; set; } = true;
@@ -112,12 +108,6 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateModelConfigurationSetting
             validationResults = new List<ValidationResult>();
             var context = new ValidationContext(this);
             
-            // Validate DefaultPrivacySetting enum value
-            if (!Enum.TryParse<PrivacySettings>(DefaultPrivacySetting, true, out _))
-            {
-                validationResults.Add(new ValidationResult("Invalid default privacy setting value. Must be one of: Public, Private, Unlisted", new[] { nameof(DefaultPrivacySetting) }));
-            }
-
             if (!Enum.TryParse<FeatureDisabledMode>(CommentsDisabledMode, true, out _))
             {
                 validationResults.Add(new ValidationResult("Invalid comments disabled mode. Must be ReadOnly or Hidden", new[] { nameof(CommentsDisabledMode) }));

@@ -2,8 +2,10 @@ import { getDefaultSettings, type UserSettingsData } from "@/lib/services/userSe
 
 export type ModelCardSize = "small" | "medium" | "large";
 export type ModelCardSpacing = "compact" | "normal" | "spacious";
+export type ModelBrowseViewType = "grid" | "list";
 
 export interface ResolvedModelBrowseLayout {
+  viewType: ModelBrowseViewType;
   containerClassName: string;
   gapClassName: string;
   cardSize: ModelCardSize;
@@ -18,7 +20,6 @@ const LG_GRID_COLUMNS: Record<number, string> = {
 };
 
 const CARD_SIZES = new Set<ModelCardSize>(["small", "medium", "large"]);
-const CARD_SPACINGS = new Set<ModelCardSpacing>(["compact", "normal", "spacious"]);
 
 function clampGridColumns(value: number | undefined): number {
   const n = value ?? 4;
@@ -34,10 +35,15 @@ function clampCardSize(value: string | undefined): ModelCardSize {
 }
 
 function clampCardSpacing(value: string | undefined): ModelCardSpacing {
+  const CARD_SPACINGS = new Set<ModelCardSpacing>(["compact", "normal", "spacious"]);
   if (value && CARD_SPACINGS.has(value as ModelCardSpacing)) {
     return value as ModelCardSpacing;
   }
   return "normal";
+}
+
+function clampViewType(value: string | undefined): ModelBrowseViewType {
+  return value === "list" ? "list" : "grid";
 }
 
 function gapClassForSpacing(spacing: ModelCardSpacing): string {
@@ -71,9 +77,16 @@ export function resolveModelBrowseLayout(
   const spacing = clampCardSpacing(merged.cardSpacing);
   const columns = clampGridColumns(merged.gridColumns);
   const lgCols = LG_GRID_COLUMNS[columns] ?? LG_GRID_COLUMNS[4];
+  const viewType = clampViewType(merged.dashboardViewType);
+
+  const containerClassName =
+    viewType === "list"
+      ? "flex flex-col"
+      : `grid grid-cols-2 sm:grid-cols-3 ${lgCols}`;
 
   return {
-    containerClassName: `grid grid-cols-2 sm:grid-cols-3 ${lgCols}`,
+    viewType,
+    containerClassName,
     gapClassName: gapClassForSpacing(spacing),
     cardSize,
   };

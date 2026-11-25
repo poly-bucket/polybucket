@@ -1,6 +1,6 @@
 "use client";
 
-import { ModelCard } from "@/components/models/model-card";
+import { ModelBrowseModel } from "@/components/models/model-browse-model";
 import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
 import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { useCollectionDetail } from "@/contexts/CollectionDetailContext";
@@ -76,7 +76,7 @@ export function CollectionModelsTab({ collection }: CollectionModelsTabProps) {
               {removingModelId === model.id ? "Removing..." : "Remove"}
             </button>
           )}
-          <ModelCard model={model} size={layout.cardSize} />
+          <ModelBrowseModel model={model} layout={layout} />
         </div>
       ))}
     </ModelBrowseGrid>

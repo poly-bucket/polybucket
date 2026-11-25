@@ -64,15 +64,14 @@ public class SiteModelUploadPolicyTests : IDisposable
         login.ShouldBe(expectLoginRequired);
     }
 
-    [Fact(DisplayName = "When SystemSetup is absent, default model privacy falls back to ModelSettings.")]
-    public async Task DefaultPrivacy_UsesModelSettingsWhenNoSetup()
+    [Fact(DisplayName = "When SystemSetup is absent, default model privacy is Public.")]
+    public async Task DefaultPrivacy_IsPublicWhenNoSetup()
     {
         // Arrange
         _dbContext.ModelSettings.Add(new ModelSettings
         {
             Id = Guid.NewGuid(),
             AllowAnonUploads = false,
-            DefaultPrivacySetting = PrivacySettings.Unlisted,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });
@@ -83,7 +82,7 @@ public class SiteModelUploadPolicyTests : IDisposable
         var privacy = await _policy.GetDefaultModelPrivacyAsync();
 
         // Assert
-        privacy.ShouldBe(PrivacySettings.Unlisted);
+        privacy.ShouldBe(PrivacySettings.Public);
     }
 
   [Fact(DisplayName = "When SystemSetup exists, default model privacy prefers site default over model configuration.")]

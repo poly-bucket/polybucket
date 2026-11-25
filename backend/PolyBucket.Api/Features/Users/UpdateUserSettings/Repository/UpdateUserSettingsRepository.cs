@@ -35,7 +35,13 @@ public class UpdateUserSettingsRepository(PolyBucketDbContext context) : IUpdate
         if (request.NotifyOnFollows.HasValue) settings.NotifyOnFollows = request.NotifyOnFollows.Value;
         if (request.NotifyOnLikes.HasValue) settings.NotifyOnLikes = request.NotifyOnLikes.Value;
         if (request.NotifyOnComments.HasValue) settings.NotifyOnComments = request.NotifyOnComments.Value;
-        if (request.DashboardViewType != null) settings.DashboardViewType = request.DashboardViewType;
+        if (request.DashboardViewType != null)
+        {
+            var view = request.DashboardViewType.Equals("list", StringComparison.OrdinalIgnoreCase)
+                ? "list"
+                : "grid";
+            settings.DashboardViewType = view;
+        }
         if (request.CardSize != null) settings.CardSize = request.CardSize;
         if (request.CardSpacing != null) settings.CardSpacing = request.CardSpacing;
         if (request.GridColumns.HasValue) settings.GridColumns = request.GridColumns.Value;

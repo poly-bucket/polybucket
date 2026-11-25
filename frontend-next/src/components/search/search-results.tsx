@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Box, Download, FolderOpen, Heart, Users } from "lucide-react";
 import { Card } from "@/components/primitives/card";
-import { ModelCard, ModelCardSkeleton } from "@/components/models/model-card";
+import { ModelBrowseModel, ModelBrowseModelSkeleton } from "@/components/models/model-browse-model";
 import { ModelBrowseGrid } from "@/components/models/model-browse-grid";
 import { useModelBrowseLayout } from "@/lib/layout/use-model-browse-layout";
 import { UserAvatar } from "@/components/layout/user-avatar";
@@ -152,7 +152,7 @@ export function SearchResults({
     return (
       <ModelBrowseGrid layout={layout}>
         {Array.from({ length: 8 }).map((_, i) => (
-          <ModelCardSkeleton key={i} size={layout.cardSize} />
+          <ModelBrowseModelSkeleton key={i} layout={layout} />
         ))}
       </ModelBrowseGrid>
     );
@@ -181,10 +181,10 @@ export function SearchResults({
           </h3>
           <ModelBrowseGrid layout={layout}>
             {models.map((result) => (
-              <ModelCard
+              <ModelBrowseModel
                 key={result.id}
                 model={toModel(result)}
-                size={layout.cardSize}
+                layout={layout}
               />
             ))}
           </ModelBrowseGrid>

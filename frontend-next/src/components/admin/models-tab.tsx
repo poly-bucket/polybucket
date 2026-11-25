@@ -96,7 +96,6 @@ function ConfigurationTab() {
     try {
       const cmd = new UpdateModelConfigurationSettingsCommand({
         ...modelConfig,
-        defaultPrivacySetting: modelConfig.defaultPrivacySetting ?? "Public",
       });
       await updateModelConfigurationSettings(cmd);
       setConfigDirty(false);
@@ -177,26 +176,6 @@ function ConfigurationTab() {
                 handleConfigChange({ enableModelVersioning: v })
               }
             />
-            <SettingsField
-              label="Default privacy (model records)"
-              description="Default visibility on the model entity"
-            >
-              <Select
-                value={modelConfig.defaultPrivacySetting ?? "Public"}
-                onValueChange={(v) =>
-                  handleConfigChange({ defaultPrivacySetting: v })
-                }
-              >
-                <SelectTrigger variant="glass">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent variant="glass">
-                  <SelectItem value="Public">Public</SelectItem>
-                  <SelectItem value="Private">Private</SelectItem>
-                  <SelectItem value="Unlisted">Unlisted</SelectItem>
-                </SelectContent>
-              </Select>
-            </SettingsField>
             <SettingsField label="Site-wide model limit">
               <Input
                 variant="glass"

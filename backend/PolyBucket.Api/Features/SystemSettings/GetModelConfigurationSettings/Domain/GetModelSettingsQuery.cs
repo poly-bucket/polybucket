@@ -17,7 +17,6 @@ namespace PolyBucket.Api.Features.SystemSettings.GetModelConfigurationSettings.D
     {
         public bool AllowAnonUploads { get; set; }
         public bool RequireUploadModeration { get; set; }
-        public string DefaultPrivacySetting { get; set; } = "Public";
         public bool AllowAnonDownloads { get; set; }
         public bool EnableModelVersioning { get; set; }
         public int LimitTotalModels { get; set; }

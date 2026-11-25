@@ -22830,7 +22830,6 @@ export interface IUpdateModelConfigurationSettingsResponse {
 export class UpdateModelConfigurationSettingsCommand implements IUpdateModelConfigurationSettingsCommand {
     allowAnonUploads?: boolean;
     requireUploadModeration?: boolean;
-    defaultPrivacySetting!: string;
     allowAnonDownloads?: boolean;
     enableModelVersioning?: boolean;
     limitTotalModels?: number;
@@ -22909,7 +22908,6 @@ export class UpdateModelConfigurationSettingsCommand implements IUpdateModelConf
         if (_data) {
             this.allowAnonUploads = _data["allowAnonUploads"];
             this.requireUploadModeration = _data["requireUploadModeration"];
-            this.defaultPrivacySetting = _data["defaultPrivacySetting"];
             this.allowAnonDownloads = _data["allowAnonDownloads"];
             this.enableModelVersioning = _data["enableModelVersioning"];
             this.limitTotalModels = _data["limitTotalModels"];
@@ -22988,7 +22986,6 @@ export class UpdateModelConfigurationSettingsCommand implements IUpdateModelConf
         data = typeof data === 'object' ? data : {};
         data["allowAnonUploads"] = this.allowAnonUploads;
         data["requireUploadModeration"] = this.requireUploadModeration;
-        data["defaultPrivacySetting"] = this.defaultPrivacySetting;
         data["allowAnonDownloads"] = this.allowAnonDownloads;
         data["enableModelVersioning"] = this.enableModelVersioning;
         data["limitTotalModels"] = this.limitTotalModels;
@@ -23060,7 +23057,6 @@ export class UpdateModelConfigurationSettingsCommand implements IUpdateModelConf
 export interface IUpdateModelConfigurationSettingsCommand {
     allowAnonUploads?: boolean;
     requireUploadModeration?: boolean;
-    defaultPrivacySetting: string;
     allowAnonDownloads?: boolean;
     enableModelVersioning?: boolean;
     limitTotalModels?: number;
@@ -24356,7 +24352,6 @@ export interface IGetModelConfigurationSettingsResponse {
 export class ModelConfigurationSettingsData implements IModelConfigurationSettingsData {
     allowAnonUploads?: boolean;
     requireUploadModeration?: boolean;
-    defaultPrivacySetting?: string;
     allowAnonDownloads?: boolean;
     enableModelVersioning?: boolean;
     limitTotalModels?: number;
@@ -24435,7 +24430,6 @@ export class ModelConfigurationSettingsData implements IModelConfigurationSettin
         if (_data) {
             this.allowAnonUploads = _data["allowAnonUploads"];
             this.requireUploadModeration = _data["requireUploadModeration"];
-            this.defaultPrivacySetting = _data["defaultPrivacySetting"];
             this.allowAnonDownloads = _data["allowAnonDownloads"];
             this.enableModelVersioning = _data["enableModelVersioning"];
             this.limitTotalModels = _data["limitTotalModels"];
@@ -24514,7 +24508,6 @@ export class ModelConfigurationSettingsData implements IModelConfigurationSettin
         data = typeof data === 'object' ? data : {};
         data["allowAnonUploads"] = this.allowAnonUploads;
         data["requireUploadModeration"] = this.requireUploadModeration;
-        data["defaultPrivacySetting"] = this.defaultPrivacySetting;
         data["allowAnonDownloads"] = this.allowAnonDownloads;
         data["enableModelVersioning"] = this.enableModelVersioning;
         data["limitTotalModels"] = this.limitTotalModels;
@@ -24586,7 +24579,6 @@ export class ModelConfigurationSettingsData implements IModelConfigurationSettin
 export interface IModelConfigurationSettingsData {
     allowAnonUploads?: boolean;
     requireUploadModeration?: boolean;
-    defaultPrivacySetting?: string;
     allowAnonDownloads?: boolean;
     enableModelVersioning?: boolean;
     limitTotalModels?: number;
