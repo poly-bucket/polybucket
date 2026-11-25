@@ -12,6 +12,7 @@ using PolyBucket.Api.Features.Authentication.Services;
 using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Database.Entities.Models;
+using PolyBucket.Database.Entities.Authentication;
 using PolyBucket.Api.Features.ACL.Domain;
 using Shouldly;
 using Xunit;
@@ -164,6 +165,51 @@ public class LoginCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         result.RequiresFirstTimeSetup.ShouldBeFalse();
+    }
+
+    [Fact(DisplayName = "When the authentication response has no refresh token, login does not persist a refresh token row.")]
+    public async Task Handle_RefreshTokenNotIssued_ShouldNotPersistRefreshToken()
+    {
+        // Arrange
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "test@example.com",
+            Password = "password123"
+        };
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@example.com",
+            Username = "testuser",
+            PasswordHash = "hashedpassword"
+        };
+
+        var authResponse = new AuthenticationResponse
+        {
+            AccessToken = "access-token",
+            RefreshToken = string.Empty,
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(60),
+            RefreshTokenExpiresAt = default
+        };
+
+        _mockAuthRepository.Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
+        _mockTokenService.Setup(x => x.GenerateAuthenticationResponse(It.IsAny<User>()))
+            .Returns(authResponse);
+        _mockAuthRepository.Setup(x => x.CreateLoginRecordAsync(It.IsAny<UserLogin>()))
+            .Returns(Task.CompletedTask);
+        _mockLoginTwoFactorAuthRepository.Setup(x => x.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((PolyBucket.Database.Entities.Authentication.TwoFactorAuth?)null);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.RefreshToken.ShouldBeEmpty();
+        _mockAuthRepository.Verify(x => x.CreateRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "When handling a login with invalid credentials, the login command handler throws an UnauthorizedAccessException.")]

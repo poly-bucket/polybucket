@@ -142,15 +142,18 @@ namespace PolyBucket.Api.Features.Authentication.Register.Domain
 
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
 
-            await _registerRepository.CreateRefreshTokenAsync(new PolyBucket.Database.Entities.Authentication.RefreshToken
+            if (!string.IsNullOrEmpty(authResponse.RefreshToken))
             {
-                Id = Guid.NewGuid(),
-                Token = authResponse.RefreshToken,
-                UserId = user.Id,
-                ExpiresAt = authResponse.RefreshTokenExpiresAt,
-                CreatedAt = DateTime.UtcNow,
-                CreatedByIp = command.Client.IpAddress
-            });
+                await _registerRepository.CreateRefreshTokenAsync(new PolyBucket.Database.Entities.Authentication.RefreshToken
+                {
+                    Id = Guid.NewGuid(),
+                    Token = authResponse.RefreshToken,
+                    UserId = user.Id,
+                    ExpiresAt = authResponse.RefreshTokenExpiresAt,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedByIp = command.Client.IpAddress
+                });
+            }
 
             var loginRecord = new UserLogin
             {

@@ -162,21 +162,22 @@ namespace PolyBucket.Api.Features.Authentication.Login.Domain
             // Log successful login attempt (both application log and database record)
             await LogLoginAttempt(loginIdentifier, true, user.Id, command);
             
-            // Generate authentication response
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
 
-            // Create refresh token
-            var refreshToken = new RefreshTokenModel
+            if (!string.IsNullOrEmpty(authResponse.RefreshToken))
             {
-                Id = Guid.NewGuid(),
-                Token = authResponse.RefreshToken,
-                UserId = user.Id,
-                ExpiresAt = authResponse.RefreshTokenExpiresAt,
-                CreatedAt = DateTime.UtcNow,
-                CreatedByIp = command.Client.IpAddress
-            };
+                var refreshToken = new RefreshTokenModel
+                {
+                    Id = Guid.NewGuid(),
+                    Token = authResponse.RefreshToken,
+                    UserId = user.Id,
+                    ExpiresAt = authResponse.RefreshTokenExpiresAt,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedByIp = command.Client.IpAddress
+                };
 
-            await _authRepository.CreateRefreshTokenAsync(refreshToken);
+                await _authRepository.CreateRefreshTokenAsync(refreshToken);
+            }
 
             // Check if user requires password change or first-time setup
             var requiresPasswordChange = user.RequiresPasswordChange;

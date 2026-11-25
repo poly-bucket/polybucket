@@ -17,9 +17,14 @@ vi.mock("./userProfile", () => ({
     username: "newuser",
     roles: ["User"],
   }),
+  profileFromAccessToken: () => ({
+    id: "user-1",
+    email: "new@test.com",
+    username: "newuser",
+    roles: ["User"],
+  }),
   toClientJson: (profile: { id: string }) => ({ user: profile }),
   rolesFromRoleString: (role?: string | null) => (role ? [role] : []),
-  profileFromAccessToken: () => null,
   profileFromLoginResponse: () => null,
 }));
 
@@ -91,5 +96,34 @@ describe("handleRegisterBody", () => {
     const json = await outcome.response.json();
     expect(json.user?.id).toBe("user-1");
     expect(JSON.stringify(json)).not.toContain("access-token-value");
+  });
+
+  it("seals an access-only session when registration returns no refresh token", async () => {
+    // Arrange
+    const accessToken = "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.signature";
+    mockPost.mockResolvedValue({
+      ok: true,
+      status: 200,
+      data: {
+        requiresEmailVerification: false,
+        authentication: {
+          accessToken,
+          refreshToken: "",
+        },
+      },
+      text: "{}",
+    });
+
+    // Act
+    const outcome = await handleRegisterBody({
+      email: "new@test.com",
+      username: "newuser",
+      password: "Password123!",
+      confirmPassword: "Password123!",
+    });
+
+    // Assert
+    expect(outcome.kind).toBe("success");
+    expect(outcome.response.headers.get("set-cookie")).toContain("polybucket-session");
   });
 });

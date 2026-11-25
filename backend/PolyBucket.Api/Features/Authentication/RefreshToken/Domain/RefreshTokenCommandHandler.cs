@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,15 +11,21 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Domain
     public class RefreshTokenCommandHandler(
         IRefreshTokenRepository refreshTokenRepository,
         ITokenService tokenService,
+        ITokenSettingsService tokenSettingsService,
         ILogger<RefreshTokenCommandHandler> logger)
     {
         private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly ITokenSettingsService _tokenSettingsService = tokenSettingsService;
         private readonly ILogger<RefreshTokenCommandHandler> _logger = logger;
 
         public async Task<RefreshTokenCommandResponse> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
         {
-            // Get refresh token
+            if (!await _tokenSettingsService.IsRefreshTokensEnabledAsync())
+            {
+                throw new UnauthorizedAccessException("Refresh tokens are disabled");
+            }
+
             var refreshToken = await _refreshTokenRepository.GetRefreshTokenAsync(command.RefreshToken);
             if (refreshToken == null || !refreshToken.IsActive)
             {
@@ -35,22 +42,23 @@ namespace PolyBucket.Api.Features.Authentication.RefreshToken.Domain
             // Revoke the current refresh token
             await _refreshTokenRepository.RevokeRefreshTokenAsync(command.RefreshToken, "Replaced by new token", command.Client.IpAddress);
 
-            // Generate new authentication response
             var authResponse = _tokenService.GenerateAuthenticationResponse(user);
 
-            // Create new refresh token
-            var newRefreshToken = new PolyBucket.Database.Entities.Authentication.RefreshToken
+            if (!string.IsNullOrEmpty(authResponse.RefreshToken))
             {
-                Id = Guid.NewGuid(),
-                Token = authResponse.RefreshToken,
-                UserId = user.Id,
-                ExpiresAt = authResponse.RefreshTokenExpiresAt,
-                CreatedAt = DateTime.UtcNow,
-                CreatedByIp = command.Client.IpAddress,
-                ReplacedByToken = authResponse.RefreshToken
-            };
+                var newRefreshToken = new PolyBucket.Database.Entities.Authentication.RefreshToken
+                {
+                    Id = Guid.NewGuid(),
+                    Token = authResponse.RefreshToken,
+                    UserId = user.Id,
+                    ExpiresAt = authResponse.RefreshTokenExpiresAt,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedByIp = command.Client.IpAddress,
+                    ReplacedByToken = authResponse.RefreshToken
+                };
 
-            await _refreshTokenRepository.CreateRefreshTokenAsync(newRefreshToken);
+                await _refreshTokenRepository.CreateRefreshTokenAsync(newRefreshToken);
+            }
 
             _logger.LogInformation("Token refreshed successfully for user: {Email}", user.Email);
 

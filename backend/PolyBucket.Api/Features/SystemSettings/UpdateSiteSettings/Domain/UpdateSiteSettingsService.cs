@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using PolyBucket.Database.Persistence;
 using PolyBucket.Api.Features.SystemSettings.Domain;
 using PolyBucket.Api.Features.SystemSettings.Services;
+using PolyBucket.Email;
 using System.Security.Claims;
 
 namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
@@ -13,12 +14,14 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
         IUpdateSiteSettingsRepository repository,
         ILogger<UpdateSiteSettingsService> logger,
         IHttpContextAccessor httpContextAccessor,
-        ISitePrivacyState sitePrivacyState) : IUpdateSiteSettingsService
+        ISitePrivacyState sitePrivacyState,
+        IEmailSettingsResolver emailSettingsResolver) : IUpdateSiteSettingsService
     {
         private readonly IUpdateSiteSettingsRepository _repository = repository;
         private readonly ILogger<UpdateSiteSettingsService> _logger = logger;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
+        private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
 
         public async Task<UpdateSiteSettingsResponse> UpdateSiteSettingsAsync(UpdateSiteSettingsCommand request, CancellationToken cancellationToken = default)
         {
@@ -115,6 +118,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
 
                 await _repository.Context.SaveChangesAsync(cancellationToken);
                 _sitePrivacyState.Invalidate();
+                _emailSettingsResolver.Invalidate();
                 
                 _logger.LogInformation("Site settings updated successfully by user {UserId}", 
                     userIdClaim?.Value ?? "unknown");

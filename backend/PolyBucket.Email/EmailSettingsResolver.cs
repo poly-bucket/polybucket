@@ -60,6 +60,21 @@ public class EmailSettingsResolver(
     {
         var sources = new Dictionary<string, EmailSettingSource>();
 
+        var disableEmailSubsystem = await context.SystemSetups
+            .AsNoTracking()
+            .Select(s => (bool?)s.DisableEmailSettings)
+            .FirstOrDefaultAsync(cancellationToken) ?? false;
+
+        if (disableEmailSubsystem)
+        {
+            sources[EffectiveEmailSettings.Fields.Transport] = EmailSettingSource.Database;
+            return new EffectiveEmailSettings
+            {
+                Transport = EmailTransportKind.Disabled,
+                Sources = sources
+            };
+        }
+
         var transport = ResolveTransport(env, db, sources);
 
         var host = Pick(EffectiveEmailSettings.Fields.SmtpHost, NullIfBlank(env.Smtp.Host), Get(db, EmailSystemSettingKeys.EmailSmtpServer), string.Empty, sources);

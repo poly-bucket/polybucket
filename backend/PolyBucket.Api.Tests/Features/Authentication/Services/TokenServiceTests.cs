@@ -151,6 +151,29 @@ public class TokenServiceTests
         principal.ShouldBeNull();
     }
 
+    [Fact(DisplayName = "When refresh tokens are disabled, the authentication response omits refresh token values.")]
+    public async Task GenerateAuthenticationResponseAsync_RefreshTokensDisabled_OmitsRefreshToken()
+    {
+        // Arrange
+        var disabledRefreshSettings = new DisabledRefreshTokenSettingsService();
+        var tokenService = new TokenService(_configuration, disabledRefreshSettings);
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@example.com",
+            Username = "testuser",
+            Role = new Role { Name = "User" }
+        };
+
+        // Act
+        var response = await tokenService.GenerateAuthenticationResponseAsync(user);
+
+        // Assert
+        response.AccessToken.ShouldNotBeNullOrEmpty();
+        response.RefreshToken.ShouldBeEmpty();
+        response.RefreshTokenExpiresAt.ShouldBe(default);
+    }
+
     [Fact(DisplayName = "When generating an authentication response, the token service returns a complete response with tokens and user info.")]
     public async Task GenerateAuthenticationResponseAsync_ShouldReturnCompleteResponse()
     {
@@ -211,5 +234,19 @@ public class TokenServiceTests
         {
             return Task.FromResult(true);
         }
+    }
+
+    private class DisabledRefreshTokenSettingsService : ITokenSettingsService
+    {
+        public Task<TokenSettings> GetTokenSettingsAsync() =>
+            Task.FromResult(new TokenSettings { EnableRefreshTokens = false });
+
+        public Task<bool> UpdateTokenSettingsAsync(TokenSettings settings) => Task.FromResult(true);
+
+        public Task<int> GetAccessTokenExpiryMinutesAsync() => Task.FromResult(60);
+
+        public Task<int> GetRefreshTokenExpiryDaysAsync() => Task.FromResult(7);
+
+        public Task<bool> IsRefreshTokensEnabledAsync() => Task.FromResult(false);
     }
 } 

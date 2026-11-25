@@ -8,6 +8,7 @@ using PolyBucket.Api.Features.Authentication.RefreshToken.Domain;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Http;
 using PolyBucket.Api.Features.Authentication.RefreshToken.Repository;
 using PolyBucket.Api.Features.Authentication.Services;
+using PolyBucket.Api.Features.SystemSettings.Services;
 using Shouldly;
 using System;
 using System.Threading;
@@ -22,6 +23,7 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
     {
         private readonly Mock<IRefreshTokenRepository> _authRepositoryMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
+        private readonly Mock<ITokenSettingsService> _tokenSettingsServiceMock;
         private readonly Mock<ILogger<RefreshTokenCommandHandler>> _loggerMock;
         private readonly RefreshTokenController _controller;
         private readonly RefreshTokenCommandHandler _handler;
@@ -30,11 +32,16 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
         {
             _authRepositoryMock = new Mock<IRefreshTokenRepository>();
             _tokenServiceMock = new Mock<ITokenService>();
+            _tokenSettingsServiceMock = new Mock<ITokenSettingsService>();
+            _tokenSettingsServiceMock
+                .Setup(x => x.IsRefreshTokensEnabledAsync())
+                .ReturnsAsync(true);
             _loggerMock = new Mock<ILogger<RefreshTokenCommandHandler>>();
 
             _handler = new RefreshTokenCommandHandler(
                 _authRepositoryMock.Object,
                 _tokenServiceMock.Object,
+                _tokenSettingsServiceMock.Object,
                 _loggerMock.Object);
 
             var httpContext = new DefaultHttpContext();
@@ -47,6 +54,23 @@ namespace PolyBucket.Api.Tests.Features.Authentication.Http
                     HttpContext = httpContext
                 }
             };
+        }
+
+        [Fact(DisplayName = "When refresh tokens are disabled in site settings, the refresh token controller returns Unauthorized.")]
+        public async Task RefreshToken_RefreshTokensDisabled_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            _tokenSettingsServiceMock
+                .Setup(x => x.IsRefreshTokensEnabledAsync())
+                .ReturnsAsync(false);
+            var command = new RefreshTokenCommand { RefreshToken = "any-token" };
+
+            // Act
+            var result = await _controller.RefreshToken(command, CancellationToken.None);
+
+            // Assert
+            result.ShouldBeOfType<UnauthorizedObjectResult>();
+            _authRepositoryMock.Verify(x => x.GetRefreshTokenAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Fact(DisplayName = "When refreshing with a valid refresh token, the refresh token controller returns Ok with new tokens.")]

@@ -95,6 +95,31 @@ public class EmailSettingsResolverTests : IDisposable
         settings.IsManagedByEnvironment(Fields.SmtpHost).ShouldBeFalse();
     }
 
+    [Fact(DisplayName = "When the site email subsystem is disabled, effective settings block delivery even if SMTP is configured.")]
+    public async Task GetEffectiveSettings_SiteEmailSubsystemDisabled_BlocksDelivery()
+    {
+        // Arrange
+        _context.SystemSetups.Add(new SystemSetup
+        {
+            Id = Guid.NewGuid(),
+            DisableEmailSettings = true
+        });
+        Seed(
+            (EmailSystemSettingKeys.EmailTransport, "Smtp"),
+            (EmailSystemSettingKeys.EmailSmtpServer, "smtp.db.example"),
+            (EmailSystemSettingKeys.EmailFromAddress, "db@example.com"));
+        await _context.SaveChangesAsync();
+        var resolver = CreateResolver();
+
+        // Act
+        var settings = await resolver.GetEffectiveSettingsAsync();
+
+        // Assert
+        settings.Transport.ShouldBe(EmailTransportKind.Disabled);
+        settings.IsEnabled.ShouldBeFalse();
+        settings.CanDeliver.ShouldBeFalse();
+    }
+
     [Fact(DisplayName = "When environment options and database settings both exist, environment values win and are marked as managed.")]
     public async Task GetEffectiveSettings_EnvironmentAndDatabase_EnvironmentWins()
     {

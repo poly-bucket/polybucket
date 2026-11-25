@@ -2,12 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using PolyBucket.Email;
 using PolyBucket.Email.Templates;
 using PolyBucket.Email.Domain;
 using PolyBucket.Email.Repository;
+using PolyBucket.Database.Entities.SystemSettings;
+using PolyBucket.Database.Persistence;
 using Shouldly;
 using Xunit;
 
@@ -63,6 +70,44 @@ public class EmailQueueTests
         // Assert
         _repository.Verify(r => r.Add(It.IsAny<EmailMessage>()), Times.Once);
         _repository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "When the site email subsystem is disabled, enqueue reports EmailDisabled and stores nothing.")]
+    public async Task Enqueue_SiteEmailSubsystemDisabled_ReturnsDisabled()
+    {
+        // Arrange
+        await using var context = new PolyBucketDbContext(new DbContextOptionsBuilder<PolyBucketDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options);
+        context.SystemSetups.Add(new SystemSetup { Id = Guid.NewGuid(), DisableEmailSettings = true });
+        context.SystemSettings.Add(new SystemSetting
+        {
+            Key = EmailSystemSettingKeys.EmailTransport,
+            Value = "Log"
+        });
+        context.SystemSettings.Add(new SystemSetting
+        {
+            Key = EmailSystemSettingKeys.EmailFromAddress,
+            Value = "noreply@example.com"
+        });
+        await context.SaveChangesAsync();
+
+        var resolver = new EmailSettingsResolver(
+            context,
+            Mock.Of<IOptionsMonitor<EmailOptions>>(m => m.CurrentValue == new EmailOptions()),
+            new SmtpPasswordProtector(new EphemeralDataProtectionProvider()),
+            new MemoryCache(new MemoryCacheOptions()),
+            new ConfigurationBuilder().Build(),
+            NullLogger<EmailSettingsResolver>.Instance);
+
+        var queue = new EmailQueue(_repository.Object, resolver, _signal.Object, NullLogger<EmailQueue>.Instance);
+
+        // Act
+        var outcome = await queue.EnqueueAsync(WelcomeRequest());
+
+        // Assert
+        outcome.ShouldBe(EmailEnqueueOutcome.EmailDisabled);
+        _repository.Verify(r => r.Add(It.IsAny<EmailMessage>()), Times.Never);
     }
 
     [Fact(DisplayName = "When email delivery is disabled, nothing is stored.")]

@@ -30,4 +30,17 @@ describe("sealed session", () => {
     expect(opened?.accessExp).toBe(payload.accessExp);
     expect(opened?.roles).toEqual(["Admin"]);
   });
+
+  it("seals and unseals a payload with an empty refresh token", async () => {
+    const payload = {
+      refreshToken: "",
+      accessToken: "access",
+      accessExp: Date.now() + 60_000,
+      roles: ["User"],
+    };
+    const sealed = await sealSession(payload, 3600);
+    const opened = await unsealSession(sealed);
+    expect(opened?.refreshToken).toBe("");
+    expect(opened?.accessToken).toBe("access");
+  });
 });

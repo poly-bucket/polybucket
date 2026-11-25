@@ -35,7 +35,6 @@ export async function unsealSession(token: string): Promise<SealedSessionPayload
     const rolesRaw = payload.roles;
     if (
       typeof refreshToken !== "string" ||
-      !refreshToken.trim() ||
       typeof accessToken !== "string" ||
       !accessToken.trim() ||
       typeof accessExp !== "number"

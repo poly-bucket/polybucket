@@ -7,7 +7,7 @@ import {
   type ApiRefreshResponse,
   type ApiRegisterResponse,
 } from "./apiClient";
-import { appendSessionCookie, readSessionCookieValue, refreshMaxAgeFromIso } from "./cookies";
+import { appendSessionCookie, readSessionCookieValue, sessionMaxAgeSeconds } from "./cookies";
 import {
   accessTokenExpMs,
   unsealSession,
@@ -35,7 +35,7 @@ export async function sealTokensInResponse(
     accessExp: accessTokenExpMs(accessToken),
     roles,
   };
-  const maxAge = refreshMaxAgeFromIso(refreshExpiresAt);
+  const maxAge = sessionMaxAgeSeconds(refreshExpiresAt, payload.accessExp);
   await appendSessionCookie(response, payload, maxAge);
   return payload;
 }
@@ -54,6 +54,9 @@ export async function refreshSessionPayload(
   | { ok: true; payload: SealedSessionPayload; profile: BffUserProfile; refreshExpiresAt?: string }
   | { ok: false; status: number }
 > {
+  if (!refreshToken.trim()) {
+    return { ok: false, status: 401 };
+  }
   const result = await apiPostJson<ApiRefreshResponse>("/api/auth/refresh-token", {
     refreshToken,
   });
@@ -63,7 +66,10 @@ export async function refreshSessionPayload(
   const auth = result.data.authentication;
   const accessToken = auth.accessToken ?? "";
   const newRefresh = auth.refreshToken ?? "";
-  if (!accessToken.trim() || !newRefresh.trim()) {
+  if (!accessToken.trim()) {
+    return { ok: false, status: 401 };
+  }
+  if (!newRefresh.trim()) {
     return { ok: false, status: 401 };
   }
   const profile = profileFromAuthentication(auth);
@@ -124,7 +130,7 @@ export async function handleLoginBody(
   }
   const accessToken = login.token ?? "";
   const refreshToken = login.refreshToken ?? "";
-  if (!accessToken.trim() || !refreshToken.trim()) {
+  if (!accessToken.trim()) {
     return {
       kind: "error",
       response: NextResponse.json({ message: "Invalid login response" }, { status: 502 }),
@@ -192,7 +198,7 @@ export async function handleRegisterBody(
   const auth = register.authentication;
   const accessToken = auth?.accessToken ?? "";
   const refreshToken = auth?.refreshToken ?? "";
-  if (!accessToken.trim() || !refreshToken.trim()) {
+  if (!accessToken.trim()) {
     return {
       kind: "error",
       response: NextResponse.json({ message: "Invalid registration response" }, { status: 502 }),
@@ -259,6 +265,9 @@ export async function ensureFreshAccessToken(
   const skewMs = 60_000;
   if (session.accessExp - Date.now() > skewMs) {
     return { ok: true, session, rotated: false };
+  }
+  if (!session.refreshToken.trim()) {
+    return { ok: false };
   }
   const refreshed = await refreshSessionPayload(session.refreshToken);
   if (!refreshed.ok) {

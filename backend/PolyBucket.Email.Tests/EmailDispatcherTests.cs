@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -10,6 +14,8 @@ using PolyBucket.Email;
 using PolyBucket.Email.Templates;
 using PolyBucket.Email.Domain;
 using PolyBucket.Email.Repository;
+using PolyBucket.Database.Entities.SystemSettings;
+using PolyBucket.Database.Persistence;
 using Shouldly;
 using Xunit;
 
@@ -158,6 +164,47 @@ public class EmailDispatcherTests
         // Assert
         _repository.Verify(r => r.MarkDeadLetterAsync(message.Id, It.Is<string>(s => s.StartsWith("Render failed")), It.IsAny<CancellationToken>()), Times.Once);
         _transport.Verify(t => t.SendAsync(It.IsAny<EmailEnvelope>(), It.IsAny<EffectiveEmailSettings>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "When the site email subsystem is disabled, dispatch claims nothing even if SMTP settings exist in the database.")]
+    public async Task DispatchPending_SiteEmailSubsystemDisabled_ClaimsNothing()
+    {
+        // Arrange
+        await using var context = new PolyBucketDbContext(new DbContextOptionsBuilder<PolyBucketDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options);
+        context.SystemSetups.Add(new SystemSetup { Id = Guid.NewGuid(), DisableEmailSettings = true });
+        await context.SaveChangesAsync();
+
+        var resolver = new EmailSettingsResolver(
+            context,
+            Mock.Of<IOptionsMonitor<EmailOptions>>(m => m.CurrentValue == new EmailOptions
+            {
+                Transport = EmailTransportKind.Smtp,
+                FromAddress = "noreply@example.com",
+                Smtp = new SmtpOptions { Host = "smtp.example.com" }
+            }),
+            new SmtpPasswordProtector(new EphemeralDataProtectionProvider()),
+            new MemoryCache(new MemoryCacheOptions()),
+            new ConfigurationBuilder().Build(),
+            NullLogger<EmailSettingsResolver>.Instance);
+
+        var dispatcher = new EmailDispatcher(
+            _repository.Object,
+            resolver,
+            _factory.Object,
+            new EmailTemplateRenderer(),
+            _branding.Object,
+            Options.Create(_options),
+            TimeProvider.System,
+            NullLogger<EmailDispatcher>.Instance);
+
+        // Act
+        var processed = await dispatcher.DispatchPendingAsync();
+
+        // Assert
+        processed.ShouldBe(0);
+        _repository.Verify(r => r.ClaimBatchAsync(It.IsAny<int>(), It.IsAny<TimeSpan>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "When email delivery is disabled, nothing is claimed so queued messages wait for a working configuration.")]

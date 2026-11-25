@@ -54,3 +54,17 @@ export function refreshMaxAgeFromIso(iso: string | undefined): number {
   const seconds = Math.floor((ms - Date.now()) / 1000);
   return Math.max(60, Math.min(seconds, 60 * 60 * 24 * 30));
 }
+
+export function sessionMaxAgeSeconds(refreshExpiresAt: string | undefined, accessExpMs: number): number {
+  if (refreshExpiresAt?.trim()) {
+    const ms = Date.parse(refreshExpiresAt);
+    if (!Number.isNaN(ms)) {
+      const seconds = Math.floor((ms - Date.now()) / 1000);
+      if (seconds > 0) {
+        return Math.max(60, Math.min(seconds, 60 * 60 * 24 * 30));
+      }
+    }
+  }
+  const accessSeconds = Math.floor((accessExpMs - Date.now()) / 1000);
+  return Math.max(60, accessSeconds);
+}

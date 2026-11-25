@@ -131,23 +131,29 @@ namespace PolyBucket.Api.Features.Authentication.Services
         public async Task<AuthenticationResponse> GenerateAuthenticationResponseAsync(User user)
         {
             var accessToken = await GenerateAccessTokenAsync(user);
-            var refreshToken = GenerateRefreshToken();
-            
-            // Get token expiry from settings service, fallback to configuration
+
             var accessTokenExpiryMinutes = await _tokenSettingsService.GetAccessTokenExpiryMinutesAsync();
             if (accessTokenExpiryMinutes <= 0)
             {
                 accessTokenExpiryMinutes = Convert.ToInt32(_configuration["AppSettings:Security:AccessTokenExpiryMinutes"] ?? "60");
             }
-            
-            var refreshTokenExpiryDays = await _tokenSettingsService.GetRefreshTokenExpiryDaysAsync();
-            if (refreshTokenExpiryDays <= 0)
-            {
-                refreshTokenExpiryDays = Convert.ToInt32(_configuration["AppSettings:Security:RefreshTokenExpiryDays"] ?? "7");
-            }
-            
+
             var accessTokenExpiry = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
-            var refreshTokenExpiry = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+            var refreshTokensEnabled = await _tokenSettingsService.IsRefreshTokensEnabledAsync();
+            string refreshToken = string.Empty;
+            var refreshTokenExpiry = default(DateTime);
+
+            if (refreshTokensEnabled)
+            {
+                refreshToken = GenerateRefreshToken();
+                var refreshTokenExpiryDays = await _tokenSettingsService.GetRefreshTokenExpiryDaysAsync();
+                if (refreshTokenExpiryDays <= 0)
+                {
+                    refreshTokenExpiryDays = Convert.ToInt32(_configuration["AppSettings:Security:RefreshTokenExpiryDays"] ?? "7");
+                }
+
+                refreshTokenExpiry = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+            }
 
             return new AuthenticationResponse
             {
