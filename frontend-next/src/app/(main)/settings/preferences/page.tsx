@@ -53,17 +53,25 @@ export default function PreferencesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (settings) {
-      setLocal({
-        language: settings.language ?? "en",
-        theme: settings.theme ?? "dark",
-        timeZone: settings.timeZone ?? "UTC",
-        measurementSystem: settings.measurementSystem ?? "metric",
-        defaultPrinterId: settings.defaultPrinterId ?? "",
-        autoRotateModels: settings.autoRotateModels ?? true,
-      });
+    if (!settings) {
+      return;
     }
-  }, [settings]);
+    setLocal({
+      language: settings.language ?? "en",
+      theme: settings.theme ?? "dark",
+      timeZone: settings.timeZone ?? "UTC",
+      measurementSystem: settings.measurementSystem ?? "metric",
+      defaultPrinterId: settings.defaultPrinterId ?? "",
+      autoRotateModels: settings.autoRotateModels ?? true,
+    });
+  }, [
+    settings?.language,
+    settings?.theme,
+    settings?.timeZone,
+    settings?.measurementSystem,
+    settings?.defaultPrinterId,
+    settings?.autoRotateModels,
+  ]);
 
   useEffect(() => {
   let cancelled = false;

@@ -23,6 +23,15 @@ const {
   getModelById: vi.fn(),
 }));
 
+vi.mock("@/lib/bff/fetchSiteAccessPolicy", async () => {
+  const { defaultModelMetadataRules } = await import("@/lib/models/model-metadata");
+  return {
+    fetchSiteAccessPolicy: vi.fn().mockResolvedValue({
+      modelMetadataRules: defaultModelMetadataRules,
+    }),
+  };
+});
+
 vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
@@ -47,7 +56,7 @@ vi.mock("@/lib/api/clientFactory", () => ({
 const model = {
   id: "model-1",
   name: "Widget",
-  description: "A widget",
+  description: "A cool widget",
   privacy: PrivacySettings.Public,
   license: LicenseTypes.MIT,
   aiGenerated: false,

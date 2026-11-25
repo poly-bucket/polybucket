@@ -17,5 +17,8 @@ export default defineConfig({
     command: "npm run dev",
     url: `http://localhost:${PORT}`,
     reuseExistingServer: true,
+    env: {
+      E2E_SITE_ACCESS_OVERRIDE: "1",
+    },
   },
 });

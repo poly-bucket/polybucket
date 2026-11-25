@@ -1,24 +1,12 @@
 import { test, expect } from "@playwright/test";
-
-async function mockSiteAccess(
-  page: import("@playwright/test").Page,
-  allowPublicBrowsing: boolean
-) {
-  await page.route("**/api/polybucket/auth/site-access", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ allowPublicBrowsing }),
-    });
-  });
-}
+import { setPublicBrowsingOverride } from "./publicBrowsingCookie";
 
 test.describe("Private site browsing", () => {
   test("redirects anonymous /dashboard to login when public browsing is disabled", async ({
     page,
   }) => {
     // Arrange
-    await mockSiteAccess(page, false);
+    await setPublicBrowsingOverride(page, false);
 
     // Act
     await page.goto("/dashboard");
@@ -29,7 +17,7 @@ test.describe("Private site browsing", () => {
 
   test("allows anonymous /dashboard when public browsing is enabled", async ({ page }) => {
     // Arrange
-    await mockSiteAccess(page, true);
+    await setPublicBrowsingOverride(page, true);
 
     // Act
     await page.goto("/dashboard");

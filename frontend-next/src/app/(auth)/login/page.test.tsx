@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor } from "@/test/test-utils";
 import LoginPage from "./page";
 
-const mockPush = vi.fn();
+const mockAssign = vi.fn();
 
 const mockSearchParamsGet = vi.fn((key: string) =>
   key === "redirect" ? null : null
@@ -20,17 +20,33 @@ vi.mock("@/lib/services/registrationService", async (importOriginal) => {
 });
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
   useSearchParams: () => ({ get: mockSearchParamsGet }),
 }));
 
 describe("LoginPage", () => {
+  const originalLocation = window.location;
+
   beforeEach(() => {
-    mockPush.mockClear();
+    mockAssign.mockReset();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: {
+        origin: "https://app.example.com",
+        href: "https://app.example.com/login",
+        assign: mockAssign,
+      },
+    });
     mockSearchParamsGet.mockImplementation((key: string) =>
       key === "redirect" ? null : null
     );
     mockFetchRegistrationStatus.mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
   });
 
   it("shows create account link when public registration is open", async () => {
@@ -111,7 +127,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/");
+      expect(mockAssign).toHaveBeenCalledWith("/");
     });
   });
 
@@ -154,7 +170,7 @@ describe("LoginPage", () => {
     });
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/");
+      expect(mockAssign).toHaveBeenCalledWith("/");
     });
   });
 
@@ -194,7 +210,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/");
+      expect(mockAssign).toHaveBeenCalledWith("/");
     });
   });
 
@@ -212,7 +228,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+      expect(mockAssign).toHaveBeenCalledWith("/dashboard");
     });
   });
 
@@ -231,7 +247,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/setup");
+      expect(mockAssign).toHaveBeenCalledWith("/setup");
     });
   });
 
@@ -250,7 +266,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/");
+      expect(mockAssign).toHaveBeenCalledWith("/");
     });
   });
 

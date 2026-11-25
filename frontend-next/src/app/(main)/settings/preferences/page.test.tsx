@@ -4,15 +4,17 @@ import PreferencesPage from "./page";
 
 const mockUpdateSettings = vi.fn().mockResolvedValue(true);
 
+const mockSettings = {
+  language: "en",
+  theme: "dark",
+  timeZone: "UTC",
+  measurementSystem: "metric",
+  autoRotateModels: true,
+};
+
 vi.mock("@/contexts/UserSettingsContext", () => ({
   useUserSettings: () => ({
-    settings: {
-      language: "en",
-      theme: "dark",
-      timeZone: "UTC",
-      measurementSystem: "metric",
-      autoRotateModels: true,
-    },
+    settings: mockSettings,
     updateSettings: mockUpdateSettings,
   }),
 }));

@@ -4,6 +4,10 @@ import {
   resolvePrivateBrowseRedirect,
   resolveRoleProtectedRedirect,
 } from "@/lib/auth/browseAccess";
+import {
+  E2E_ALLOW_PUBLIC_BROWSING_COOKIE,
+  readE2EPublicBrowsingOverride,
+} from "@/lib/auth/e2eSiteAccessOverride";
 import { fetchSiteAccessPolicy } from "@/lib/bff/fetchSiteAccessPolicy";
 import { isActionTokenPath, redirectWithoutQueryToken } from "@/lib/bff/actionToken";
 import {
@@ -29,6 +33,11 @@ export async function middleware(request: NextRequest) {
 
   const origin = request.nextUrl.origin;
   const { allowPublicBrowsing } = await fetchSiteAccessPolicy(origin);
+  const publicBrowsingOverride = readE2EPublicBrowsingOverride(
+    process.env.E2E_SITE_ACCESS_OVERRIDE,
+    request.cookies.get(E2E_ALLOW_PUBLIC_BROWSING_COOKIE)?.value
+  );
+  const allowPublicBrowse = publicBrowsingOverride ?? allowPublicBrowsing;
 
   const sealedCookie = readSessionCookieValue(request);
   const hasBrowseSession = hasValidSessionCookieShape(request);
@@ -41,7 +50,7 @@ export async function middleware(request: NextRequest) {
   const privateRedirect = resolvePrivateBrowseRedirect(
     pathname,
     origin,
-    allowPublicBrowsing,
+    allowPublicBrowse,
     hasBrowseSession || hasValidSession
   );
   if (privateRedirect) {

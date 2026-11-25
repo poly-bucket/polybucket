@@ -59,7 +59,7 @@ describe("modelMetadataSchema", () => {
   it("accepts valid metadata", () => {
     const result = modelMetadataSchema.safeParse({
       name: "Test Model",
-      description: "Hello",
+      description: "Hello world",
       privacy: PrivacySettings.Public,
       license: LicenseTypes.MIT,
       aiGenerated: false,
