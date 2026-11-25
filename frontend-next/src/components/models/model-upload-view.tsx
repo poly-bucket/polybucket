@@ -385,8 +385,10 @@ export default function ModelUploadView() {
   );
 
   useEffect(() => {
-    setMetadataValid(modelMetadataSchema.safeParse(metadataValues).success);
-  }, [metadataValues]);
+    setMetadataValid(
+      metadataSchemaRef.current.safeParse(metadataValues).success
+    );
+  }, [metadataValues, metadataRules]);
 
   const handleSelectFile = (id: string) => {
     const f = uploadedFiles.find((x) => x.id === id);
