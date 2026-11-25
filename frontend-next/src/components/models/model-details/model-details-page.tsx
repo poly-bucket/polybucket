@@ -18,6 +18,14 @@ import {
   recordModelView,
 } from "@/lib/services/modelViewsService";
 import { applyDownloadCountToModel } from "@/lib/services/modelDownloadsService";
+import {
+  fetchSiteAccessPolicy,
+  type SiteAccessPolicy,
+} from "@/lib/bff/fetchSiteAccessPolicy";
+import {
+  areModelDownloadsEnabled,
+  mayDownloadModel,
+} from "@/lib/auth/downloadAccess";
 import type { ModelReactionResult } from "@/lib/services/modelReactionsService";
 import { ModelDetailsCarousel, type CarouselItem } from "./model-details-carousel";
 import { ModelDetailsSidebar } from "./model-details-sidebar";
@@ -110,6 +118,9 @@ export function ModelDetailsPage() {
     new Set()
   );
   const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
+  const [siteAccessPolicy, setSiteAccessPolicy] = useState<SiteAccessPolicy | null>(
+    null
+  );
 
   const modelDetailTabs = useModelDetailTabs();
   const activeTabId =
@@ -146,6 +157,18 @@ export function ModelDetailsPage() {
   useEffect(() => {
     loadModel();
   }, [loadModel]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchSiteAccessPolicy(window.location.origin).then((policy) => {
+      if (!cancelled) {
+        setSiteAccessPolicy(policy);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const modelId = model?.id;
@@ -188,9 +211,30 @@ export function ModelDetailsPage() {
     user &&
     (user.id === model.authorId || user.id === model.author?.id);
 
-  const handleDownload = useCallback(async () => {
-    if (!model?.id || !isAuthenticated) {
+  const canDownload = useMemo(() => {
+    if (!model || !siteAccessPolicy) {
+      return false;
+    }
+
+    return mayDownloadModel(
+      isAuthenticated,
+      siteAccessPolicy,
+      model.privacy != null ? String(model.privacy) : undefined
+    );
+  }, [model, siteAccessPolicy, isAuthenticated]);
+
+  const rejectDownloadAttempt = useCallback(() => {
+    if (!siteAccessPolicy || areModelDownloadsEnabled(siteAccessPolicy)) {
       toast.error("Sign in to download models");
+      return;
+    }
+
+    toast.error("Downloads are disabled on this site");
+  }, [siteAccessPolicy]);
+
+  const handleDownload = useCallback(async () => {
+    if (!model?.id || !canDownload) {
+      rejectDownloadAttempt();
       return;
     }
     try {
@@ -218,12 +262,12 @@ export function ModelDetailsPage() {
         "Download failed: " + (err instanceof Error ? err.message : "Unknown error")
       );
     }
-  }, [model, isAuthenticated]);
+  }, [model, canDownload, rejectDownloadAttempt]);
 
   const handleFileDownload = useCallback(
     async (file: { id: string; name: string }) => {
-      if (!model?.id || !isAuthenticated) {
-        toast.error("Sign in to download files");
+      if (!model?.id || !canDownload) {
+        rejectDownloadAttempt();
         return;
       }
       setDownloadingFiles((prev) => new Set(prev).add(file.id));
@@ -259,7 +303,7 @@ export function ModelDetailsPage() {
         });
       }
     },
-    [model?.id, isAuthenticated]
+    [model?.id, canDownload, rejectDownloadAttempt]
   );
 
   const handleDelete = useCallback(async () => {
@@ -440,7 +484,7 @@ export function ModelDetailsPage() {
           <ModelDetailsFiles
             files={model.files ?? []}
             downloadingFileIds={downloadingFiles}
-            isAuthenticated={isAuthenticated}
+            canDownload={canDownload}
             onFileDownload={handleFileDownload}
           />
 
@@ -453,6 +497,7 @@ export function ModelDetailsPage() {
             isOwner={!!isOwner}
             isFederated={!!model.isFederated}
             isAuthenticated={isAuthenticated}
+            canDownload={canDownload}
             isDeleting={isDeleting}
             onDownload={handleDownload}
             onDelete={() => setShowDeleteConfirm(true)}

@@ -6,6 +6,8 @@ public enum StreamModelFileStatus
     ModelNotFound,
     FileNotFound,
     Forbidden,
+    Unauthorized,
+    Disabled,
     StorageMissing,
     InvalidPath,
     Error

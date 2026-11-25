@@ -114,6 +114,49 @@ public class DownloadModelControllerTests
         Assert.Equal(403, status.StatusCode);
     }
 
+    [Fact(DisplayName = "When downloading a model and the service returns Unauthorized, the download model controller returns 401.")]
+    public async Task DownloadModel_WhenServiceReturnsUnauthorized_Returns401()
+    {
+        // Arrange
+        var mock = new Mock<IDownloadModelService>();
+        mock
+            .Setup(s => s.DownloadAsync(It.IsAny<Guid>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DownloadModelOutcome.Unauthorized());
+        var controller = new DownloadModelController(mock.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "Test")) }
+        };
+
+        // Act
+        var result = await controller.DownloadModel(Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        Assert.IsType<UnauthorizedObjectResult>(result);
+    }
+
+    [Fact(DisplayName = "When downloading a model and the service returns Disabled, the download model controller returns 403.")]
+    public async Task DownloadModel_WhenServiceReturnsDisabled_Returns403()
+    {
+        // Arrange
+        var mock = new Mock<IDownloadModelService>();
+        mock
+            .Setup(s => s.DownloadAsync(It.IsAny<Guid>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DownloadModelOutcome.Disabled());
+        var controller = new DownloadModelController(mock.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "Test")) }
+        };
+
+        // Act
+        var result = await controller.DownloadModel(Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        var status = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(403, status.StatusCode);
+    }
+
     [Fact(DisplayName = "When downloading a model and the service returns a zip, the download model controller returns the zip file.")]
     public async Task DownloadModel_WhenServiceReturnsOkZip_ReturnsZip()
     {

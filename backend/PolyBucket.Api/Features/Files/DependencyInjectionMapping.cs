@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
                 Register<StreamModelFile.Domain.IStreamModelFileService, StreamModelFile.Domain.StreamModelFileService,
                     StreamModelFile.Repository.IStreamModelFileRepository, StreamModelFile.Repository.StreamModelFileRepository>(services);
                 services.AddScoped<Domain.IModelFileAccessEvaluator, Domain.ModelFileAccessEvaluator>();
-                services.AddScoped<StreamModelFile.Http.PublicModelAuthorizationFilter>();
+                services.AddScoped<Http.RequireModelDownloadAuthorizationFilter>();
                 return services;
             }
 

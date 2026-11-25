@@ -9,6 +9,8 @@ export type SiteAccessPolicy = {
   allowPublicBrowsing: boolean;
   requireLoginForUpload: boolean;
   allowAnonymousModelUpload: boolean;
+  allowAnonymousModelDownload: boolean;
+  modelDownloadsEnabled: boolean;
   defaultModelPrivacy: string;
   modelMetadataRules: ModelMetadataRules;
 };
@@ -23,6 +25,8 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       allowPublicBrowsing?: boolean;
       requireLoginForUpload?: boolean;
       allowAnonymousModelUpload?: boolean;
+      allowAnonymousModelDownload?: boolean;
+      modelDownloadsEnabled?: boolean;
       defaultModelPrivacy?: string;
       modelMetadataRules?: Partial<ModelMetadataRules>;
     };
@@ -30,6 +34,8 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       allowPublicBrowsing: data.allowPublicBrowsing === true,
       requireLoginForUpload: data.requireLoginForUpload !== false,
       allowAnonymousModelUpload: data.allowAnonymousModelUpload === true,
+      allowAnonymousModelDownload: data.allowAnonymousModelDownload === true,
+      modelDownloadsEnabled: data.modelDownloadsEnabled !== false,
       defaultModelPrivacy: data.defaultModelPrivacy ?? "Public",
       modelMetadataRules: parseModelMetadataRules(data.modelMetadataRules),
     };
@@ -55,6 +61,8 @@ export async function fetchSiteAccessPolicy(origin: string): Promise<SiteAccessP
     allowPublicBrowsing: false,
     requireLoginForUpload: true,
     allowAnonymousModelUpload: false,
+    allowAnonymousModelDownload: false,
+    modelDownloadsEnabled: true,
     defaultModelPrivacy: "Public",
     modelMetadataRules: defaultModelMetadataRules,
   };

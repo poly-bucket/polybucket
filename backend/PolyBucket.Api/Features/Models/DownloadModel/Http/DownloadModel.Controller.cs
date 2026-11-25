@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PolyBucket.Api.Features.ACL.Authorization;
-using PolyBucket.Api.Features.ACL.Domain;
+using PolyBucket.Api.Features.Files.Http;
 using PolyBucket.Api.Features.Models.DownloadModel.Domain;
 using System;
 using System.Threading;
@@ -24,8 +23,8 @@ public class DownloadModelController : ControllerBase
     /// Download a model as a single file or a ZIP of files and previews.
     /// </summary>
     [HttpGet("{id}/download")]
-    [Authorize]
-    [RequirePermission(PermissionConstants.MODEL_DOWNLOAD)]
+    [AllowAnonymous]
+    [ServiceFilter(typeof(RequireModelDownloadAuthorizationFilter))]
     [Produces("application/octet-stream", "application/zip", "application/json")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -37,6 +36,8 @@ public class DownloadModelController : ControllerBase
         return outcome.Kind switch
         {
             DownloadModelOutcomeKind.NotFound => NotFound(outcome.Message),
+            DownloadModelOutcomeKind.Unauthorized => Unauthorized(outcome.Message),
+            DownloadModelOutcomeKind.Disabled => StatusCode(403, outcome.Message),
             DownloadModelOutcomeKind.Forbid => StatusCode(403, outcome.Message),
             DownloadModelOutcomeKind.Error => StatusCode(500, outcome.Message),
             DownloadModelOutcomeKind.OkSingleFile when outcome.FileStream != null && outcome.FileName != null && outcome.FileContentType != null

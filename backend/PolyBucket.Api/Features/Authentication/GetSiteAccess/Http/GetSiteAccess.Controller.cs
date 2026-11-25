@@ -9,7 +9,7 @@ namespace PolyBucket.Api.Features.Authentication.GetSiteAccess.Http;
 public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService) : ControllerBase
 {
     /// <summary>
-    /// Returns public site access flags for browsing and model uploads.
+    /// Returns public site access flags for browsing, model uploads, and downloads.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Public browsing, upload policy flags, and model metadata validation rules for the upload UI</returns>
@@ -25,6 +25,8 @@ public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService)
             allowPublicBrowsing = result.AllowPublicBrowsing,
             requireLoginForUpload = result.RequireLoginForUpload,
             allowAnonymousModelUpload = result.AllowAnonymousModelUpload,
+            allowAnonymousModelDownload = result.AllowAnonymousModelDownload,
+            modelDownloadsEnabled = result.ModelDownloadsEnabled,
             defaultModelPrivacy = result.DefaultModelPrivacy,
             modelMetadataRules = new
             {

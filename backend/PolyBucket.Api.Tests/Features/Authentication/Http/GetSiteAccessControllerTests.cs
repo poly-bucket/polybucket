@@ -26,8 +26,9 @@ public class GetSiteAccessControllerTests : IDisposable
         var cache = new MemoryCache(new MemoryCacheOptions());
         var privacy = new SitePrivacyState(_dbContext, cache, NullLogger<SitePrivacyState>.Instance);
         var uploadPolicy = new SiteModelUploadPolicy(_dbContext, cache, NullLogger<SiteModelUploadPolicy>.Instance);
+        var downloadPolicy = new SiteModelDownloadPolicy(_dbContext, cache, NullLogger<SiteModelDownloadPolicy>.Instance);
         var metadataPolicy = new ModelMetadataPolicy(_dbContext, cache, NullLogger<ModelMetadataPolicy>.Instance);
-        _controller = new GetSiteAccessController(new GetSiteAccessService(privacy, uploadPolicy, metadataPolicy));
+        _controller = new GetSiteAccessController(new GetSiteAccessService(privacy, uploadPolicy, downloadPolicy, metadataPolicy));
     }
 
     [Fact(DisplayName = "When no site setup exists, site access reports public browsing is allowed.")]
@@ -112,6 +113,29 @@ public class GetSiteAccessControllerTests : IDisposable
         allowNsfw.ShouldBe(false);
         var minDesc = rules.GetType().GetProperty("minDescriptionLength")!.GetValue(rules);
         minDesc.ShouldBe(15);
+    }
+
+    [Fact(DisplayName = "When model settings exist, site access includes download policy flags.")]
+    public async Task GetSiteAccess_IncludesDownloadPolicy()
+    {
+        // Arrange
+        _dbContext.ModelSettings.Add(new ModelSettings
+        {
+            Id = Guid.NewGuid(),
+            AllowAnonDownloads = true,
+            EnableModelDownloads = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetSiteAccess(CancellationToken.None);
+
+        // Assert
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        ok.Value!.GetType().GetProperty("allowAnonymousModelDownload")!.GetValue(ok.Value).ShouldBe(true);
+        ok.Value.GetType().GetProperty("modelDownloadsEnabled")!.GetValue(ok.Value).ShouldBe(false);
     }
 
     public void Dispose()

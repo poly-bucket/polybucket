@@ -5,10 +5,12 @@ namespace PolyBucket.Api.Features.Authentication.GetSiteAccess.Domain;
 public class GetSiteAccessService(
     ISitePrivacyState sitePrivacyState,
     ISiteModelUploadPolicy uploadPolicy,
+    ISiteModelDownloadPolicy downloadPolicy,
     IModelMetadataPolicy metadataPolicy) : IGetSiteAccessService
 {
     private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
     private readonly ISiteModelUploadPolicy _uploadPolicy = uploadPolicy;
+    private readonly ISiteModelDownloadPolicy _downloadPolicy = downloadPolicy;
     private readonly IModelMetadataPolicy _metadataPolicy = metadataPolicy;
 
     public async Task<GetSiteAccessResponse> GetSiteAccessAsync(CancellationToken cancellationToken)
@@ -16,6 +18,8 @@ public class GetSiteAccessService(
         var allowPublicBrowsing = await _sitePrivacyState.IsPublicBrowsingAllowedAsync(cancellationToken);
         var allowAnonymousModelUpload = await _uploadPolicy.IsAnonymousModelUploadAllowedAsync(cancellationToken);
         var requireLoginForUpload = await _uploadPolicy.IsLoginRequiredForUnauthenticatedUploadAsync(cancellationToken);
+        var allowAnonymousModelDownload = await _downloadPolicy.IsAnonymousModelDownloadAllowedAsync(cancellationToken);
+        var modelDownloadsEnabled = await _downloadPolicy.AreModelDownloadsEnabledAsync(cancellationToken);
         var defaultPrivacy = await _uploadPolicy.GetDefaultModelPrivacyAsync(cancellationToken);
         var metadata = await _metadataPolicy.GetSnapshotAsync(cancellationToken);
 
@@ -24,6 +28,8 @@ public class GetSiteAccessService(
             AllowPublicBrowsing = allowPublicBrowsing,
             RequireLoginForUpload = requireLoginForUpload,
             AllowAnonymousModelUpload = allowAnonymousModelUpload,
+            AllowAnonymousModelDownload = allowAnonymousModelDownload,
+            ModelDownloadsEnabled = modelDownloadsEnabled,
             DefaultModelPrivacy = defaultPrivacy.ToString(),
             ModelMetadataRules = new ModelMetadataRulesDto
             {

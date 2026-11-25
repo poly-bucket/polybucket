@@ -34,6 +34,7 @@ describe("ModelDetailsSidebar", () => {
         isOwner={false}
         isFederated={false}
         isAuthenticated={true}
+        canDownload={true}
         isDeleting={false}
         onDownload={() => {}}
         onDelete={() => {}}

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 interface ModelDetailsFilesProps {
   files: ModelFile[];
   downloadingFileIds: Set<string>;
-  isAuthenticated: boolean;
+  canDownload: boolean;
   onFileDownload: (file: { id: string; name: string }) => void;
 }
 
@@ -51,7 +51,7 @@ function formatFileSize(size: number | undefined): string {
 export function ModelDetailsFiles({
   files,
   downloadingFileIds,
-  isAuthenticated,
+  canDownload,
   onFileDownload,
 }: ModelDetailsFilesProps) {
   const normalizedFiles = files.map((file, index) => ({
@@ -102,7 +102,7 @@ export function ModelDetailsFiles({
                   size="sm"
                   onClick={() => onFileDownload(file)}
                   disabled={
-                    downloadingFileIds.has(file.id) || !isAuthenticated
+                    downloadingFileIds.has(file.id) || !canDownload
                   }
                 >
                   {downloadingFileIds.has(file.id)

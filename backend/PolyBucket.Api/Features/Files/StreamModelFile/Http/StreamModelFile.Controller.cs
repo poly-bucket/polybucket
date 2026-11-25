@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolyBucket.Api.Features.Files.Http;
 using PolyBucket.Api.Features.Files.StreamModelFile.Domain;
 
 namespace PolyBucket.Api.Features.Files.StreamModelFile.Http;
@@ -11,7 +13,8 @@ public class StreamModelFileController(IStreamModelFileService service) : Contro
     /// Stream a named file from a model; optionally records a download when requested.
     /// </summary>
     [HttpGet("stream/model/{modelId:guid}/{fileName}")]
-    [ServiceFilter(typeof(PublicModelAuthorizationFilter))]
+    [AllowAnonymous]
+    [ServiceFilter(typeof(RequireModelDownloadAuthorizationFilter))]
     [Produces("application/octet-stream", "application/json")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -29,6 +32,8 @@ public class StreamModelFileController(IStreamModelFileService service) : Contro
             return result.Status switch
             {
                 StreamModelFileStatus.ModelNotFound => NotFound("Model not found"),
+                StreamModelFileStatus.Unauthorized => Unauthorized("Sign in is required to download this file"),
+                StreamModelFileStatus.Disabled => StatusCode(403, "Model downloads are disabled on this site"),
                 StreamModelFileStatus.Forbidden => Forbid("You do not have permission to access this model"),
                 StreamModelFileStatus.FileNotFound => NotFound($"File '{Uri.UnescapeDataString(fileName)}' not found. Available files: {result.AvailableFilesMessage}"),
                 StreamModelFileStatus.InvalidPath => StatusCode(500, "Invalid file path format"),

@@ -4,8 +4,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PolyBucket.Api.Features.ACL.Services;
+using PolyBucket.Api.Features.Files.Domain;
 using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Database.Entities.Models;
 using PolyBucket.Api.Features.Models.DownloadModel.Repository;
 using PolyBucket.Api.Features.Models.RecordModelDownload.Domain;
 using PolyBucket.Database.Entities.Models.Enums;
@@ -14,7 +15,7 @@ namespace PolyBucket.Api.Features.Models.DownloadModel.Domain;
 
 public class DownloadModelService(
     IDownloadModelRepository repository,
-    IPermissionService permissionService,
+    IModelFileAccessEvaluator accessEvaluator,
     IStorageService storageService,
     IOptions<StorageSettings> storageOptions,
     IHttpContextAccessor httpContextAccessor,
@@ -37,9 +38,17 @@ public class DownloadModelService(
                 return DownloadModelOutcome.NotFound();
             }
 
-            if (!await CanUserAccessModelAsync(user, bundle))
+            var modelForAccess = new Model
             {
-                return DownloadModelOutcome.Forbid();
+                Id = bundle.Id,
+                Privacy = bundle.Privacy,
+                AuthorId = bundle.AuthorId
+            };
+            var access = await accessEvaluator.CanDownloadModelAsync(modelForAccess, user, cancellationToken);
+            var denied = MapDownloadAccess(access);
+            if (denied != null)
+            {
+                return denied;
             }
 
             var needsZip = bundle.Files.Count > 1 || bundle.Previews.Count > 0;
@@ -267,39 +276,14 @@ public class DownloadModelService(
         return await downloadCounter.TryRecordDownloadAsync(modelId, viewerKey, cancellationToken);
     }
 
-    private async Task<bool> CanUserAccessModelAsync(ClaimsPrincipal user, DownloadModelBundle model)
-    {
-        if (model.Privacy == PrivacySettings.Public)
+    private static DownloadModelOutcome? MapDownloadAccess(ModelDownloadAccessResult access) =>
+        access switch
         {
-            return true;
-        }
-
-        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
-        {
-            return false;
-        }
-
-        if (model.AuthorId == currentUserId)
-        {
-            return true;
-        }
-
-        var isAdmin = await permissionService.IsAdminAsync(currentUserId);
-        var userRole = await permissionService.GetUserRoleAsync(currentUserId);
-        var isModerator = userRole?.Name.Equals("Moderator", StringComparison.OrdinalIgnoreCase) == true;
-        if (isAdmin || isModerator)
-        {
-            return true;
-        }
-
-        if (model.Privacy == PrivacySettings.Private)
-        {
-            return false;
-        }
-
-        return model.Privacy == PrivacySettings.Unlisted;
-    }
+            ModelDownloadAccessResult.Allowed => null,
+            ModelDownloadAccessResult.Disabled => DownloadModelOutcome.Disabled(),
+            ModelDownloadAccessResult.SignInRequired => DownloadModelOutcome.Unauthorized(),
+            _ => DownloadModelOutcome.Forbid()
+        };
 
     private string? ExtractObjectKey(string filePath)
     {

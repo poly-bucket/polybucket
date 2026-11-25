@@ -21,9 +21,11 @@ public class StreamFileByIdService(
             return new StreamFileByIdResult(StreamFileByIdStatus.NotFound, null, null, null);
         }
 
-        if (!await accessEvaluator.CanUserAccessModelAsync(file.Model, user, cancellationToken))
+        var downloadAccess = await accessEvaluator.CanDownloadModelAsync(file.Model, user, cancellationToken);
+        if (downloadAccess != ModelDownloadAccessResult.Allowed)
         {
-            return new StreamFileByIdResult(StreamFileByIdStatus.Forbidden, null, null, null);
+            var status = ModelDownloadAccessMapper.ToStreamFileByIdStatus(downloadAccess);
+            return new StreamFileByIdResult(status, null, null, null);
         }
 
         var stream = await repository.DownloadAsync(file.Path, cancellationToken);

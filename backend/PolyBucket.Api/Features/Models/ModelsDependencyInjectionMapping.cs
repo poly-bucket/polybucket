@@ -29,6 +29,7 @@ public static class ModelsDependencyInjectionMapping
 
         services.AddScoped<Upload.IAnonymousUploadAuthorProvider, Upload.AnonymousUploadAuthorProvider>();
         services.AddScoped<CreateModel.Http.RequireModelUploadAuthorizationFilter>();
+        services.AddScoped<Files.Http.RequireModelDownloadAuthorizationFilter>();
         services.AddScoped<CreateModel.Domain.CreateModelService>();
         services.AddTransient<
             CreateModel.Repository.ICreateModelRepository,

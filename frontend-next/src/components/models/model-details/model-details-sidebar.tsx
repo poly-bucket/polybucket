@@ -34,6 +34,7 @@ interface ModelDetailsSidebarProps {
   isOwner: boolean;
   isFederated: boolean;
   isAuthenticated: boolean;
+  canDownload: boolean;
   isDeleting: boolean;
   onDownload: () => void;
   onDelete: () => void;
@@ -48,6 +49,7 @@ export function ModelDetailsSidebar({
   isOwner,
   isFederated,
   isAuthenticated,
+  canDownload,
   isDeleting,
   onDownload,
   onDelete,
@@ -184,7 +186,7 @@ export function ModelDetailsSidebar({
               variant="glass"
               className="w-full"
               onClick={onDownload}
-              disabled={!isAuthenticated}
+              disabled={!canDownload}
             >
               <Download className="h-5 w-5" />
               Download ({formatNumber(downloads)})

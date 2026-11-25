@@ -7,6 +7,8 @@ public enum DownloadModelOutcomeKind
 {
     NotFound,
     Forbid,
+    Unauthorized,
+    Disabled,
     Error,
     OkSingleFile,
     OkZip
@@ -30,6 +32,12 @@ public sealed class DownloadModelOutcome
 
     public static DownloadModelOutcome Forbid() =>
         new() { Kind = DownloadModelOutcomeKind.Forbid, Message = "You do not have permission to download this model" };
+
+    public static DownloadModelOutcome Unauthorized() =>
+        new() { Kind = DownloadModelOutcomeKind.Unauthorized, Message = "Sign in is required to download this model" };
+
+    public static DownloadModelOutcome Disabled() =>
+        new() { Kind = DownloadModelOutcomeKind.Disabled, Message = "Model downloads are disabled on this site" };
 
     public static DownloadModelOutcome Error500(string? message) =>
         new() { Kind = DownloadModelOutcomeKind.Error, Message = message ?? "An error occurred" };

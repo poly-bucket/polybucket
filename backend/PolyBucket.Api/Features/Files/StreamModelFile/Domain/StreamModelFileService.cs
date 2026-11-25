@@ -38,9 +38,11 @@ public class StreamModelFileService(
             return new StreamModelFileResult(StreamModelFileStatus.ModelNotFound, null, null, null, 0, false, null);
         }
 
-        if (!await accessEvaluator.CanUserAccessModelAsync(model, user, cancellationToken))
+        var downloadAccess = await accessEvaluator.CanDownloadModelAsync(model, user, cancellationToken);
+        if (downloadAccess != ModelDownloadAccessResult.Allowed)
         {
-            return new StreamModelFileResult(StreamModelFileStatus.Forbidden, null, null, null, 0, false, null);
+            var status = ModelDownloadAccessMapper.ToStreamModelFileStatus(downloadAccess);
+            return new StreamModelFileResult(status, null, null, null, 0, false, null);
         }
 
         var file = model.Files.FirstOrDefault(f =>

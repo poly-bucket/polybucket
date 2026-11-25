@@ -13,7 +13,11 @@ public class GetSiteAccessResponse
 
     public bool AllowAnonymousModelUpload { get; set; }
 
-  public string DefaultModelPrivacy { get; set; } = "Public";
+    public bool AllowAnonymousModelDownload { get; set; }
+
+    public bool ModelDownloadsEnabled { get; set; } = true;
+
+    public string DefaultModelPrivacy { get; set; } = "Public";
 
     public ModelMetadataRulesDto ModelMetadataRules { get; set; } = new();
 }

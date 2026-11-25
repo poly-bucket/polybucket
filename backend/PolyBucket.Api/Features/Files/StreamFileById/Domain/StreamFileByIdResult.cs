@@ -5,6 +5,8 @@ public enum StreamFileByIdStatus
     Success,
     NotFound,
     Forbidden,
+    Unauthorized,
+    Disabled,
     StorageMissing,
     Error
 }
