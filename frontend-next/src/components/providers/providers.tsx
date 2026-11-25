@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import "@/lib/plugins/config";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SiteBrandingProvider } from "@/contexts/SiteBrandingContext";
 import { getLayoutProviders, getPlugins } from "@/lib/plugins/registry";
 import { PluginBoundary } from "@/lib/plugins/plugin-boundary";
 import { InstalledPluginAssets } from "@/components/layout/installed-plugin-assets";
@@ -49,10 +50,12 @@ function PluginLifecycleRunner({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <PluginLifecycleRunner>
-        <InstalledPluginAssets />
-        <ComposeLayoutProviders>{children}</ComposeLayoutProviders>
-      </PluginLifecycleRunner>
+      <SiteBrandingProvider>
+        <PluginLifecycleRunner>
+          <InstalledPluginAssets />
+          <ComposeLayoutProviders>{children}</ComposeLayoutProviders>
+        </PluginLifecycleRunner>
+      </SiteBrandingProvider>
     </AuthProvider>
   );
 }

@@ -159,7 +159,7 @@ export function SiteSettingsSection() {
       </SettingsField>
       <SettingsToggle
         label="Show advanced options in admin"
-        description="Hints admins that extended model settings are available"
+        description="When on, shows the Advanced model policies block on Admin → Models → Configuration"
         checked={form.showAdvancedOptions ?? false}
         onCheckedChange={(v) => patch({ showAdvancedOptions: v })}
       />

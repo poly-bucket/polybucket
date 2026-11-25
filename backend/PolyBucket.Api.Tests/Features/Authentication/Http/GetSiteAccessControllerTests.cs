@@ -28,6 +28,7 @@ public class GetSiteAccessControllerTests : IDisposable
         _dbContext = new PolyBucketDbContext(dbOptions);
         var cache = new MemoryCache(new MemoryCacheOptions());
         var privacy = new SitePrivacyState(_dbContext, cache, NullLogger<SitePrivacyState>.Instance);
+        var branding = new SiteBrandingState(_dbContext, cache, NullLogger<SiteBrandingState>.Instance);
         var uploadPolicy = new SiteModelUploadPolicy(_dbContext, cache, NullLogger<SiteModelUploadPolicy>.Instance);
         var downloadPolicy = new SiteModelDownloadPolicy(_dbContext, cache, NullLogger<SiteModelDownloadPolicy>.Instance);
         var metadataPolicy = new ModelMetadataPolicy(_dbContext, cache, NullLogger<ModelMetadataPolicy>.Instance);
@@ -48,6 +49,7 @@ public class GetSiteAccessControllerTests : IDisposable
         _controller = new GetSiteAccessController(
             new GetSiteAccessService(
                 privacy,
+                branding,
                 uploadPolicy,
                 downloadPolicy,
                 metadataPolicy,
@@ -67,6 +69,40 @@ public class GetSiteAccessControllerTests : IDisposable
         ok.Value.ShouldNotBeNull();
         var allowed = ok.Value!.GetType().GetProperty("allowPublicBrowsing")!.GetValue(ok.Value);
         allowed.ShouldBe(true);
+    }
+
+    [Fact(DisplayName = "When no site setup exists, site access returns default site name.")]
+    public async Task GetSiteAccess_NoSetup_ReturnsDefaultSiteName()
+    {
+        // Act
+        var result = await _controller.GetSiteAccess(CancellationToken.None);
+
+        // Assert
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var siteName = ok.Value!.GetType().GetProperty("siteName")!.GetValue(ok.Value);
+        siteName.ShouldBe("PolyBucket");
+    }
+
+    [Fact(DisplayName = "When site name is configured in system setup, site access returns it.")]
+    public async Task GetSiteAccess_ConfiguredSiteName_ReturnsSiteName()
+    {
+        // Arrange
+        _dbContext.SystemSetups.Add(new SystemSetup
+        {
+            Id = Guid.NewGuid(),
+            SiteName = "Maker Hub",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetSiteAccess(CancellationToken.None);
+
+        // Assert
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var siteName = ok.Value!.GetType().GetProperty("siteName")!.GetValue(ok.Value);
+        siteName.ShouldBe("Maker Hub");
     }
 
     [Fact(DisplayName = "When public browsing is disabled in site setup, site access reports private site.")]

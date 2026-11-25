@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSiteBranding } from "@/contexts/SiteBrandingContext";
 import { useNavItems } from "@/lib/plugins";
 import { UserAvatar } from "./user-avatar";
 import { UserMenu } from "./user-menu";
@@ -20,6 +21,7 @@ function useIsMac() {
 
 export function NavigationBar() {
   const { user, isAuthenticated } = useAuth();
+  const { siteName } = useSiteBranding();
   const navItems = useNavItems();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuAnchorRef = useRef<HTMLButtonElement>(null);
@@ -53,7 +55,7 @@ export function NavigationBar() {
               )}
               <div className="flex items-center gap-1.5">
                 <h1 className="text-2xl font-semibold leading-tight text-white">
-                  Polybucket
+                  {siteName}
                 </h1>
               </div>
             </div>

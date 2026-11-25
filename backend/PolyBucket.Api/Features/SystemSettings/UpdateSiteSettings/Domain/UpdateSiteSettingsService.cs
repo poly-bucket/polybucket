@@ -15,12 +15,14 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
         ILogger<UpdateSiteSettingsService> logger,
         IHttpContextAccessor httpContextAccessor,
         ISitePrivacyState sitePrivacyState,
+        ISiteBrandingState siteBrandingState,
         IEmailSettingsResolver emailSettingsResolver) : IUpdateSiteSettingsService
     {
         private readonly IUpdateSiteSettingsRepository _repository = repository;
         private readonly ILogger<UpdateSiteSettingsService> _logger = logger;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
+        private readonly ISiteBrandingState _siteBrandingState = siteBrandingState;
         private readonly IEmailSettingsResolver _emailSettingsResolver = emailSettingsResolver;
 
         public async Task<UpdateSiteSettingsResponse> UpdateSiteSettingsAsync(UpdateSiteSettingsCommand request, CancellationToken cancellationToken = default)
@@ -118,6 +120,7 @@ namespace PolyBucket.Api.Features.SystemSettings.UpdateSiteSettings.Domain
 
                 await _repository.Context.SaveChangesAsync(cancellationToken);
                 _sitePrivacyState.Invalidate();
+                _siteBrandingState.Invalidate();
                 _emailSettingsResolver.Invalidate();
                 
                 _logger.LogInformation("Site settings updated successfully by user {UserId}", 

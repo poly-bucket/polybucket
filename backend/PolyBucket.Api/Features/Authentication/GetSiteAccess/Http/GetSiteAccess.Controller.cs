@@ -12,7 +12,7 @@ public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService)
     /// Returns public site access flags for browsing, model uploads, and downloads.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Public browsing, upload policy flags, model sharing/reporting gates, and metadata validation rules for the upload UI</returns>
+    /// <returns>Site identity, public browsing, upload policy flags, model sharing/reporting gates, and metadata validation rules for the upload UI</returns>
     [HttpGet("site-access")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GetSiteAccessResponse), 200)]
@@ -22,6 +22,7 @@ public class GetSiteAccessController(IGetSiteAccessService getSiteAccessService)
         var rules = result.ModelMetadataRules;
         return Ok(new
         {
+            siteName = result.SiteName,
             allowPublicBrowsing = result.AllowPublicBrowsing,
             requireLoginForUpload = result.RequireLoginForUpload,
             allowAnonymousModelUpload = result.AllowAnonymousModelUpload,

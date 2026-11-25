@@ -7,6 +7,8 @@ public interface IGetSiteAccessService
 
 public class GetSiteAccessResponse
 {
+    public string SiteName { get; set; } = "PolyBucket";
+
     public bool AllowPublicBrowsing { get; set; }
 
     public bool RequireLoginForUpload { get; set; }

@@ -5,6 +5,7 @@ import {
 } from "@/lib/models/model-metadata";
 import { getPolybucketApiUrl } from "./env";
 import type { FeatureAccessLevel } from "@/lib/auth/featureAccess";
+import { DEFAULT_SITE_NAME } from "@/lib/site/defaultSiteName";
 
 function parseAccessLevel(value?: string): FeatureAccessLevel {
   if (value === "Hidden" || value === "ReadOnly" || value === "Full") {
@@ -14,6 +15,7 @@ function parseAccessLevel(value?: string): FeatureAccessLevel {
 }
 
 export type SiteAccessPolicy = {
+  siteName: string;
   allowPublicBrowsing: boolean;
   requireLoginForUpload: boolean;
   allowAnonymousModelUpload: boolean;
@@ -35,6 +37,7 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       return null;
     }
     const data = (await response.json()) as {
+      siteName?: string;
       allowPublicBrowsing?: boolean;
       requireLoginForUpload?: boolean;
       allowAnonymousModelUpload?: boolean;
@@ -48,7 +51,9 @@ async function readPolicyFromUrl(url: string): Promise<SiteAccessPolicy | null> 
       defaultModelPrivacy?: string;
       modelMetadataRules?: Partial<ModelMetadataRules>;
     };
+    const siteName = data.siteName?.trim() || DEFAULT_SITE_NAME;
     return {
+      siteName,
       allowPublicBrowsing: data.allowPublicBrowsing === true,
       requireLoginForUpload: data.requireLoginForUpload !== false,
       allowAnonymousModelUpload: data.allowAnonymousModelUpload === true,
@@ -81,6 +86,7 @@ export async function fetchSiteAccessPolicy(origin: string): Promise<SiteAccessP
   }
 
   return {
+    siteName: DEFAULT_SITE_NAME,
     allowPublicBrowsing: false,
     requireLoginForUpload: true,
     allowAnonymousModelUpload: false,

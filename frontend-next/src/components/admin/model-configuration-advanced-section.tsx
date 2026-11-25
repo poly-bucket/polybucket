@@ -28,13 +28,11 @@ const ENFORCED_TOGGLES: ToggleDef[] = [
 interface ModelConfigurationAdvancedSectionProps {
   config: ModelConfigurationSettingsData;
   onChange: (updates: Partial<ModelConfigurationSettingsData>) => void;
-  showAdvancedHint?: boolean;
 }
 
 export function ModelConfigurationAdvancedSection({
   config,
   onChange,
-  showAdvancedHint,
 }: ModelConfigurationAdvancedSectionProps) {
   const [open, setOpen] = useState(false);
 
@@ -50,11 +48,6 @@ export function ModelConfigurationAdvancedSection({
             Additional policies (embedding, backups, appeals, and similar) remain stored in the API
             until their features ship.
           </p>
-          {showAdvancedHint && (
-            <p className="mt-1 text-xs text-white/40">
-              Site “show advanced options” is enabled in System settings.
-            </p>
-          )}
         </div>
         <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
           {open ? (

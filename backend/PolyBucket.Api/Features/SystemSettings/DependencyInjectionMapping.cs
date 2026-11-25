@@ -8,6 +8,7 @@ public static class SystemSettingsDependencyInjectionMapping
     {
         services.AddMemoryCache();
         services.AddScoped<Services.ISitePrivacyState, Services.SitePrivacyState>();
+        services.AddScoped<Services.ISiteBrandingState, Services.SiteBrandingState>();
         services.AddScoped<Services.ISiteModelUploadPolicy, Services.SiteModelUploadPolicy>();
         services.AddScoped<Services.ISiteModelDownloadPolicy, Services.SiteModelDownloadPolicy>();
         services.AddScoped<Services.ISiteModelVersioningPolicy, Services.SiteModelVersioningPolicy>();

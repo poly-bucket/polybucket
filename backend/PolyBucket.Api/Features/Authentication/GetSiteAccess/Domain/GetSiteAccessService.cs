@@ -4,6 +4,7 @@ namespace PolyBucket.Api.Features.Authentication.GetSiteAccess.Domain;
 
 public class GetSiteAccessService(
     ISitePrivacyState sitePrivacyState,
+    ISiteBrandingState siteBrandingState,
     ISiteModelUploadPolicy uploadPolicy,
     ISiteModelDownloadPolicy downloadPolicy,
     IModelMetadataPolicy metadataPolicy,
@@ -12,6 +13,7 @@ public class GetSiteAccessService(
     ISiteModelAdvancedPolicy advancedPolicy) : IGetSiteAccessService
 {
     private readonly ISitePrivacyState _sitePrivacyState = sitePrivacyState;
+    private readonly ISiteBrandingState _siteBrandingState = siteBrandingState;
     private readonly ISiteModelUploadPolicy _uploadPolicy = uploadPolicy;
     private readonly ISiteModelDownloadPolicy _downloadPolicy = downloadPolicy;
     private readonly IModelMetadataPolicy _metadataPolicy = metadataPolicy;
@@ -21,6 +23,7 @@ public class GetSiteAccessService(
 
     public async Task<GetSiteAccessResponse> GetSiteAccessAsync(CancellationToken cancellationToken)
     {
+        var siteName = await _siteBrandingState.GetSiteNameAsync(cancellationToken);
         var allowPublicBrowsing = await _sitePrivacyState.IsPublicBrowsingAllowedAsync(cancellationToken);
         var allowAnonymousModelUpload = await _uploadPolicy.IsAnonymousModelUploadAllowedAsync(cancellationToken);
         var requireLoginForUpload = await _uploadPolicy.IsLoginRequiredForUnauthenticatedUploadAsync(cancellationToken);
@@ -35,6 +38,7 @@ public class GetSiteAccessService(
 
         return new GetSiteAccessResponse
         {
+            SiteName = siteName,
             AllowPublicBrowsing = allowPublicBrowsing,
             RequireLoginForUpload = requireLoginForUpload,
             AllowAnonymousModelUpload = allowAnonymousModelUpload,

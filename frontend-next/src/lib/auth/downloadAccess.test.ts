@@ -6,16 +6,21 @@ import {
 } from "./downloadAccess";
 import type { SiteAccessPolicy } from "@/lib/bff/fetchSiteAccessPolicy";
 import { defaultModelMetadataRules } from "@/lib/models/model-metadata";
+import { DEFAULT_SITE_NAME } from "@/lib/site/defaultSiteName";
 
 function basePolicy(
   overrides: Partial<SiteAccessPolicy> = {}
 ): SiteAccessPolicy {
   return {
+    siteName: DEFAULT_SITE_NAME,
     allowPublicBrowsing: true,
     requireLoginForUpload: true,
     allowAnonymousModelUpload: false,
     allowAnonymousModelDownload: false,
     modelDownloadsEnabled: true,
+    modelVersioningEnabled: true,
+    modelSharingEnabled: true,
+    modelReportingEnabled: true,
     modelCommentsAccess: "Full",
     modelCollectionsAccess: "Full",
     defaultModelPrivacy: "Public",

@@ -51,7 +51,7 @@ function ConfigurationTab() {
   const [configDirty, setConfigDirty] = useState(false);
   const [siteDirty, setSiteDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAdvancedHint, setShowAdvancedHint] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -64,7 +64,7 @@ function ConfigurationTab() {
       ]);
       setModelConfig(configRes.settings ?? null);
       setSiteSettings(siteRes.settings ?? null);
-      setShowAdvancedHint(site?.showAdvancedOptions ?? false);
+      setShowAdvancedOptions(site?.showAdvancedOptions ?? false);
     } catch {
       setError("Failed to load settings");
     } finally {
@@ -394,11 +394,12 @@ function ConfigurationTab() {
                 </Select>
               </SettingsField>
             )}
-            <ModelConfigurationAdvancedSection
-              config={modelConfig}
-              onChange={handleConfigChange}
-              showAdvancedHint={showAdvancedHint}
-            />
+            {showAdvancedOptions && (
+              <ModelConfigurationAdvancedSection
+                config={modelConfig}
+                onChange={handleConfigChange}
+              />
+            )}
             <SettingsFooter
               onSave={saveModelConfig}
               isSaving={savingConfig}
