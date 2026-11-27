@@ -4,7 +4,11 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { svgToDataUrl, previewUserAvatarSvg } from "@/lib/avatar/minidenticon";
+import {
+  buildGeneratedUserAvatarSavePayload,
+  svgToDataUrl,
+  previewUserAvatarSvg,
+} from "@/lib/avatar/minidenticon";
 import { regenerateUserAvatar } from "@/lib/services/avatarService";
 import { ApiClientFactory } from "@/lib/api/clientFactory";
 import {
@@ -52,7 +56,11 @@ export default function AdminAccountSetupStep({
     if (!user?.id) return;
     setSetupAvatarSaving(true);
     try {
-      await regenerateUserAvatar(setupAvatarSalt.trim() || undefined);
+      const { salt, avatar } = buildGeneratedUserAvatarSavePayload(
+        user.id,
+        setupAvatarSalt
+      );
+      await regenerateUserAvatar(salt, avatar);
       await refreshUserFromMe();
       toast.success("Avatar saved");
     } catch (e) {

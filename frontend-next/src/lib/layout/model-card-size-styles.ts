@@ -33,7 +33,7 @@ export function modelCardSizeClasses(size: ModelCardSize = "medium") {
 export function modelCardShellClass(size: ModelCardSize | undefined, className?: string) {
   const { shell } = modelCardSizeClasses(size ?? "medium");
   return cn(
-    "group flex cursor-pointer flex-col overflow-hidden transition-all duration-200",
+    "group flex cursor-pointer flex-col overflow-hidden transition-[transform,box-shadow] duration-200 active:scale-[0.98]",
     shell,
     className
   );

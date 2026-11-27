@@ -13,15 +13,17 @@ describe("useUploadWizard helpers", () => {
     isFormDirty: false,
   };
 
-  it("locks details and review until files are present", () => {
-    expect(canAdvanceFromStep("files", baseCtx)).toBe(false);
-    expect(isStepReachable("details", baseCtx)).toBe(false);
+  it("locks review until files and metadata are ready", () => {
+    expect(canAdvanceFromStep("compose", baseCtx)).toBe(false);
     expect(isStepReachable("review", baseCtx)).toBe(false);
 
-    const withFiles = { ...baseCtx, fileCount: 2 };
-    expect(canAdvanceFromStep("files", withFiles)).toBe(true);
-    expect(isStepReachable("details", withFiles)).toBe(true);
-    expect(isStepReachable("review", withFiles)).toBe(false);
+    const withFilesOnly = { ...baseCtx, fileCount: 2 };
+    expect(canAdvanceFromStep("compose", withFilesOnly)).toBe(false);
+    expect(isStepReachable("review", withFilesOnly)).toBe(false);
+
+    const ready = { ...withFilesOnly, metadataValid: true };
+    expect(canAdvanceFromStep("compose", ready)).toBe(true);
+    expect(isStepReachable("review", ready)).toBe(true);
   });
 
   it("allows review when metadata is valid and files exist", () => {

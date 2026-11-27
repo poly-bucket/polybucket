@@ -59,7 +59,7 @@ export function CollectionCard({
         <img
           src={collection.thumbnailUrl}
           alt={collection.name}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover outline outline-1 -outline-offset-1 outline-white/10 transition-transform duration-300 group-hover:scale-105"
         />
       ) : (
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
@@ -76,9 +76,9 @@ export function CollectionCard({
       <Link href={href} className="flex flex-1 flex-col min-h-0">
         <Card
           variant="glass"
-          className="flex h-full cursor-pointer flex-col overflow-hidden border-white/20 gap-0 py-0 transition-all duration-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"
+          className="flex h-full cursor-pointer flex-col overflow-hidden border-white/20 gap-0 py-0 transition-[transform,box-shadow] duration-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"
         >
-          <div className="relative h-40 flex-shrink-0 overflow-hidden bg-gradient-to-br from-gray-700 to-gray-900 sm:h-48">
+          <div className="relative h-40 flex-shrink-0 overflow-hidden rounded-t-xl bg-gradient-to-br from-gray-700 to-gray-900 sm:h-48">
             {thumbnailContent}
             <div className="absolute left-2 top-2 flex flex-wrap gap-1">
               {collection.visibility === "Private" && (
@@ -162,7 +162,7 @@ export function CollectionCard({
             )}
           </div>
           <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
-            <h3 className="mb-1 min-h-[2.5rem] line-clamp-2 text-sm font-semibold leading-tight text-white">
+            <h3 className="mb-1 min-h-[2.5rem] line-clamp-2 text-sm font-semibold leading-tight text-balance text-white">
               {collection.name ?? "Untitled Collection"}
             </h3>
             {collection.description && (
@@ -170,7 +170,7 @@ export function CollectionCard({
                 {collection.description}
               </p>
             )}
-            <div className="mt-auto flex items-center justify-between text-xs text-white/60">
+            <div className="mt-auto flex items-center justify-between text-xs tabular-nums text-white/60">
               <span className="flex items-center gap-1">
                 {getVisibilityIcon(collection.visibility)}
                 {collection.modelCount ?? 0} models

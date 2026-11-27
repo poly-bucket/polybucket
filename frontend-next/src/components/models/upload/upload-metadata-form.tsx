@@ -20,15 +20,43 @@ export interface UploadMetadataFormProps {
   form: UseFormReturn<ModelMetadataFormValues>;
   categories: string[];
   allowModelRemixing?: boolean;
+  descriptionRules?: { required: boolean; min: number; max: number };
   onCategoriesChange: (categories: string[]) => void;
   onValidityChange: (valid: boolean) => void;
   onDirtyChange: (dirty: boolean) => void;
+}
+
+const PRIVACY_HINTS: Record<string, string> = {
+  [PrivacySettings.Public]: "Anyone can find it in browse and search.",
+  [PrivacySettings.Unlisted]: "Only people with the link can open it.",
+  [PrivacySettings.Private]: "Only you can see it.",
+};
+
+function FieldLabel({ htmlFor, children, hint }: { htmlFor?: string; children: string; hint?: string }) {
+  return (
+    <div className="mb-1.5 flex items-baseline justify-between gap-2">
+      <label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
+        {children}
+      </label>
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+    </div>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="mt-1.5 text-xs text-destructive" role="alert">
+      {message}
+    </p>
+  );
 }
 
 export function UploadMetadataForm({
   form,
   categories,
   allowModelRemixing = true,
+  descriptionRules,
   onCategoriesChange,
   onValidityChange,
   onDirtyChange,
@@ -37,10 +65,15 @@ export function UploadMetadataForm({
     register,
     control,
     watch,
-    formState: { isValid, isDirty, errors },
+    formState: { isValid, isDirty, errors, touchedFields, dirtyFields, isSubmitted },
   } = form;
 
   const isRemix = watch("isRemix");
+  const privacy = watch("privacy");
+  const descriptionLength = (watch("description") ?? "").length;
+
+  const shouldShowError = (field: keyof ModelMetadataFormValues) =>
+    Boolean(isSubmitted || touchedFields[field] || dirtyFields[field]);
 
   useEffect(() => {
     onValidityChange(isValid);
@@ -58,61 +91,84 @@ export function UploadMetadataForm({
     );
   };
 
+  const descriptionHint = descriptionRules
+    ? descriptionRules.required
+      ? descriptionRules.min > 0
+        ? `Required · at least ${descriptionRules.min} characters`
+        : "Required"
+      : "Optional"
+    : undefined;
+
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Title</label>
+        <FieldLabel htmlFor="upload-title">Title</FieldLabel>
         <Input
+          id="upload-title"
           {...register("name")}
-          placeholder="Enter model title"
-          className="glass-bg border-white/20"
-          aria-invalid={!!errors.name}
+          placeholder="e.g. Articulated desk dragon"
+          className="glass-bg h-10 border-white/20 text-base"
+          aria-invalid={shouldShowError("name") && !!errors.name}
         />
-        {errors.name?.message && (
-          <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
-        )}
+        <FieldError message={shouldShowError("name") ? errors.name?.message : undefined} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+        <FieldLabel htmlFor="upload-description" hint={descriptionHint}>
+          Description
+        </FieldLabel>
         <Textarea
+          id="upload-description"
           {...register("description")}
           variant="glass"
-          rows={4}
-          placeholder="Enter model description"
-          className="resize-none"
-          aria-invalid={!!errors.description}
+          rows={5}
+          placeholder="What it is, how to print it, and anything people should know before they start."
+          className="resize-y"
+          aria-invalid={shouldShowError("description") && !!errors.description}
         />
+        <div className="mt-1.5 flex items-start justify-between gap-3">
+          <FieldError
+            message={shouldShowError("description") ? errors.description?.message : undefined}
+          />
+          {descriptionRules && descriptionRules.max > 0 && (
+            <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+              {descriptionLength} / {descriptionRules.max}
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Privacy</label>
+          <FieldLabel>Visibility</FieldLabel>
           <Controller
             name="privacy"
             control={control}
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger variant="glass" className="w-full">
-                  <SelectValue placeholder="Select privacy" />
+                <SelectTrigger variant="glass" className="w-full" aria-label="Visibility">
+                  <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
                 <SelectContent variant="glass">
                   <SelectItem value={PrivacySettings.Public}>Public</SelectItem>
-                  <SelectItem value={PrivacySettings.Private}>Private</SelectItem>
                   <SelectItem value={PrivacySettings.Unlisted}>Unlisted</SelectItem>
+                  <SelectItem value={PrivacySettings.Private}>Private</SelectItem>
                 </SelectContent>
               </Select>
             )}
           />
+          {privacy && PRIVACY_HINTS[privacy] && (
+            <p className="mt-1.5 text-xs text-muted-foreground">{PRIVACY_HINTS[privacy]}</p>
+          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">License</label>
+          <FieldLabel>License</FieldLabel>
           <Controller
             name="license"
             control={control}
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger variant="glass" className="w-full">
+                <SelectTrigger variant="glass" className="w-full" aria-label="License">
                   <SelectValue placeholder="Select license" />
                 </SelectTrigger>
                 <SelectContent variant="glass">
@@ -125,70 +181,77 @@ export function UploadMetadataForm({
               </Select>
             )}
           />
+          <FieldError message={shouldShowError("license") ? errors.license?.message : undefined} />
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Categories</label>
-        <div className="flex flex-wrap gap-2">
-          {MODEL_CATEGORIES.map((category) => (
-            <button
-              key={category}
-              type="button"
-              onClick={() => handleCategoryToggle(category)}
-              className={cn(
-                "px-3 py-1 rounded-full text-sm border transition-colors",
-                categories.includes(category)
-                  ? "bg-primary border-primary text-primary-foreground"
-                  : "bg-transparent border-white/20 text-foreground hover:border-white/40"
-              )}
-            >
-              {category}
-            </button>
-          ))}
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-foreground">Categories</legend>
+        <div className="flex flex-wrap gap-1.5">
+          {MODEL_CATEGORIES.map((category) => {
+            const selected = categories.includes(category);
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => handleCategoryToggle(category)}
+                aria-pressed={selected}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-sm outline-none motion-safe:transition-colors focus-visible:ring-2 focus-visible:ring-primary/60",
+                  selected
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-white/15 bg-transparent text-foreground/85 hover:border-white/35"
+                )}
+              >
+                {category}
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </fieldset>
 
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-3">Options</label>
-        <div className="space-y-2">
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-foreground">Labels</legend>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {(
             [
-              { name: "aiGenerated" as const, label: "AI Generated" },
-              { name: "wip" as const, label: "Work in Progress" },
+              { name: "aiGenerated" as const, label: "AI generated" },
+              { name: "wip" as const, label: "Work in progress" },
               { name: "nsfw" as const, label: "NSFW" },
               ...(allowModelRemixing
-                ? [{ name: "isRemix" as const, label: "Remix of Another Model" }]
+                ? [{ name: "isRemix" as const, label: "Remix" }]
                 : []),
             ] as const
           ).map(({ name, label }) => (
-            <label key={name} className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
-              <Controller
-                name={name}
-                control={control}
-                render={({ field }) => (
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                )}
-              />
-              {label}
-            </label>
+            <div key={name}>
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5 text-sm text-foreground motion-safe:transition-colors hover:border-white/20">
+                {label}
+                <Controller
+                  name={name}
+                  control={control}
+                  render={({ field }) => (
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </label>
+              <FieldError message={errors[name]?.message} />
+            </div>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       {allowModelRemixing && isRemix && (
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Original model URL</label>
+          <FieldLabel htmlFor="upload-remix-url">Original model URL</FieldLabel>
           <Input
+            id="upload-remix-url"
             {...register("remixUrl")}
             type="url"
             placeholder="https://..."
             className="glass-bg border-white/20"
             aria-invalid={!!errors.remixUrl}
           />
-          {errors.remixUrl?.message && (
-            <p className="mt-1 text-xs text-destructive">{errors.remixUrl.message}</p>
-          )}
+          <FieldError message={errors.remixUrl?.message} />
         </div>
       )}
     </div>

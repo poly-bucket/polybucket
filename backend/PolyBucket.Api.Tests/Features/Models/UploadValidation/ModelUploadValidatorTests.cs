@@ -106,6 +106,41 @@ public class ModelUploadValidatorTests
         result!.ShouldContain("3D model file");
     }
 
+    [Fact(DisplayName = "When a DXF file is enabled, validation accepts it as a 3D upload.")]
+    public async Task ValidateAsync_WhenDxfEnabled_ReturnsNull()
+    {
+        // Arrange
+        _limitsProvider
+            .Setup(p => p.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ModelUploadLimitsSnapshot
+            {
+                SiteMaxFileSizeBytes = 100 * 1024 * 1024,
+                MaxFilesPerUpload = 5,
+                EnabledFileTypes = new[]
+                {
+                    new ModelUploadFileTypeLimit
+                    {
+                        Extension = ".dxf",
+                        Category = "3D",
+                        MaxFileSizeBytes = 100 * 1024 * 1024
+                    }
+                },
+                ExtensionCategories = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    [".dxf"] = "3D"
+                }
+            });
+
+        var content = "  0\nSECTION\n  2\nHEADER\n";
+        var files = new[] { CreateFormFile("bracket.dxf", System.Text.Encoding.UTF8.GetBytes(content), "image/vnd.dxf") };
+
+        // Act
+        var result = await _validator.ValidateAsync(files, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
   [Fact(DisplayName = "When files meet limits and include a 3D file, validation succeeds.")]
     public async Task ValidateAsync_WhenValid_ReturnsNull()
     {

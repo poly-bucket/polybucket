@@ -12,9 +12,11 @@ namespace PolyBucket.Api.Seeders
 
         public async Task SeedAsync()
         {
-            if (await _context.FileTypeSettings.AnyAsync())
+            var hasExisting = await _context.FileTypeSettings.AnyAsync();
+            if (hasExisting)
             {
-                _logger.LogInformation("File type settings already exist, skipping seeding");
+                _logger.LogInformation("File type settings already exist, skipping full seeding");
+                await EnsureDxfFileTypeAsync();
                 return;
             }
 
@@ -165,6 +167,26 @@ namespace PolyBucket.Api.Seeders
                     IsCompressible = true,
                     Category = "3D",
                     Priority = 7,
+                    IsDefault = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedById = adminUser.Id,
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedById = adminUser.Id
+                },
+                new FileTypeSettings
+                {
+                    Id = Guid.NewGuid(),
+                    FileExtension = ".dxf",
+                    Enabled = true,
+                    MaxFileSizeBytes = 500L * 1024 * 1024,
+                    MaxPerUpload = 10,
+                    DisplayName = "DXF File",
+                    Description = "AutoCAD Drawing Exchange Format for 2D/3D CAD drawings",
+                    MimeType = "image/vnd.dxf",
+                    RequiresPreview = true,
+                    IsCompressible = true,
+                    Category = "3D",
+                    Priority = 8,
                     IsDefault = true,
                     CreatedAt = DateTime.UtcNow,
                     CreatedById = adminUser.Id,
@@ -563,6 +585,49 @@ namespace PolyBucket.Api.Seeders
             await _context.SaveChangesAsync();
             
             _logger.LogInformation("File type settings seeded successfully");
+        }
+
+        private async Task EnsureDxfFileTypeAsync()
+        {
+            if (await _context.FileTypeSettings.AnyAsync(ft => ft.FileExtension == ".dxf"))
+            {
+                return;
+            }
+
+            var adminUser = await _context.Users
+                .Include(u => u.Role)
+                .Where(u => u.Role != null && u.Role.Name == "Admin")
+                .FirstOrDefaultAsync();
+
+            if (adminUser == null)
+            {
+                _logger.LogWarning("Admin user not found; cannot backfill .dxf file type setting");
+                return;
+            }
+
+            var now = DateTime.UtcNow;
+            _context.FileTypeSettings.Add(new PolyBucket.Database.Entities.SystemSettings.FileTypeSettings
+            {
+                Id = Guid.NewGuid(),
+                FileExtension = ".dxf",
+                Enabled = true,
+                MaxFileSizeBytes = 500L * 1024 * 1024,
+                MaxPerUpload = 10,
+                DisplayName = "DXF File",
+                Description = "AutoCAD Drawing Exchange Format for 2D/3D CAD drawings",
+                MimeType = "image/vnd.dxf",
+                RequiresPreview = true,
+                IsCompressible = true,
+                Category = "3D",
+                Priority = 8,
+                IsDefault = true,
+                CreatedAt = now,
+                CreatedById = adminUser.Id,
+                UpdatedAt = now,
+                UpdatedById = adminUser.Id
+            });
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Backfilled default .dxf file type setting");
         }
     }
 }

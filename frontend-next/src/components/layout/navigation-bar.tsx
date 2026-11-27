@@ -20,7 +20,7 @@ function useIsMac() {
 }
 
 export function NavigationBar() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { siteName } = useSiteBranding();
   const navItems = useNavItems();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -54,7 +54,7 @@ export function NavigationBar() {
                 <div className="mx-1 h-4 w-px bg-white/20" />
               )}
               <div className="flex items-center gap-1.5">
-                <h1 className="text-2xl font-semibold leading-tight text-white">
+                <h1 className="text-2xl font-semibold leading-tight text-balance text-white">
                   {siteName}
                 </h1>
               </div>
@@ -63,7 +63,7 @@ export function NavigationBar() {
             <button
               type="button"
               onClick={() => search.setOpen(true)}
-              className="hidden items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/50 transition-colors hover:border-white/25 hover:bg-white/10 hover:text-white/70 sm:flex"
+              className="hidden min-h-10 items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/50 transition-[color,background-color,border-color,transform] duration-200 active:scale-[0.96] hover:border-white/25 hover:bg-white/10 hover:text-white/70 sm:flex"
             >
               <Search className="h-3.5 w-3.5" />
               <span>Search...</span>
@@ -74,52 +74,61 @@ export function NavigationBar() {
             <button
               type="button"
               onClick={() => search.setOpen(true)}
-              className="flex items-center rounded-md p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white sm:hidden"
+              className="flex min-h-10 min-w-10 items-center justify-center rounded-md text-white/50 transition-[color,background-color,transform] duration-200 active:scale-[0.96] hover:bg-white/10 hover:text-white sm:hidden"
               aria-label="Search"
             >
               <Search className="h-4 w-4" />
             </button>
 
             <div className="flex items-center justify-end gap-1.5">
-              {rightItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className="flex h-7 items-center gap-1 rounded-md border border-white/20 bg-white/10 px-2 py-0.5 text-xs text-white transition-colors hover:border-white/30 hover:bg-white/15"
-                  >
-                    <Icon className="h-3 w-3" strokeWidth={2} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-
-              {isAuthenticated && <NotificationBell />}
-
-              {isAuthenticated ? (
-                <button
-                  ref={userMenuAnchorRef}
-                  type="button"
-                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                  className="flex h-full items-center gap-1 rounded p-0.5 transition-colors duration-200 hover:bg-white/10"
-                >
-                  <UserAvatar
-                    userId={user?.id ?? ""}
-                    username={user?.username ?? ""}
-                    profilePictureUrl={user?.profilePictureUrl}
-                    avatar={user?.avatar}
-                    size="sm"
-                  />
-                  <ChevronDown className="h-3 w-3 text-white/60" strokeWidth={2} />
-                </button>
+              {isLoading ? (
+                <div
+                  className="h-7 w-28 rounded-md border border-white/10 bg-white/5"
+                  aria-hidden
+                />
               ) : (
-                <Link
-                  href="/login"
-                  className="flex h-7 items-center rounded-md border border-white/20 bg-white/10 px-2 py-0.5 text-xs text-white transition-colors hover:border-white/30 hover:bg-white/15"
-                >
-                  Sign In
-                </Link>
+                <>
+                  {rightItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className="flex min-h-10 items-center gap-1 rounded-md border border-white/20 bg-white/10 px-2 py-0.5 text-xs text-white transition-[color,background-color,border-color,transform] duration-200 active:scale-[0.96] hover:border-white/30 hover:bg-white/15"
+                      >
+                        <Icon className="h-3 w-3" strokeWidth={2} />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+
+                  {isAuthenticated && <NotificationBell />}
+
+                  {isAuthenticated ? (
+                    <button
+                      ref={userMenuAnchorRef}
+                      type="button"
+                      onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                      className="flex min-h-10 items-center gap-1 rounded p-0.5 transition-[color,background-color,transform] duration-200 active:scale-[0.96] hover:bg-white/10"
+                    >
+                      <UserAvatar
+                        userId={user?.id ?? ""}
+                        username={user?.username ?? ""}
+                        profilePictureUrl={user?.profilePictureUrl}
+                        avatar={user?.avatar}
+                        size="sm"
+                      />
+                      <ChevronDown className="h-3 w-3 text-white/60" strokeWidth={2} />
+                    </button>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="flex h-7 items-center rounded-md border border-white/20 bg-white/10 px-2 py-0.5 text-xs text-white transition-colors hover:border-white/30 hover:bg-white/15"
+                    >
+                      Sign In
+                    </Link>
+                  )}
+                </>
               )}
             </div>
           </div>

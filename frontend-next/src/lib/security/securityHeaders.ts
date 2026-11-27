@@ -6,10 +6,10 @@ export function buildContentSecurityPolicy(): string {
     ? "script-src 'self' 'unsafe-inline'"
     : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
   return [
-    "default-src 'self'",
+    "default-src 'self' blob:",
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https: http:",
+    "img-src 'self' data: blob: https: http:",
     `connect-src 'self' ${apiOrigin}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",

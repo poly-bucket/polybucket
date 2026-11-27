@@ -5,18 +5,12 @@ import { Card } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
 import { cn } from "@/lib/utils";
 import type { UploadedFile } from "../file-queue";
+import { useFileDataUrl } from "@/hooks/use-file-data-url";
 
 function ThumbnailImage({ file }: { file: File }) {
-  const [url, setUrl] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
+  const url = useFileDataUrl(file);
   if (!url) return null;
-  return (
-    <img src={url} alt="" className="h-full w-full object-cover" />
-  );
+  return <img src={url} alt="" className="h-full w-full object-cover" />;
 }
 
 interface UploadThumbnailPanelProps {

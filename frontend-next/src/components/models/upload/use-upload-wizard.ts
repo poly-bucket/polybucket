@@ -5,7 +5,7 @@ import type { ModelMetadataFormValues } from "@/lib/models/model-metadata";
 import { titleFromFileName } from "@/lib/models/model-metadata";
 import type { UploadFileType } from "../upload-shared";
 
-export const UPLOAD_WIZARD_STEPS = ["files", "details", "review"] as const;
+export const UPLOAD_WIZARD_STEPS = ["compose", "review"] as const;
 export type UploadWizardStep = (typeof UPLOAD_WIZARD_STEPS)[number];
 
 export interface UploadWizardContext {
@@ -24,10 +24,8 @@ export function canAdvanceFromStep(
   ctx: UploadWizardContext
 ): boolean {
   switch (step) {
-    case "files":
-      return ctx.settingsLoaded && ctx.fileCount >= 1;
-    case "details":
-      return ctx.metadataValid;
+    case "compose":
+      return ctx.settingsLoaded && ctx.fileCount >= 1 && ctx.metadataValid;
     case "review":
       return ctx.metadataValid && ctx.fileCount >= 1;
     default:
@@ -86,7 +84,7 @@ export function useUploadWizard({
   currentTitle,
   onAutoTitle,
 }: UseUploadWizardOptions) {
-  const [currentStep, setCurrentStep] = useState<UploadWizardStep>("files");
+  const [currentStep, setCurrentStep] = useState<UploadWizardStep>("compose");
 
   const ctx: UploadWizardContext = useMemo(
     () => ({
@@ -134,8 +132,7 @@ export function useUploadWizard({
 
   const stepCompletion = useMemo(() => {
     return {
-      files: canAdvanceFromStep("files", ctx),
-      details: canAdvanceFromStep("details", ctx),
+      compose: canAdvanceFromStep("compose", ctx),
       review: canAdvanceFromStep("review", ctx),
     };
   }, [ctx]);

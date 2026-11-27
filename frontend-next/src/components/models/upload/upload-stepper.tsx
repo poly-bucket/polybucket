@@ -1,12 +1,12 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UploadWizardStep } from "./use-upload-wizard";
 import { UPLOAD_WIZARD_STEPS } from "./use-upload-wizard";
 
 const STEP_LABELS: Record<UploadWizardStep, string> = {
-  files: "Files",
-  details: "Details",
+  compose: "Files & details",
   review: "Review",
 };
 
@@ -24,50 +24,42 @@ export function UploadStepper({
   onStepClick,
 }: UploadStepperProps) {
   return (
-    <nav aria-label="Upload progress" className="flex flex-wrap items-center gap-2 sm:gap-3">
-      {UPLOAD_WIZARD_STEPS.map((step, index) => {
-        const reachable = isStepReachable(step);
-        const isCurrent = currentStep === step;
-        const isComplete = stepCompletion[step] && !isCurrent;
+    <nav aria-label="Upload progress">
+      <ol className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-1">
+        {UPLOAD_WIZARD_STEPS.map((step, index) => {
+          const reachable = isStepReachable(step);
+          const isCurrent = currentStep === step;
+          const isComplete = stepCompletion[step] && !isCurrent;
 
-        return (
-          <div key={step} className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              disabled={!reachable && !isCurrent}
-              onClick={() => reachable && onStepClick(step)}
-              aria-current={isCurrent ? "step" : undefined}
-              className={cn(
-                "flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs sm:text-sm transition-colors",
-                isCurrent && "border-primary bg-primary text-primary-foreground",
-                !isCurrent &&
-                  isComplete &&
-                  "border-primary/50 text-foreground hover:border-primary/70",
-                !isCurrent &&
-                  !isComplete &&
-                  reachable &&
-                  "border-white/20 text-muted-foreground hover:border-white/40",
-                !reachable && !isCurrent && "border-white/10 text-muted-foreground/50 cursor-not-allowed"
-              )}
-            >
-              <span
+          return (
+            <li key={step} className="flex items-center gap-1">
+              {index > 0 && <span className="h-px w-3 bg-white/15" aria-hidden />}
+              <button
+                type="button"
+                disabled={!reachable && !isCurrent}
+                onClick={() => reachable && onStepClick(step)}
+                aria-current={isCurrent ? "step" : undefined}
                 className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium",
-                  isCurrent ? "bg-primary-foreground/20" : "bg-white/10"
+                  "flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium outline-none motion-safe:transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 sm:text-sm",
+                  isCurrent && "bg-primary text-primary-foreground",
+                  !isCurrent && reachable && "text-foreground/80 hover:bg-white/[0.06]",
+                  !reachable && !isCurrent && "cursor-not-allowed text-muted-foreground/50"
                 )}
               >
-                {index + 1}
-              </span>
-              {STEP_LABELS[step]}
-            </button>
-            {index < UPLOAD_WIZARD_STEPS.length - 1 && (
-              <span className="hidden sm:inline text-white/20" aria-hidden>
-                /
-              </span>
-            )}
-          </div>
-        );
-      })}
+                <span
+                  className={cn(
+                    "flex size-5 items-center justify-center rounded-full font-mono text-[11px]",
+                    isCurrent ? "bg-primary-foreground/20" : "bg-white/10"
+                  )}
+                >
+                  {isComplete ? <Check className="size-3" aria-hidden /> : index + 1}
+                </span>
+                {STEP_LABELS[step]}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
     </nav>
   );
 }

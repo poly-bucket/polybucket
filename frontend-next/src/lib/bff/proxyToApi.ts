@@ -65,14 +65,40 @@ export async function proxyRequestToApi(
 
   const method = request.method;
   const hasBody = method !== "GET" && method !== "HEAD";
-  const body = hasBody ? await request.arrayBuffer() : undefined;
+
+  if (hasBody && normalized.includes("models")) {
+    // #region agent log
+    fetch("http://127.0.0.1:7425/ingest/0e4469e7-8733-4f5f-86f7-c22a81b7a59f", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d87db7",
+      },
+      body: JSON.stringify({
+        sessionId: "d87db7",
+        runId: "pre-fix",
+        hypothesisId: "B",
+        location: "proxyToApi.ts:proxy",
+        message: "Proxying model upload",
+        data: {
+          targetUrl,
+          clientContentLength: request.headers.get("content-length"),
+          contentType: request.headers.get("content-type"),
+          streamingBody: true,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }
 
   const upstream = await fetch(targetUrl, {
     method,
     headers,
-    body: hasBody ? body : undefined,
+    body: hasBody ? request.body : undefined,
+    duplex: hasBody ? "half" : undefined,
     cache: "no-store",
-  });
+  } as RequestInit);
 
   const responseHeaders = new Headers();
   for (const name of FORWARD_RESPONSE_HEADERS) {
@@ -83,6 +109,29 @@ export async function proxyRequestToApi(
   }
 
   const responseBody = await upstream.arrayBuffer();
+  if (normalized.includes("models") && method === "POST") {
+    // #region agent log
+    fetch("http://127.0.0.1:7425/ingest/0e4469e7-8733-4f5f-86f7-c22a81b7a59f", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d87db7",
+      },
+      body: JSON.stringify({
+        sessionId: "d87db7",
+        runId: "pre-fix",
+        hypothesisId: "B",
+        location: "proxyToApi.ts:response",
+        message: "Model upload upstream response",
+        data: {
+          status: upstream.status,
+          bodyPreview: new TextDecoder().decode(responseBody.slice(0, 240)),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }
   const response = new NextResponse(responseBody, {
     status: upstream.status,
     statusText: upstream.statusText,

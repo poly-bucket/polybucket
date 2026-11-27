@@ -31,6 +31,27 @@ describe("buildCarouselItems", () => {
     expect(thumb?.type).toBe("image");
   });
 
+  it("uses leaf file names in image stream URLs", () => {
+    const model = {
+      id: "m1",
+      thumbnailUrl: undefined,
+      files: [
+        {
+          id: "f1",
+          name: "images/switch_shelf.png",
+          mimeType: "image/png",
+        },
+      ],
+    } as unknown as Model;
+
+    const items = buildCarouselItems(model);
+    const image = items.find((i) => i.id === "f1");
+
+    expect(image?.type).toBe("image");
+    expect(image?.url).toContain("/switch_shelf.png");
+    expect(image?.url).not.toContain("images%2F");
+  });
+
   it("adds 3D files as 3d items", () => {
     const model = {
       id: "m1",

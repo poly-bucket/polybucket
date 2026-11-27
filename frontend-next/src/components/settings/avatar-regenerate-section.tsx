@@ -3,7 +3,11 @@
 import { type ChangeEvent, useCallback, useMemo, useState } from "react";
 import { Input } from "@/components/primitives/input";
 import { Button } from "@/components/primitives/button";
-import { svgToDataUrl, previewUserAvatarSvg } from "@/lib/avatar/minidenticon";
+import {
+  buildGeneratedUserAvatarSavePayload,
+  svgToDataUrl,
+  previewUserAvatarSvg,
+} from "@/lib/avatar/minidenticon";
 import { regenerateUserAvatar } from "@/lib/services/avatarService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -83,10 +87,13 @@ export function AvatarRegenerateSection({ onSaved }: AvatarRegenerateSectionProp
   const handleSave = async () => {
     setSaving(true);
     try {
-      await regenerateUserAvatar(
-        mode === "generate" ? salt.trim() || undefined : undefined,
-        mode === "upload" ? uploadedAvatar : undefined
-      );
+      const { salt: saltForSave, avatar: generatedSvg } =
+        mode === "generate"
+          ? buildGeneratedUserAvatarSavePayload(userId, effectiveSalt)
+          : { salt: undefined, avatar: undefined };
+      const avatarForSave =
+        mode === "upload" ? uploadedAvatar : generatedSvg;
+      await regenerateUserAvatar(saltForSave, avatarForSave);
       await refreshUserFromMe();
       await onSaved?.();
       toast.success("Avatar updated");

@@ -142,25 +142,64 @@ export async function uploadModel(request: ModelUploadRequest): Promise<Uploaded
       description: model?.description,
     };
   } catch (error) {
-    const apiError = error as ApiException & { response?: string; status?: number };
-    const rawResponse = typeof apiError.response === "string" ? apiError.response : "";
-    let errorMessage = apiError.message || "Upload failed";
+    let errorMessage = "Upload failed";
+    let status: number | undefined;
 
-    if (rawResponse) {
-      try {
-        const parsed = JSON.parse(rawResponse) as {
-          message?: string;
-          detail?: string;
-          title?: string;
-        };
-        errorMessage = parsed.message || parsed.detail || parsed.title || rawResponse;
-      } catch {
-        errorMessage = rawResponse;
+    if (ApiException.isApiException(error)) {
+      status = error.status;
+      const rawResponse = typeof error.response === "string" ? error.response : "";
+      errorMessage = error.message || errorMessage;
+      if (rawResponse) {
+        try {
+          const parsed = JSON.parse(rawResponse) as {
+            message?: string;
+            detail?: string;
+            title?: string;
+          };
+          errorMessage =
+            parsed.message || parsed.detail || parsed.title || rawResponse;
+        } catch {
+          errorMessage = rawResponse;
+        }
       }
+    } else if (error && typeof error === "object") {
+      const errObj = error as {
+        status?: number;
+        message?: string;
+        detail?: string;
+        title?: string;
+      };
+      status = errObj.status;
+      errorMessage =
+        errObj.detail ||
+        errObj.message ||
+        errObj.title ||
+        errorMessage;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
     }
 
+    // #region agent log
+    fetch("http://127.0.0.1:7425/ingest/0e4469e7-8733-4f5f-86f7-c22a81b7a59f", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d87db7",
+      },
+      body: JSON.stringify({
+        sessionId: "d87db7",
+        runId: "pre-fix",
+        hypothesisId: "A",
+        location: "modelsService.ts:uploadModel",
+        message: "Model upload failed",
+        data: { status, errorMessage, fileCount: request.files.length },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     const normalizedError = new Error(errorMessage);
-    (normalizedError as Error & { status?: number }).status = apiError.status;
+    (normalizedError as Error & { status?: number }).status = status;
     throw normalizedError;
   }
 }

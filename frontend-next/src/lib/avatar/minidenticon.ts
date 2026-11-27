@@ -73,6 +73,17 @@ export function previewUserAvatarSvg(userId: string, salt?: string): string {
   return minidenticonSvg(seed, DEFAULT_SAT, DEFAULT_LIGHT);
 }
 
+export function buildGeneratedUserAvatarSavePayload(
+  userId: string,
+  effectiveSalt: string
+): { salt?: string; avatar: string } {
+  const salt = effectiveSalt.trim() || undefined;
+  return {
+    salt,
+    avatar: previewUserAvatarSvg(userId, salt),
+  };
+}
+
 export const maxCollectionAvatarSvgLength = 256_000;
 
 /**

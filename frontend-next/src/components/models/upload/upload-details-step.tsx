@@ -19,6 +19,7 @@ interface UploadDetailsStepProps {
   onSelectThumbnail: (fileId: string) => void;
   canGenerateFrom3d: boolean;
   onOpenThumbnailGenerator: () => void;
+  suspendBackground3dPreview?: boolean;
   metadataForm: UseFormReturn<ModelMetadataFormValues>;
   categories: string[];
   onCategoriesChange: (categories: string[]) => void;
@@ -37,6 +38,7 @@ export function UploadDetailsStep({
   onSelectThumbnail,
   canGenerateFrom3d,
   onOpenThumbnailGenerator,
+  suspendBackground3dPreview = false,
   metadataForm,
   categories,
   onCategoriesChange,
@@ -52,6 +54,7 @@ export function UploadDetailsStep({
           activeFileId={previewFileId}
           getFileType={getFileType}
           onActiveFileChange={onSelectPreviewFile}
+          suspendBackground3d={suspendBackground3dPreview}
         />
       </div>
       <div className="space-y-6">

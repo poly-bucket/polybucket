@@ -19,6 +19,7 @@ export default defineConfig({
     reuseExistingServer: true,
     env: {
       E2E_SITE_ACCESS_OVERRIDE: "1",
+      SESSION_SECRET: "development-session-secret-min-32-chars!!",
     },
   },
 });

@@ -36,7 +36,7 @@ export function RecentModelsSection() {
   if (loading) {
     return (
       <section className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold text-white">Recent Models</h2>
+        <h2 className="mb-4 text-lg font-semibold text-balance text-white">Recent Models</h2>
         <ModelBrowseGrid layout={layout}>
           {Array.from({ length: RECENT_MODELS_SKELETON_COUNT }).map((_, i) => (
             <ModelBrowseModelSkeleton key={i} layout={layout} />
@@ -49,8 +49,8 @@ export function RecentModelsSection() {
   if (error) {
     return (
       <section className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold text-white">Recent Models</h2>
-        <div className="rounded-xl border border-white/20 bg-white/5 px-6 py-8 text-center">
+        <h2 className="mb-4 text-lg font-semibold text-balance text-white">Recent Models</h2>
+        <div className="rounded-xl bg-white/5 px-6 py-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
           <p className="mb-4 text-white/80">{error}</p>
           <Button variant="outline" onClick={loadModels}>
             Retry
@@ -64,9 +64,9 @@ export function RecentModelsSection() {
   if (models.length === 0) {
     return (
       <section className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold text-white">Recent Models</h2>
-        <div className="rounded-xl border border-white/20 bg-white/5 px-6 py-12 text-center">
-          <p className="text-white/80">No models yet.</p>
+        <h2 className="mb-4 text-lg font-semibold text-balance text-white">Recent Models</h2>
+        <div className="rounded-xl bg-white/5 px-6 py-12 text-center shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
+          <p className="text-pretty text-white/80">No models yet.</p>
         </div>
       </section>
     );
@@ -74,7 +74,7 @@ export function RecentModelsSection() {
 
   return (
     <section className="mt-8">
-      <h2 className="mb-4 text-lg font-semibold text-white">Recent Models</h2>
+      <h2 className="mb-4 text-lg font-semibold text-balance text-white">Recent Models</h2>
       <ModelBrowseGrid layout={layout}>
         {models.map((model) => (
           <ModelBrowseModel key={model.id} model={model} layout={layout} />

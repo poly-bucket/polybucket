@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type { UploadedFile } from "./file-queue";
 import type { UploadFileType } from "./upload-shared";
 import { useUserSettings } from "@/contexts/UserSettingsContext";
+import { useFileDataUrl } from "@/hooks/use-file-data-url";
 
 interface UploadPreviewCarouselProps {
   files: UploadedFile[];
@@ -17,15 +18,11 @@ interface UploadPreviewCarouselProps {
   getFileType: (fileName: string) => UploadFileType;
   onActiveFileChange: (fileId: string) => void;
   onOpenThumbnailGenerator?: () => void;
+  suspendBackground3d?: boolean;
 }
 
 function ImagePreview({ file }: { file: File }) {
-  const [url, setUrl] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
+  const url = useFileDataUrl(file);
   if (!url) return null;
   return (
     <div className="h-full w-full flex items-center justify-center p-4">
@@ -40,6 +37,7 @@ export default function UploadPreviewCarousel({
   getFileType,
   onActiveFileChange,
   onOpenThumbnailGenerator,
+  suspendBackground3d = false,
 }: UploadPreviewCarouselProps) {
   const { settings } = useUserSettings();
   const activeFile = files.find((file) => file.id === activeFileId) ?? null;
@@ -63,7 +61,12 @@ export default function UploadPreviewCarousel({
         <div className="h-96 w-full bg-muted/30 rounded-md overflow-hidden">
           {activeFile ? (
             <>
-              {activeFileType === "3d" && (
+              {activeFileType === "3d" && suspendBackground3d && (
+                <div className="flex h-full w-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                  3D preview paused while the thumbnail editor is open
+                </div>
+              )}
+              {activeFileType === "3d" && !suspendBackground3d && (
                 <ModelViewer
                   file={activeFile.file}
                   fileName={activeFile.name}
@@ -94,8 +97,15 @@ export default function UploadPreviewCarousel({
               )}
             </>
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-              Select a file from the queue to preview
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
+              <p className="text-sm font-medium text-foreground/85">
+                {files.length === 0 ? "Preview appears here" : "Pick a file to preview"}
+              </p>
+              <p className="max-w-xs text-xs text-muted-foreground">
+                {files.length === 0
+                  ? "Add a mesh, image, or PDF to the queue and it opens in this panel right away."
+                  : "Select a row in the upload queue, or use the thumbnails below when you have several files."}
+              </p>
             </div>
           )}
         </div>

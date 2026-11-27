@@ -7,5 +7,6 @@ test.describe("Security headers", () => {
     const headers = response!.headers();
     expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
     expect(headers["content-security-policy"]).toContain("default-src 'self'");
+    expect(headers["content-security-policy"]).toMatch(/img-src[^;]*\bblob:/);
   });
 });

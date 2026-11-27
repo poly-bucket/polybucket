@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import React, { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Stage } from "@react-three/drei";
 import * as THREE from "three";
@@ -132,16 +132,34 @@ function ThumbnailCameraController({
   onRendererReady,
 }: {
   settings: RenderSettings;
-  onRendererReady: (renderer: THREE.WebGLRenderer) => void;
+  onRendererReady: () => void;
 }) {
   const { camera, gl } = useThree();
+  const readyNotified = useRef(false);
 
   useEffect(() => {
     camera.position.set(0, 0, settings.cameraDistance);
     camera.lookAt(0, 0, 0);
     camera.updateMatrixWorld();
-    onRendererReady(gl);
-  }, [camera, settings.cameraDistance, gl, onRendererReady]);
+  }, [camera, settings.cameraDistance]);
+
+  useEffect(() => {
+    if (readyNotified.current) return;
+    readyNotified.current = true;
+    onRendererReady();
+  }, [gl, onRendererReady]);
+
+  return null;
+}
+
+function ThumbnailSceneBackground({ color }: { color: string }) {
+  const { gl, invalidate } = useThree();
+
+  useEffect(() => {
+    gl.setClearColor(color);
+    gl.setClearAlpha(1);
+    invalidate();
+  }, [color, gl, invalidate]);
 
   return null;
 }
@@ -151,15 +169,18 @@ function useScreenshot() {
   return useCallback((): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       try {
-        gl.render(scene, camera);
-        gl.domElement.toBlob(
-          (blob) => {
-            if (blob && blob.size > 0) resolve(blob);
-            else reject(new Error("Failed to capture screenshot"));
-          },
-          "image/png",
-          0.9
-        );
+        const capture = () => {
+          gl.render(scene, camera);
+          gl.domElement.toBlob(
+            (blob) => {
+              if (blob && blob.size > 0) resolve(blob);
+              else reject(new Error("Failed to capture screenshot"));
+            },
+            "image/png",
+            1
+          );
+        };
+        requestAnimationFrame(capture);
       } catch (error) {
         reject(error);
       }
@@ -167,18 +188,25 @@ function useScreenshot() {
   }, [gl, scene, camera]);
 }
 
-function ScreenshotProvider({ onReady }: { onReady: (fn: () => Promise<Blob>) => void }) {
+function ScreenshotProvider({
+  onReadyRef,
+}: {
+  onReadyRef: React.MutableRefObject<((fn: () => Promise<Blob>) => void) | null>;
+}) {
   const takeScreenshot = useScreenshot();
   useEffect(() => {
-    onReady(takeScreenshot);
-  }, [takeScreenshot, onReady]);
+    onReadyRef.current?.(takeScreenshot);
+  }, [takeScreenshot, onReadyRef]);
   return null;
 }
 
 function WebGLMonitor({ onContextLost }: { onContextLost: () => void }) {
   const { gl } = useThree();
   useEffect(() => {
-    const handler = () => onContextLost();
+    const handler = (event: Event) => {
+      event.preventDefault();
+      onContextLost();
+    };
     gl.domElement.addEventListener("webglcontextlost", handler);
     return () => gl.domElement.removeEventListener("webglcontextlost", handler);
   }, [gl, onContextLost]);
@@ -190,6 +218,26 @@ const VIEW_MODES = [
   { value: "wireframe" as const, label: "Wireframe" },
   { value: "points" as const, label: "Points" },
 ];
+
+class ThumbnailSceneErrorBoundary extends React.Component<
+  { children: React.ReactNode; onError: (error: Error) => void },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error) {
+    this.props.onError(error);
+  }
+
+  render() {
+    if (this.state.error) return null;
+    return this.props.children;
+  }
+}
 
 export default function ThumbnailGenerator({
   modelFile,
@@ -215,7 +263,42 @@ export default function ThumbnailGenerator({
   const [isGenerating, setIsGenerating] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [webglError, setWebglError] = useState<string | null>(null);
+  const [sceneResetKey, setSceneResetKey] = useState(0);
+  const [webglSupportError, setWebglSupportError] = useState<string | null>(null);
   const takeScreenshotRef = useRef<(() => Promise<Blob>) | null>(null);
+  const screenshotReadyRef = useRef<((fn: () => Promise<Blob>) => void) | null>((fn) => {
+    takeScreenshotRef.current = fn;
+  });
+  const rendererReadyNotified = useRef(false);
+
+  useEffect(() => {
+    screenshotReadyRef.current = (fn) => {
+      takeScreenshotRef.current = fn;
+    };
+  }, []);
+
+  const handleRendererReady = useCallback(() => {
+    if (rendererReadyNotified.current) return;
+    rendererReadyNotified.current = true;
+    setCameraReady(true);
+  }, []);
+
+  const handleContextLost = useCallback(() => {
+    setWebglError("WebGL context was lost");
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    setSceneResetKey((key) => key + 1);
+    setCameraReady(false);
+    setWebglError(null);
+    setWebglSupportError(null);
+    rendererReadyNotified.current = false;
+
+    const canvas = document.createElement("canvas");
+    const gl = canvas.getContext("webgl") ?? canvas.getContext("webgl2");
+    setWebglSupportError(gl ? null : "WebGL is not supported");
+  }, [open, modelFile.name]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -225,12 +308,6 @@ export default function ThumbnailGenerator({
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
-  const webglSupportError = (() => {
-    if (!open || typeof window === "undefined") return null;
-    const canvas = document.createElement("canvas");
-    const gl = canvas.getContext("webgl") ?? canvas.getContext("webgl2");
-    return gl ? null : "WebGL is not supported";
-  })();
   const activeError = webglError ?? webglSupportError;
 
   const handleSettingChange = (key: keyof RenderSettings, value: unknown) => {
@@ -257,6 +334,7 @@ export default function ThumbnailGenerator({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         variant="glass"
+        overlayClassName="bg-black/70 backdrop-blur-md"
         className="w-[98vw] sm:w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] h-[94vh] max-h-[94vh] flex flex-col overflow-hidden"
       >
         <DialogHeader>
@@ -271,30 +349,32 @@ export default function ThumbnailGenerator({
             <Card variant="glass" className="border-white/20 overflow-hidden h-full min-h-[28rem]">
               <Canvas
                 camera={{ position: [0, 0, renderSettings.cameraDistance], fov: 45 }}
-                gl={{ preserveDrawingBuffer: true }}
-                style={{
-                  background: renderSettings.backgroundColor,
-                  width: "100%",
-                  height: "100%",
-                }}
+                gl={{ preserveDrawingBuffer: true, alpha: false, antialias: true }}
+                style={{ width: "100%", height: "100%" }}
               >
+                <ThumbnailSceneBackground color={renderSettings.backgroundColor} />
                 <ThumbnailCameraController
                   settings={renderSettings}
-                  onRendererReady={() => setCameraReady(true)}
+                  onRendererReady={handleRendererReady}
                 />
-                <ScreenshotProvider onReady={(fn) => (takeScreenshotRef.current = fn)} />
-                <WebGLMonitor onContextLost={() => setWebglError("WebGL context was lost")} />
+                <ScreenshotProvider onReadyRef={screenshotReadyRef} />
+                <WebGLMonitor onContextLost={handleContextLost} />
                 <ambientLight intensity={0.4} />
                 <directionalLight
                   position={[10, 10, 5]}
                   intensity={renderSettings.lightIntensity}
                   color={renderSettings.lightColor}
                 />
-                <Suspense fallback={null}>
-                  <Stage environment="city" intensity={0.6}>
-                    <ThumbnailModel file={modelFile} settings={renderSettings} />
-                  </Stage>
-                </Suspense>
+                <ThumbnailSceneErrorBoundary
+                  key={sceneResetKey}
+                  onError={(error) => setWebglError(error.message)}
+                >
+                  <Suspense fallback={null}>
+                    <Stage environment={null} intensity={0.6} shadows={false}>
+                      <ThumbnailModel file={modelFile} settings={renderSettings} />
+                    </Stage>
+                  </Suspense>
+                </ThumbnailSceneErrorBoundary>
                 <OrbitControls
                   autoRotate={renderSettings.autoRotate}
                   autoRotateSpeed={1}

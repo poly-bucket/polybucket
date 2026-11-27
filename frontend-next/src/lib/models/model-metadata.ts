@@ -125,7 +125,7 @@ export function createModelMetadataSchema(rules: ModelMetadataRules) {
     : z.nativeEnum(LicenseTypes);
 
   const modelMetadataFieldsSchema = z.object({
-    name: z.string().min(1, "Name is required").max(255),
+    name: z.string().min(1, "Title is required").max(255),
     description: descriptionSchema,
     privacy: z.nativeEnum(PrivacySettings),
     license: licenseSchema,

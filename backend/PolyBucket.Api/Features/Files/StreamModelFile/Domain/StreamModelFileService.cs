@@ -33,6 +33,7 @@ public class StreamModelFileService(
         CancellationToken cancellationToken = default)
     {
         var decodedFileName = Uri.UnescapeDataString(fileName);
+        var lookupLeafName = ModelFileNameHelper.GetLeafFileName(decodedFileName);
         var model = await repository.GetModelWithFilesAsync(modelId, cancellationToken);
         if (model == null)
         {
@@ -47,7 +48,12 @@ public class StreamModelFileService(
         }
 
         var file = model.Files.FirstOrDefault(f =>
-            string.Equals(f.Name, decodedFileName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(f.Name, decodedFileName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(f.Name, lookupLeafName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(
+                ModelFileNameHelper.GetLeafFileName(f.Name),
+                lookupLeafName,
+                StringComparison.OrdinalIgnoreCase));
         if (file == null)
         {
             var available = string.Join(", ", model.Files.Select(f => f.Name));

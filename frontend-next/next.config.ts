@@ -3,6 +3,10 @@ import { securityResponseHeaders } from "./src/lib/security/securityHeaders";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    // Default is 10MB; model uploads are proxied through /api/polybucket and can exceed that.
+    proxyClientMaxBodySize: "1gb",
+  },
   async headers() {
     return [
       {

@@ -145,13 +145,13 @@ export function NotificationBell() {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={toggle}
-        className="relative flex h-7 w-7 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+        className="relative flex min-h-10 min-w-10 items-center justify-center rounded-md text-white/70 transition-[color,background-color,transform] duration-200 active:scale-[0.96] hover:bg-white/10 hover:text-white"
       >
         <Bell className="h-4 w-4" strokeWidth={2} />
         {unreadCount > 0 && (
           <span
             aria-hidden="true"
-            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white"
+            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold tabular-nums leading-none text-white"
           >
             {badgeLabel(unreadCount)}
           </span>

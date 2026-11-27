@@ -44,7 +44,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           gradient &&
             "bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-pink-500/10",
           animated &&
-            "transition-all duration-300 hover:scale-[1.02] hover:shadow-[var(--glass-shadow-lg)]",
+            "transition-[transform,box-shadow] duration-300 hover:scale-[1.02] hover:shadow-[var(--glass-shadow-lg)]",
           hoverEffects({ hover }),
           className
         )}

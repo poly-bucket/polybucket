@@ -12,7 +12,7 @@ import { cva } from "class-variance-authority"
  * - scale: Scale up slightly on hover
  */
 export const hoverEffects = cva(
-  "transition-all duration-300",
+  "transition-[transform,box-shadow,opacity] duration-300",
   {
     variants: {
       hover: {

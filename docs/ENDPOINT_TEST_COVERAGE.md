@@ -73,7 +73,7 @@ Legend: **Behavioral** = Moq/xUnit controller or service tests with AAA and mean
 | | BanUserService / UnbanUserService | ✓ | | |
 | | GetUserById | ✓ | | |
 | | GetUserSettings / UpdateUserSettings | ✓ | | |
-| | RegenerateAvatar | ✓ | | |
+| | RegenerateAvatar | ✓ | | ✓ |
 | | CreateUser, GetUsers, GetUserProfile, UpdateUserProfile | ✓ | ✓ | |
 | | GetBannedUsers, MarkEmailVerified, GeneratePasswordResetLink | ✓ | ✓ | |
 | | GetUserModels, GetUserLikedModels, GetPublicUserCollections, GetUserComments, GetUserPrinters | ✓ | ✓ | |

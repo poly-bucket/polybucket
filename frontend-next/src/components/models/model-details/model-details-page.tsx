@@ -45,6 +45,7 @@ import { EditModelModal } from "../edit-model/edit-model-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { Button } from "@/components/primitives/button";
 import { ModelDetailsPageSkeleton } from "@/components/ui/skeletons";
+import { getModelFileLeafName } from "@/lib/models/model-file-name";
 
 export function buildCarouselItems(model: ModelWithReactions): CarouselItem[] {
   const items: CarouselItem[] = [];
@@ -66,10 +67,11 @@ export function buildCarouselItems(model: ModelWithReactions): CarouselItem[] {
   );
   imageFiles.forEach((file) => {
     if (file.name && file.id && model.id) {
+      const streamName = getModelFileLeafName(file.name);
       items.push({
         id: file.id,
         type: "image",
-        url: `${baseUrl}/api/files/stream/model/${model.id}/${encodeURIComponent(file.name)}`,
+        url: `${baseUrl}/api/files/stream/model/${model.id}/${encodeURIComponent(streamName)}`,
       });
     }
   });
@@ -84,7 +86,7 @@ export function buildCarouselItems(model: ModelWithReactions): CarouselItem[] {
       items.push({
         id: file.id,
         type: "3d",
-        fileName: file.name,
+        fileName: getModelFileLeafName(file.name),
         mimeType: file.mimeType,
       });
     }
@@ -101,7 +103,7 @@ export function buildCarouselItems(model: ModelWithReactions): CarouselItem[] {
       items.push({
         id: file.id,
         type: isMarkdownFile(file.name) ? "markdown" : "pdf",
-        fileName: file.name,
+        fileName: getModelFileLeafName(file.name),
         mimeType: file.mimeType,
       });
     }
@@ -334,7 +336,7 @@ export function ModelDetailsPage() {
         const client = ApiClientFactory.getApiClient();
         const response = await client.streamModelFile_StreamModelFile(
           model.id,
-          file.name,
+          getModelFileLeafName(file.name),
           true
         );
         if (response?.data instanceof Blob) {

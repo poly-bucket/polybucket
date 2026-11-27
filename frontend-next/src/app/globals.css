@@ -353,7 +353,11 @@ body {
     -webkit-backdrop-filter: blur(var(--blur-crystal)) !important;
     border: 1px solid var(--glass-crystal-border) !important;
     box-shadow: var(--glass-crystal-shadow) !important;
-    transition: all 0.3s ease !important;
+    transition:
+      box-shadow 0.3s ease,
+      transform 0.3s ease,
+      border-color 0.3s ease,
+      background-color 0.3s ease !important;
     /* Top highlight gradient */
     background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.15), transparent 50%) !important;
     background-size: 200% 200% !important;
@@ -477,4 +481,37 @@ body {
 
 [data-sonner-toast] [data-close-button]:hover {
   opacity: 0.9 !important;
+}
+
+.upload-bed {
+  --bed-line: rgb(255 255 255 / 0.045);
+  --bed-line-major: rgb(255 255 255 / 0.09);
+  background-color: rgb(10 8 18 / 0.55);
+}
+
+.upload-bed-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--bed-line-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bed-line-major) 1px, transparent 1px),
+    linear-gradient(to right, var(--bed-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bed-line) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+  transition: opacity 200ms ease;
+}
+
+.upload-bed[data-drag-active="true"] {
+  --bed-line: color-mix(in oklch, var(--primary) 22%, transparent);
+  --bed-line-major: color-mix(in oklch, var(--primary) 55%, transparent);
+  background-color: color-mix(in oklch, var(--primary) 8%, rgb(10 8 18 / 0.6));
+}
+
+.upload-bed[data-drag-active="true"] .upload-bed-grid {
+  mask-image: radial-gradient(ellipse at center, black 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 55%, transparent 100%);
 }

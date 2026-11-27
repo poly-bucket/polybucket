@@ -66,9 +66,7 @@ export interface LoginResult {
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() =>
-    typeof window !== "undefined" ? getStoredUser() : null
-  );
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUserFromMe = useCallback(async () => {
@@ -104,6 +102,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = subscribeAuthSession(setUser);
     purgeLegacyTokenStorage();
+    const cached = getStoredUser();
+    if (cached) {
+      setUser(cached);
+      setIsLoading(false);
+    }
     void (async () => {
       const sessionUser = await fetchSessionFromBff();
       setUser(sessionUser ?? getStoredUser());

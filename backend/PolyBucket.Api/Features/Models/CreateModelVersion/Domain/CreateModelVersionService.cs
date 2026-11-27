@@ -5,6 +5,7 @@ using PolyBucket.Api.Features.ACL.Services;
 using PolyBucket.Api.Features.ACL.Domain;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Http;
 using PolyBucket.Api.Features.Models.CreateModelVersion.Repository;
+using PolyBucket.Api.Features.Files.Domain;
 using PolyBucket.Api.Features.Models.Common;
 using PolyBucket.Api.Features.SystemSettings.Services;
 using PolyBucket.Database.Entities.Models;
@@ -89,7 +90,8 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                 {
                     if (file.Length == 0) continue;
 
-                    var objectKey = $"models/{model.Id}/versions/{versionId}/{Guid.NewGuid()}_{file.FileName}";
+                    var leafFileName = ModelFileNameHelper.GetLeafFileName(file.FileName);
+                    var objectKey = $"models/{model.Id}/versions/{versionId}/{Guid.NewGuid()}_{leafFileName}";
                     await using var stream = file.OpenReadStream();
 
                     string storedPath;
@@ -114,7 +116,7 @@ namespace PolyBucket.Api.Features.Models.CreateModelVersion.Domain
                     {
                         Id = Guid.NewGuid(),
                         ModelId = model.Id,
-                        Name = file.FileName,
+                        Name = leafFileName,
                         Path = storedPath,
                         Size = storedSize,
                         MimeType = file.ContentType

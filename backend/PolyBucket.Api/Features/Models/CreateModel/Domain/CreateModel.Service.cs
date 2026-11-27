@@ -8,6 +8,7 @@ using PolyBucket.Api.Features.ModelModeration.Domain;
 using PolyBucket.Api.Features.Models.GenerateModelPreview.Domain;
 using PolyBucket.Api.Features.Models.UpdateModel.Domain;
 using PolyBucket.Api.Features.Models.Common;
+using PolyBucket.Api.Features.Files.Domain;
 using PolyBucket.Api.Features.Models.UploadValidation.Domain;
 using PolyBucket.Api.Features.Models.Upload;
 using PolyBucket.Api.Features.SystemSettings.Services;
@@ -96,7 +97,8 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                 {
                     if (file.Length == 0) continue;
 
-                    var objectKey = $"models/{modelId}/{file.FileName}";
+                    var leafFileName = ModelFileNameHelper.GetLeafFileName(file.FileName);
+                    var objectKey = $"models/{modelId}/{leafFileName}";
                     await using var stream = file.OpenReadStream();
 
                     string storedPath;
@@ -121,7 +123,7 @@ namespace PolyBucket.Api.Features.Models.CreateModel.Domain
                     {
                         Id = Guid.NewGuid(),
                         ModelId = modelId,
-                        Name = file.FileName,
+                        Name = leafFileName,
                         Path = storedPath,
                         Size = storedSize,
                         MimeType = file.ContentType,

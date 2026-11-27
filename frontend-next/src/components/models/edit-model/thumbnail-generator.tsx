@@ -356,7 +356,7 @@ export function ThumbnailGenerator({
                   color={renderSettings.lightColor}
                 />
                 <Suspense fallback={null}>
-                  <Stage environment="city" intensity={0.6}>
+                  <Stage environment={null} intensity={0.6} shadows={false}>
                     <ThumbnailModel file={modelFile} settings={renderSettings} />
                   </Stage>
                 </Suspense>

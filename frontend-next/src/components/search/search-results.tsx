@@ -58,7 +58,7 @@ function UserResultCard({ result }: { result: SearchResult }) {
     <Link href={`/profile/${result.username ?? result.id}`}>
       <Card
         variant="glass"
-        className="flex cursor-pointer flex-row items-center gap-4 border-white/20 px-4 py-4 transition-all duration-200 hover:scale-[1.01] hover:bg-white/10"
+        className="flex cursor-pointer flex-row items-center gap-4 border-white/20 px-4 py-4 transition-[transform,background-color] duration-200 hover:scale-[1.01] hover:bg-white/10"
       >
         <UserAvatar
           userId={result.id}
@@ -93,13 +93,13 @@ function CollectionResultCard({ result }: { result: SearchResult }) {
     <Link href={`/collections/${result.id}`}>
       <Card
         variant="glass"
-        className="flex cursor-pointer flex-row items-center gap-4 border-white/20 px-4 py-4 transition-all duration-200 hover:scale-[1.01] hover:bg-white/10"
+        className="flex cursor-pointer flex-row items-center gap-4 border-white/20 px-4 py-4 transition-[transform,background-color] duration-200 hover:scale-[1.01] hover:bg-white/10"
       >
         {result.thumbnailUrl ? (
           <img
             src={result.thumbnailUrl}
             alt=""
-            className="h-12 w-12 shrink-0 rounded-lg object-cover"
+            className="h-12 w-12 shrink-0 rounded-lg object-cover outline outline-1 -outline-offset-1 outline-white/10"
           />
         ) : (
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10">

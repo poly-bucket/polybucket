@@ -12,6 +12,7 @@ import {
   getExtensionsByCategory,
   getModelUploadConfig,
   isFileTypeAllowed,
+  partitionUploadFilesByAllowance,
 } from "@/lib/services/fileTypeSettingsService";
 import {
   parseModelMarkdown,
@@ -31,14 +32,14 @@ import { fetchSiteAccessPolicy } from "@/lib/bff/fetchSiteAccessPolicy";
 import { mayAccessModelUpload } from "@/lib/auth/uploadAccess";
 import {
   createUploadedFile,
+  formatFileSize,
   getUploadFileType,
   setThumbnailSelection,
 } from "./upload-shared";
 import type { UploadedFile } from "./file-queue";
 import { UploadWizardShell } from "./upload/upload-wizard-shell";
 import { UploadWizardSkeleton } from "@/components/ui/skeletons";
-import { UploadFilesStep } from "./upload/upload-files-step";
-import { UploadDetailsStep } from "./upload/upload-details-step";
+import { UploadComposeStep } from "./upload/upload-compose-step";
 import { UploadReviewStep } from "./upload/upload-review-step";
 import { useUploadWizard } from "./upload/use-upload-wizard";
 import {
@@ -51,6 +52,7 @@ import {
   type ModelMetadataRules,
 } from "@/lib/models/model-metadata";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { validateGeneratedThumbnailBlob } from "@/lib/models/generated-thumbnail";
 
 function buildInitialMetadata(): ModelMetadataFormValues {
   const localUploadDefaults = getUploadDefaults();
@@ -272,10 +274,41 @@ export default function ModelUploadView() {
         toast.error(result.error ?? "Failed to extract zip");
         return;
       }
-      const files = convertToFiles(result.files);
+      const extracted = convertToFiles(result.files);
+      const { allowed, rejected } = partitionUploadFilesByAllowance(
+        fileTypeSettings,
+        extracted,
+        siteMaxFileSizeBytes
+      );
+      if (rejected.length > 0) {
+        toast.error(
+          `Skipped ${rejected.length} unsupported or oversize file(s): ${rejected.join(", ")}`
+        );
+        // #region agent log
+        fetch("http://127.0.0.1:7425/ingest/0e4469e7-8733-4f5f-86f7-c22a81b7a59f", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "d87db7",
+          },
+          body: JSON.stringify({
+            sessionId: "d87db7",
+            runId: "pre-fix",
+            hypothesisId: "C",
+            location: "model-upload-view.tsx:processZipFile",
+            message: "Zip extract rejected files",
+            data: { rejected, allowedCount: allowed.length },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+      }
+      if (allowed.length === 0) {
+        return;
+      }
       const previousCount = uploadedFiles.length;
       const remaining = maxFilesPerUpload - uploadedFiles.length;
-      const toAdd = files.slice(0, remaining);
+      const toAdd = allowed.slice(0, remaining);
       const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
       const newUploaded = toAdd.map((fileItem) => {
         const nextFile = createUploadedFile(fileItem, takenNames);
@@ -289,8 +322,9 @@ export default function ModelUploadView() {
       });
       const firstPreview = newUploaded.find((fileItem) => getFileType(fileItem.name) !== "unknown");
       if (firstPreview && !previewFile) setPreviewFile(firstPreview);
+      const skippedForLimit = allowed.length - toAdd.length;
       toast.success(
-        `Zip extracted: ${toAdd.length} file(s) added. ${files.length - toAdd.length} skipped (max reached).`
+        `Zip extracted: ${toAdd.length} file(s) added.${skippedForLimit > 0 ? ` ${skippedForLimit} skipped (max reached).` : ""}`
       );
     },
     [
@@ -300,6 +334,8 @@ export default function ModelUploadView() {
       previewFile,
       getFileType,
       applyAutoTitleIfNeeded,
+      fileTypeSettings,
+      siteMaxFileSizeBytes,
     ]
   );
 
@@ -418,7 +454,16 @@ export default function ModelUploadView() {
   };
 
   const handleThumbnailGenerated = useCallback(
-    (blob: Blob, fileName: string) => {
+    async (blob: Blob, fileName: string) => {
+      const validationError = await validateGeneratedThumbnailBlob(blob);
+      if (validationError === "empty") {
+        toast.error("Generated thumbnail was empty");
+        return;
+      }
+      if (validationError === "invalid-png") {
+        toast.error("Generated thumbnail was not a valid PNG");
+        return;
+      }
       const generatedFile = new File([blob], fileName, { type: "image/png" });
       const takenNames = new Set(uploadedFiles.map((uploadedFile) => uploadedFile.name));
       const generatedUploaded = createUploadedFile(generatedFile, takenNames);
@@ -432,8 +477,6 @@ export default function ModelUploadView() {
     },
     [uploadedFiles]
   );
-
-  const imageFiles = uploadedFiles.filter((fileItem) => getFileType(fileItem.name) === "image");
 
   const selectedThumbnailFile = uploadedFiles.find(
     (fileItem) => fileItem.id === selectedThumbnailFileId
@@ -455,16 +498,27 @@ export default function ModelUploadView() {
 
   const canGenerateThumbnail = previewFile ? getFileType(previewFile.name) === "3d" : false;
 
-  const reviewThumbnailPreviewUrl = React.useMemo(() => {
-    if (!selectedThumbnailFile) return null;
-    return URL.createObjectURL(selectedThumbnailFile.file);
-  }, [selectedThumbnailFile]);
+  const [reviewThumbnailPreviewUrl, setReviewThumbnailPreviewUrl] = React.useState<string | null>(
+    null
+  );
 
   useEffect(() => {
-    return () => {
-      if (reviewThumbnailPreviewUrl) URL.revokeObjectURL(reviewThumbnailPreviewUrl);
+    if (!selectedThumbnailFile) {
+      setReviewThumbnailPreviewUrl(null);
+      return;
+    }
+    let cancelled = false;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (!cancelled && typeof reader.result === "string") {
+        setReviewThumbnailPreviewUrl(reader.result);
+      }
     };
-  }, [reviewThumbnailPreviewUrl]);
+    reader.readAsDataURL(selectedThumbnailFile.file);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedThumbnailFile]);
 
   const getThumbnailFileIdForUpload = () => {
     if (!selectedThumbnailFileId) return undefined;
@@ -482,6 +536,16 @@ export default function ModelUploadView() {
     if (uploadedFiles.length === 0 || !metadataValid) return;
     if (!thumbnailRequirementMet) {
       toast.error("At least one image file is required for the model thumbnail");
+      return;
+    }
+    const disallowed = uploadedFiles.filter(
+      (fileItem) =>
+        !isFileTypeAllowed(fileTypeSettings, fileItem.file, siteMaxFileSizeBytes)
+    );
+    if (disallowed.length > 0) {
+      toast.error(
+        `Remove unsupported or oversize files before upload: ${disallowed.map((f) => f.name).join(", ")}`
+      );
       return;
     }
     const data = metadataForm.getValues();
@@ -535,6 +599,29 @@ export default function ModelUploadView() {
     URL.revokeObjectURL(url);
   };
 
+  const uploadBlockers: string[] = [];
+  if (!settingsLoading) {
+    if (uploadedFiles.length === 0) uploadBlockers.push("At least one file is required");
+    const metadataCheck = metadataSchemaRef.current.safeParse(metadataValues);
+    if (!metadataCheck.success) {
+      for (const issue of metadataCheck.error.issues) {
+        if (!uploadBlockers.includes(issue.message)) uploadBlockers.push(issue.message);
+      }
+    }
+  }
+
+  const totalUploadBytes = uploadedFiles.reduce((sum, fileItem) => sum + fileItem.size, 0);
+  const uploadSummary =
+    uploadedFiles.length > 0
+      ? `${uploadedFiles.length} ${uploadedFiles.length === 1 ? "file" : "files"} · ${formatFileSize(totalUploadBytes)}${
+          wizard.currentStep === "compose" ? " · ready to review" : ""
+        }`
+      : undefined;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [wizard.currentStep]);
+
   const handleCancel = () => {
     if (wizard.isDirty) {
       const confirmed = window.confirm(
@@ -558,47 +645,41 @@ export default function ModelUploadView() {
         onStepClick={wizard.goToStep}
         canAdvance={wizard.canAdvanceFromCurrent}
         isUploading={isUploading}
+        blockers={uploadBlockers}
+        summary={uploadSummary}
         onBack={wizard.goBack}
         onNext={wizard.goNext}
         onUpload={handleUpload}
         onCancel={handleCancel}
       >
-        {wizard.currentStep === "files" && (
-          <UploadFilesStep
+        {wizard.currentStep === "compose" && (
+          <UploadComposeStep
             settingsLoading={settingsLoading}
             isExtractingZip={isExtractingZip}
             uploadedFiles={uploadedFiles}
-            selectedFileId={previewFile?.id ?? null}
+            previewFileId={previewFile?.id ?? null}
             acceptFormats={allSupportedFormats}
             formatGroups={formatGroups}
             canAddMore={canAddMoreFiles}
             maxFiles={maxFilesPerUpload}
+            maxFileSizeLabel={formatFileSize(siteMaxFileSizeBytes)}
             getFileType={getFileType}
             onFilesSelected={handleFilesSelected}
             onSelectFile={handleSelectFile}
             onRemoveFile={handleRemoveFile}
             onClearAll={handleClearAll}
             onDownloadMarkdownTemplate={downloadMarkdownTemplate}
-          />
-        )}
-
-        {wizard.currentStep === "details" && (
-          <UploadDetailsStep
-            uploadedFiles={uploadedFiles}
-            previewFileId={previewFile?.id ?? null}
-            getFileType={getFileType}
-            onSelectPreviewFile={handleSelectFile}
-            imageFiles={imageFiles}
             selectedThumbnailFileId={selectedThumbnailFileId}
             onSelectThumbnail={handleSelectThumbnail}
             canGenerateFrom3d={canGenerateThumbnail}
             onOpenThumbnailGenerator={() => setShowThumbnailGenerator(true)}
+            suspendBackground3dPreview={showThumbnailGenerator}
             metadataForm={metadataForm}
+            metadataRules={metadataRules}
             categories={categories}
             onCategoriesChange={setCategories}
             onMetadataValidityChange={setMetadataValid}
             onMetadataDirtyChange={setMetadataDirty}
-            allowModelRemixing={metadataRules.allowModelRemixing}
           />
         )}
 
@@ -610,6 +691,7 @@ export default function ModelUploadView() {
             getFileType={getFileType}
             thumbnailPreviewUrl={reviewThumbnailPreviewUrl}
             hasThumbnail={selectedThumbnailFileId !== null}
+            onEdit={() => wizard.goToStep("compose")}
           />
         )}
       </UploadWizardShell>

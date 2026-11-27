@@ -123,3 +123,20 @@ export function isFileTypeAllowed(
   const maxBytes = Math.min(siteMaxFileSizeBytes, perTypeMax);
   return file.size <= maxBytes;
 }
+
+export function partitionUploadFilesByAllowance(
+  fileTypes: FileTypeSettingsData[] | undefined,
+  files: File[],
+  siteMaxFileSizeBytes: number = DEFAULT_SITE_MAX_FILE_SIZE_BYTES
+): { allowed: File[]; rejected: string[] } {
+  const allowed: File[] = [];
+  const rejected: string[] = [];
+  for (const file of files) {
+    if (isFileTypeAllowed(fileTypes, file, siteMaxFileSizeBytes)) {
+      allowed.push(file);
+    } else {
+      rejected.push(file.name);
+    }
+  }
+  return { allowed, rejected };
+}

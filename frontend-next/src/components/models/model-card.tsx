@@ -59,12 +59,17 @@ export function ModelCard({ model, onClick, className, size = "medium" }: ModelC
 
   const content = (
     <>
-      <div className={cn("relative overflow-hidden bg-white/10", sizeStyles.thumb)}>
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-t-xl bg-white/10",
+          sizeStyles.thumb
+        )}
+      >
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
             alt={model.name ?? "Model thumbnail"}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover outline outline-1 -outline-offset-1 outline-white/10 transition-transform duration-300 group-hover:scale-105"
             onError={handleImageError}
           />
         ) : (
@@ -88,14 +93,14 @@ export function ModelCard({ model, onClick, className, size = "medium" }: ModelC
       <div className={cn("flex flex-1 flex-col", sizeStyles.bodyPad)}>
         <h3
           className={cn(
-            "mb-1 font-semibold leading-tight text-white line-clamp-2",
+            "mb-1 font-semibold leading-tight text-white line-clamp-2 text-balance",
             sizeStyles.title
           )}
         >
           {model.name ?? "Untitled Model"}
         </h3>
         <p className="mb-2 text-xs text-white/60 sm:mb-3">by {authorName}</p>
-        <div className="flex items-center justify-between text-xs text-white/60">
+        <div className="flex items-center justify-between text-xs tabular-nums text-white/60">
           <span className="flex items-center gap-1">
             <Heart className="h-3 w-3 fill-current text-red-400" />
             {formatNumber(totalLikes)}

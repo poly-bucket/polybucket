@@ -22,7 +22,7 @@ export function UploadModelPreviewCard({
     description.length > 120 ? `${description.slice(0, 120).trim()}…` : description;
 
   return (
-    <Card variant="glass" className={cn("overflow-hidden", className)}>
+    <Card variant="glass" className={cn("gap-0 overflow-hidden py-0", className)}>
       <div className="relative h-40 bg-white/10 sm:h-48">
         {thumbnailUrl ? (
           <img src={thumbnailUrl} alt="" className="h-full w-full object-cover" />

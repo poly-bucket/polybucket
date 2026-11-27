@@ -47,14 +47,14 @@ function DashboardWelcomeSection(): React.ReactElement {
   return (
     <Card variant="glass" className="border-white/20">
       <CardHeader>
-        <CardTitle className="text-white">
+        <CardTitle className="text-balance text-white">
           {isAuthenticated
             ? `Welcome back, ${user?.username ?? "User"}`
             : "Welcome to Polybucket"}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-white/80">
+        <p className="text-pretty text-white/80">
           {isAuthenticated
             ? "Your dashboard is ready. More features will be added here soon."
             : "Sign in to access your models, collections, and more."}

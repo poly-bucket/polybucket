@@ -133,7 +133,7 @@ namespace PolyBucket.Api.Common.Services
 
         public static bool IsTextFile(string extension)
         {
-            var textExtensions = new[] { ".txt", ".md", ".markdown", ".obj" };
+            var textExtensions = new[] { ".txt", ".md", ".markdown", ".obj", ".dxf" };
             return textExtensions.Contains(extension.ToLowerInvariant());
         }
     }
